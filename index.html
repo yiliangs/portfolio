@@ -104,9 +104,16 @@
     const ctx    = canvas.getContext('2d');
     const label  = document.getElementById('label');
 
+    const DPR = window.devicePixelRatio || 1;
+
     function resize() {
-      canvas.width  = window.innerWidth;
-      canvas.height = window.innerHeight;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      canvas.width  = w * DPR;
+      canvas.height = h * DPR;
+      canvas.style.width  = w + 'px';
+      canvas.style.height = h + 'px';
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
       buildGrid();
       buildCharArrays();
     }
