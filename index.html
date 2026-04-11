@@ -63,11 +63,28 @@
     const BOOST_STEPS = 3;      // concentric boost rings emitting outward from cursor
 
     // ── Text-in-RD constants ─────────────────────────────────────────────────
-    const TITLE_TEXT    = "Yiliang Shao's Work";
     const SUBTITLE_TEXT = "The algorithm is forming itself. So is this site.";
     const TEXT_TARGET   = 0.36;   // V level text cells maintain (maps to ▓)
     const TEXT_RESTORE  = 0.055;  // restoration rate per frame — ~0.4s to reform
     const TEXT_VISIBLE  = 0.10;   // min V to show letter glyph; below → RD char
+
+    // 5×7 bitmap font — rows encoded as 5-bit integers, MSB = leftmost pixel
+    const FONT5x7 = {
+      'Y': [17, 17, 10,  4,  4,  4,  4],
+      'I': [31,  4,  4,  4,  4,  4, 31],
+      'L': [16, 16, 16, 16, 16, 16, 31],
+      'A': [14, 17, 17, 31, 17, 17, 17],
+      'N': [17, 25, 21, 19, 17, 17, 17],
+      'G': [14, 16, 16, 23, 17, 17, 14],
+      'S': [14, 17, 16, 14,  1, 17, 14],
+      'H': [17, 17, 17, 31, 17, 17, 17],
+      'O': [14, 17, 17, 17, 17, 17, 14],
+      'W': [17, 17, 17, 21, 21, 27, 17],
+      'R': [30, 17, 17, 30, 20, 18, 17],
+      'K': [17, 18, 20, 24, 20, 18, 17],
+      "'": [ 6,  6,  0,  0,  0,  0,  0],
+      ' ': [ 0,  0,  0,  0,  0,  0,  0],
+    };
 
     // ── Canvas ───────────────────────────────────────────────────────────────
     const canvas = document.getElementById('c');
@@ -88,29 +105,83 @@
       V1 = new Float32Array(n);
     }
 
-    // ── Text mask — assigns letter chars to cells at title/subtitle positions ─
+    // ── Text mask — bitmap title + terminal box + subtitle, all in the RD grid ─
     function buildTextMask() {
-      const n   = cols * rows;
+      const n = cols * rows;
       textChars = new Array(n).fill(null);
       textMask  = new Uint8Array(n);
 
-      const titleRow    = Math.floor(rows / 2) - 2;
-      const subtitleRow = Math.floor(rows / 2) + 1;
+      const CHAR_W   = 5;   // bitmap font width
+      const CHAR_H   = 7;   // bitmap font height
+      const CHAR_GAP = 1;   // cells between letters
+      const PIXEL    = '█'; // char used for on-pixels
 
-      function assignLine(text, row) {
-        if (row < 0 || row >= rows) return;
-        const start = Math.floor((cols - text.length) / 2);
-        for (let c = 0; c < text.length; c++) {
-          const col = start + c;
-          if (col < 0 || col >= cols) continue;
-          const i      = row * cols + col;
-          textChars[i] = text[c];
-          textMask[i]  = 1;
-        }
+      const title = "YILIANG SHAO'S WORK";
+
+      // Total cell-width of the bitmap title
+      const titleCellW = title.length * (CHAR_W + CHAR_GAP) - CHAR_GAP;
+
+      const BOX_PAD_X = 3;   // inner horizontal padding (cells)
+      const BOX_PAD_Y = 1;   // inner vertical padding (rows)
+      const SPACER    = 1;   // rows between bitmap and subtitle
+
+      const boxInnerW  = Math.max(titleCellW, SUBTITLE_TEXT.length) + BOX_PAD_X * 2;
+      const boxOuterW  = boxInnerW + 2;   // add ║ on each side
+      // box row layout:  ╔═╗ / pad / [7 bitmap rows] / spacer / subtitle / pad / ╚═╝
+      const boxHeight  = 1 + BOX_PAD_Y + CHAR_H + SPACER + 1 + BOX_PAD_Y + 1;
+
+      const boxLeft    = Math.floor((cols - boxOuterW) / 2);
+      const boxRight   = boxLeft + boxOuterW - 1;
+      const boxTop     = Math.floor((rows - boxHeight) / 2);
+      const boxBottom  = boxTop + boxHeight - 1;
+
+      const bitmapRow  = boxTop + 1 + BOX_PAD_Y;          // first row of bitmap title
+      const subRow     = bitmapRow + CHAR_H + SPACER;      // subtitle row
+
+      // Helper: write one char into the mask (clips silently at grid edges)
+      function put(row, col, ch) {
+        if (row < 0 || row >= rows || col < 0 || col >= cols) return;
+        const i      = row * cols + col;
+        textChars[i] = ch;
+        textMask[i]  = 1;
       }
 
-      assignLine(TITLE_TEXT.toUpperCase(),    titleRow);
-      assignLine(SUBTITLE_TEXT.toLowerCase(), subtitleRow);
+      // ── Box border ──────────────────────────────────────────────────────
+      put(boxTop,    boxLeft,  '╔');
+      put(boxTop,    boxRight, '╗');
+      put(boxBottom, boxLeft,  '╚');
+      put(boxBottom, boxRight, '╝');
+      for (let c = boxLeft + 1; c < boxRight; c++) {
+        put(boxTop,    c, '═');
+        put(boxBottom, c, '═');
+      }
+      for (let r = boxTop + 1; r < boxBottom; r++) {
+        put(r, boxLeft,  '║');
+        put(r, boxRight, '║');
+      }
+
+      // ── Bitmap title (centered) ──────────────────────────────────────────
+      const bitmapLeft = Math.floor((cols - titleCellW) / 2);
+      let curCol = bitmapLeft;
+
+      for (const ch of title) {
+        const bitmap = FONT5x7[ch] || FONT5x7[' '];
+        for (let row = 0; row < CHAR_H; row++) {
+          const bits = bitmap[row];
+          for (let bit = 0; bit < CHAR_W; bit++) {
+            if (bits & (1 << (CHAR_W - 1 - bit))) {
+              put(bitmapRow + row, curCol + bit, PIXEL);
+            }
+          }
+        }
+        curCol += CHAR_W + CHAR_GAP;
+      }
+
+      // ── Subtitle (centered) ──────────────────────────────────────────────
+      const subLeft = Math.floor((cols - SUBTITLE_TEXT.length) / 2);
+      for (let c = 0; c < SUBTITLE_TEXT.length; c++) {
+        put(subRow, subLeft + c, SUBTITLE_TEXT[c]);
+      }
     }
 
     // ── Resize ───────────────────────────────────────────────────────────────
