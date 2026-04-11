@@ -41,7 +41,7 @@
     const NC    = CHARS.length;
     const V_MAX = 0.40;
 
-    const DU     = 0.2097;
+    const DU     = 0.2097;   // base diffusion rates
     const DV     = 0.105;
     const STEPS  = 6;
     const WARMUP = 80;
@@ -75,6 +75,13 @@
 
     const OVERLAY_DISSOLVE = 0.15;
     const OVERLAY_RESTORE  = 0.022;
+
+    // ── Diffusion oscillation — drives spatial spacing of RD structures ────────
+    // Oscillating DU/DV changes the characteristic wavelength of the pattern:
+    // higher diffusion → wider arms / more spacing; lower → tighter / denser.
+    const DIFF_AMP  = 0.22;      // ±22 % around base values
+    const DIFF_FREQ = 0.000262;  // ~24 s period (out of phase with param morphing)
+    let curDU = DU, curDV = DV;
 
     // ── Canvas ────────────────────────────────────────────────────────────────
     const canvas  = document.getElementById('c');
@@ -248,8 +255,8 @@
           const Lv = 0.05*(V0[rp+cp]+V0[rp+cn]+V0[rn+cp]+V0[rn+cn])
                    + 0.20*(V0[rp+c ]+V0[rc+cp]+V0[rc+cn]+V0[rn+c ]) - v;
           const uvv = u * v * v;
-          U1[i] = Math.max(0, Math.min(1, u + DU*Lu - uvv + f*(1-u)));
-          V1[i] = Math.max(0, Math.min(1, v + DV*Lv + uvv - (f+k)*v));
+          U1[i] = Math.max(0, Math.min(1, u + curDU*Lu - uvv + f*(1-u)));
+          V1[i] = Math.max(0, Math.min(1, v + curDV*Lv + uvv - (f+k)*v));
         }
       }
       let t = U0; U0 = U1; U1 = t;
@@ -311,8 +318,8 @@
           const Lv = 0.05*(V0[rp+c-1]+V0[rp+c+1]+V0[rn+c-1]+V0[rn+c+1])
                    + 0.20*(V0[rp+c  ]+V0[rc+c-1]+V0[rc+c+1]+V0[rn+c  ]) - v;
           const uvv = u*v*v;
-          U1[i] = Math.max(0, Math.min(1, u + DU*Lu - uvv + f*(1-u)));
-          V1[i] = Math.max(0, Math.min(1, v + DV*Lv + uvv - (f+k)*v));
+          U1[i] = Math.max(0, Math.min(1, u + curDU*Lu - uvv + f*(1-u)));
+          V1[i] = Math.max(0, Math.min(1, v + curDV*Lv + uvv - (f+k)*v));
         }
       }
       for (let r = r0; r <= r1; r++) {
@@ -442,6 +449,11 @@
     function loop(ts) {
       const dt = Math.min(ts - lastTs, 100);
       lastTs = ts;
+
+      // Diffusion oscillation — changes arm spacing of RD pattern
+      const diffScale = 1.0 + DIFF_AMP * Math.sin(ts * DIFF_FREQ);
+      curDU = DU * diffScale;
+      curDV = DV * diffScale;
 
       palT += dt / COLOR_DUR;
       if (palT >= 1) { palA = palB; palB = randomPair(); palT -= 1; }
