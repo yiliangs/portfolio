@@ -76,8 +76,13 @@
     const OVERLAY_DISSOLVE = 0.15;
     const OVERLAY_RESTORE  = 0.022;
 
-    // ── Row spread (breathes ±13%, ~20s period) ───────────────────────────────
-    let rowSpread = 1.0;
+    // ── Cell scale: uniform XY grid-spacing oscillation ───────────────────────
+    // Grid is sized for the MINIMUM scale so the viewport is always covered.
+    const CELL_SCALE_AMP = 0.12;          // ±12%  →  cell spacing 8.8–11.2 px
+    const CELL_SCALE_MIN = 1 - CELL_SCALE_AMP;
+    let   cellScale      = 1.0;
+    // Pixel offset to keep the scaled grid centred on the viewport
+    let   offX = 0, offY = 0;
 
     // ── Canvas ────────────────────────────────────────────────────────────────
     const canvas  = document.getElementById('c');
@@ -91,8 +96,8 @@
     let U0, V0, U1, V1;
     let textChars, textMask, interiorMask;
     let boxGeo        = null;
-    let titleCells    = [];
-    let subtitleCells = [];
+    let titleCells    = [];   // {ch, x, cx, baseRow, v}   — x/cx are fixed pixel coords
+    let subtitleCells = [];   // {ch, col, baseRow, v}     — col is grid column index
 
     // ── Grid ──────────────────────────────────────────────────────────────────
     function buildGrid() {
@@ -101,7 +106,7 @@
       U1 = new Float32Array(n); V1 = new Float32Array(n);
     }
 
-    // ── Text mask  (border only — subtitle moves to canvas2) ──────────────────
+    // ── Text mask (border only) ───────────────────────────────────────────────
     function buildTextMask() {
       const n = cols * rows;
       textChars    = new Array(n).fill(null);
@@ -135,9 +140,7 @@
       for (let r = boxTop + 1; r < boxBottom; r++) {
         put(r, boxLeft, '║'); put(r, boxRight, '║');
       }
-      // Note: subtitle NOT put into textMask — it lives on canvas2
 
-      // Interior (all non-border cells inside the box)
       for (let r = boxTop + 1; r < boxBottom; r++) {
         for (let c = boxLeft + 1; c < boxRight; c++) {
           const i = r * cols + c;
@@ -146,13 +149,13 @@
       }
 
       boxGeo = {
-        titleBaseRow: titleRowStart + TITLE_ROWS / 2,  // fractional row, center of title area
-        subBaseRow:   subRow + 0.5,                    // fractional row, center of subtitle row
+        titleBaseRow: titleRowStart + TITLE_ROWS / 2,
+        subBaseRow:   subRow + 0.5,
         subLeft,
       };
     }
 
-    // ── Title cells on canvas2 ────────────────────────────────────────────────
+    // ── Title cells (canvas2) — X fixed by font measure, Y grid-based ─────────
     function buildTitleCells() {
       if (!boxGeo) return;
       ctx2.font = FONT_LG;
@@ -167,15 +170,18 @@
       }
     }
 
-    // ── Subtitle cells on canvas2 ─────────────────────────────────────────────
+    // ── Subtitle cells (canvas2) — col grid-based, position scales with cellScale
     function buildSubtitleCells() {
       if (!boxGeo) return;
       const { subLeft, subBaseRow } = boxGeo;
       subtitleCells = [];
       for (let c = 0; c < SUBTITLE_TEXT.length; c++) {
-        const ch = SUBTITLE_TEXT[c];
-        const x  = (subLeft + c) * CELL_W;
-        subtitleCells.push({ ch, x, cx: x + CELL_W / 2, baseRow: subBaseRow, v: 1 });
+        subtitleCells.push({
+          ch:      SUBTITLE_TEXT[c],
+          col:     subLeft + c,   // grid column — pixel x computed per-frame
+          baseRow: subBaseRow,
+          v:       1,
+        });
       }
     }
 
@@ -183,16 +189,17 @@
     function resize() {
       const w = window.innerWidth, h = window.innerHeight;
 
-      canvas.width = w * DPR;  canvas.height = h * DPR;
+      canvas.width  = w * DPR; canvas.height  = h * DPR;
       canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
       ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
 
-      canvas2.width = w * DPR; canvas2.height = h * DPR;
+      canvas2.width  = w * DPR; canvas2.height  = h * DPR;
       canvas2.style.width = w + 'px'; canvas2.style.height = h + 'px';
       ctx2.setTransform(DPR, 0, 0, DPR, 0, 0);
 
-      cols = Math.ceil(w / CELL_W) + 1;
-      rows = Math.ceil(h / CELL_H) + 1;
+      // Size grid for MINIMUM cell scale so it always covers the viewport
+      cols = Math.ceil(w / (CELL_W * CELL_SCALE_MIN)) + 2;
+      rows = Math.ceil(h / (CELL_H * CELL_SCALE_MIN)) + 2;
       buildGrid();
       buildTextMask();
       buildTitleCells();
@@ -201,7 +208,17 @@
 
     window.addEventListener('resize', () => { resize(); initRD(curF, curK); });
 
-    // ── Text restoration (border only) ────────────────────────────────────────
+    // ── Recompute render offsets (keeps scaled grid centred in viewport) ───────
+    function updateOffsets() {
+      offX = (window.innerWidth  - cols * CELL_W * cellScale) / 2;
+      offY = (window.innerHeight - rows * CELL_H * cellScale) / 2;
+    }
+
+    // Pixel → fractional grid coordinates
+    const pxCol = px => (px - offX) / (CELL_W * cellScale);
+    const pxRow = py => (py - offY) / (CELL_H * cellScale);
+
+    // ── Text restoration ──────────────────────────────────────────────────────
     function restoreText() {
       for (let i = 0; i < textMask.length; i++) {
         if (textMask[i]) {
@@ -231,32 +248,25 @@
       for (let s = 0; s < WARMUP; s++) { stepRD(f, k); restoreText(); }
     }
 
-    // ── RD step — interior hard-blocked ───────────────────────────────────────
+    // ── RD step ───────────────────────────────────────────────────────────────
     function stepRD(f, k) {
       for (let r = 0; r < rows; r++) {
         const rp = (r === 0        ? rows - 1 : r - 1) * cols;
         const rc =  r * cols;
         const rn = (r === rows - 1 ? 0        : r + 1) * cols;
-
         for (let c = 0; c < cols; c++) {
           const i = rc + c;
           if (interiorMask[i]) { U1[i] = 1; V1[i] = 0; continue; }
-
           const cp = c === 0        ? cols - 1 : c - 1;
           const cn = c === cols - 1 ? 0        : c + 1;
-          const u  = U0[i], v = V0[i];
-
+          const u = U0[i], v = V0[i];
           const Lu = 0.05*(U0[rp+cp]+U0[rp+cn]+U0[rn+cp]+U0[rn+cn])
                    + 0.20*(U0[rp+c ]+U0[rc+cp]+U0[rc+cn]+U0[rn+c ]) - u;
           const Lv = 0.05*(V0[rp+cp]+V0[rp+cn]+V0[rn+cp]+V0[rn+cn])
                    + 0.20*(V0[rp+c ]+V0[rc+cp]+V0[rc+cn]+V0[rn+c ]) - v;
-
           const uvv = u * v * v;
-          const nu  = u + DU * Lu - uvv + f * (1 - u);
-          const nv  = v + DV * Lv + uvv - (f + k) * v;
-
-          U1[i] = nu < 0 ? 0 : nu > 1 ? 1 : nu;
-          V1[i] = nv < 0 ? 0 : nv > 1 ? 1 : nv;
+          U1[i] = Math.max(0, Math.min(1, u + DU*Lu - uvv + f*(1-u)));
+          V1[i] = Math.max(0, Math.min(1, v + DV*Lv + uvv - (f+k)*v));
         }
       }
       let t = U0; U0 = U1; U1 = t;
@@ -266,33 +276,28 @@
     // ── Pointer ───────────────────────────────────────────────────────────────
     const ptr = { x: -9999, y: -9999, active: false };
 
-    // Converts pixel Y → fractional grid row accounting for current rowSpread
-    const pxToRow = py => py / (CELL_H * rowSpread);
-
     // ── Seed mouse ────────────────────────────────────────────────────────────
     function seedMouse() {
       if (!ptr.active) return;
-      const cx = ptr.x / CELL_W;
-      const cy = pxToRow(ptr.y);
-      const cellH = CELL_H * rowSpread;
-      const r0 = Math.max(0,        Math.floor(cy - SEED_R / cellH));
-      const r1 = Math.min(rows - 1, Math.ceil (cy + SEED_R / cellH));
-      const c0 = Math.max(0,        Math.floor(cx - SEED_R / CELL_W));
-      const c1 = Math.min(cols - 1, Math.ceil (cx + SEED_R / CELL_W));
+      const cx = pxCol(ptr.x), cy = pxRow(ptr.y);
+      const cw = CELL_W * cellScale, ch = CELL_H * cellScale;
+      const r0 = Math.max(0,        Math.floor(cy - SEED_R / ch));
+      const r1 = Math.min(rows - 1, Math.ceil (cy + SEED_R / ch));
+      const c0 = Math.max(0,        Math.floor(cx - SEED_R / cw));
+      const c1 = Math.min(cols - 1, Math.ceil (cx + SEED_R / cw));
       const rr = SEED_R * SEED_R;
 
       for (let r = r0; r <= r1; r++) {
         for (let c = c0; c <= c1; c++) {
-          const dx = (c + 0.5 - cx) * CELL_W;
-          const dy = (r + 0.5 - cy) * cellH;
+          const dx = (c + 0.5 - cx) * cw;
+          const dy = (r + 0.5 - cy) * ch;
           const d2 = dx * dx + dy * dy;
           if (d2 >= rr) continue;
           const t      = 1 - Math.sqrt(d2) / SEED_R;
           const smooth = t * t * (3 - 2 * t);
           const i      = r * cols + c;
-
           if (textMask[i]) {
-            V0[i] *= (1 - 0.50 * smooth);           // dissolve border
+            V0[i] *= (1 - 0.50 * smooth);
           } else if (!interiorMask[i]) {
             V0[i] = Math.min(0.25, V0[i] + 0.12 * smooth);
             U0[i] = Math.max(0.75, U0[i] - 0.09 * smooth);
@@ -304,19 +309,18 @@
     // ── Local RD boost ────────────────────────────────────────────────────────
     function localBoostStep(f, k, radius) {
       if (!ptr.active) return;
-      const cx   = ptr.x / CELL_W;
-      const cy   = pxToRow(ptr.y);
-      const cellH = CELL_H * rowSpread;
-      const r0 = Math.max(1,        Math.floor(cy - radius / cellH));
-      const r1 = Math.min(rows - 2, Math.ceil (cy + radius / cellH));
-      const c0 = Math.max(1,        Math.floor(cx - radius / CELL_W));
-      const c1 = Math.min(cols - 2, Math.ceil (cx + radius / CELL_W));
+      const cx = pxCol(ptr.x), cy = pxRow(ptr.y);
+      const cw = CELL_W * cellScale, ch = CELL_H * cellScale;
+      const r0 = Math.max(1,        Math.floor(cy - radius / ch));
+      const r1 = Math.min(rows - 2, Math.ceil (cy + radius / ch));
+      const c0 = Math.max(1,        Math.floor(cx - radius / cw));
+      const c1 = Math.min(cols - 2, Math.ceil (cx + radius / cw));
       const rr = radius * radius;
 
       for (let r = r0; r <= r1; r++) {
         const rp = (r-1)*cols, rc = r*cols, rn = (r+1)*cols;
         for (let c = c0; c <= c1; c++) {
-          const dx = (c+0.5-cx)*CELL_W, dy = (r+0.5-cy)*cellH;
+          const dx = (c+0.5-cx)*cw, dy = (r+0.5-cy)*ch;
           if (dx*dx+dy*dy >= rr) continue;
           const i = rc+c;
           if (interiorMask[i]) continue;
@@ -333,7 +337,7 @@
       for (let r = r0; r <= r1; r++) {
         const rc = r*cols;
         for (let c = c0; c <= c1; c++) {
-          const dx = (c+0.5-cx)*CELL_W, dy = (r+0.5-cy)*cellH;
+          const dx = (c+0.5-cx)*cw, dy = (r+0.5-cy)*ch;
           if (dx*dx+dy*dy >= rr) continue;
           const i = rc+c;
           if (interiorMask[i]) continue;
@@ -343,12 +347,24 @@
     }
 
     // ── Canvas2 overlay dissolve ──────────────────────────────────────────────
+    function overlayPixelXY(cell) {
+      // Title cells: X fixed (measured from font), Y tracks grid + cellScale
+      // Subtitle cells: both X and Y track grid + cellScale
+      const x  = cell.col !== undefined
+        ? offX + cell.col       * CELL_W * cellScale
+        : cell.x;
+      const cx = cell.col !== undefined
+        ? offX + (cell.col + 0.5) * CELL_W * cellScale
+        : cell.cx;
+      const cy = offY + cell.baseRow * CELL_H * cellScale;
+      return { x, cx, cy };
+    }
+
     function updateOverlayV() {
       const allCells = titleCells.concat(subtitleCells);
       for (const cell of allCells) {
-        const cy = cell.baseRow * CELL_H * rowSpread;
-        const dx = cell.cx - ptr.x;
-        const dy = cy - ptr.y;
+        const { cx, cy } = overlayPixelXY(cell);
+        const dx = cx - ptr.x, dy = cy - ptr.y;
         const d  = Math.sqrt(dx * dx + dy * dy);
         if (ptr.active && d < SEED_R) {
           const t = 1 - d / SEED_R;
@@ -368,15 +384,21 @@
       ctx.textBaseline = 'top';
       ctx.fillStyle    = hsl(fg);
 
-      let i = 0;
+      const cw = CELL_W * cellScale, ch = CELL_H * cellScale;
       for (let r = 0; r < rows; r++) {
-        const y = r * CELL_H * rowSpread;    // ← row Y driven by rowSpread
-        for (let c = 0; c < cols; c++, i++) {
+        const y = offY + r * ch;
+        if (y > window.innerHeight + ch) break;
+        if (y + ch < 0) continue;
+        for (let c = 0; c < cols; c++) {
+          const x = offX + c * cw;
+          if (x > window.innerWidth + cw) break;
+          if (x + cw < 0) continue;
+          const i   = r * cols + c;
           const v   = V0[i];
           const idx = Math.min(NC - 1, Math.floor(v / V_MAX * NC));
-          const ch  = (textChars[i] && v > TEXT_VISIBLE) ? textChars[i] : CHARS[idx];
-          if (ch === ' ') continue;
-          ctx.fillText(ch, c * CELL_W, y);
+          const ch_ = (textChars[i] && v > TEXT_VISIBLE) ? textChars[i] : CHARS[idx];
+          if (ch_ === ' ') continue;
+          ctx.fillText(ch_, x, y);
         }
       }
 
@@ -390,40 +412,39 @@
       }
     }
 
-    // ── Draw canvas2 (title + subtitle, per-char ASCII dissolve) ─────────────
+    // ── Draw canvas2 (title + subtitle, ASCII dissolve) ───────────────────────
     function drawOverlay(fg) {
       ctx2.clearRect(0, 0, window.innerWidth, window.innerHeight);
       ctx2.fillStyle    = hsl(fg);
       ctx2.textBaseline = 'middle';
 
-      function renderCells(cells, font) {
-        ctx2.font = font;
-        for (const cell of cells) {
-          const cy = cell.baseRow * CELL_H * rowSpread;
-          const v  = cell.v;
-          let ch;
-          if      (v > 0.85) { ch = cell.ch; ctx2.globalAlpha = 1; }
-          else if (v > 0.65) { ch = '▓';     ctx2.globalAlpha = v; }
-          else if (v > 0.45) { ch = '▒';     ctx2.globalAlpha = v; }
-          else if (v > 0.25) { ch = '░';     ctx2.globalAlpha = v; }
-          else if (v > 0.08) { ch = '·';     ctx2.globalAlpha = v; }
-          else continue;
-          ctx2.fillText(ch, cell.x, cy);
-        }
+      function renderCell(cell) {
+        const { x, cy } = overlayPixelXY(cell);
+        const v = cell.v;
+        let ch;
+        if      (v > 0.85) { ch = cell.ch; ctx2.globalAlpha = 1; }
+        else if (v > 0.65) { ch = '▓';     ctx2.globalAlpha = v; }
+        else if (v > 0.45) { ch = '▒';     ctx2.globalAlpha = v; }
+        else if (v > 0.25) { ch = '░';     ctx2.globalAlpha = v; }
+        else if (v > 0.08) { ch = '·';     ctx2.globalAlpha = v; }
+        else return;
+        ctx2.fillText(ch, x, cy);
       }
 
-      renderCells(titleCells,    FONT_LG);
-      renderCells(subtitleCells, FONT);
+      ctx2.font = FONT_LG;
+      for (const cell of titleCells)    renderCell(cell);
+      ctx2.font = FONT;
+      for (const cell of subtitleCells) renderCell(cell);
       ctx2.globalAlpha = 1;
     }
 
-    // ── Color — Anthropic-inspired palette (muted earth tones) ───────────────
+    // ── Color — Anthropic-inspired palette ────────────────────────────────────
     const PALETTES = [
-      { bg:{h:28,  s:18, l:6},  fg:{h:35,  s:38, l:72} },  // dark warm + sand cream
-      { bg:{h:22,  s:14, l:7},  fg:{h:20,  s:48, l:63} },  // near-black + muted coral
-      { bg:{h:215, s:12, l:7},  fg:{h:42,  s:40, l:68} },  // dark steel + warm amber
-      { bg:{h:160, s:10, l:7},  fg:{h:148, s:28, l:62} },  // dark sage bg + sage fg
-      { bg:{h:18,  s:12, l:8},  fg:{h:16,  s:44, l:60} },  // anthracite + terracotta
+      { bg:{h:28,  s:18, l:6},  fg:{h:35,  s:38, l:72} },
+      { bg:{h:22,  s:14, l:7},  fg:{h:20,  s:48, l:63} },
+      { bg:{h:215, s:12, l:7},  fg:{h:42,  s:40, l:68} },
+      { bg:{h:160, s:10, l:7},  fg:{h:148, s:28, l:62} },
+      { bg:{h:18,  s:12, l:8},  fg:{h:16,  s:44, l:60} },
     ];
 
     function randomPair() {
@@ -462,8 +483,9 @@
       const dt = Math.min(ts - lastTs, 100);
       lastTs = ts;
 
-      // Row spread: ±13%, ~20s period — drives row height in draw()
-      rowSpread = 1.0 + 0.13 * Math.sin(ts * 0.00032);
+      // Uniform cell-spacing oscillation — ±12%, ~22s period
+      cellScale = 1.0 + CELL_SCALE_AMP * Math.sin(ts * 0.00028);
+      updateOffsets();
 
       palT += dt / COLOR_DUR;
       if (palT >= 1) { palA = palB; palB = randomPair(); palT -= 1; }
