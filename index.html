@@ -34,57 +34,46 @@
     const CELL_W   = 10;
     const CELL_H   = 16;
     const FONT     = `13px "Geist Mono", "Courier New", monospace`;
+    const FONT_LG  = `${CELL_H * 2}px "Geist Mono", "Courier New", monospace`;  // 2× for title
 
-    // Density ramp: index 0-1 are spaces (skipped in draw), rest are visible
-    // ░▒ placed at mid-range so cursor zone renders in lighter blocks, not solid █
     const CHARS    = '  ·∙:-=+░▒▓█';
-    const NC       = CHARS.length;   // 12
-    const V_MAX    = 0.40;           // Gray-Scott V ceiling (typical)
+    const NC       = CHARS.length;
+    const V_MAX    = 0.40;
 
     const DU       = 0.2097;
     const DV       = 0.105;
-    const STEPS    = 6;              // RD iterations per rAF
-    const WARMUP   = 80;             // pre-run steps on init
-    const SEED_R   = 40;             // mouse seed radius, screen px
+    const STEPS    = 6;
+    const WARMUP   = 80;
+    const SEED_R   = 40;
 
-    // Gray-Scott parameter waypoints — all connected/labyrinthine, no isolated blobs
     const PARAM_SETS = [
-      { f: 0.029, k: 0.057 },  // mazes
-      { f: 0.037, k: 0.060 },  // fingerprints
-      { f: 0.060, k: 0.062 },  // worms
-      { f: 0.025, k: 0.060 },  // coral
-      { f: 0.039, k: 0.058 },  // dense labyrinth
+      { f: 0.029, k: 0.057 },
+      { f: 0.037, k: 0.060 },
+      { f: 0.060, k: 0.062 },
+      { f: 0.025, k: 0.060 },
+      { f: 0.039, k: 0.058 },
     ];
 
-    const COLOR_DUR  = 8700;    // ms per color palette
-    const PARAM_DUR  = 18700;   // ms per param transition
+    const COLOR_DUR  = 8700;
+    const PARAM_DUR  = 18700;
+    const BOOST_R    = 70;
+    const BOOST_STEPS = 3;
 
-    const BOOST_R     = 70;     // base radius for one boost ring, screen px
-    const BOOST_STEPS = 3;      // concentric boost rings emitting outward from cursor
-
-    // ── Text-in-RD constants ─────────────────────────────────────────────────
+    // ── Text / box constants ─────────────────────────────────────────────────
+    const TITLE_TEXT    = "YILIANG SHAO'S WORK";
     const SUBTITLE_TEXT = "The algorithm is forming itself. So is this site.";
-    const TEXT_TARGET   = 0.36;   // V level text cells maintain (maps to ▓)
-    const TEXT_RESTORE  = 0.055;  // restoration rate per frame — ~0.4s to reform
-    const TEXT_VISIBLE  = 0.10;   // min V to show letter glyph; below → RD char
 
-    // 5×7 bitmap font — rows encoded as 5-bit integers, MSB = leftmost pixel
-    const FONT5x7 = {
-      'Y': [17, 17, 10,  4,  4,  4,  4],
-      'I': [31,  4,  4,  4,  4,  4, 31],
-      'L': [16, 16, 16, 16, 16, 16, 31],
-      'A': [14, 17, 17, 31, 17, 17, 17],
-      'N': [17, 25, 21, 19, 17, 17, 17],
-      'G': [14, 16, 16, 23, 17, 17, 14],
-      'S': [14, 17, 16, 14,  1, 17, 14],
-      'H': [17, 17, 17, 31, 17, 17, 17],
-      'O': [14, 17, 17, 17, 17, 17, 14],
-      'W': [17, 17, 17, 21, 21, 27, 17],
-      'R': [30, 17, 17, 30, 20, 18, 17],
-      'K': [17, 18, 20, 24, 20, 18, 17],
-      "'": [ 6,  6,  0,  0,  0,  0,  0],
-      ' ': [ 0,  0,  0,  0,  0,  0,  0],
-    };
+    const TEXT_TARGET      = 0.36;   // V that border/subtitle cells maintain
+    const TEXT_RESTORE     = 0.030;  // restoration rate  — ~0.8s full reform
+    const TEXT_VISIBLE     = 0.10;   // V below which letter/border char hides
+    const INTERIOR_DECAY   = 0.92;   // per-frame V decay for interior cells
+    const TITLE_DISSOLVE_V = 0.06;   // avg interior V above which title starts to vanish
+
+    // Box layout dimensions (in cells / rows)
+    const BOX_PAD_X   = 3;   // inner horizontal padding
+    const BOX_PAD_Y   = 1;   // inner vertical padding (rows)
+    const TITLE_ROWS  = 2;   // rows allocated for large-font title
+    const BOX_SPACER  = 1;   // rows between title and subtitle
 
     // ── Canvas ───────────────────────────────────────────────────────────────
     const canvas = document.getElementById('c');
@@ -93,8 +82,9 @@
     const DPR    = window.devicePixelRatio || 1;
 
     let cols, rows;
-    let U0, V0, U1, V1;     // ping-pong Float32Arrays
-    let textChars, textMask; // text embedded in RD field
+    let U0, V0, U1, V1;
+    let textChars, textMask, interiorMask;
+    let boxGeo = null;   // computed in buildTextMask, used in draw
 
     // ── Grid ─────────────────────────────────────────────────────────────────
     function buildGrid() {
@@ -105,40 +95,31 @@
       V1 = new Float32Array(n);
     }
 
-    // ── Text mask — bitmap title + terminal box + subtitle, all in the RD grid ─
+    // ── Text mask ────────────────────────────────────────────────────────────
+    //  textMask   → border + subtitle cells: V maintained at TEXT_TARGET
+    //  interiorMask → remaining cells inside box: V decayed to 0 (clean bg)
+    //  boxGeo     → geometry needed by draw() for the large-font title
     function buildTextMask() {
       const n = cols * rows;
-      textChars = new Array(n).fill(null);
-      textMask  = new Uint8Array(n);
+      textChars    = new Array(n).fill(null);
+      textMask     = new Uint8Array(n);
+      interiorMask = new Uint8Array(n);
 
-      const CHAR_W   = 5;   // bitmap font width
-      const CHAR_H   = 7;   // bitmap font height
-      const CHAR_GAP = 1;   // cells between letters
-      const PIXEL    = '█'; // char used for on-pixels
+      // Box outer dimensions
+      const boxInnerW = Math.max(SUBTITLE_TEXT.length, 40) + BOX_PAD_X * 2;
+      const boxOuterW = boxInnerW + 2;
+      // boxHeight: top + padY + titleRows + spacer + 1(sub) + padY + bottom
+      const boxHeight = 1 + BOX_PAD_Y + TITLE_ROWS + BOX_SPACER + 1 + BOX_PAD_Y + 1;
 
-      const title = "YILIANG SHAO'S WORK";
+      const boxLeft   = Math.floor((cols - boxOuterW) / 2);
+      const boxRight  = boxLeft + boxOuterW - 1;
+      const boxTop    = Math.floor((rows - boxHeight) / 2);
+      const boxBottom = boxTop + boxHeight - 1;
 
-      // Total cell-width of the bitmap title
-      const titleCellW = title.length * (CHAR_W + CHAR_GAP) - CHAR_GAP;
+      const titleRowStart = boxTop + 1 + BOX_PAD_Y;
+      const subRow        = titleRowStart + TITLE_ROWS + BOX_SPACER;
 
-      const BOX_PAD_X = 3;   // inner horizontal padding (cells)
-      const BOX_PAD_Y = 1;   // inner vertical padding (rows)
-      const SPACER    = 1;   // rows between bitmap and subtitle
-
-      const boxInnerW  = Math.max(titleCellW, SUBTITLE_TEXT.length) + BOX_PAD_X * 2;
-      const boxOuterW  = boxInnerW + 2;   // add ║ on each side
-      // box row layout:  ╔═╗ / pad / [7 bitmap rows] / spacer / subtitle / pad / ╚═╝
-      const boxHeight  = 1 + BOX_PAD_Y + CHAR_H + SPACER + 1 + BOX_PAD_Y + 1;
-
-      const boxLeft    = Math.floor((cols - boxOuterW) / 2);
-      const boxRight   = boxLeft + boxOuterW - 1;
-      const boxTop     = Math.floor((rows - boxHeight) / 2);
-      const boxBottom  = boxTop + boxHeight - 1;
-
-      const bitmapRow  = boxTop + 1 + BOX_PAD_Y;          // first row of bitmap title
-      const subRow     = bitmapRow + CHAR_H + SPACER;      // subtitle row
-
-      // Helper: write one char into the mask (clips silently at grid edges)
+      // Write one cell into textMask
       function put(row, col, ch) {
         if (row < 0 || row >= rows || col < 0 || col >= cols) return;
         const i      = row * cols + col;
@@ -146,7 +127,7 @@
         textMask[i]  = 1;
       }
 
-      // ── Box border ──────────────────────────────────────────────────────
+      // ── Box border ─────────────────────────────────────────────────────
       put(boxTop,    boxLeft,  '╔');
       put(boxTop,    boxRight, '╗');
       put(boxBottom, boxLeft,  '╚');
@@ -160,28 +141,31 @@
         put(r, boxRight, '║');
       }
 
-      // ── Bitmap title (centered) ──────────────────────────────────────────
-      const bitmapLeft = Math.floor((cols - titleCellW) / 2);
-      let curCol = bitmapLeft;
-
-      for (const ch of title) {
-        const bitmap = FONT5x7[ch] || FONT5x7[' '];
-        for (let row = 0; row < CHAR_H; row++) {
-          const bits = bitmap[row];
-          for (let bit = 0; bit < CHAR_W; bit++) {
-            if (bits & (1 << (CHAR_W - 1 - bit))) {
-              put(bitmapRow + row, curCol + bit, PIXEL);
-            }
-          }
-        }
-        curCol += CHAR_W + CHAR_GAP;
-      }
-
-      // ── Subtitle (centered) ──────────────────────────────────────────────
+      // ── Subtitle ───────────────────────────────────────────────────────
       const subLeft = Math.floor((cols - SUBTITLE_TEXT.length) / 2);
       for (let c = 0; c < SUBTITLE_TEXT.length; c++) {
         put(subRow, subLeft + c, SUBTITLE_TEXT[c]);
       }
+
+      // ── Interior mask — all non-text cells inside the box border ───────
+      for (let r = boxTop + 1; r < boxBottom; r++) {
+        for (let c = boxLeft + 1; c < boxRight; c++) {
+          const i = r * cols + c;
+          if (!textMask[i]) interiorMask[i] = 1;
+        }
+      }
+
+      // ── Store geometry for draw() ──────────────────────────────────────
+      const boxCenterX = (boxLeft + boxRight + 1) / 2;   // cells
+      const titleCenterY = (titleRowStart + TITLE_ROWS / 2) * CELL_H;
+      boxGeo = {
+        titleDrawX:   boxCenterX * CELL_W,
+        titleDrawY:   titleCenterY,
+        titleR0:      titleRowStart,
+        titleR1:      titleRowStart + TITLE_ROWS - 1,
+        boxLeft,
+        boxRight,
+      };
     }
 
     // ── Resize ───────────────────────────────────────────────────────────────
@@ -200,11 +184,17 @@
 
     window.addEventListener('resize', () => { resize(); initRD(curF, curK); });
 
-    // ── Text V restoration (called each frame and during warmup) ─────────────
+    // ── Text + interior restoration (called every frame after stepRD) ────────
     function restoreText() {
       for (let i = 0; i < textMask.length; i++) {
         if (textMask[i]) {
+          // Border / subtitle: restore V and U toward equilibrium
           V0[i] += TEXT_RESTORE * (TEXT_TARGET - V0[i]);
+          U0[i] += TEXT_RESTORE * ((1 - TEXT_TARGET) - U0[i]);
+        } else if (interiorMask[i]) {
+          // Interior: decay V toward 0, keep U=1 (suppresses RD growth)
+          V0[i] *= INTERIOR_DECAY;
+          U0[i]  = 1;
         }
       }
     }
@@ -213,11 +203,11 @@
     function initRD(f, k) {
       U0.fill(1);
       V0.fill(0);
-      // Pre-seed text cells so they're visible from frame 1
+      // Pre-seed text cells to target so they're visible from frame 1
       for (let i = 0; i < textMask.length; i++) {
         if (textMask[i]) { V0[i] = TEXT_TARGET; U0[i] = 1 - TEXT_TARGET; }
       }
-      // Scatter random seed patches (~0.3% of cells as 3×3 centers)
+      // Scatter random RD seeds outside the box
       const count = Math.max(20, Math.floor(cols * rows * 0.003));
       for (let p = 0; p < count; p++) {
         const r = 1 + Math.floor(Math.random() * (rows - 2));
@@ -225,15 +215,14 @@
         for (let dr = -1; dr <= 1; dr++) {
           for (let dc = -1; dc <= 1; dc++) {
             const i = (r + dr) * cols + (c + dc);
-            V0[i] = 1; U0[i] = 0;
+            if (!textMask[i] && !interiorMask[i]) { V0[i] = 1; U0[i] = 0; }
           }
         }
       }
-      // Pre-warm, restoring text cells after every step
       for (let s = 0; s < WARMUP; s++) { stepRD(f, k); restoreText(); }
     }
 
-    // ── RD step (Gray-Scott, 9-point Laplacian, ping-pong) ───────────────────
+    // ── RD step ──────────────────────────────────────────────────────────────
     function stepRD(f, k) {
       for (let r = 0; r < rows; r++) {
         const rp = (r === 0        ? rows - 1 : r - 1) * cols;
@@ -244,16 +233,12 @@
           const cp = c === 0        ? cols - 1 : c - 1;
           const cn = c === cols - 1 ? 0        : c + 1;
           const i  = rc + c;
-          const u  = U0[i];
-          const v  = V0[i];
+          const u  = U0[i], v = V0[i];
 
-          // 9-point Laplacian (corners 0.05, edges 0.20, center -1)
           const Lu = 0.05 * (U0[rp+cp] + U0[rp+cn] + U0[rn+cp] + U0[rn+cn])
-                   + 0.20 * (U0[rp+c ] + U0[rc+cp] + U0[rc+cn] + U0[rn+c ])
-                   - u;
+                   + 0.20 * (U0[rp+c ] + U0[rc+cp] + U0[rc+cn] + U0[rn+c ]) - u;
           const Lv = 0.05 * (V0[rp+cp] + V0[rp+cn] + V0[rn+cp] + V0[rn+cn])
-                   + 0.20 * (V0[rp+c ] + V0[rc+cp] + V0[rc+cn] + V0[rn+c ])
-                   - v;
+                   + 0.20 * (V0[rp+c ] + V0[rc+cp] + V0[rc+cn] + V0[rn+c ]) - v;
 
           const uvv = u * v * v;
           const nu  = u + DU * Lu - uvv + f * (1 - u);
@@ -285,11 +270,19 @@
           const dx = (c + 0.5 - cx) * CELL_W;
           const dy = (r + 0.5 - cy) * CELL_H;
           const d2 = dx * dx + dy * dy;
-          if (d2 < rr) {
-            const t      = 1 - Math.sqrt(d2) / SEED_R;
-            const smooth = t * t * (3 - 2 * t);
-            const i      = r * cols + c;
-            // Cap V at 0.25 → maps to ░ in the char ramp, never reaches solid █
+          if (d2 >= rr) continue;
+          const t      = 1 - Math.sqrt(d2) / SEED_R;
+          const smooth = t * t * (3 - 2 * t);
+          const i      = r * cols + c;
+
+          if (textMask[i]) {
+            // Border / subtitle: suppress V toward 0 → chars dissolve
+            V0[i] *= (1 - 0.40 * smooth);
+          } else if (interiorMask[i]) {
+            // Interior: inject V → title alpha decreases → title fades
+            V0[i] = Math.min(0.25, V0[i] + 0.18 * smooth);
+          } else {
+            // Regular RD field: cap-inject as before
             V0[i] = Math.min(0.25, V0[i] + 0.12 * smooth);
             U0[i] = Math.max(0.75, U0[i] - 0.09 * smooth);
           }
@@ -297,8 +290,7 @@
       }
     }
 
-    // ── Local RD boost — concentric rings radiating outward from cursor ───────
-    //    Ring s covers radius BOOST_R*(s+1); inner cells accumulate all passes.
+    // ── Local RD boost ───────────────────────────────────────────────────────
     function localBoostStep(f, k, radius) {
       if (!ptr.active) return;
       const cx = ptr.x / CELL_W;
@@ -310,32 +302,30 @@
       const rr = radius * radius;
 
       for (let r = r0; r <= r1; r++) {
-        const rp = (r - 1) * cols, rc = r * cols, rn = (r + 1) * cols;
+        const rp = (r-1)*cols, rc = r*cols, rn = (r+1)*cols;
         for (let c = c0; c <= c1; c++) {
           const dx = (c + 0.5 - cx) * CELL_W;
           const dy = (r + 0.5 - cy) * CELL_H;
-          if (dx * dx + dy * dy >= rr) continue;
+          if (dx*dx + dy*dy >= rr) continue;
           const i   = rc + c;
           const u   = U0[i], v = V0[i];
-          const Lu  = 0.05 * (U0[rp+c-1] + U0[rp+c+1] + U0[rn+c-1] + U0[rn+c+1])
-                    + 0.20 * (U0[rp+c  ] + U0[rc+c-1] + U0[rc+c+1] + U0[rn+c  ]) - u;
-          const Lv  = 0.05 * (V0[rp+c-1] + V0[rp+c+1] + V0[rn+c-1] + V0[rn+c+1])
-                    + 0.20 * (V0[rp+c  ] + V0[rc+c-1] + V0[rc+c+1] + V0[rn+c  ]) - v;
-          const uvv = u * v * v;
-          const nu  = u + DU * Lu - uvv + f * (1 - u);
-          const nv  = v + DV * Lv + uvv - (f + k) * v;
-          U1[i] = nu < 0 ? 0 : nu > 1 ? 1 : nu;
-          V1[i] = nv < 0 ? 0 : nv > 1 ? 1 : nv;
+          const Lu  = 0.05*(U0[rp+c-1]+U0[rp+c+1]+U0[rn+c-1]+U0[rn+c+1])
+                    + 0.20*(U0[rp+c  ]+U0[rc+c-1]+U0[rc+c+1]+U0[rn+c  ]) - u;
+          const Lv  = 0.05*(V0[rp+c-1]+V0[rp+c+1]+V0[rn+c-1]+V0[rn+c+1])
+                    + 0.20*(V0[rp+c  ]+V0[rc+c-1]+V0[rc+c+1]+V0[rn+c  ]) - v;
+          const uvv = u*v*v;
+          const nu  = u + DU*Lu - uvv + f*(1-u);
+          const nv  = v + DV*Lv + uvv - (f+k)*v;
+          U1[i] = nu<0?0:nu>1?1:nu;
+          V1[i] = nv<0?0:nv>1?1:nv;
         }
       }
       for (let r = r0; r <= r1; r++) {
-        const rc = r * cols;
+        const rc = r*cols;
         for (let c = c0; c <= c1; c++) {
-          const dx = (c + 0.5 - cx) * CELL_W;
-          const dy = (r + 0.5 - cy) * CELL_H;
-          if (dx * dx + dy * dy >= rr) continue;
-          const i = rc + c;
-          U0[i] = U1[i]; V0[i] = V1[i];
+          const dx = (c+0.5-cx)*CELL_W, dy = (r+0.5-cy)*CELL_H;
+          if (dx*dx+dy*dy >= rr) continue;
+          const i = rc+c; U0[i]=U1[i]; V0[i]=V1[i];
         }
       }
     }
@@ -355,11 +345,33 @@
         for (let c = 0; c < cols; c++, i++) {
           const v   = V0[i];
           const idx = Math.min(NC - 1, Math.floor(v / V_MAX * NC));
-          // Text cells: show the letter glyph when V is above threshold
           const ch  = (textChars[i] && v > TEXT_VISIBLE) ? textChars[i] : CHARS[idx];
           if (ch === ' ') continue;
           ctx.fillText(ch, c * CELL_W, y);
         }
+      }
+
+      // ── Large title with dissolve alpha ──────────────────────────────────
+      if (boxGeo) {
+        // Compute average V across title-row interior cells
+        let vSum = 0, vCnt = 0;
+        for (let r = boxGeo.titleR0; r <= boxGeo.titleR1; r++) {
+          for (let c = boxGeo.boxLeft + 1; c < boxGeo.boxRight; c++) {
+            const i = r * cols + c;
+            if (interiorMask[i]) { vSum += V0[i]; vCnt++; }
+          }
+        }
+        const avgV       = vCnt > 0 ? vSum / vCnt : 0;
+        const titleAlpha = Math.max(0, 1 - avgV / TITLE_DISSOLVE_V);
+
+        ctx.save();
+        ctx.font         = FONT_LG;
+        ctx.textAlign    = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle    = hsl(fg);
+        ctx.globalAlpha  = titleAlpha;
+        ctx.fillText(TITLE_TEXT, boxGeo.titleDrawX, boxGeo.titleDrawY);
+        ctx.restore();
       }
 
       // Cursor ring
@@ -418,11 +430,9 @@
       const dt = Math.min(ts - lastTs, 100);
       lastTs = ts;
 
-      // Color morph
       palT += dt / COLOR_DUR;
       if (palT >= 1) { palA = palB; palB = randomPair(); palT -= 1; }
 
-      // Param morph
       parT += dt / PARAM_DUR;
       if (parT >= 1) { piA = piB; piB = randParamIdx(piA); parT -= 1; }
       curF = PARAM_SETS[piA].f + (PARAM_SETS[piB].f - PARAM_SETS[piA].f) * parT;
@@ -436,15 +446,13 @@
       seedMouse();
       for (let s = 0; s < BOOST_STEPS; s++) localBoostStep(curF, curK, BOOST_R * (s + 1));
       for (let s = 0; s < STEPS; s++) stepRD(curF, curK);
-      restoreText();   // pull text cell V back toward target after RD step
+      restoreText();
       draw(bg, fg);
 
       requestAnimationFrame(loop);
     }
 
     // ── Events ───────────────────────────────────────────────────────────────
-
-    // Block ctrl+scroll zoom-out — heavy grid at extreme zoom-out
     document.addEventListener('wheel', e => {
       if (!e.ctrlKey) return;
       if (e.deltaY > 0) e.preventDefault();
