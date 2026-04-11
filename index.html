@@ -27,26 +27,176 @@
   <div id="label">archive in progress</div>
 
   <script>
-    // ─────────────────────────────────────────────
-    //  Constants
-    // ─────────────────────────────────────────────
-    const CELL_W        = 10;
-    const CELL_H        = 16;
-    const FONT          = `13px "Courier New", monospace`;
+    // ── Constants ────────────────────────────────────────────────────────────
+    const CELL_W   = 10;
+    const CELL_H   = 16;
+    const FONT     = `13px "Courier New", monospace`;
 
-    const DUST_CHARS    = '▓▒░▓▒▓░#@%&$█▓▒░▓▒#@';
-    const FLOOR_CHARS   = '·∙:.·∙ .· ∙.  ·∙:';
+    // Density ramp: index 0-1 are spaces (skipped in draw), rest are visible
+    const CHARS    = '  ·∙:-=+*#▓█';
+    const NC       = CHARS.length;   // 12
+    const V_MAX    = 0.40;           // Gray-Scott V ceiling (typical)
 
-    const MOP_RADIUS    = 88;       // px
-    const MOP_RATE      = 0.20;     // dust cleared per frame at cursor center (60fps baseline)
-    const RECOVER_RATE  = 0.0020;   // dust regrowth per frame (60fps baseline) — full in ~8s
-    const SHIMMER_PROB  = 0.0022;   // fraction of cells that flicker per frame
+    const DU       = 0.2097;
+    const DV       = 0.105;
+    const STEPS    = 6;              // RD iterations per rAF
+    const WARMUP   = 80;             // pre-run steps on init
 
-    const COLOR_CYCLE   = 13000;    // ms between palette transitions
+    const SEED_R   = 55;             // mouse seed radius, screen px
 
-    // ─────────────────────────────────────────────
-    //  Color utilities
-    // ─────────────────────────────────────────────
+    // Gray-Scott parameter waypoints — each produces a distinct topology
+    const PARAM_SETS = [
+      { f: 0.035, k: 0.065 },  // pearls
+      { f: 0.060, k: 0.062 },  // worms
+      { f: 0.029, k: 0.057 },  // mazes
+      { f: 0.025, k: 0.060 },  // coral
+      { f: 0.039, k: 0.058 },  // mitosis
+    ];
+
+    const COLOR_DUR  = 13000;   // ms per color palette
+    const PARAM_DUR  = 28000;   // ms per param transition
+
+    // ── Canvas ───────────────────────────────────────────────────────────────
+    const canvas = document.getElementById('c');
+    const ctx    = canvas.getContext('2d');
+    const label  = document.getElementById('label');
+    const DPR    = window.devicePixelRatio || 1;
+
+    let cols, rows;
+    let U0, V0, U1, V1;   // ping-pong Float32Arrays
+
+    function resize() {
+      const w = window.innerWidth, h = window.innerHeight;
+      canvas.width        = w * DPR;
+      canvas.height       = h * DPR;
+      canvas.style.width  = w + 'px';
+      canvas.style.height = h + 'px';
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      cols = Math.ceil(w / CELL_W) + 1;
+      rows = Math.ceil(h / CELL_H) + 1;
+      const n = cols * rows;
+      U0 = new Float32Array(n);
+      V0 = new Float32Array(n);
+      U1 = new Float32Array(n);
+      V1 = new Float32Array(n);
+    }
+
+    window.addEventListener('resize', () => { resize(); initRD(curF, curK); });
+
+    // ── RD init ──────────────────────────────────────────────────────────────
+    function initRD(f, k) {
+      U0.fill(1);
+      V0.fill(0);
+      // Scatter seed patches (~0.3% of cells as 3×3 centers)
+      const count = Math.max(20, Math.floor(cols * rows * 0.003));
+      for (let p = 0; p < count; p++) {
+        const r = 1 + Math.floor(Math.random() * (rows - 2));
+        const c = 1 + Math.floor(Math.random() * (cols - 2));
+        for (let dr = -1; dr <= 1; dr++) {
+          for (let dc = -1; dc <= 1; dc++) {
+            const i = (r + dr) * cols + (c + dc);
+            V0[i] = 1;
+            U0[i] = 0;
+          }
+        }
+      }
+      for (let s = 0; s < WARMUP; s++) stepRD(f, k);
+    }
+
+    // ── RD step (Gray-Scott, 9-point Laplacian, ping-pong) ───────────────────
+    function stepRD(f, k) {
+      for (let r = 0; r < rows; r++) {
+        const rp = (r === 0        ? rows - 1 : r - 1) * cols;
+        const rc =  r * cols;
+        const rn = (r === rows - 1 ? 0        : r + 1) * cols;
+
+        for (let c = 0; c < cols; c++) {
+          const cp = c === 0        ? cols - 1 : c - 1;
+          const cn = c === cols - 1 ? 0        : c + 1;
+          const i  = rc + c;
+          const u  = U0[i];
+          const v  = V0[i];
+
+          // 9-point Laplacian (corners 0.05, edges 0.20, center -1)
+          const Lu = 0.05 * (U0[rp+cp] + U0[rp+cn] + U0[rn+cp] + U0[rn+cn])
+                   + 0.20 * (U0[rp+c ] + U0[rc+cp] + U0[rc+cn] + U0[rn+c ])
+                   - u;
+          const Lv = 0.05 * (V0[rp+cp] + V0[rp+cn] + V0[rn+cp] + V0[rn+cn])
+                   + 0.20 * (V0[rp+c ] + V0[rc+cp] + V0[rc+cn] + V0[rn+c ])
+                   - v;
+
+          const uvv = u * v * v;
+          const nu  = u + DU * Lu - uvv + f * (1 - u);
+          const nv  = v + DV * Lv + uvv - (f + k) * v;
+
+          U1[i] = nu < 0 ? 0 : nu > 1 ? 1 : nu;
+          V1[i] = nv < 0 ? 0 : nv > 1 ? 1 : nv;
+        }
+      }
+      // Swap buffers
+      let t = U0; U0 = U1; U1 = t;
+          t = V0; V0 = V1; V1 = t;
+    }
+
+    // ── Mouse seed ───────────────────────────────────────────────────────────
+    const ptr = { x: -9999, y: -9999, active: false };
+
+    function seedMouse() {
+      if (!ptr.active) return;
+      const cx = ptr.x / CELL_W;
+      const cy = ptr.y / CELL_H;
+      const r0 = Math.max(0,        Math.floor(cy - SEED_R / CELL_H));
+      const r1 = Math.min(rows - 1, Math.ceil (cy + SEED_R / CELL_H));
+      const c0 = Math.max(0,        Math.floor(cx - SEED_R / CELL_W));
+      const c1 = Math.min(cols - 1, Math.ceil (cx + SEED_R / CELL_W));
+      const rr = SEED_R * SEED_R;
+
+      for (let r = r0; r <= r1; r++) {
+        for (let c = c0; c <= c1; c++) {
+          const dx = (c + 0.5 - cx) * CELL_W;
+          const dy = (r + 0.5 - cy) * CELL_H;
+          if (dx * dx + dy * dy < rr) {
+            V0[r * cols + c] = 1;
+            U0[r * cols + c] = 0;
+          }
+        }
+      }
+    }
+
+    // ── Draw ─────────────────────────────────────────────────────────────────
+    function draw(bg, fg) {
+      ctx.fillStyle = hsl(bg);
+      ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+
+      ctx.font         = FONT;
+      ctx.textBaseline = 'top';
+      ctx.fillStyle    = hsl(fg);
+
+      let i = 0;
+      for (let r = 0; r < rows; r++) {
+        const y = r * CELL_H;
+        for (let c = 0; c < cols; c++, i++) {
+          const idx = Math.min(NC - 1, Math.floor(V0[i] / V_MAX * NC));
+          if (idx < 2) continue;   // skip space chars — bg shows through
+          ctx.fillText(CHARS[idx], c * CELL_W, y);
+        }
+      }
+
+      // Cursor ring
+      if (ptr.active) {
+        ctx.beginPath();
+        ctx.arc(ptr.x, ptr.y, SEED_R, 0, Math.PI * 2);
+        ctx.strokeStyle = hsla(fg, 0.22);
+        ctx.lineWidth   = 1;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(ptr.x, ptr.y, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = hsla(fg, 0.5);
+        ctx.fill();
+      }
+    }
+
+    // ── Color utilities ──────────────────────────────────────────────────────
     function randomPair() {
       const bgH = Math.random() * 360;
       const fgH = (bgH + 140 + Math.random() * 80) % 360;
@@ -60,225 +210,77 @@
       let dh = b.h - a.h;
       if (dh >  180) dh -= 360;
       if (dh < -180) dh += 360;
-      return {
-        h: (a.h + dh * t + 360) % 360,
-        s:  a.s + (b.s - a.s) * t,
-        l:  a.l + (b.l - a.l) * t,
-      };
+      return { h: (a.h + dh * t + 360) % 360, s: a.s + (b.s - a.s) * t, l: a.l + (b.l - a.l) * t };
     }
 
-    function hsl(c)          { return `hsl(${c.h.toFixed(1)},${c.s.toFixed(1)}%,${c.l.toFixed(1)}%)`; }
-    function hsla(c, alpha)  { return `hsla(${c.h.toFixed(1)},${c.s.toFixed(1)}%,${c.l.toFixed(1)}%,${alpha})`; }
+    const hsl  = c => `hsl(${c.h.toFixed(1)},${c.s.toFixed(1)}%,${c.l.toFixed(1)}%)`;
+    const hsla = (c, a) => `hsla(${c.h.toFixed(1)},${c.s.toFixed(1)}%,${c.l.toFixed(1)}%,${a})`;
 
-    function dimFg(fg) {
-      return { h: fg.h, s: fg.s * 0.45, l: fg.l * 0.32 };
+    // ── Palette & param state ────────────────────────────────────────────────
+    let palA = randomPair(), palB = randomPair(), palT = 0;
+
+    function randParamIdx(exclude) {
+      let i;
+      do { i = Math.floor(Math.random() * PARAM_SETS.length); } while (i === exclude);
+      return i;
     }
 
-    // ─────────────────────────────────────────────
-    //  Grid
-    // ─────────────────────────────────────────────
-    let cols, rows, cells;
+    let piA  = randParamIdx(-1);
+    let piB  = randParamIdx(piA);
+    let parT = 0;
+    let curF = PARAM_SETS[piA].f;
+    let curK = PARAM_SETS[piA].k;
 
-    function randFrom(str) { return str[Math.floor(Math.random() * str.length)]; }
-
-    function buildGrid() {
-      cols  = Math.ceil(canvas.width  / CELL_W) + 1;
-      rows  = Math.ceil(canvas.height / CELL_H) + 1;
-      cells = new Float32Array(cols * rows);   // dust value per cell, 0–1
-      cells.fill(1);
-    }
-
-    // Pre-bake character arrays (avoids per-frame allocation)
-    let dustChars, floorChars;
-
-    function buildCharArrays() {
-      const count = cols * rows;
-      dustChars  = new Array(count).fill(null).map(() => randFrom(DUST_CHARS));
-      floorChars = new Array(count).fill(null).map(() => randFrom(FLOOR_CHARS));
-    }
-
-    // ─────────────────────────────────────────────
-    //  Canvas / resize
-    // ─────────────────────────────────────────────
-    const canvas = document.getElementById('c');
-    const ctx    = canvas.getContext('2d');
-    const label  = document.getElementById('label');
-
-    const DPR = window.devicePixelRatio || 1;
-
-    function resize() {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      canvas.width  = w * DPR;
-      canvas.height = h * DPR;
-      canvas.style.width  = w + 'px';
-      canvas.style.height = h + 'px';
-      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-      buildGrid();
-      buildCharArrays();
-    }
-
-    window.addEventListener('resize', resize);
-
-    // ─────────────────────────────────────────────
-    //  Pointer (unified mouse + tilt)
-    // ─────────────────────────────────────────────
-    const ptr = { x: -9999, y: -9999, active: false };
-    let isTouchDevice = false;
-
-    window.addEventListener('mousemove', e => {
-      if (isTouchDevice) return;
-      ptr.x = e.clientX;
-      ptr.y = e.clientY;
-      ptr.active = true;
-    });
-
-    window.addEventListener('mouseleave', () => {
-      ptr.active = false;
-    });
-
-    window.addEventListener('touchstart', () => {
-      isTouchDevice = true;
-    }, { once: true });
-
-    window.addEventListener('deviceorientation', e => {
-      if (!isTouchDevice) return;
-      const gx = Math.max(-45, Math.min(45, e.gamma || 0));
-      const by = Math.max(-45, Math.min(45, (e.beta  || 0) - 30));  // offset for natural hold angle
-      ptr.x      = ((gx + 45) / 90) * canvas.width;
-      ptr.y      = ((by + 45) / 90) * canvas.height;
-      ptr.active = true;
-    });
-
-    // ─────────────────────────────────────────────
-    //  Update — mop, recovery, shimmer
-    // ─────────────────────────────────────────────
-    function update(scale) {
-      const mopRate     = MOP_RATE     * scale;
-      const recoverRate = RECOVER_RATE * scale;
-
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          const i  = r * cols + c;
-          const cx = c * CELL_W + CELL_W * 0.5;
-          const cy = r * CELL_H + CELL_H * 0.5;
-          const dx = cx - ptr.x;
-          const dy = cy - ptr.y;
-          const d2 = dx * dx + dy * dy;
-
-          if (ptr.active && d2 < MOP_RADIUS * MOP_RADIUS) {
-            const t      = 1 - Math.sqrt(d2) / MOP_RADIUS;
-            const smooth = t * t * (3 - 2 * t);           // smoothstep
-            cells[i] = Math.max(0, cells[i] - mopRate * smooth);
-          } else {
-            cells[i] = Math.min(1, cells[i] + recoverRate);
-          }
-        }
-      }
-
-      // Shimmer: randomly re-roll dust char on fully-covered cells
-      const flipCount = Math.ceil(cols * rows * SHIMMER_PROB * scale);
-      for (let k = 0; k < flipCount; k++) {
-        const i = Math.floor(Math.random() * cells.length);
-        if (cells[i] > 0.85) dustChars[i] = randFrom(DUST_CHARS);
-      }
-    }
-
-    // ─────────────────────────────────────────────
-    //  Draw
-    // ─────────────────────────────────────────────
-    function draw(bg, fg) {
-      // Background
-      ctx.fillStyle = hsl(bg);
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      ctx.font         = FONT;
-      ctx.textBaseline = 'top';
-
-      const fgColor    = hsl(fg);
-      const floorColor = hsl(dimFg(fg));
-
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-          const i    = r * cols + c;
-          const dust = cells[i];
-          const x    = c * CELL_W;
-          const y    = r * CELL_H;
-
-          // Floor layer — visible where dust is cleared
-          if (dust < 0.96) {
-            ctx.globalAlpha = (1 - dust) * 0.65;
-            ctx.fillStyle   = floorColor;
-            ctx.fillText(floorChars[i], x, y);
-          }
-
-          // Dust layer
-          if (dust > 0.04) {
-            ctx.globalAlpha = dust;
-            ctx.fillStyle   = fgColor;
-            ctx.fillText(dustChars[i], x, y);
-          }
-        }
-      }
-
-      ctx.globalAlpha = 1;
-
-      // Cursor ring
-      if (ptr.active) {
-        ctx.beginPath();
-        ctx.arc(ptr.x, ptr.y, MOP_RADIUS, 0, Math.PI * 2);
-        ctx.strokeStyle = hsla(fg, 0.25);
-        ctx.lineWidth   = 1;
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.arc(ptr.x, ptr.y, 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = hsla(fg, 0.5);
-        ctx.fill();
-      }
-    }
-
-    // ─────────────────────────────────────────────
-    //  Palette state
-    // ─────────────────────────────────────────────
-    let palA = randomPair();
-    let palB = randomPair();
-    let palT = 0;
-
-    // ─────────────────────────────────────────────
-    //  Main loop
-    // ─────────────────────────────────────────────
-    const TARGET_DT = 1000 / 60;
+    // ── Main loop ────────────────────────────────────────────────────────────
     let lastTs = 0;
 
     function loop(ts) {
-      const dt    = Math.min(ts - lastTs, 100);   // cap at 100ms to survive tab backgrounding
-      const scale = dt / TARGET_DT;               // normalize to 60fps
+      const dt = Math.min(ts - lastTs, 100);   // cap to survive backgrounded tabs
       lastTs = ts;
 
-      // Advance palette
-      palT += dt / COLOR_CYCLE;
-      if (palT >= 1) {
-        palA = palB;
-        palB = randomPair();
-        palT -= 1;
-      }
+      // Color morph
+      palT += dt / COLOR_DUR;
+      if (palT >= 1) { palA = palB; palB = randomPair(); palT -= 1; }
+
+      // Param morph
+      parT += dt / PARAM_DUR;
+      if (parT >= 1) { piA = piB; piB = randParamIdx(piA); parT -= 1; }
+      curF = PARAM_SETS[piA].f + (PARAM_SETS[piB].f - PARAM_SETS[piA].f) * parT;
+      curK = PARAM_SETS[piA].k + (PARAM_SETS[piB].k - PARAM_SETS[piA].k) * parT;
 
       const bg = lerpHSL(palA.bg, palB.bg, palT);
       const fg = lerpHSL(palA.fg, palB.fg, palT);
 
       label.style.color = hsl(fg);
 
-      update(scale);
+      seedMouse();
+      for (let s = 0; s < STEPS; s++) stepRD(curF, curK);
       draw(bg, fg);
 
       requestAnimationFrame(loop);
     }
 
-    // ─────────────────────────────────────────────
-    //  Init
-    // ─────────────────────────────────────────────
+    // ── Events ───────────────────────────────────────────────────────────────
+    let isTouchDevice = false;
+
+    window.addEventListener('mousemove', e => {
+      if (isTouchDevice) return;
+      ptr.x = e.clientX; ptr.y = e.clientY; ptr.active = true;
+    });
+    window.addEventListener('mouseleave', () => { ptr.active = false; });
+    window.addEventListener('touchstart',  () => { isTouchDevice = true; }, { once: true });
+    window.addEventListener('deviceorientation', e => {
+      if (!isTouchDevice) return;
+      const gx = Math.max(-45, Math.min(45,  e.gamma || 0));
+      const by = Math.max(-45, Math.min(45, (e.beta  || 0) - 30));
+      ptr.x = ((gx + 45) / 90) * window.innerWidth;
+      ptr.y = ((by + 45) / 90) * window.innerHeight;
+      ptr.active = true;
+    });
+
+    // ── Init ────────────────────────────────────────────────────────────────
     resize();
+    initRD(curF, curK);
     requestAnimationFrame(loop);
   </script>
 </body>
