@@ -53,8 +53,11 @@
       { f: 0.039, k: 0.058 },  // dense labyrinth
     ];
 
-    const COLOR_DUR  = 13000;   // ms per color palette
-    const PARAM_DUR  = 28000;   // ms per param transition
+    const COLOR_DUR  = 8700;    // ms per color palette
+    const PARAM_DUR  = 18700;   // ms per param transition
+
+    const BOOST_R     = 75;     // local speed-boost radius, screen px
+    const BOOST_STEPS = 3;      // extra RD steps in boost region per frame
 
     // ── Canvas ───────────────────────────────────────────────────────────────
     const canvas = document.getElementById('c');
@@ -158,12 +161,60 @@
           const d2 = dx * dx + dy * dy;
           if (d2 < rr) {
             const t      = 1 - Math.sqrt(d2) / SEED_R;
-            const smooth = t * t * (3 - 2 * t);       // smoothstep falloff
+            const smooth = t * t * (3 - 2 * t);              // smoothstep falloff
             const i      = r * cols + c;
-            // Nudge toward activation — gradient, not hard fill
-            V0[i] = Math.min(1, V0[i] + 0.28 * smooth);
-            U0[i] = Math.max(0, U0[i] - 0.20 * smooth);
+            // Stir with signed noise — disrupts local equilibrium, never fills solid
+            V0[i] = Math.min(1, Math.max(0, V0[i] + (Math.random() * 2 - 1) * 0.45 * smooth));
           }
+        }
+      }
+    }
+
+    // ── Local RD boost near cursor (extra steps in cursor region) ────────────
+    function localBoostStep(f, k) {
+      if (!ptr.active) return;
+      const cx = ptr.x / CELL_W;
+      const cy = ptr.y / CELL_H;
+      // Keep 1-cell margin from edges so Laplacian never needs wrap-around here
+      const r0 = Math.max(1,        Math.floor(cy - BOOST_R / CELL_H));
+      const r1 = Math.min(rows - 2, Math.ceil (cy + BOOST_R / CELL_H));
+      const c0 = Math.max(1,        Math.floor(cx - BOOST_R / CELL_W));
+      const c1 = Math.min(cols - 2, Math.ceil (cx + BOOST_R / CELL_W));
+      const rr = BOOST_R * BOOST_R;
+
+      // Compute one RD step for cells in radius → write to U1/V1
+      for (let r = r0; r <= r1; r++) {
+        const rp = (r - 1) * cols;
+        const rc =  r       * cols;
+        const rn = (r + 1) * cols;
+        for (let c = c0; c <= c1; c++) {
+          const dx = (c + 0.5 - cx) * CELL_W;
+          const dy = (r + 0.5 - cy) * CELL_H;
+          if (dx * dx + dy * dy >= rr) continue;
+          const i   = rc + c;
+          const u   = U0[i], v = V0[i];
+          const Lu  = 0.05 * (U0[rp+c-1] + U0[rp+c+1] + U0[rn+c-1] + U0[rn+c+1])
+                    + 0.20 * (U0[rp+c  ] + U0[rc+c-1] + U0[rc+c+1] + U0[rn+c  ]) - u;
+          const Lv  = 0.05 * (V0[rp+c-1] + V0[rp+c+1] + V0[rn+c-1] + V0[rn+c+1])
+                    + 0.20 * (V0[rp+c  ] + V0[rc+c-1] + V0[rc+c+1] + V0[rn+c  ]) - v;
+          const uvv = u * v * v;
+          const nu  = u + DU * Lu - uvv + f * (1 - u);
+          const nv  = v + DV * Lv + uvv - (f + k) * v;
+          U1[i] = nu < 0 ? 0 : nu > 1 ? 1 : nu;
+          V1[i] = nv < 0 ? 0 : nv > 1 ? 1 : nv;
+        }
+      }
+
+      // Copy results back into U0/V0 (the global step will read from these)
+      for (let r = r0; r <= r1; r++) {
+        const rc = r * cols;
+        for (let c = c0; c <= c1; c++) {
+          const dx = (c + 0.5 - cx) * CELL_W;
+          const dy = (r + 0.5 - cy) * CELL_H;
+          if (dx * dx + dy * dy >= rr) continue;
+          const i = rc + c;
+          U0[i] = U1[i];
+          V0[i] = V1[i];
         }
       }
     }
@@ -259,6 +310,7 @@
       label.style.color = hsl(fg);
 
       seedMouse();
+      for (let s = 0; s < BOOST_STEPS; s++) localBoostStep(curF, curK);
       for (let s = 0; s < STEPS; s++) stepRD(curF, curK);
       draw(bg, fg);
 
@@ -272,7 +324,8 @@
       if (isTouchDevice) return;
       ptr.x = e.clientX; ptr.y = e.clientY; ptr.active = true;
     });
-    window.addEventListener('mouseleave', () => { ptr.active = false; });
+    document.addEventListener('mouseleave', () => { ptr.active = false; });
+    window.addEventListener('blur',        () => { ptr.active = false; });
     window.addEventListener('touchstart',  () => { isTouchDevice = true; }, { once: true });
     window.addEventListener('deviceorientation', e => {
       if (!isTouchDevice) return;
