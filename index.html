@@ -32,10 +32,10 @@
 
   <script>
     // ── Constants ─────────────────────────────────────────────────────────────
-    const CELL_W  = 10;
-    const CELL_H  = 16;
-    const FONT    = `13px "Geist Mono", "Courier New", monospace`;
-    const FONT_LG = `${CELL_H * 2}px "Geist Mono", "Courier New", monospace`;
+    let CELL_W  = 10;
+    let CELL_H  = 16;
+    let FONT    = `13px "Geist Mono", "Courier New", monospace`;
+    let FONT_LG = `32px "Geist Mono", "Courier New", monospace`;
 
     const CHARS = '  ·∙:-=+░▒▓█';
     const NC    = CHARS.length;
@@ -82,6 +82,16 @@
     const DIFF_AMP  = 0.22;      // ±22 % around base values
     const DIFF_FREQ = 0.000262;  // ~24 s period (out of phase with param morphing)
     let curDU = DU, curDV = DV;
+
+    // ── Responsive cell sizing ────────────────────────────────────────────────
+    function computeCellSize() {
+      const minCols = Math.max(SUBTITLE_TEXT.length, 40) + BOX_PAD_X * 2 + 2; // box outer width
+      CELL_W  = Math.max(5, Math.min(10, Math.floor(window.innerWidth / minCols)));
+      CELL_H  = Math.round(CELL_W * 1.6);
+      const fs = Math.round(CELL_W * 1.3);
+      FONT    = `${fs}px "Geist Mono", "Courier New", monospace`;
+      FONT_LG = `${CELL_H * 2}px "Geist Mono", "Courier New", monospace`;
+    }
 
     // ── Canvas ────────────────────────────────────────────────────────────────
     const canvas  = document.getElementById('c');
@@ -189,6 +199,7 @@
 
     // ── Resize ────────────────────────────────────────────────────────────────
     function resize() {
+      computeCellSize();
       const w = window.innerWidth, h = window.innerHeight;
 
       canvas.width  = w * DPR; canvas.height  = h * DPR;
@@ -492,7 +503,17 @@
     });
     document.addEventListener('mouseleave', () => { ptr.active = false; });
     window.addEventListener('blur',        () => { ptr.active = false; });
-    window.addEventListener('touchstart',  () => { isTouchDevice = true; }, { once: true });
+    window.addEventListener('touchstart', e => {
+      isTouchDevice = true;
+      const t = e.touches[0];
+      ptr.x = t.clientX; ptr.y = t.clientY; ptr.active = true;
+    });
+    window.addEventListener('touchmove', e => {
+      const t = e.touches[0];
+      ptr.x = t.clientX; ptr.y = t.clientY; ptr.active = true;
+      e.preventDefault();
+    }, { passive: false });
+    window.addEventListener('touchend',   () => { ptr.active = false; });
     window.addEventListener('deviceorientation', e => {
       if (!isTouchDevice) return;
       const gx = Math.max(-45, Math.min(45,  e.gamma || 0));
