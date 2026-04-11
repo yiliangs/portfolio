@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.8">
   <title>yiliang — archive in progress</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; }
@@ -12,7 +15,7 @@
       position: fixed;
       bottom: 1.75rem;
       left: 2rem;
-      font-family: 'Courier New', Courier, monospace;
+      font-family: 'Geist Mono', 'Courier New', monospace;
       font-size: 0.68rem;
       letter-spacing: 0.18em;
       text-transform: lowercase;
@@ -30,10 +33,11 @@
     // ── Constants ────────────────────────────────────────────────────────────
     const CELL_W   = 10;
     const CELL_H   = 16;
-    const FONT     = `13px "Courier New", monospace`;
+    const FONT     = `13px "Geist Mono", "Courier New", monospace`;
 
     // Density ramp: index 0-1 are spaces (skipped in draw), rest are visible
-    const CHARS    = '  ·∙:-=+*#▓█';
+    // ░▒ placed at mid-range so cursor zone renders in lighter blocks, not solid █
+    const CHARS    = '  ·∙:-=+░▒▓█';
     const NC       = CHARS.length;   // 12
     const V_MAX    = 0.40;           // Gray-Scott V ceiling (typical)
 
@@ -41,8 +45,7 @@
     const DV       = 0.105;
     const STEPS    = 6;              // RD iterations per rAF
     const WARMUP   = 80;             // pre-run steps on init
-
-    const SEED_R   = 55;             // mouse seed radius, screen px
+    const SEED_R   = 40;             // mouse seed radius, screen px
 
     // Gray-Scott parameter waypoints — all connected/labyrinthine, no isolated blobs
     const PARAM_SETS = [
@@ -56,8 +59,15 @@
     const COLOR_DUR  = 8700;    // ms per color palette
     const PARAM_DUR  = 18700;   // ms per param transition
 
-    const BOOST_R     = 70;     // base radius for one boost ring, screen px (3 rings total → 210px reach)
+    const BOOST_R     = 70;     // base radius for one boost ring, screen px
     const BOOST_STEPS = 3;      // concentric boost rings emitting outward from cursor
+
+    // ── Text-in-RD constants ─────────────────────────────────────────────────
+    const TITLE_TEXT    = "Yiliang Shao's Work";
+    const SUBTITLE_TEXT = "The algorithm is forming itself. So is this site.";
+    const TEXT_TARGET   = 0.36;   // V level text cells maintain (maps to ▓)
+    const TEXT_RESTORE  = 0.055;  // restoration rate per frame — ~0.4s to reform
+    const TEXT_VISIBLE  = 0.10;   // min V to show letter glyph; below → RD char
 
     // ── Canvas ───────────────────────────────────────────────────────────────
     const canvas = document.getElementById('c');
@@ -66,8 +76,44 @@
     const DPR    = window.devicePixelRatio || 1;
 
     let cols, rows;
-    let U0, V0, U1, V1;   // ping-pong Float32Arrays
+    let U0, V0, U1, V1;     // ping-pong Float32Arrays
+    let textChars, textMask; // text embedded in RD field
 
+    // ── Grid ─────────────────────────────────────────────────────────────────
+    function buildGrid() {
+      const n = cols * rows;
+      U0 = new Float32Array(n);
+      V0 = new Float32Array(n);
+      U1 = new Float32Array(n);
+      V1 = new Float32Array(n);
+    }
+
+    // ── Text mask — assigns letter chars to cells at title/subtitle positions ─
+    function buildTextMask() {
+      const n   = cols * rows;
+      textChars = new Array(n).fill(null);
+      textMask  = new Uint8Array(n);
+
+      const titleRow    = Math.floor(rows / 2) - 2;
+      const subtitleRow = Math.floor(rows / 2) + 1;
+
+      function assignLine(text, row) {
+        if (row < 0 || row >= rows) return;
+        const start = Math.floor((cols - text.length) / 2);
+        for (let c = 0; c < text.length; c++) {
+          const col = start + c;
+          if (col < 0 || col >= cols) continue;
+          const i      = row * cols + col;
+          textChars[i] = text[c];
+          textMask[i]  = 1;
+        }
+      }
+
+      assignLine(TITLE_TEXT.toUpperCase(),    titleRow);
+      assignLine(SUBTITLE_TEXT.toLowerCase(), subtitleRow);
+    }
+
+    // ── Resize ───────────────────────────────────────────────────────────────
     function resize() {
       const w = window.innerWidth, h = window.innerHeight;
       canvas.width        = w * DPR;
@@ -77,20 +123,30 @@
       ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
       cols = Math.ceil(w / CELL_W) + 1;
       rows = Math.ceil(h / CELL_H) + 1;
-      const n = cols * rows;
-      U0 = new Float32Array(n);
-      V0 = new Float32Array(n);
-      U1 = new Float32Array(n);
-      V1 = new Float32Array(n);
+      buildGrid();
+      buildTextMask();
     }
 
     window.addEventListener('resize', () => { resize(); initRD(curF, curK); });
+
+    // ── Text V restoration (called each frame and during warmup) ─────────────
+    function restoreText() {
+      for (let i = 0; i < textMask.length; i++) {
+        if (textMask[i]) {
+          V0[i] += TEXT_RESTORE * (TEXT_TARGET - V0[i]);
+        }
+      }
+    }
 
     // ── RD init ──────────────────────────────────────────────────────────────
     function initRD(f, k) {
       U0.fill(1);
       V0.fill(0);
-      // Scatter seed patches (~0.3% of cells as 3×3 centers)
+      // Pre-seed text cells so they're visible from frame 1
+      for (let i = 0; i < textMask.length; i++) {
+        if (textMask[i]) { V0[i] = TEXT_TARGET; U0[i] = 1 - TEXT_TARGET; }
+      }
+      // Scatter random seed patches (~0.3% of cells as 3×3 centers)
       const count = Math.max(20, Math.floor(cols * rows * 0.003));
       for (let p = 0; p < count; p++) {
         const r = 1 + Math.floor(Math.random() * (rows - 2));
@@ -98,12 +154,12 @@
         for (let dr = -1; dr <= 1; dr++) {
           for (let dc = -1; dc <= 1; dc++) {
             const i = (r + dr) * cols + (c + dc);
-            V0[i] = 1;
-            U0[i] = 0;
+            V0[i] = 1; U0[i] = 0;
           }
         }
       }
-      for (let s = 0; s < WARMUP; s++) stepRD(f, k);
+      // Pre-warm, restoring text cells after every step
+      for (let s = 0; s < WARMUP; s++) { stepRD(f, k); restoreText(); }
     }
 
     // ── RD step (Gray-Scott, 9-point Laplacian, ping-pong) ───────────────────
@@ -136,7 +192,6 @@
           V1[i] = nv < 0 ? 0 : nv > 1 ? 1 : nv;
         }
       }
-      // Swap buffers
       let t = U0; U0 = U1; U1 = t;
           t = V0; V0 = V1; V1 = t;
     }
@@ -144,17 +199,15 @@
     // ── Mouse seed ───────────────────────────────────────────────────────────
     const ptr = { x: -9999, y: -9999, active: false };
 
-    // ts: rAF timestamp, used for coherent slow oscillation
-    function seedMouse(ts) {
+    function seedMouse() {
       if (!ptr.active) return;
-      const cx    = ptr.x / CELL_W;
-      const cy    = ptr.y / CELL_H;
-      const r0    = Math.max(0,        Math.floor(cy - SEED_R / CELL_H));
-      const r1    = Math.min(rows - 1, Math.ceil (cy + SEED_R / CELL_H));
-      const c0    = Math.max(0,        Math.floor(cx - SEED_R / CELL_W));
-      const c1    = Math.min(cols - 1, Math.ceil (cx + SEED_R / CELL_W));
-      const rr    = SEED_R * SEED_R;
-      const phase = ts * 0.00065;   // slow drift, ~10s per cycle
+      const cx = ptr.x / CELL_W;
+      const cy = ptr.y / CELL_H;
+      const r0 = Math.max(0,        Math.floor(cy - SEED_R / CELL_H));
+      const r1 = Math.min(rows - 1, Math.ceil (cy + SEED_R / CELL_H));
+      const c0 = Math.max(0,        Math.floor(cx - SEED_R / CELL_W));
+      const c1 = Math.min(cols - 1, Math.ceil (cx + SEED_R / CELL_W));
+      const rr = SEED_R * SEED_R;
 
       for (let r = r0; r <= r1; r++) {
         for (let c = c0; c <= c1; c++) {
@@ -162,22 +215,19 @@
           const dy = (r + 0.5 - cy) * CELL_H;
           const d2 = dx * dx + dy * dy;
           if (d2 < rr) {
-            const t       = 1 - Math.sqrt(d2) / SEED_R;
-            const smooth  = t * t * (3 - 2 * t);
-            const i       = r * cols + c;
-            // Coherent sine wave (spatial + temporal) so the field breathes slowly
-            // Small random term adds subtle variation without causing blink
-            const coherent = Math.sin(phase + c * 0.35 + r * 0.28) * 0.055 * smooth;
-            const rand     = (Math.random() * 2 - 1) * 0.012 * smooth;
-            V0[i] = Math.min(1, Math.max(0, V0[i] + coherent + rand));
+            const t      = 1 - Math.sqrt(d2) / SEED_R;
+            const smooth = t * t * (3 - 2 * t);
+            const i      = r * cols + c;
+            // Cap V at 0.25 → maps to ░ in the char ramp, never reaches solid █
+            V0[i] = Math.min(0.25, V0[i] + 0.12 * smooth);
+            U0[i] = Math.max(0.75, U0[i] - 0.09 * smooth);
           }
         }
       }
     }
 
-    // ── Local RD boost — called with increasing radii so effect radiates outward
-    //    Ring s uses radius BOOST_R*(s+1); inner cells accumulate all passes.
-    //    Result: 0–BOOST_R gets BOOST_STEPS extra steps, next ring gets BOOST_STEPS-1, etc.
+    // ── Local RD boost — concentric rings radiating outward from cursor ───────
+    //    Ring s covers radius BOOST_R*(s+1); inner cells accumulate all passes.
     function localBoostStep(f, k, radius) {
       if (!ptr.active) return;
       const cx = ptr.x / CELL_W;
@@ -188,11 +238,8 @@
       const c1 = Math.min(cols - 2, Math.ceil (cx + radius / CELL_W));
       const rr = radius * radius;
 
-      // Compute one RD step for cells in radius → write to U1/V1
       for (let r = r0; r <= r1; r++) {
-        const rp = (r - 1) * cols;
-        const rc =  r       * cols;
-        const rn = (r + 1) * cols;
+        const rp = (r - 1) * cols, rc = r * cols, rn = (r + 1) * cols;
         for (let c = c0; c <= c1; c++) {
           const dx = (c + 0.5 - cx) * CELL_W;
           const dy = (r + 0.5 - cy) * CELL_H;
@@ -210,8 +257,6 @@
           V1[i] = nv < 0 ? 0 : nv > 1 ? 1 : nv;
         }
       }
-
-      // Copy results back into U0/V0
       for (let r = r0; r <= r1; r++) {
         const rc = r * cols;
         for (let c = c0; c <= c1; c++) {
@@ -219,8 +264,7 @@
           const dy = (r + 0.5 - cy) * CELL_H;
           if (dx * dx + dy * dy >= rr) continue;
           const i = rc + c;
-          U0[i] = U1[i];
-          V0[i] = V1[i];
+          U0[i] = U1[i]; V0[i] = V1[i];
         }
       }
     }
@@ -238,9 +282,12 @@
       for (let r = 0; r < rows; r++) {
         const y = r * CELL_H;
         for (let c = 0; c < cols; c++, i++) {
-          const idx = Math.min(NC - 1, Math.floor(V0[i] / V_MAX * NC));
-          if (idx < 2) continue;   // skip space chars — bg shows through
-          ctx.fillText(CHARS[idx], c * CELL_W, y);
+          const v   = V0[i];
+          const idx = Math.min(NC - 1, Math.floor(v / V_MAX * NC));
+          // Text cells: show the letter glyph when V is above threshold
+          const ch  = (textChars[i] && v > TEXT_VISIBLE) ? textChars[i] : CHARS[idx];
+          if (ch === ' ') continue;
+          ctx.fillText(ch, c * CELL_W, y);
         }
       }
 
@@ -297,7 +344,7 @@
     let lastTs = 0;
 
     function loop(ts) {
-      const dt = Math.min(ts - lastTs, 100);   // cap to survive backgrounded tabs
+      const dt = Math.min(ts - lastTs, 100);
       lastTs = ts;
 
       // Color morph
@@ -315,10 +362,10 @@
 
       label.style.color = hsl(fg);
 
-      seedMouse(ts);
-      // Concentric boost rings: innermost ring accumulates all passes → radiates outward
+      seedMouse();
       for (let s = 0; s < BOOST_STEPS; s++) localBoostStep(curF, curK, BOOST_R * (s + 1));
       for (let s = 0; s < STEPS; s++) stepRD(curF, curK);
+      restoreText();   // pull text cell V back toward target after RD step
       draw(bg, fg);
 
       requestAnimationFrame(loop);
@@ -326,10 +373,10 @@
 
     // ── Events ───────────────────────────────────────────────────────────────
 
-    // Block ctrl+scroll zoom (minimum ~80%) — heavy grid at extreme zoom-out
+    // Block ctrl+scroll zoom-out — heavy grid at extreme zoom-out
     document.addEventListener('wheel', e => {
       if (!e.ctrlKey) return;
-      if (e.deltaY > 0) e.preventDefault();   // block zoom-out only; zoom-in is fine
+      if (e.deltaY > 0) e.preventDefault();
     }, { passive: false });
 
     let isTouchDevice = false;
