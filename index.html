@@ -41,9 +41,9 @@
     const NC    = CHARS.length;
     const V_MAX = 0.40;
 
-    const DU    = 0.2097;
-    const DV    = 0.105;
-    const STEPS = 6;
+    const DU     = 0.2097;
+    const DV     = 0.105;
+    const STEPS  = 6;
     const WARMUP = 80;
     const SEED_R = 40;
 
@@ -55,9 +55,9 @@
       { f: 0.039, k: 0.058 },
     ];
 
-    const COLOR_DUR  = 8700;
-    const PARAM_DUR  = 18700;
-    const BOOST_R    = 70;
+    const COLOR_DUR   = 8700;
+    const PARAM_DUR   = 18700;
+    const BOOST_R     = 70;
     const BOOST_STEPS = 3;
 
     // ── Text / box constants ──────────────────────────────────────────────────
@@ -73,8 +73,11 @@
     const TITLE_ROWS = 2;
     const BOX_SPACER = 1;
 
-    const TITLE_DISSOLVE_RATE = 0.15;
-    const TITLE_RESTORE_RATE  = 0.025;
+    const OVERLAY_DISSOLVE = 0.15;
+    const OVERLAY_RESTORE  = 0.022;
+
+    // ── Row spread (breathes ±13%, ~20s period) ───────────────────────────────
+    let rowSpread = 1.0;
 
     // ── Canvas ────────────────────────────────────────────────────────────────
     const canvas  = document.getElementById('c');
@@ -87,8 +90,9 @@
     let cols, rows;
     let U0, V0, U1, V1;
     let textChars, textMask, interiorMask;
-    let boxGeo     = null;
-    let titleCells = [];
+    let boxGeo        = null;
+    let titleCells    = [];
+    let subtitleCells = [];
 
     // ── Grid ──────────────────────────────────────────────────────────────────
     function buildGrid() {
@@ -97,7 +101,7 @@
       U1 = new Float32Array(n); V1 = new Float32Array(n);
     }
 
-    // ── Text mask (border + subtitle on canvas1) ──────────────────────────────
+    // ── Text mask  (border only — subtitle moves to canvas2) ──────────────────
     function buildTextMask() {
       const n = cols * rows;
       textChars    = new Array(n).fill(null);
@@ -115,33 +119,25 @@
 
       const titleRowStart = boxTop + 1 + BOX_PAD_Y;
       const subRow        = titleRowStart + TITLE_ROWS + BOX_SPACER;
+      const subLeft       = Math.floor((cols - SUBTITLE_TEXT.length) / 2);
 
       function put(row, col, ch) {
         if (row < 0 || row >= rows || col < 0 || col >= cols) return;
         const i = row * cols + col;
-        textChars[i] = ch;
-        textMask[i]  = 1;
+        textChars[i] = ch; textMask[i] = 1;
       }
 
-      // Border
       put(boxTop,    boxLeft,  '╔'); put(boxTop,    boxRight, '╗');
       put(boxBottom, boxLeft,  '╚'); put(boxBottom, boxRight, '╝');
       for (let c = boxLeft + 1; c < boxRight; c++) {
-        put(boxTop,    c, '═');
-        put(boxBottom, c, '═');
+        put(boxTop,    c, '═'); put(boxBottom, c, '═');
       }
       for (let r = boxTop + 1; r < boxBottom; r++) {
-        put(r, boxLeft,  '║');
-        put(r, boxRight, '║');
+        put(r, boxLeft, '║'); put(r, boxRight, '║');
       }
+      // Note: subtitle NOT put into textMask — it lives on canvas2
 
-      // Subtitle
-      const subLeft = Math.floor((cols - SUBTITLE_TEXT.length) / 2);
-      for (let c = 0; c < SUBTITLE_TEXT.length; c++) {
-        put(subRow, subLeft + c, SUBTITLE_TEXT[c]);
-      }
-
-      // Interior mask (all non-text cells inside border)
+      // Interior (all non-border cells inside the box)
       for (let r = boxTop + 1; r < boxBottom; r++) {
         for (let c = boxLeft + 1; c < boxRight; c++) {
           const i = r * cols + c;
@@ -150,7 +146,9 @@
       }
 
       boxGeo = {
-        titleDrawY: (titleRowStart + TITLE_ROWS / 2) * CELL_H,
+        titleBaseRow: titleRowStart + TITLE_ROWS / 2,  // fractional row, center of title area
+        subBaseRow:   subRow + 0.5,                    // fractional row, center of subtitle row
+        subLeft,
       };
     }
 
@@ -160,14 +158,24 @@
       ctx2.font = FONT_LG;
       const totalW = ctx2.measureText(TITLE_TEXT).width;
       const startX = (window.innerWidth - totalW) / 2;
-      const midY   = boxGeo.titleDrawY;
-
       titleCells = [];
       let x = startX;
       for (const ch of TITLE_TEXT) {
         const w = ctx2.measureText(ch).width;
-        titleCells.push({ ch, x, cx: x + w / 2, cy: midY, v: 1 });
+        titleCells.push({ ch, x, cx: x + w / 2, baseRow: boxGeo.titleBaseRow, v: 1 });
         x += w;
+      }
+    }
+
+    // ── Subtitle cells on canvas2 ─────────────────────────────────────────────
+    function buildSubtitleCells() {
+      if (!boxGeo) return;
+      const { subLeft, subBaseRow } = boxGeo;
+      subtitleCells = [];
+      for (let c = 0; c < SUBTITLE_TEXT.length; c++) {
+        const ch = SUBTITLE_TEXT[c];
+        const x  = (subLeft + c) * CELL_W;
+        subtitleCells.push({ ch, x, cx: x + CELL_W / 2, baseRow: subBaseRow, v: 1 });
       }
     }
 
@@ -175,7 +183,7 @@
     function resize() {
       const w = window.innerWidth, h = window.innerHeight;
 
-      canvas.width = w * DPR; canvas.height = h * DPR;
+      canvas.width = w * DPR;  canvas.height = h * DPR;
       canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
       ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
 
@@ -188,19 +196,19 @@
       buildGrid();
       buildTextMask();
       buildTitleCells();
+      buildSubtitleCells();
     }
 
     window.addEventListener('resize', () => { resize(); initRD(curF, curK); });
 
-    // ── Text restoration ──────────────────────────────────────────────────────
+    // ── Text restoration (border only) ────────────────────────────────────────
     function restoreText() {
       for (let i = 0; i < textMask.length; i++) {
         if (textMask[i]) {
           V0[i] += TEXT_RESTORE * (TEXT_TARGET - V0[i]);
           U0[i] += TEXT_RESTORE * ((1 - TEXT_TARGET) - U0[i]);
         } else if (interiorMask[i]) {
-          V0[i] = 0;   // hard-force: belt-and-suspenders with stepRD block
-          U0[i] = 1;
+          V0[i] = 0; U0[i] = 1;
         }
       }
     }
@@ -215,17 +223,15 @@
       for (let p = 0; p < count; p++) {
         const r = 1 + Math.floor(Math.random() * (rows - 2));
         const c = 1 + Math.floor(Math.random() * (cols - 2));
-        for (let dr = -1; dr <= 1; dr++) {
-          for (let dc = -1; dc <= 1; dc++) {
-            const i = (r + dr) * cols + (c + dc);
-            if (!textMask[i] && !interiorMask[i]) { V0[i] = 1; U0[i] = 0; }
-          }
+        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+          const i = (r + dr) * cols + (c + dc);
+          if (!textMask[i] && !interiorMask[i]) { V0[i] = 1; U0[i] = 0; }
         }
       }
       for (let s = 0; s < WARMUP; s++) { stepRD(f, k); restoreText(); }
     }
 
-    // ── RD step — interior cells hard-blocked ─────────────────────────────────
+    // ── RD step — interior hard-blocked ───────────────────────────────────────
     function stepRD(f, k) {
       for (let r = 0; r < rows; r++) {
         const rp = (r === 0        ? rows - 1 : r - 1) * cols;
@@ -234,7 +240,7 @@
 
         for (let c = 0; c < cols; c++) {
           const i = rc + c;
-          if (interiorMask[i]) { U1[i] = 1; V1[i] = 0; continue; }  // ← block RD
+          if (interiorMask[i]) { U1[i] = 1; V1[i] = 0; continue; }
 
           const cp = c === 0        ? cols - 1 : c - 1;
           const cn = c === cols - 1 ? 0        : c + 1;
@@ -257,16 +263,20 @@
           t = V0; V0 = V1; V1 = t;
     }
 
-    // ── Mouse pointer ─────────────────────────────────────────────────────────
+    // ── Pointer ───────────────────────────────────────────────────────────────
     const ptr = { x: -9999, y: -9999, active: false };
 
-    // ── Seed mouse — border/subtitle dissolve + RD field disturb ──────────────
+    // Converts pixel Y → fractional grid row accounting for current rowSpread
+    const pxToRow = py => py / (CELL_H * rowSpread);
+
+    // ── Seed mouse ────────────────────────────────────────────────────────────
     function seedMouse() {
       if (!ptr.active) return;
       const cx = ptr.x / CELL_W;
-      const cy = ptr.y / CELL_H;
-      const r0 = Math.max(0,        Math.floor(cy - SEED_R / CELL_H));
-      const r1 = Math.min(rows - 1, Math.ceil (cy + SEED_R / CELL_H));
+      const cy = pxToRow(ptr.y);
+      const cellH = CELL_H * rowSpread;
+      const r0 = Math.max(0,        Math.floor(cy - SEED_R / cellH));
+      const r1 = Math.min(rows - 1, Math.ceil (cy + SEED_R / cellH));
       const c0 = Math.max(0,        Math.floor(cx - SEED_R / CELL_W));
       const c1 = Math.min(cols - 1, Math.ceil (cx + SEED_R / CELL_W));
       const rr = SEED_R * SEED_R;
@@ -274,7 +284,7 @@
       for (let r = r0; r <= r1; r++) {
         for (let c = c0; c <= c1; c++) {
           const dx = (c + 0.5 - cx) * CELL_W;
-          const dy = (r + 0.5 - cy) * CELL_H;
+          const dy = (r + 0.5 - cy) * cellH;
           const d2 = dx * dx + dy * dy;
           if (d2 >= rr) continue;
           const t      = 1 - Math.sqrt(d2) / SEED_R;
@@ -282,12 +292,11 @@
           const i      = r * cols + c;
 
           if (textMask[i]) {
-            V0[i] *= (1 - 0.40 * smooth);              // dissolve border/subtitle
+            V0[i] *= (1 - 0.50 * smooth);           // dissolve border
           } else if (!interiorMask[i]) {
-            V0[i] = Math.min(0.25, V0[i] + 0.12 * smooth);  // seed RD field
+            V0[i] = Math.min(0.25, V0[i] + 0.12 * smooth);
             U0[i] = Math.max(0.75, U0[i] - 0.09 * smooth);
           }
-          // interior cells: leave them alone (stepRD keeps them at 0)
         }
       }
     }
@@ -295,10 +304,11 @@
     // ── Local RD boost ────────────────────────────────────────────────────────
     function localBoostStep(f, k, radius) {
       if (!ptr.active) return;
-      const cx = ptr.x / CELL_W;
-      const cy = ptr.y / CELL_H;
-      const r0 = Math.max(1,        Math.floor(cy - radius / CELL_H));
-      const r1 = Math.min(rows - 2, Math.ceil (cy + radius / CELL_H));
+      const cx   = ptr.x / CELL_W;
+      const cy   = pxToRow(ptr.y);
+      const cellH = CELL_H * rowSpread;
+      const r0 = Math.max(1,        Math.floor(cy - radius / cellH));
+      const r1 = Math.min(rows - 2, Math.ceil (cy + radius / cellH));
       const c0 = Math.max(1,        Math.floor(cx - radius / CELL_W));
       const c1 = Math.min(cols - 2, Math.ceil (cx + radius / CELL_W));
       const rr = radius * radius;
@@ -306,7 +316,7 @@
       for (let r = r0; r <= r1; r++) {
         const rp = (r-1)*cols, rc = r*cols, rn = (r+1)*cols;
         for (let c = c0; c <= c1; c++) {
-          const dx = (c+0.5-cx)*CELL_W, dy = (r+0.5-cy)*CELL_H;
+          const dx = (c+0.5-cx)*CELL_W, dy = (r+0.5-cy)*cellH;
           if (dx*dx+dy*dy >= rr) continue;
           const i = rc+c;
           if (interiorMask[i]) continue;
@@ -316,16 +326,14 @@
           const Lv = 0.05*(V0[rp+c-1]+V0[rp+c+1]+V0[rn+c-1]+V0[rn+c+1])
                    + 0.20*(V0[rp+c  ]+V0[rc+c-1]+V0[rc+c+1]+V0[rn+c  ]) - v;
           const uvv = u*v*v;
-          const nu = u + DU*Lu - uvv + f*(1-u);
-          const nv = v + DV*Lv + uvv - (f+k)*v;
-          U1[i] = nu<0?0:nu>1?1:nu;
-          V1[i] = nv<0?0:nv>1?1:nv;
+          U1[i] = Math.max(0, Math.min(1, u + DU*Lu - uvv + f*(1-u)));
+          V1[i] = Math.max(0, Math.min(1, v + DV*Lv + uvv - (f+k)*v));
         }
       }
       for (let r = r0; r <= r1; r++) {
         const rc = r*cols;
         for (let c = c0; c <= c1; c++) {
-          const dx = (c+0.5-cx)*CELL_W, dy = (r+0.5-cy)*CELL_H;
+          const dx = (c+0.5-cx)*CELL_W, dy = (r+0.5-cy)*cellH;
           if (dx*dx+dy*dy >= rr) continue;
           const i = rc+c;
           if (interiorMask[i]) continue;
@@ -334,23 +342,24 @@
       }
     }
 
-    // ── Update title cell dissolve values ─────────────────────────────────────
-    function updateTitleV() {
-      for (const cell of titleCells) {
+    // ── Canvas2 overlay dissolve ──────────────────────────────────────────────
+    function updateOverlayV() {
+      const allCells = titleCells.concat(subtitleCells);
+      for (const cell of allCells) {
+        const cy = cell.baseRow * CELL_H * rowSpread;
         const dx = cell.cx - ptr.x;
-        const dy = cell.cy - ptr.y;
+        const dy = cy - ptr.y;
         const d  = Math.sqrt(dx * dx + dy * dy);
         if (ptr.active && d < SEED_R) {
           const t = 1 - d / SEED_R;
-          const s = t * t * (3 - 2 * t);
-          cell.v = Math.max(0, cell.v - TITLE_DISSOLVE_RATE * s);
+          cell.v = Math.max(0, cell.v - OVERLAY_DISSOLVE * t * t * (3 - 2 * t));
         } else {
-          cell.v += TITLE_RESTORE_RATE * (1 - cell.v);
+          cell.v += OVERLAY_RESTORE * (1 - cell.v);
         }
       }
     }
 
-    // ── Draw canvas1 (RD field + border/subtitle) ─────────────────────────────
+    // ── Draw canvas1 (RD field + border) ─────────────────────────────────────
     function draw(bg, fg) {
       ctx.fillStyle = hsl(bg);
       ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
@@ -361,7 +370,7 @@
 
       let i = 0;
       for (let r = 0; r < rows; r++) {
-        const y = r * CELL_H;
+        const y = r * CELL_H * rowSpread;    // ← row Y driven by rowSpread
         for (let c = 0; c < cols; c++, i++) {
           const v   = V0[i];
           const idx = Math.min(NC - 1, Math.floor(v / V_MAX * NC));
@@ -374,44 +383,54 @@
       if (ptr.active) {
         ctx.beginPath();
         ctx.arc(ptr.x, ptr.y, SEED_R, 0, Math.PI * 2);
-        ctx.strokeStyle = hsla(fg, 0.22);
-        ctx.lineWidth   = 1;
-        ctx.stroke();
+        ctx.strokeStyle = hsla(fg, 0.22); ctx.lineWidth = 1; ctx.stroke();
         ctx.beginPath();
         ctx.arc(ptr.x, ptr.y, 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = hsla(fg, 0.5);
-        ctx.fill();
+        ctx.fillStyle = hsla(fg, 0.5); ctx.fill();
       }
     }
 
-    // ── Draw canvas2 (title, ASCII dissolve) ─────────────────────────────────
-    function drawTitle(fg) {
+    // ── Draw canvas2 (title + subtitle, per-char ASCII dissolve) ─────────────
+    function drawOverlay(fg) {
       ctx2.clearRect(0, 0, window.innerWidth, window.innerHeight);
-      ctx2.font         = FONT_LG;
-      ctx2.textBaseline = 'middle';
       ctx2.fillStyle    = hsl(fg);
+      ctx2.textBaseline = 'middle';
 
-      for (const cell of titleCells) {
-        const v = cell.v;
-        let ch;
-        if      (v > 0.85) { ch = cell.ch; ctx2.globalAlpha = 1; }
-        else if (v > 0.65) { ch = '▓';     ctx2.globalAlpha = v; }
-        else if (v > 0.45) { ch = '▒';     ctx2.globalAlpha = v; }
-        else if (v > 0.25) { ch = '░';     ctx2.globalAlpha = v; }
-        else if (v > 0.08) { ch = '·';     ctx2.globalAlpha = v; }
-        else continue;
-        ctx2.fillText(ch, cell.x, cell.cy);
+      function renderCells(cells, font) {
+        ctx2.font = font;
+        for (const cell of cells) {
+          const cy = cell.baseRow * CELL_H * rowSpread;
+          const v  = cell.v;
+          let ch;
+          if      (v > 0.85) { ch = cell.ch; ctx2.globalAlpha = 1; }
+          else if (v > 0.65) { ch = '▓';     ctx2.globalAlpha = v; }
+          else if (v > 0.45) { ch = '▒';     ctx2.globalAlpha = v; }
+          else if (v > 0.25) { ch = '░';     ctx2.globalAlpha = v; }
+          else if (v > 0.08) { ch = '·';     ctx2.globalAlpha = v; }
+          else continue;
+          ctx2.fillText(ch, cell.x, cy);
+        }
       }
+
+      renderCells(titleCells,    FONT_LG);
+      renderCells(subtitleCells, FONT);
       ctx2.globalAlpha = 1;
     }
 
-    // ── Color utilities ───────────────────────────────────────────────────────
+    // ── Color — Anthropic-inspired palette (muted earth tones) ───────────────
+    const PALETTES = [
+      { bg:{h:28,  s:18, l:6},  fg:{h:35,  s:38, l:72} },  // dark warm + sand cream
+      { bg:{h:22,  s:14, l:7},  fg:{h:20,  s:48, l:63} },  // near-black + muted coral
+      { bg:{h:215, s:12, l:7},  fg:{h:42,  s:40, l:68} },  // dark steel + warm amber
+      { bg:{h:160, s:10, l:7},  fg:{h:148, s:28, l:62} },  // dark sage bg + sage fg
+      { bg:{h:18,  s:12, l:8},  fg:{h:16,  s:44, l:60} },  // anthracite + terracotta
+    ];
+
     function randomPair() {
-      const bgH = Math.random() * 360;
-      const fgH = (bgH + 140 + Math.random() * 80) % 360;
+      const p = PALETTES[Math.floor(Math.random() * PALETTES.length)];
       return {
-        bg: { h: bgH, s: 30 + Math.random() * 35, l: 5  + Math.random() * 5  },
-        fg: { h: fgH, s: 65 + Math.random() * 25, l: 62 + Math.random() * 18 },
+        bg: { h: p.bg.h+(Math.random()-.5)*10, s: p.bg.s+(Math.random()-.5)*6,  l: p.bg.l+(Math.random()-.5)*2 },
+        fg: { h: p.fg.h+(Math.random()-.5)*14, s: p.fg.s+(Math.random()-.5)*8,  l: p.fg.l+(Math.random()-.5)*6 },
       };
     }
 
@@ -419,11 +438,11 @@
       let dh = b.h - a.h;
       if (dh >  180) dh -= 360;
       if (dh < -180) dh += 360;
-      return { h: (a.h + dh * t + 360) % 360, s: a.s + (b.s - a.s) * t, l: a.l + (b.l - a.l) * t };
+      return { h:(a.h+dh*t+360)%360, s:a.s+(b.s-a.s)*t, l:a.l+(b.l-a.l)*t };
     }
 
     const hsl  = c => `hsl(${c.h.toFixed(1)},${c.s.toFixed(1)}%,${c.l.toFixed(1)}%)`;
-    const hsla = (c, a) => `hsla(${c.h.toFixed(1)},${c.s.toFixed(1)}%,${c.l.toFixed(1)}%,${a})`;
+    const hsla = (c,a) => `hsla(${c.h.toFixed(1)},${c.s.toFixed(1)}%,${c.l.toFixed(1)}%,${a})`;
 
     // ── Palette & param state ─────────────────────────────────────────────────
     let palA = randomPair(), palB = randomPair(), palT = 0;
@@ -433,11 +452,8 @@
       return i;
     }
 
-    let piA  = randParamIdx(-1);
-    let piB  = randParamIdx(piA);
-    let parT = 0;
-    let curF = PARAM_SETS[piA].f;
-    let curK = PARAM_SETS[piA].k;
+    let piA  = randParamIdx(-1), piB = randParamIdx(piA), parT = 0;
+    let curF = PARAM_SETS[piA].f, curK = PARAM_SETS[piA].k;
 
     // ── Main loop ─────────────────────────────────────────────────────────────
     let lastTs = 0;
@@ -445,6 +461,9 @@
     function loop(ts) {
       const dt = Math.min(ts - lastTs, 100);
       lastTs = ts;
+
+      // Row spread: ±13%, ~20s period — drives row height in draw()
+      rowSpread = 1.0 + 0.13 * Math.sin(ts * 0.00032);
 
       palT += dt / COLOR_DUR;
       if (palT >= 1) { palA = palB; palB = randomPair(); palT -= 1; }
@@ -458,13 +477,13 @@
       const fg = lerpHSL(palA.fg, palB.fg, palT);
       label.style.color = hsl(fg);
 
-      updateTitleV();
+      updateOverlayV();
       seedMouse();
       for (let s = 0; s < BOOST_STEPS; s++) localBoostStep(curF, curK, BOOST_R * (s + 1));
       for (let s = 0; s < STEPS; s++) stepRD(curF, curK);
       restoreText();
       draw(bg, fg);
-      drawTitle(fg);
+      drawOverlay(fg);
 
       requestAnimationFrame(loop);
     }
