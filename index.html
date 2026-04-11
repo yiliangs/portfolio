@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.8">
   <title>yiliang — archive in progress</title>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -56,8 +56,8 @@
     const COLOR_DUR  = 8700;    // ms per color palette
     const PARAM_DUR  = 18700;   // ms per param transition
 
-    const BOOST_R     = 75;     // local speed-boost radius, screen px
-    const BOOST_STEPS = 3;      // extra RD steps in boost region per frame
+    const BOOST_R     = 70;     // base radius for one boost ring, screen px (3 rings total → 210px reach)
+    const BOOST_STEPS = 3;      // concentric boost rings emitting outward from cursor
 
     // ── Canvas ───────────────────────────────────────────────────────────────
     const canvas = document.getElementById('c');
@@ -144,15 +144,17 @@
     // ── Mouse seed ───────────────────────────────────────────────────────────
     const ptr = { x: -9999, y: -9999, active: false };
 
-    function seedMouse() {
+    // ts: rAF timestamp, used for coherent slow oscillation
+    function seedMouse(ts) {
       if (!ptr.active) return;
-      const cx = ptr.x / CELL_W;
-      const cy = ptr.y / CELL_H;
-      const r0 = Math.max(0,        Math.floor(cy - SEED_R / CELL_H));
-      const r1 = Math.min(rows - 1, Math.ceil (cy + SEED_R / CELL_H));
-      const c0 = Math.max(0,        Math.floor(cx - SEED_R / CELL_W));
-      const c1 = Math.min(cols - 1, Math.ceil (cx + SEED_R / CELL_W));
-      const rr = SEED_R * SEED_R;
+      const cx    = ptr.x / CELL_W;
+      const cy    = ptr.y / CELL_H;
+      const r0    = Math.max(0,        Math.floor(cy - SEED_R / CELL_H));
+      const r1    = Math.min(rows - 1, Math.ceil (cy + SEED_R / CELL_H));
+      const c0    = Math.max(0,        Math.floor(cx - SEED_R / CELL_W));
+      const c1    = Math.min(cols - 1, Math.ceil (cx + SEED_R / CELL_W));
+      const rr    = SEED_R * SEED_R;
+      const phase = ts * 0.00065;   // slow drift, ~10s per cycle
 
       for (let r = r0; r <= r1; r++) {
         for (let c = c0; c <= c1; c++) {
@@ -160,27 +162,31 @@
           const dy = (r + 0.5 - cy) * CELL_H;
           const d2 = dx * dx + dy * dy;
           if (d2 < rr) {
-            const t      = 1 - Math.sqrt(d2) / SEED_R;
-            const smooth = t * t * (3 - 2 * t);              // smoothstep falloff
-            const i      = r * cols + c;
-            // Stir with signed noise — disrupts local equilibrium, never fills solid
-            V0[i] = Math.min(1, Math.max(0, V0[i] + (Math.random() * 2 - 1) * 0.45 * smooth));
+            const t       = 1 - Math.sqrt(d2) / SEED_R;
+            const smooth  = t * t * (3 - 2 * t);
+            const i       = r * cols + c;
+            // Coherent sine wave (spatial + temporal) so the field breathes slowly
+            // Small random term adds subtle variation without causing blink
+            const coherent = Math.sin(phase + c * 0.35 + r * 0.28) * 0.055 * smooth;
+            const rand     = (Math.random() * 2 - 1) * 0.012 * smooth;
+            V0[i] = Math.min(1, Math.max(0, V0[i] + coherent + rand));
           }
         }
       }
     }
 
-    // ── Local RD boost near cursor (extra steps in cursor region) ────────────
-    function localBoostStep(f, k) {
+    // ── Local RD boost — called with increasing radii so effect radiates outward
+    //    Ring s uses radius BOOST_R*(s+1); inner cells accumulate all passes.
+    //    Result: 0–BOOST_R gets BOOST_STEPS extra steps, next ring gets BOOST_STEPS-1, etc.
+    function localBoostStep(f, k, radius) {
       if (!ptr.active) return;
       const cx = ptr.x / CELL_W;
       const cy = ptr.y / CELL_H;
-      // Keep 1-cell margin from edges so Laplacian never needs wrap-around here
-      const r0 = Math.max(1,        Math.floor(cy - BOOST_R / CELL_H));
-      const r1 = Math.min(rows - 2, Math.ceil (cy + BOOST_R / CELL_H));
-      const c0 = Math.max(1,        Math.floor(cx - BOOST_R / CELL_W));
-      const c1 = Math.min(cols - 2, Math.ceil (cx + BOOST_R / CELL_W));
-      const rr = BOOST_R * BOOST_R;
+      const r0 = Math.max(1,        Math.floor(cy - radius / CELL_H));
+      const r1 = Math.min(rows - 2, Math.ceil (cy + radius / CELL_H));
+      const c0 = Math.max(1,        Math.floor(cx - radius / CELL_W));
+      const c1 = Math.min(cols - 2, Math.ceil (cx + radius / CELL_W));
+      const rr = radius * radius;
 
       // Compute one RD step for cells in radius → write to U1/V1
       for (let r = r0; r <= r1; r++) {
@@ -205,7 +211,7 @@
         }
       }
 
-      // Copy results back into U0/V0 (the global step will read from these)
+      // Copy results back into U0/V0
       for (let r = r0; r <= r1; r++) {
         const rc = r * cols;
         for (let c = c0; c <= c1; c++) {
@@ -309,8 +315,9 @@
 
       label.style.color = hsl(fg);
 
-      seedMouse();
-      for (let s = 0; s < BOOST_STEPS; s++) localBoostStep(curF, curK);
+      seedMouse(ts);
+      // Concentric boost rings: innermost ring accumulates all passes → radiates outward
+      for (let s = 0; s < BOOST_STEPS; s++) localBoostStep(curF, curK, BOOST_R * (s + 1));
       for (let s = 0; s < STEPS; s++) stepRD(curF, curK);
       draw(bg, fg);
 
@@ -318,6 +325,13 @@
     }
 
     // ── Events ───────────────────────────────────────────────────────────────
+
+    // Block ctrl+scroll zoom (minimum ~80%) — heavy grid at extreme zoom-out
+    document.addEventListener('wheel', e => {
+      if (!e.ctrlKey) return;
+      if (e.deltaY > 0) e.preventDefault();   // block zoom-out only; zoom-in is fine
+    }, { passive: false });
+
     let isTouchDevice = false;
 
     window.addEventListener('mousemove', e => {
