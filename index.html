@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>yiliang — archive in progress</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+    canvas { display: block; cursor: none; }
+    #label {
+      position: fixed;
+      bottom: 1.75rem;
+      left: 2rem;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
+      text-transform: lowercase;
+      opacity: 0.4;
+      pointer-events: none;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div id="label">archive in progress</div>
+
+  <script>
+    // ─────────────────────────────────────────────
+    //  Constants
+    // ─────────────────────────────────────────────
+    const CELL_W        = 10;
+    const CELL_H        = 16;
+    const FONT          = `13px "Courier New", monospace`;
+
+    const DUST_CHARS    = '▓▒░▓▒▓░#@%&$█▓▒░▓▒#@';
+    const FLOOR_CHARS   = '·∙:.·∙ .· ∙.  ·∙:';
+
+    const MOP_RADIUS    = 88;       // px
+    const MOP_RATE      = 0.20;     // dust cleared per frame at cursor center (60fps baseline)
+    const RECOVER_RATE  = 0.0020;   // dust regrowth per frame (60fps baseline) — full in ~8s
+    const SHIMMER_PROB  = 0.0022;   // fraction of cells that flicker per frame
+
+    const COLOR_CYCLE   = 13000;    // ms between palette transitions
+
+    // ─────────────────────────────────────────────
+    //  Color utilities
+    // ─────────────────────────────────────────────
+    function randomPair() {
+      const bgH = Math.random() * 360;
+      const fgH = (bgH + 140 + Math.random() * 80) % 360;
+      return {
+        bg: { h: bgH, s: 30 + Math.random() * 35, l: 5  + Math.random() * 5  },
+        fg: { h: fgH, s: 65 + Math.random() * 25, l: 62 + Math.random() * 18 },
+      };
+    }
+
+    function lerpHSL(a, b, t) {
+      let dh = b.h - a.h;
+      if (dh >  180) dh -= 360;
+      if (dh < -180) dh += 360;
+      return {
+        h: (a.h + dh * t + 360) % 360,
+        s:  a.s + (b.s - a.s) * t,
+        l:  a.l + (b.l - a.l) * t,
+      };
+    }
+
+    function hsl(c)          { return `hsl(${c.h.toFixed(1)},${c.s.toFixed(1)}%,${c.l.toFixed(1)}%)`; }
+    function hsla(c, alpha)  { return `hsla(${c.h.toFixed(1)},${c.s.toFixed(1)}%,${c.l.toFixed(1)}%,${alpha})`; }
+
+    function dimFg(fg) {
+      return { h: fg.h, s: fg.s * 0.45, l: fg.l * 0.32 };
+    }
+
+    // ─────────────────────────────────────────────
+    //  Grid
+    // ─────────────────────────────────────────────
+    let cols, rows, cells;
+
+    function randFrom(str) { return str[Math.floor(Math.random() * str.length)]; }
+
+    function buildGrid() {
+      cols  = Math.ceil(canvas.width  / CELL_W) + 1;
+      rows  = Math.ceil(canvas.height / CELL_H) + 1;
+      cells = new Float32Array(cols * rows);   // dust value per cell, 0–1
+      cells.fill(1);
+    }
+
+    // Pre-bake character arrays (avoids per-frame allocation)
+    let dustChars, floorChars;
+
+    function buildCharArrays() {
+      const count = cols * rows;
+      dustChars  = new Array(count).fill(null).map(() => randFrom(DUST_CHARS));
+      floorChars = new Array(count).fill(null).map(() => randFrom(FLOOR_CHARS));
+    }
+
+    // ─────────────────────────────────────────────
+    //  Canvas / resize
+    // ─────────────────────────────────────────────
+    const canvas = document.getElementById('c');
+    const ctx    = canvas.getContext('2d');
+    const label  = document.getElementById('label');
+
+    function resize() {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+      buildGrid();
+      buildCharArrays();
+    }
+
+    window.addEventListener('resize', resize);
+
+    // ─────────────────────────────────────────────
+    //  Pointer (unified mouse + tilt)
+    // ─────────────────────────────────────────────
+    const ptr = { x: -9999, y: -9999, active: false };
+    let isTouchDevice = false;
+
+    window.addEventListener('mousemove', e => {
+      if (isTouchDevice) return;
+      ptr.x = e.clientX;
+      ptr.y = e.clientY;
+      ptr.active = true;
+    });
+
+    window.addEventListener('mouseleave', () => {
+      ptr.active = false;
+    });
+
+    window.addEventListener('touchstart', () => {
+      isTouchDevice = true;
+    }, { once: true });
+
+    window.addEventListener('deviceorientation', e => {
+      if (!isTouchDevice) return;
+      const gx = Math.max(-45, Math.min(45, e.gamma || 0));
+      const by = Math.max(-45, Math.min(45, (e.beta  || 0) - 30));  // offset for natural hold angle
+      ptr.x      = ((gx + 45) / 90) * canvas.width;
+      ptr.y      = ((by + 45) / 90) * canvas.height;
+      ptr.active = true;
+    });
+
+    // ─────────────────────────────────────────────
+    //  Update — mop, recovery, shimmer
+    // ─────────────────────────────────────────────
+    function update(scale) {
+      const mopRate     = MOP_RATE     * scale;
+      const recoverRate = RECOVER_RATE * scale;
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const i  = r * cols + c;
+          const cx = c * CELL_W + CELL_W * 0.5;
+          const cy = r * CELL_H + CELL_H * 0.5;
+          const dx = cx - ptr.x;
+          const dy = cy - ptr.y;
+          const d2 = dx * dx + dy * dy;
+
+          if (ptr.active && d2 < MOP_RADIUS * MOP_RADIUS) {
+            const t      = 1 - Math.sqrt(d2) / MOP_RADIUS;
+            const smooth = t * t * (3 - 2 * t);           // smoothstep
+            cells[i] = Math.max(0, cells[i] - mopRate * smooth);
+          } else {
+            cells[i] = Math.min(1, cells[i] + recoverRate);
+          }
+        }
+      }
+
+      // Shimmer: randomly re-roll dust char on fully-covered cells
+      const flipCount = Math.ceil(cols * rows * SHIMMER_PROB * scale);
+      for (let k = 0; k < flipCount; k++) {
+        const i = Math.floor(Math.random() * cells.length);
+        if (cells[i] > 0.85) dustChars[i] = randFrom(DUST_CHARS);
+      }
+    }
+
+    // ─────────────────────────────────────────────
+    //  Draw
+    // ─────────────────────────────────────────────
+    function draw(bg, fg) {
+      // Background
+      ctx.fillStyle = hsl(bg);
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.font         = FONT;
+      ctx.textBaseline = 'top';
+
+      const fgColor    = hsl(fg);
+      const floorColor = hsl(dimFg(fg));
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const i    = r * cols + c;
+          const dust = cells[i];
+          const x    = c * CELL_W;
+          const y    = r * CELL_H;
+
+          // Floor layer — visible where dust is cleared
+          if (dust < 0.96) {
+            ctx.globalAlpha = (1 - dust) * 0.65;
+            ctx.fillStyle   = floorColor;
+            ctx.fillText(floorChars[i], x, y);
+          }
+
+          // Dust layer
+          if (dust > 0.04) {
+            ctx.globalAlpha = dust;
+            ctx.fillStyle   = fgColor;
+            ctx.fillText(dustChars[i], x, y);
+          }
+        }
+      }
+
+      ctx.globalAlpha = 1;
+
+      // Cursor ring
+      if (ptr.active) {
+        ctx.beginPath();
+        ctx.arc(ptr.x, ptr.y, MOP_RADIUS, 0, Math.PI * 2);
+        ctx.strokeStyle = hsla(fg, 0.25);
+        ctx.lineWidth   = 1;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(ptr.x, ptr.y, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = hsla(fg, 0.5);
+        ctx.fill();
+      }
+    }
+
+    // ─────────────────────────────────────────────
+    //  Palette state
+    // ─────────────────────────────────────────────
+    let palA = randomPair();
+    let palB = randomPair();
+    let palT = 0;
+
+    // ─────────────────────────────────────────────
+    //  Main loop
+    // ─────────────────────────────────────────────
+    const TARGET_DT = 1000 / 60;
+    let lastTs = 0;
+
+    function loop(ts) {
+      const dt    = Math.min(ts - lastTs, 100);   // cap at 100ms to survive tab backgrounding
+      const scale = dt / TARGET_DT;               // normalize to 60fps
+      lastTs = ts;
+
+      // Advance palette
+      palT += dt / COLOR_CYCLE;
+      if (palT >= 1) {
+        palA = palB;
+        palB = randomPair();
+        palT -= 1;
+      }
+
+      const bg = lerpHSL(palA.bg, palB.bg, palT);
+      const fg = lerpHSL(palA.fg, palB.fg, palT);
+
+      label.style.color = hsl(fg);
+
+      update(scale);
+      draw(bg, fg);
+
+      requestAnimationFrame(loop);
+    }
+
+    // ─────────────────────────────────────────────
+    //  Init
+    // ─────────────────────────────────────────────
+    resize();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
