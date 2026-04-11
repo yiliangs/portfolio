@@ -44,13 +44,13 @@
 
     const SEED_R   = 55;             // mouse seed radius, screen px
 
-    // Gray-Scott parameter waypoints — each produces a distinct topology
+    // Gray-Scott parameter waypoints — all connected/labyrinthine, no isolated blobs
     const PARAM_SETS = [
-      { f: 0.035, k: 0.065 },  // pearls
-      { f: 0.060, k: 0.062 },  // worms
       { f: 0.029, k: 0.057 },  // mazes
+      { f: 0.037, k: 0.060 },  // fingerprints
+      { f: 0.060, k: 0.062 },  // worms
       { f: 0.025, k: 0.060 },  // coral
-      { f: 0.039, k: 0.058 },  // mitosis
+      { f: 0.039, k: 0.058 },  // dense labyrinth
     ];
 
     const COLOR_DUR  = 13000;   // ms per color palette
@@ -155,9 +155,14 @@
         for (let c = c0; c <= c1; c++) {
           const dx = (c + 0.5 - cx) * CELL_W;
           const dy = (r + 0.5 - cy) * CELL_H;
-          if (dx * dx + dy * dy < rr) {
-            V0[r * cols + c] = 1;
-            U0[r * cols + c] = 0;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < rr) {
+            const t      = 1 - Math.sqrt(d2) / SEED_R;
+            const smooth = t * t * (3 - 2 * t);       // smoothstep falloff
+            const i      = r * cols + c;
+            // Nudge toward activation — gradient, not hard fill
+            V0[i] = Math.min(1, V0[i] + 0.28 * smooth);
+            U0[i] = Math.max(0, U0[i] - 0.20 * smooth);
           }
         }
       }
