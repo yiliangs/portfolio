@@ -76,14 +76,6 @@
     const OVERLAY_DISSOLVE = 0.15;
     const OVERLAY_RESTORE  = 0.022;
 
-    // ── Cell scale: uniform XY grid-spacing oscillation ───────────────────────
-    // Grid is sized for the MINIMUM scale so the viewport is always covered.
-    const CELL_SCALE_AMP = 0.12;          // ±12%  →  cell spacing 8.8–11.2 px
-    const CELL_SCALE_MIN = 1 - CELL_SCALE_AMP;
-    let   cellScale      = 1.0;
-    // Pixel offset to keep the scaled grid centred on the viewport
-    let   offX = 0, offY = 0;
-
     // ── Canvas ────────────────────────────────────────────────────────────────
     const canvas  = document.getElementById('c');
     const ctx     = canvas.getContext('2d');
@@ -96,8 +88,8 @@
     let U0, V0, U1, V1;
     let textChars, textMask, interiorMask;
     let boxGeo        = null;
-    let titleCells    = [];   // {ch, x, cx, baseRow, v}   — x/cx are fixed pixel coords
-    let subtitleCells = [];   // {ch, col, baseRow, v}     — col is grid column index
+    let titleCells    = [];
+    let subtitleCells = [];
 
     // ── Grid ──────────────────────────────────────────────────────────────────
     function buildGrid() {
@@ -106,7 +98,7 @@
       U1 = new Float32Array(n); V1 = new Float32Array(n);
     }
 
-    // ── Text mask (border only) ───────────────────────────────────────────────
+    // ── Text mask (border only — subtitle on canvas2) ─────────────────────────
     function buildTextMask() {
       const n = cols * rows;
       textChars    = new Array(n).fill(null);
@@ -155,7 +147,7 @@
       };
     }
 
-    // ── Title cells (canvas2) — X fixed by font measure, Y grid-based ─────────
+    // ── Title cells (canvas2) ─────────────────────────────────────────────────
     function buildTitleCells() {
       if (!boxGeo) return;
       ctx2.font = FONT_LG;
@@ -165,22 +157,24 @@
       let x = startX;
       for (const ch of TITLE_TEXT) {
         const w = ctx2.measureText(ch).width;
-        titleCells.push({ ch, x, cx: x + w / 2, baseRow: boxGeo.titleBaseRow, v: 1 });
+        titleCells.push({ ch, x, cx: x + w / 2, cy: boxGeo.titleBaseRow * CELL_H, v: 1 });
         x += w;
       }
     }
 
-    // ── Subtitle cells (canvas2) — col grid-based, position scales with cellScale
+    // ── Subtitle cells (canvas2) ──────────────────────────────────────────────
     function buildSubtitleCells() {
       if (!boxGeo) return;
       const { subLeft, subBaseRow } = boxGeo;
       subtitleCells = [];
       for (let c = 0; c < SUBTITLE_TEXT.length; c++) {
+        const x = (subLeft + c) * CELL_W;
         subtitleCells.push({
-          ch:      SUBTITLE_TEXT[c],
-          col:     subLeft + c,   // grid column — pixel x computed per-frame
-          baseRow: subBaseRow,
-          v:       1,
+          ch:  SUBTITLE_TEXT[c],
+          x,
+          cx:  x + CELL_W / 2,
+          cy:  subBaseRow * CELL_H,
+          v:   1,
         });
       }
     }
@@ -197,9 +191,8 @@
       canvas2.style.width = w + 'px'; canvas2.style.height = h + 'px';
       ctx2.setTransform(DPR, 0, 0, DPR, 0, 0);
 
-      // Size grid for MINIMUM cell scale so it always covers the viewport
-      cols = Math.ceil(w / (CELL_W * CELL_SCALE_MIN)) + 2;
-      rows = Math.ceil(h / (CELL_H * CELL_SCALE_MIN)) + 2;
+      cols = Math.ceil(w / CELL_W) + 1;
+      rows = Math.ceil(h / CELL_H) + 1;
       buildGrid();
       buildTextMask();
       buildTitleCells();
@@ -207,16 +200,6 @@
     }
 
     window.addEventListener('resize', () => { resize(); initRD(curF, curK); });
-
-    // ── Recompute render offsets (keeps scaled grid centred in viewport) ───────
-    function updateOffsets() {
-      offX = (window.innerWidth  - cols * CELL_W * cellScale) / 2;
-      offY = (window.innerHeight - rows * CELL_H * cellScale) / 2;
-    }
-
-    // Pixel → fractional grid coordinates
-    const pxCol = px => (px - offX) / (CELL_W * cellScale);
-    const pxRow = py => (py - offY) / (CELL_H * cellScale);
 
     // ── Text restoration ──────────────────────────────────────────────────────
     function restoreText() {
@@ -279,18 +262,17 @@
     // ── Seed mouse ────────────────────────────────────────────────────────────
     function seedMouse() {
       if (!ptr.active) return;
-      const cx = pxCol(ptr.x), cy = pxRow(ptr.y);
-      const cw = CELL_W * cellScale, ch = CELL_H * cellScale;
-      const r0 = Math.max(0,        Math.floor(cy - SEED_R / ch));
-      const r1 = Math.min(rows - 1, Math.ceil (cy + SEED_R / ch));
-      const c0 = Math.max(0,        Math.floor(cx - SEED_R / cw));
-      const c1 = Math.min(cols - 1, Math.ceil (cx + SEED_R / cw));
+      const cx = ptr.x / CELL_W, cy = ptr.y / CELL_H;
+      const r0 = Math.max(0,        Math.floor(cy - SEED_R / CELL_H));
+      const r1 = Math.min(rows - 1, Math.ceil (cy + SEED_R / CELL_H));
+      const c0 = Math.max(0,        Math.floor(cx - SEED_R / CELL_W));
+      const c1 = Math.min(cols - 1, Math.ceil (cx + SEED_R / CELL_W));
       const rr = SEED_R * SEED_R;
 
       for (let r = r0; r <= r1; r++) {
         for (let c = c0; c <= c1; c++) {
-          const dx = (c + 0.5 - cx) * cw;
-          const dy = (r + 0.5 - cy) * ch;
+          const dx = (c + 0.5 - cx) * CELL_W;
+          const dy = (r + 0.5 - cy) * CELL_H;
           const d2 = dx * dx + dy * dy;
           if (d2 >= rr) continue;
           const t      = 1 - Math.sqrt(d2) / SEED_R;
@@ -309,18 +291,17 @@
     // ── Local RD boost ────────────────────────────────────────────────────────
     function localBoostStep(f, k, radius) {
       if (!ptr.active) return;
-      const cx = pxCol(ptr.x), cy = pxRow(ptr.y);
-      const cw = CELL_W * cellScale, ch = CELL_H * cellScale;
-      const r0 = Math.max(1,        Math.floor(cy - radius / ch));
-      const r1 = Math.min(rows - 2, Math.ceil (cy + radius / ch));
-      const c0 = Math.max(1,        Math.floor(cx - radius / cw));
-      const c1 = Math.min(cols - 2, Math.ceil (cx + radius / cw));
+      const cx = ptr.x / CELL_W, cy = ptr.y / CELL_H;
+      const r0 = Math.max(1,        Math.floor(cy - radius / CELL_H));
+      const r1 = Math.min(rows - 2, Math.ceil (cy + radius / CELL_H));
+      const c0 = Math.max(1,        Math.floor(cx - radius / CELL_W));
+      const c1 = Math.min(cols - 2, Math.ceil (cx + radius / CELL_W));
       const rr = radius * radius;
 
       for (let r = r0; r <= r1; r++) {
         const rp = (r-1)*cols, rc = r*cols, rn = (r+1)*cols;
         for (let c = c0; c <= c1; c++) {
-          const dx = (c+0.5-cx)*cw, dy = (r+0.5-cy)*ch;
+          const dx = (c+0.5-cx)*CELL_W, dy = (r+0.5-cy)*CELL_H;
           if (dx*dx+dy*dy >= rr) continue;
           const i = rc+c;
           if (interiorMask[i]) continue;
@@ -337,7 +318,7 @@
       for (let r = r0; r <= r1; r++) {
         const rc = r*cols;
         for (let c = c0; c <= c1; c++) {
-          const dx = (c+0.5-cx)*cw, dy = (r+0.5-cy)*ch;
+          const dx = (c+0.5-cx)*CELL_W, dy = (r+0.5-cy)*CELL_H;
           if (dx*dx+dy*dy >= rr) continue;
           const i = rc+c;
           if (interiorMask[i]) continue;
@@ -347,24 +328,10 @@
     }
 
     // ── Canvas2 overlay dissolve ──────────────────────────────────────────────
-    function overlayPixelXY(cell) {
-      // Title cells: X fixed (measured from font), Y tracks grid + cellScale
-      // Subtitle cells: both X and Y track grid + cellScale
-      const x  = cell.col !== undefined
-        ? offX + cell.col       * CELL_W * cellScale
-        : cell.x;
-      const cx = cell.col !== undefined
-        ? offX + (cell.col + 0.5) * CELL_W * cellScale
-        : cell.cx;
-      const cy = offY + cell.baseRow * CELL_H * cellScale;
-      return { x, cx, cy };
-    }
-
     function updateOverlayV() {
       const allCells = titleCells.concat(subtitleCells);
       for (const cell of allCells) {
-        const { cx, cy } = overlayPixelXY(cell);
-        const dx = cx - ptr.x, dy = cy - ptr.y;
+        const dx = cell.cx - ptr.x, dy = cell.cy - ptr.y;
         const d  = Math.sqrt(dx * dx + dy * dy);
         if (ptr.active && d < SEED_R) {
           const t = 1 - d / SEED_R;
@@ -375,7 +342,7 @@
       }
     }
 
-    // ── Draw canvas1 (RD field + border) ─────────────────────────────────────
+    // ── Draw canvas1 ─────────────────────────────────────────────────────────
     function draw(bg, fg) {
       ctx.fillStyle = hsl(bg);
       ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
@@ -384,21 +351,15 @@
       ctx.textBaseline = 'top';
       ctx.fillStyle    = hsl(fg);
 
-      const cw = CELL_W * cellScale, ch = CELL_H * cellScale;
+      let i = 0;
       for (let r = 0; r < rows; r++) {
-        const y = offY + r * ch;
-        if (y > window.innerHeight + ch) break;
-        if (y + ch < 0) continue;
-        for (let c = 0; c < cols; c++) {
-          const x = offX + c * cw;
-          if (x > window.innerWidth + cw) break;
-          if (x + cw < 0) continue;
-          const i   = r * cols + c;
+        const y = r * CELL_H;
+        for (let c = 0; c < cols; c++, i++) {
           const v   = V0[i];
           const idx = Math.min(NC - 1, Math.floor(v / V_MAX * NC));
-          const ch_ = (textChars[i] && v > TEXT_VISIBLE) ? textChars[i] : CHARS[idx];
-          if (ch_ === ' ') continue;
-          ctx.fillText(ch_, x, y);
+          const ch  = (textChars[i] && v > TEXT_VISIBLE) ? textChars[i] : CHARS[idx];
+          if (ch === ' ') continue;
+          ctx.fillText(ch, c * CELL_W, y);
         }
       }
 
@@ -412,14 +373,13 @@
       }
     }
 
-    // ── Draw canvas2 (title + subtitle, ASCII dissolve) ───────────────────────
+    // ── Draw canvas2 (ASCII dissolve overlay) ────────────────────────────────
     function drawOverlay(fg) {
       ctx2.clearRect(0, 0, window.innerWidth, window.innerHeight);
       ctx2.fillStyle    = hsl(fg);
       ctx2.textBaseline = 'middle';
 
       function renderCell(cell) {
-        const { x, cy } = overlayPixelXY(cell);
         const v = cell.v;
         let ch;
         if      (v > 0.85) { ch = cell.ch; ctx2.globalAlpha = 1; }
@@ -428,7 +388,7 @@
         else if (v > 0.25) { ch = '░';     ctx2.globalAlpha = v; }
         else if (v > 0.08) { ch = '·';     ctx2.globalAlpha = v; }
         else return;
-        ctx2.fillText(ch, x, cy);
+        ctx2.fillText(ch, cell.x, cell.cy);
       }
 
       ctx2.font = FONT_LG;
@@ -482,10 +442,6 @@
     function loop(ts) {
       const dt = Math.min(ts - lastTs, 100);
       lastTs = ts;
-
-      // Uniform cell-spacing oscillation — ±12%, ~22s period
-      cellScale = 1.0 + CELL_SCALE_AMP * Math.sin(ts * 0.00028);
-      updateOffsets();
 
       palT += dt / COLOR_DUR;
       if (palT >= 1) { palA = palB; palB = randomPair(); palT -= 1; }
