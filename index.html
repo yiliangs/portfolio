@@ -108,6 +108,33 @@
     let titleCells    = [];
     let subtitleCells = [];
 
+    // ── Char sprite atlas ────────────────────────────────────────────────────
+    const BOX_CHARS   = ['╔','╗','╚','╝','═','║'];
+    const ALL_CHARS   = CHARS.split('').filter(c => c !== ' ')
+                        .concat(BOX_CHARS)
+                        .filter((c,i,a) => a.indexOf(c) === i);
+    const atlasCanvas = document.createElement('canvas');
+    const atlasCtx    = atlasCanvas.getContext('2d');
+    const spriteMap   = {};
+    let   atlasColor  = '';
+
+    function rebuildAtlas(fgStr) {
+      if (fgStr === atlasColor) return;
+      atlasColor = fgStr;
+      const w = Math.ceil(CELL_W * DPR);
+      const h = Math.ceil(CELL_H * DPR);
+      atlasCanvas.width  = w * ALL_CHARS.length;
+      atlasCanvas.height = h;
+      atlasCtx.scale(DPR, DPR);
+      atlasCtx.font         = FONT;
+      atlasCtx.textBaseline = 'top';
+      atlasCtx.fillStyle    = fgStr;
+      for (let i = 0; i < ALL_CHARS.length; i++) {
+        spriteMap[ALL_CHARS[i]] = i * w;
+        atlasCtx.fillText(ALL_CHARS[i], i * CELL_W, 0);
+      }
+    }
+
     // ── Grid ──────────────────────────────────────────────────────────────────
     function buildGrid() {
       const n = cols * rows;
@@ -213,12 +240,13 @@
       cols = Math.ceil(w / CELL_W) + 1;
       rows = Math.ceil(h / CELL_H) + 1;
       buildGrid();
+      buildRowOffsets();
       buildTextMask();
       buildTitleCells();
       buildSubtitleCells();
     }
 
-    window.addEventListener('resize', () => { resize(); initRD(curF, curK); });
+    window.addEventListener('resize', () => { resize(); atlasColor = ''; initRD(curF, curK); });
 
     // ── Text restoration ──────────────────────────────────────────────────────
     function restoreText() {
@@ -250,25 +278,37 @@
       for (let s = 0; s < WARMUP; s++) { stepRD(f, k); restoreText(); }
     }
 
+    // ── Pre-computed row offsets (rebuilt on resize) ────────────────────────
+    let rowPrev, rowNext;
+    function buildRowOffsets() {
+      rowPrev = new Int32Array(rows);
+      rowNext = new Int32Array(rows);
+      for (let r = 0; r < rows; r++) {
+        rowPrev[r] = (r === 0 ? rows - 1 : r - 1) * cols;
+        rowNext[r] = (r === rows - 1 ? 0 : r + 1) * cols;
+      }
+    }
+
     // ── RD step ───────────────────────────────────────────────────────────────
     function stepRD(f, k) {
+      const lastCol = cols - 1;
       for (let r = 0; r < rows; r++) {
-        const rp = (r === 0        ? rows - 1 : r - 1) * cols;
-        const rc =  r * cols;
-        const rn = (r === rows - 1 ? 0        : r + 1) * cols;
+        const rp = rowPrev[r];
+        const rc = r * cols;
+        const rn = rowNext[r];
         for (let c = 0; c < cols; c++) {
           const i = rc + c;
           if (interiorMask[i]) { U1[i] = 1; V1[i] = 0; continue; }
-          const cp = c === 0        ? cols - 1 : c - 1;
-          const cn = c === cols - 1 ? 0        : c + 1;
+          const cp = c === 0        ? lastCol : c - 1;
+          const cn = c === lastCol  ? 0       : c + 1;
           const u = U0[i], v = V0[i];
           const Lu = 0.05*(U0[rp+cp]+U0[rp+cn]+U0[rn+cp]+U0[rn+cn])
                    + 0.20*(U0[rp+c ]+U0[rc+cp]+U0[rc+cn]+U0[rn+c ]) - u;
           const Lv = 0.05*(V0[rp+cp]+V0[rp+cn]+V0[rn+cp]+V0[rn+cn])
                    + 0.20*(V0[rp+c ]+V0[rc+cp]+V0[rc+cn]+V0[rn+c ]) - v;
           const uvv = u * v * v;
-          U1[i] = Math.max(0, Math.min(1, u + curDU*Lu - uvv + f*(1-u)));
-          V1[i] = Math.max(0, Math.min(1, v + curDV*Lv + uvv - (f+k)*v));
+          U1[i] = u + curDU*Lu - uvv + f*(1-u);
+          V1[i] = v + curDV*Lv + uvv - (f+k)*v;
         }
       }
       let t = U0; U0 = U1; U1 = t;
@@ -330,8 +370,8 @@
           const Lv = 0.05*(V0[rp+c-1]+V0[rp+c+1]+V0[rn+c-1]+V0[rn+c+1])
                    + 0.20*(V0[rp+c  ]+V0[rc+c-1]+V0[rc+c+1]+V0[rn+c  ]) - v;
           const uvv = u*v*v;
-          U1[i] = Math.max(0, Math.min(1, u + curDU*Lu - uvv + f*(1-u)));
-          V1[i] = Math.max(0, Math.min(1, v + curDV*Lv + uvv - (f+k)*v));
+          U1[i] = u + curDU*Lu - uvv + f*(1-u);
+          V1[i] = v + curDV*Lv + uvv - (f+k)*v;
         }
       }
       for (let r = r0; r <= r1; r++) {
@@ -363,12 +403,14 @@
 
     // ── Draw canvas1 ─────────────────────────────────────────────────────────
     function draw(bg, fg) {
+      const fgStr = hsl(fg);
+      rebuildAtlas(fgStr);
+
       ctx.fillStyle = hsl(bg);
       ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
 
-      ctx.font         = FONT;
-      ctx.textBaseline = 'top';
-      ctx.fillStyle    = hsl(fg);
+      const sw = Math.ceil(CELL_W * DPR);
+      const sh = Math.ceil(CELL_H * DPR);
 
       let i = 0;
       for (let r = 0; r < rows; r++) {
@@ -378,7 +420,13 @@
           const idx = Math.min(NC - 1, Math.floor(v / V_MAX * NC));
           const ch  = (textChars[i] && v > TEXT_VISIBLE) ? textChars[i] : CHARS[idx];
           if (ch === ' ') continue;
-          ctx.fillText(ch, c * CELL_W, y);
+          const sx = spriteMap[ch];
+          if (sx !== undefined) {
+            ctx.drawImage(atlasCanvas, sx, 0, sw, sh, c * CELL_W, y, CELL_W, CELL_H);
+          } else {
+            ctx.font = FONT; ctx.textBaseline = 'top'; ctx.fillStyle = fgStr;
+            ctx.fillText(ch, c * CELL_W, y);
+          }
         }
       }
 
@@ -457,10 +505,14 @@
 
     // ── Main loop ─────────────────────────────────────────────────────────────
     let lastTs = 0;
+    let adaptiveSteps = STEPS;
 
     function loop(ts) {
       const dt = Math.min(ts - lastTs, 100);
       lastTs = ts;
+
+      if (dt > 20) adaptiveSteps = Math.max(2, adaptiveSteps - 1);
+      else if (dt < 14) adaptiveSteps = Math.min(STEPS, adaptiveSteps + 1);
 
       // Diffusion oscillation — changes arm spacing of RD pattern
       const diffScale = 1.0 + DIFF_AMP * Math.sin(ts * DIFF_FREQ);
@@ -482,7 +534,7 @@
       updateOverlayV();
       seedMouse();
       for (let s = 0; s < BOOST_STEPS; s++) localBoostStep(curF, curK, BOOST_R * (s + 1));
-      for (let s = 0; s < STEPS; s++) stepRD(curF, curK);
+      for (let s = 0; s < adaptiveSteps; s++) stepRD(curF, curK);
       restoreText();
       draw(bg, fg);
       drawOverlay(fg);
