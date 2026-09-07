@@ -48,8 +48,8 @@ const HYPER_SPAN = 1.2;    // the turned w runs to +-sqrt(0.75); this divides it
 // neighbour is the whole of the readability, which is why the range is wide against so small a base. WALL_AERIAL is
 // the share of the tone the fourth dimension takes back, thinning the far cell the way distance thins a wash.
 const WALL_LIGHT = new THREE.Vector3(-0.4, 0.75, 0.5).normalize();
-const WALL_BASE = 0.015;   // ink alpha on a wall turned right away from the light
-const WALL_RANGE = 0.22;   // and how much more the best-lit wall takes
+const WALL_BASE = 0.012;   // ink alpha on a wall turned right away from the light
+const WALL_RANGE = 0.17;   // and how much more the best-lit wall takes
 const WALL_AERIAL = 0.55;
 // 16 vertices at (+/-0.5) in four coordinates, and an edge wherever two of them differ in exactly one coordinate
 const HC_V = [], HC_E = [], HC_F = [];
