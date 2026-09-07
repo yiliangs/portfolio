@@ -424,7 +424,10 @@ class Component extends DCLogic {
     this.finishMorph();
     this.slideLeaves = !sameReg;
     const olds = this.captureTexts();
-    if (!sameReg) { this.parchT0 = performance.now(); if (this.parch) this.parch.quench(); }
+    // every transition stamps its own start, so the roll's travel is anchored to the moment the page turned. A stamp
+    // left behind by an earlier register change would already be spent, and the tween would land finished on frame one
+    this.parchT0 = performance.now();
+    if (!sameReg && this.parch) this.parch.quench();
     (this.trInstances || []).forEach((t) => t.destroy()); this.trInstances = [];
     if (!sameReg) this.retypeBrand(this.curReg(), toReg);
     this.setState(nextState, () => { window.scrollTo({ top: 0 }); if (olds) requestAnimationFrame(() => this.morphTexts(olds)); });
@@ -820,7 +823,9 @@ class Component extends DCLogic {
     // opening: the roll waits for the page cross-fade (0–0.2), then travels on its own (0.2–0.62), then unrolls (0.6–1)
     // closing: rolls up first (0–0.4), then travels home (0.38–0.8), and the essay title settles around it
     this.parch.quench();
-    const t0 = this.parchT0 || performance.now(), dur = 900, tw = this.parchTween = { k, to };
+    // the stamp is spent once a travel claims it; the next travel gets its own from the next transition
+    const t0 = this.parchT0 || performance.now(); this.parchT0 = null;
+    const dur = 900, tw = this.parchTween = { k, to };
     const tick = (now) => {
       const dest = tw.to, t = Math.min(1, (now - t0) / dur), p = this.bez(t);
       const L = (a, b) => a + (b - a) * p;
