@@ -2076,7 +2076,7 @@
       // Three essays first published on Substack in June 2026, recorded here in full. Each is built
       // the way the two papers are: a serif chapter whose body is a content module and whose hero is
       // the post's cover image. Their kind is Essay, so on the Research landing they take the smaller
-      // leaves after the papers, which keep the two anchor plates. They sit here, before the written
+      // leaves after the papers, which keep the two anchor plates. They sit here, before the Notra
       // chapter, because the landing hands out its leaf slots in data order and these three carry wide
       // covers: the slots they land in stack the title under the plate, which a wide plate needs.
       // The post itself is the chapter's Further link, as the PDF is a paper's; the subtitle is the
@@ -2097,13 +2097,17 @@
         margin: '“Inference” was never one economic good. It’s two goods that happen to share a word.',
         hero: 'assets/the-eyeball-line/hero.jpg', heroW: 1152, heroH: 921,
         paper: './content/the-eyeball-line.js' },
-      { title: 'On drawing with machines', subtitle: 'An essay on what changes when software starts to propose, not just record.', kind: 'Writing', year: 2025, page: 206, pages: '206–213', role: 'Author', with: 'A patient editor', status: 'Published', statusShort: 'published', stack: 'A text editor, three drafts, a walk between each.', link: 'Read the essay', caption: 'A sketch from the essay: the same room, drawn by hand and by suggestion.', placeholder: 'Plate: hand sketch beside a machine proposal',
-        why: 'Every tool I use had started to propose things. I wanted to say what a proposing tool owes the person drawing.',
-        margin: 'A tool that records is a pencil. A tool that proposes is a colleague, and colleagues need manners.',
-        summary: 'A long essay on generative tools in architecture, written for practitioners rather than futurists. Its argument is about manners: what a proposing tool owes the person drawing.',
-        body1: 'For most of its history, architectural software has been a very good pencil. It recorded what you decided. That is changing, and the essay tries to describe the change without either panic or advertising.',
-        body2: 'The central idea is that a tool which proposes has entered a conversation, and conversations have etiquette. It should say when it is unsure. It should not interrupt. It should let you be wrong on purpose. Most current tools fail all three, and the essay says so plainly.',
-        body3: 'It was published in the summer of 2025 and has been argued with at length, which was the intent. I still agree with most of it.' },
+      // The ACADIA 2025 project paper, and the one built thing in the book: a coffee table standing in
+      // for a space frame at furniture scale. It takes the page span a placeholder essay held here, so
+      // the register closes on a paper rather than on filler. Its byline is four names over three
+      // institutions with the first two equal, which is what renderPaper's authors array and its note
+      // are for. No `why`: that line is read by the Development cards alone, and this is a Research
+      // chapter, so the margin note carries the argument instead.
+      { id: 'notra', title: 'Notra', subtitle: 'A kerf-bent polyhedral timber frame, prototyped as a coffee table.', kind: 'Research', year: 2025, page: 206, pages: '206–213', role: 'Co-first author', with: 'Yulun Liu, Yicheng Zhang and Yao Lu', status: 'Published, ACADIA 2025', statusShort: 'published', stack: 'PolyFrame2 in Rhino for polyhedral graphic statics; 20 mm plywood strips cut on a three-axis CNC router and kerf-bent with hot water; 5 mm laser-cut acrylic anchors, six steel cables and a 6 mm glass top.', link: 'Camera-ready PDF', href: 'assets/notra/Liu-Shao-Zhang-Lu_Notra_ACADIA-2025_camera-ready.pdf', linkBlank: true, caption: 'Notra: a kerf-bent timber frame coffee table.', placeholder: 'Plate: cover photograph',
+        margin: 'Precisely calculated kerf cuts allow the elements to bend to their intended curvature without auxiliary tools.',
+        summary: 'Notra is a kerf-bent timber frame coffee table that serves as a small-scale prototype for a novel space frame system. It explores an integrated design and fabrication approach that blurs the boundary between nodes and bars in timber space frame structures. The system features curved nodal geometries fabricated from planar timber sheets using three-axis CNC milling and kerf-bending, eliminating the need for molds or custom components typically required for complex joints. Precisely calculated kerf cuts allow the elements to bend to their intended curvature without auxiliary tools. This approach reduces material waste, simplifies fabrication, and enhances accessibility for constructing geometrically intricate frames. Notra uses polyhedral graphic statics (PGS) as a form-finding method to generate a compression-dominant geometry. While demonstrated at the furniture scale, the workflow is applicable to larger structures, offering a material-efficient and cost-effective fabrication strategy.',
+        hero: 'assets/notra/fig-01.jpg', heroW: 2000, heroH: 1333,
+        paper: './content/notra.js' },
       { title: 'Survey Pipeline', subtitle: 'From a muddy site to a usable model in a single afternoon.', kind: 'R&D', year: 2022, page: 214, pages: '214–221', role: 'Research engineer', with: 'A surveying firm and a very cold intern', status: 'Internal, in use', statusShort: 'internal', stack: 'Point-cloud processing, a plane-fitting heuristic, exports to the studio’s BIM.', link: 'Technical note', caption: 'A scanned barn, its walls found, its clutter politely ignored.', placeholder: 'Capture: point cloud with fitted planes',
         why: 'Scans were easy; models you could draw over were not. I wanted the boring part done by evening.',
         margin: 'The hard part was never the scanning. It was deciding which of the six hundred million points were a wall.',
