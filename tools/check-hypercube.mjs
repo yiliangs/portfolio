@@ -16,13 +16,19 @@
 //
 // And the wash on the walls has to be steady. What makes the figure readable is that each of its eight cells is
 // shaded on the three walls it turns away from the reader, and "away" is a direction the figure itself has to
-// supply. It supplies it as a vector, not a sign, and that is the claim worth guarding: two earlier rules for it
-// each read as a plausible still and each blinked in motion. Winding every face once and keeping one side of it put
-// the whole wash out at some poses and doubled it at others. Taking the sign of the normal against the cell's centre
-// flipped a wall covering a fifth of the figure from lit to nothing between two frames, because a cell of a
-// projected tesseract folds through itself and at that instant has no inside. Scaling by that reading instead of
-// taking its sign is what fixed it, and the check below is what would catch either mistake coming back: a wall's
-// outward vector may only move a long way at a pose where the wall has no area to show the move in.
+// supply. Three rules for it have been tried and the first two blinked in motion while looking right in a still.
+// Winding every face once and keeping one side of it put the whole wash out at some poses and doubled it at others,
+// since the winding is arbitrary and nothing balances it. Taking the sign of the wall's normal against the step
+// from the cell's centre turned a wall covering a fifth of the figure over between two frames, because a cell of a
+// projected tesseract folds through itself and at that instant has no inside. Scaling by the cosine of that angle
+// fixed the fold that turns the normal, and hid the fold that walks the centre through the wall instead: the step
+// reverses through that one while its length stays put, so a quotient by its length is the same either side of it.
+// What holds is the clearance itself, the distance from the cell's centre to the wall's plane in units of the
+// cell's radius. It passes through zero both ways round, so the wash thins and returns rather than turning over.
+//
+// The check below is what catches any of the three coming back: a wall's outward vector may only move a long way at
+// a pose where the wall has no area to show the move in. It is written as a refinement test rather than a ceiling,
+// because a wall sweeping through a fold moves fast and is still sound.
 //
 // Run with `npm run check`. Exits non-zero and prints every failure it found.
 
@@ -41,9 +47,13 @@ const MOVED = 1e-4;  // units an endpoint has to travel between poses before it 
 const FLAT = 1e-5;   // how far a wall's fourth corner may sit off the plane of its first three
 const NOAREA = 0.01; // a wall covering less of the figure than this has folded to a line and is exempt
 const STEP = 1 / 60; // seconds between the poses the sweep steps through: one frame, so a move it finds is a move seen
-const SPAN = 400;    // and how many seconds of turning it walks, which is several hundred turns in both planes
+const SPAN = 250;    // and how many seconds of turning it walks, which is a dozen turns of the figure and more
 const SHRINK = 2.5;  // refining the sweep fourfold has to shrink the worst move by at least this, or it is a flip
-const XW = 0.35, YW = 0.22; // the rates home.js turns the figure at, so the sweep walks the poses it actually takes
+// The sweep walks both planes at once, at rates with no common measure, so the path never closes and covers far
+// more of the function than the home cube itself takes: the cube turns in the xw plane alone. The single-plane path
+// is walked as well, because it lies on a symmetry of the figure where cells fold through their own walls far more
+// often than they do anywhere off it, and it is the path the reader actually sees.
+const XW = 0.35, YW = 0.22;
 
 const failures = [];
 const fail = (msg) => failures.push(msg);
@@ -251,13 +261,16 @@ for (const pose of SETTLED) {
 // not a ceiling on the step, which a fast swing would trip, but whether the step shrinks when the sweep is refined.
 // A vector that turns continuously moves a quarter as far over a quarter of the interval; one that flips moves the
 // same distance however finely the sweep is cut, because the flip is between two samples wherever they are put.
+// Both the path the cube takes and a denser one off it are walked: the single-plane path lies on a symmetry of the
+// figure and folds cells through their own walls far more often than a generic path does, so a rule can be sound
+// everywhere else and still flash ninety times a minute on the one path a reader ever sees.
 // A wall that has folded to a line is exempt. Its normal is whatever three points in a row happen to say, so it does
 // swing hard, but it is drawn across a few thousandths of the figure while it does and nothing of it can be seen.
-const sweep = (step, span) => {
+const sweep = (step, span, yw) => {
   let worst = 0, at1 = null;
   let prev = at(0, 0), prevArea = [...Array(WALLS).keys()].map((w) => wallArea(prev.wpos, w));
   for (let s = 1; s * step < span; s++) {
-    const t = s * step, cur = at(XW * t, YW * t);
+    const t = s * step, cur = at(XW * t, yw * t);
     const area = [...Array(WALLS).keys()].map((w) => wallArea(cur.wpos, w));
     for (let w = 0; w < WALLS; w++) {
       if (Math.min(area[w], prevArea[w]) < NOAREA) continue;
@@ -269,15 +282,21 @@ const sweep = (step, span) => {
   }
   return { worst, at: at1 };
 };
-const coarse = sweep(STEP, SPAN), fine = sweep(STEP / 4, SPAN);
-const shrink = fine.worst > 0 ? coarse.worst / fine.worst : Infinity;
-if (shrink < SHRINK) {
-  fail('cutting the sweep from one frame a step to a quarter of one left the worst move in a wall\'s outward vector ' +
-    'nearly where it was, ' + coarse.worst.toFixed(3) + ' against ' + fine.worst.toFixed(3) + ' (wall ' + coarse.at[1] +
-    ' at t = ' + coarse.at[0].toFixed(2) + '). That is a flip between two frames, not a turn: the wash on that wall ' +
-    'lands somewhere it was never on its way to, which reads as a flash. An outward direction taken as a sign does ' +
-    'this, because a cell of a projected tesseract folds through itself and at that instant has no inside; taken as ' +
-    'a vector that passes through zero it does not');
+let shrink = Infinity;
+for (const [path, yw] of [['the one plane the cube turns in', 0], ['both planes at once', YW]]) {
+  const coarse = sweep(STEP, SPAN, yw), fine = sweep(STEP / 4, SPAN, yw);
+  const ratio = fine.worst > 0 ? coarse.worst / fine.worst : Infinity;
+  shrink = Math.min(shrink, ratio);
+  if (ratio < SHRINK) {
+    fail('sweeping ' + path + ', cutting the step from one frame to a quarter of one left the worst move in a ' +
+      'wall\'s outward vector nearly where it was, ' + coarse.worst.toFixed(3) + ' against ' + fine.worst.toFixed(3) +
+      ' (wall ' + coarse.at[1] + ' at t = ' + coarse.at[0].toFixed(2) + '). That is a flip between two frames, not a ' +
+      'turn: the wash on that wall lands somewhere it was never on its way to, which reads as a flash. A cell of a ' +
+      'projected tesseract folds through itself, and the reading that says which way is out has to pass through ' +
+      'zero as it does. Dividing that reading by the length of the step from the cell\'s centre destroys exactly ' +
+      'that, since the step reverses through the fold while its length stays put, and the quotient is the same ' +
+      'either side');
+  }
 }
 
 // folded shut at a settled pose the twelve faces that span w have come together onto nothing, and the other twelve

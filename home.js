@@ -16,13 +16,24 @@ const cubicInOut = (x) => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) 
 
 // ----- the cube is a tesseract -----
 const CS = 1;              // the cube's side, and the box the projection is refitted into
-const HYPER_XW = 0.35;     // rad/s the figure turns in the xw plane
-const HYPER_YW = 0.22;     // rad/s in the yw plane; the two rates are incommensurate, so the pose never repeats
+// The figure turns in one 4D plane and no more. A simple rotation is the one a reader can follow: a quarter turn in
+// a single plane carries the tesseract onto itself, so the whole of it is a cycle of about four and a half seconds
+// that comes back to where it began and can be learned by watching. Turning in two planes at once, which is what
+// this did, never repeats and never settles into a shape; locking the two rates to a whole-number ratio makes it
+// periodic and no easier to read, because it is the second plane and not the long period that loses the reader.
+const HYPER_XW = 0.35;     // rad/s in the xw plane, the only plane the figure turns in
 const HYPER_D = 2.0;       // eye distance for the 4D perspective divide: the far cell shrinks, the near one swells
 const HYPER_INNER = 0.55;  // weight of the far cell and the connectors against the near cell's, which reads as depth
+// And the viewpoint holds still apart from a slow roll about the axis pointing at the reader. That is the only turn
+// of the three that takes nothing out of sight: pitch and yaw carry a face away behind the figure, roll only turns
+// what is already facing you. So the three-quarter view is fixed, the roll rocks inside a bounded arc, and the only
+// thing that moves pitch and yaw is the cursor.
+const CUBE_PITCH = -0.22, CUBE_YAW = 0.5; // the three-quarter view the figure is read from
+const CUBE_ROLL = 0.28;    // rad the roll reaches either side of it
+const CUBE_ROLL_W = 0.13;  // rad/s of phase, so the rock takes about 48 s and is slower than the figure's own turn
 // The word counters the cube's turn completely and then wobbles by a bounded amount. It cannot instead keep a share
-// of that turn: the cube's yaw grows without bound, so any fraction of it walks the word right around and reads from
-// behind, and a shortest-arc slerp of the inverse flips side every time the yaw passes PI, which shows as a jump.
+// of that turn: a share of the roll tips the word off level by as much again, and the word is the one thing in the
+// figure that has to stay square to the reader, since it is read rather than looked at.
 const WORD_WOBBLE = 0.07;  // rad of free wobble, so the word shows its depth without ever leaving the reader
 const HYPER_SPAN = 1.2;    // the turned w runs to +-sqrt(0.75); this divides it back into a 0..1 depth
 // The wash the walls are drawn at. A fixed key light gives every wall a tone from the way it lies, so the figure
@@ -59,7 +70,13 @@ for (let c = 0; c < 4; c++) for (const on of [0, 1]) {
   const ci = HC_C.push(cell) - 1;
   for (const face of HC_F) if (face.every((i) => ((i >> c) & 1) === on)) HC_W.push([ci, face[0], face[1], face[2], face[3]]);
 }
-const hcC = new Float32Array(24); // the eight cells' centres, which orient their walls
+const hcC = new Float32Array(24), hcR = new Float32Array(8); // the eight cells' centres and radii, which orient their walls
+// A wall is fully out of its cell once its plane stands this much of the cell's own radius clear of the cell's
+// centre, and every wall of an honest cell stands far clear of that. It matters only where a cell folds through
+// itself: the reading then crosses zero over a short arc instead of at a point, so the wash fades rather than turns
+// over. Measuring the clearance against the cell's radius rather than a fixed length is what lets the thin
+// connecting cells shade as firmly as the two cubical ones.
+const WALL_SOFT = 0.08;
 const hcP = new Float32Array(48), hcW = new Float32Array(16); // the 16 projected points and their turned w
 // Turns the figure by a in the xw plane and b in the yw plane, divides it down to three dimensions, and refits it so
 // it exactly fills the cube's box. pos takes the 32 edges' endpoints (192 floats), wt a per-endpoint weight (64):
@@ -95,6 +112,14 @@ export function hypercube(a, b, fold, pos, wt, wpos, wnd) {
     hcC[o] = hcC[o + 1] = hcC[o + 2] = 0;
     for (let v = 0; v < 8; v++) { const i = cell[v] * 3; hcC[o] += hcP[i]; hcC[o + 1] += hcP[i + 1]; hcC[o + 2] += hcP[i + 2]; }
     hcC[o] *= k / 8; hcC[o + 1] *= k / 8; hcC[o + 2] *= k / 8;
+    // the cell's radius, which is the length its walls' clearances are read against. A cell can flatten but it
+    // cannot shrink to a point, so this never reaches zero and is safe to divide by
+    let r = 0;
+    for (let v = 0; v < 8; v++) {
+      const i = cell[v] * 3;
+      r += Math.hypot(hcP[i] * k - hcC[o], hcP[i + 1] * k - hcC[o + 1], hcP[i + 2] * k - hcC[o + 2]);
+    }
+    hcR[c] = r / 8;
   }
   for (let w = 0; w < HC_W.length; w++) {
     const wall = HC_W[w], o = w * 18, n = w * 4, c = wall[0] * 3;
@@ -103,14 +128,15 @@ export function hypercube(a, b, fold, pos, wt, wpos, wnd) {
       const i = wall[1 + [0, 1, 2, 0, 2, 3][t]] * 3, d = o + t * 3;
       wpos[d] = hcP[i] * k; wpos[d + 1] = hcP[i + 1] * k; wpos[d + 2] = hcP[i + 2] * k;
     }
-    // The wall's normal, pointed out of its cell and scaled by how firmly the cell says which way out is: the
-    // normal against the wall's own step from the cell's centre, which is 1 for a wall of an honest cube. One
+    // The wall's normal, pointed out of its cell and scaled by how firmly the cell says which way out is: how far
+    // the cell's centre stands clear of the wall's own plane, in units of the cell's radius, held to 1. One
     // triangle's normal is the whole wall's, exactly: the divide is projective on the wall's own plane, so a square
-    // still projects to a flat quadrilateral. The scaling is not decoration. A cell of this figure can fold through
+    // still projects to a flat quadrilateral. The scaling is not decoration. A cell of this figure folds through
     // itself as the pose turns, and at the moment it does its centre lies in the plane of its own wall and there is
-    // no out. Taking the sign there would flip a whole wall's tone in one frame; the scale instead passes through
-    // zero, so the cell's wash thins away as it flattens and comes back as it opens. Everything downstream reads
-    // this vector twice over, so the raw normal's own sign, which is the arbitrary one, cancels.
+    // no out. Taking the sign there would turn a whole wall's tone over in one frame; the clearance instead passes
+    // through zero, so the wash thins away as the cell flattens and comes back as it opens. It has to be the
+    // clearance and not the direction of the step from the centre, which is the same +-1 either side of the fold.
+    // Everything downstream reads this vector twice over, so the raw normal's own sign, the arbitrary one, cancels.
     const ux = wpos[o + 3] - wpos[o], uy = wpos[o + 4] - wpos[o + 1], uz = wpos[o + 5] - wpos[o + 2];
     const vx = wpos[o + 6] - wpos[o + 3], vy = wpos[o + 7] - wpos[o + 4], vz = wpos[o + 8] - wpos[o + 5];
     let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
@@ -119,7 +145,8 @@ export function hypercube(a, b, fold, pos, wt, wpos, wnd) {
     const mx = (wpos[o] + wpos[o + 3] + wpos[o + 6] + wpos[o + 15]) / 4 - hcC[c];
     const my = (wpos[o + 1] + wpos[o + 4] + wpos[o + 7] + wpos[o + 16]) / 4 - hcC[c + 1];
     const mz = (wpos[o + 2] + wpos[o + 5] + wpos[o + 8] + wpos[o + 17]) / 4 - hcC[c + 2];
-    const out = (nx * mx + ny * my + nz * mz) / (Math.hypot(mx, my, mz) || 1);
+    const clear = (nx * mx + ny * my + nz * mz) / (WALL_SOFT * hcR[wall[0]] || 1);
+    const out = Math.max(-1, Math.min(1, clear));
     wnd[n] = nx * out; wnd[n + 1] = ny * out; wnd[n + 2] = nz * out;
     // and how deep in the fourth dimension the wall lies, so the far cell comes out lighter than the near one the
     // way distance thins a wash
@@ -128,8 +155,17 @@ export function hypercube(a, b, fold, pos, wt, wpos, wnd) {
   return pos;
 }
 
+// Where the figure stands at rest: the three-quarter view, rocked by the roll and nudged by the cursor. Written as a
+// pure function because the word's counter-turn is only as good as what it is countering, so a check has to be able
+// to step the clock through both of them at once and watch what the reader would see.
+const cubeEul = new THREE.Euler();
+export function cubePose(t, px, py, out) {
+  cubeEul.set(CUBE_PITCH - py * 0.16, CUBE_YAW + px * 0.3, Math.sin(t * CUBE_ROLL_W) * CUBE_ROLL);
+  return out.setFromEuler(cubeEul);
+}
+
 // The word's own orientation: the cube's turn taken off completely, then a small bounded wobble put back. Writing it
-// as a pure function is what lets a check step the clock through a yaw of many turns and prove the word never walks.
+// as a pure function is what lets a check step the clock and prove the word neither walks nor jumps.
 const wordEul = new THREE.Euler(), wordQ = new THREE.Quaternion();
 export function wordPose(t, px, py, cubeQuat, out) {
   wordEul.set(Math.sin(t * 0.31) * WORD_WOBBLE + py * 0.05, Math.sin(t * 0.23) * WORD_WOBBLE * 1.4 + px * 0.08, 0);
@@ -282,9 +318,9 @@ export function mount(container) {
   let col = null, dis = 0, trav = 0, flat = 0, fold = 0; // the collapse timeline and its beats
   // the 4D pose. It runs free while nothing is collapsing; a collapse records where it was and the quarter turn it is
   // nearest, and the fold beat carries it there, so the figure is a plain cube before the travel starts
-  let ha = 0, hb = 0, ha0 = 0, hb0 = 0, haq = 0, hbq = 0;
+  let ha = 0, ha0 = 0, haq = 0;
   const settle = (x) => Math.round(x / (Math.PI / 2)) * (Math.PI / 2);
-  const markPose = () => { ha0 = ha; hb0 = hb; haq = settle(ha); hbq = settle(hb); };
+  const markPose = () => { ha0 = ha; haq = settle(ha); };
   const CORNERS = [];
   for (const sx of [-0.5, 0.5]) for (const sy of [-0.5, 0.5]) for (const sz of [-0.5, 0.5]) CORNERS.push(new THREE.Vector3(sx * CS, sy * CS, sz * CS));
   const cv = new THREE.Vector3();
@@ -322,7 +358,7 @@ export function mount(container) {
     if (!alive) return; raf = requestAnimationFrame(tick);
     const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
     px += (tx - px) * 0.06; py += (ty - py) * 0.06;
-    if (!col) { ha += HYPER_XW * dt; hb += HYPER_YW * dt; }
+    if (!col) ha += HYPER_XW * dt;
     if (col) {
       // beats: the word dissolves (0–0.4), the cube travels and turns into pose (0.22–0.72), then presses flat (0.6–1);
       // the expand runs the same film backwards, from the plate to the cube
@@ -333,13 +369,14 @@ export function mount(container) {
       const L = (a, b) => a + (b - a) * trav;
       anchor = { x: L(col.cube.x, col.plate.x), y: L(col.cube.y, col.plate.y), w: L(col.cube.w, col.plate.w), h: L(col.cube.h, col.plate.h) };
       // the pose settles onto its nearest quarter turn on the same beat, so the turning and the folding finish together
-      ha = ha0 + (haq - ha0) * fold; hb = hb0 + (hbq - hb0) * fold;
+      ha = ha0 + (haq - ha0) * fold;
       if (u0 >= 1 && col.reverse) { anchor = { ...col.cube }; col = null; dis = trav = flat = fold = 0; }
     }
     hover += (hoverTo - hover) * 0.1;
     alpha += (alphaTo - alpha) * 0.09;
-    // free pose: a slow turn nudged by the cursor; landed pose: the platform's axonometric (in-plane turn, then tilt)
-    eul.set(-0.22 + Math.sin(t * 0.42) * 0.05 - py * 0.16, 0.5 + t * 0.16 + px * 0.3, 0); qFree.setFromEuler(eul);
+    // free pose: the three-quarter view rocking on the reader's own axis, nudged by the cursor; landed pose: the
+    // platform's axonometric (in-plane turn, then tilt)
+    cubePose(t, px, py, qFree);
     eul.set(frame.tilt, 0, frame.turn); qPose.setFromEuler(eul);
     cube.quaternion.slerpQuaternions(qFree, qPose, trav);
     // flattening: the shell takes the sheet's proportions and loses its thickness
@@ -353,7 +390,7 @@ export function mount(container) {
     if (dis !== shownDis) { shownDis = dis; layoutVoxels(dis); }
     // the near cell always draws at the full edge weight; the far cell and the connectors draw lighter, and go out
     // as the figure folds, so at fold = 1 the wireframe left standing is the box the plate is pressed from
-    hypercube(ha, hb, fold, hyperPos, hyperW, wallPos, wallND);
+    hypercube(ha, 0, fold, hyperPos, hyperW, wallPos, wallND);
     for (let i = 0; i < 64; i++) hyperA[i] = hyperW[i] + (1 - hyperW[i]) * HYPER_INNER * (1 - fold);
     // a wall takes a tone from where its own normal stands to the key light, thinned by how deep in the fourth
     // dimension it lies and cut away entirely once it turns back toward the reader. Both readings are products with
