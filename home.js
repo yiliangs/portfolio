@@ -88,12 +88,15 @@ export function mount(container) {
     const g = new THREE.ExtrudeGeometry(shapes, { depth: DEPTH, curveSegments: 6, bevelEnabled: false });
     g.computeBoundingBox(); const bb = g.boundingBox;
     textW = bb.max.x - bb.min.x; textH = bb.max.y - bb.min.y;
-    g.translate(-(bb.min.x + bb.max.x) / 2, -(bb.min.y + bb.max.y) / 2, -DEPTH / 2);
+    // take the centering offsets off the box before anything moves it: BufferGeometry.applyMatrix4 recomputes an
+    // already-computed boundingBox in place, so translating g first would silently zero these out
+    const cx = -(bb.min.x + bb.max.x) / 2, cy = -(bb.min.y + bb.max.y) / 2;
+    g.dispose(); // g only ever measured the extruded shapes; the word itself is drawn as cap outlines below
     textMesh = new THREE.Group();
     // only the cap outlines (front and back contours), not the extrusion's side facets — those pile up along curves
     const pts = []; for (const sh of shapes) for (const path of [sh, ...sh.holes]) { const q = path.getPoints(8); for (let i = 0; i < q.length; i++) { const a = q[i], b = q[(i + 1) % q.length]; for (const z of [DEPTH / 2, -DEPTH / 2]) pts.push(a.x, a.y, z, b.x, b.y, z); } }
-    const og = new THREE.BufferGeometry(); og.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)); og.translate(-(bb.min.x + bb.max.x) / 2, -(bb.min.y + bb.max.y) / 2, 0);
-    textMesh.add(new THREE.LineSegments(og, voxEdgeMat)); g.dispose();
+    const og = new THREE.BufferGeometry(); og.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)); og.translate(cx, cy, 0);
+    textMesh.add(new THREE.LineSegments(og, voxEdgeMat));
     textMesh.scale.setScalar((CS * 0.84) / textW);
     inner.add(textMesh); shownDis = -1;
   }).catch((e) => console.error('home text failed', e));
