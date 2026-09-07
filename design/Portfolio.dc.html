@@ -13,7 +13,7 @@
   <script src="./image-slot.js"></script>
   <script src="./src/text-rippling.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400&family=Cinzel:wght@400&family=Geist+Mono:wght@400;500&family=Libre+Baskerville:ital@1&family=Google+Sans:wght@400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400&family=Cinzel:wght@400&family=Geist+Mono:wght@400;500&family=Libre+Baskerville:ital,wght@0,400;1,400&family=Google+Sans:wght@400&display=swap" rel="stylesheet">
   <style>
     body { margin: 0; background: var(--color-bg); color: var(--color-text); font-family: var(--font-body); text-wrap: pretty; }
     a { color: var(--color-accent-700); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: var(--color-accent); }
@@ -136,7 +136,7 @@
         <sc-for list="{{ leftLeaves }}" as="lf" hint-placeholder-count="1">
         <div data-leaf="{{ lf.side }}" style="grid-column:{{ lf.col }}; grid-row:{{ lf.row }}; align-self:{{ lf.selfY }}; justify-self:{{ lf.selfX }}; min-width:0; max-width:100%; z-index:{{ lf.zIndex }}; transform:translate(calc(var(--mx, 0) * {{ lf.px }}), calc(var(--my, 0) * {{ lf.py }} + {{ lf.bleedY }})); transition:transform 900ms cubic-bezier(.2,.7,.2,1);">
           <div style="animation:leaf-drift {{ lf.dur }} ease-in-out infinite alternate; animation-delay:{{ lf.delay }}; display:flex; flex-direction:{{ lf.dir }}; align-items:{{ lf.alignItems }}; gap:12px 20px; width:100%;">
-            <button data-shape="leaf-{{ lf.cardNo }}" data-shape-alt="frame-{{ lf.figNo }}" onClick="{{ lf.open }}" onMouseEnter="{{ lf.hover }}" onMouseLeave="{{ lf.unhover }}" onFocus="{{ lf.hover }}" onBlur="{{ lf.unhover }}" style-hover="box-shadow:0 30px 60px -22px rgba(32,31,29,0.42), 0 3px 8px rgba(32,31,29,0.1); border-color:var(--color-accent); z-index:3; filter:sepia(0.1) saturate(1) contrast(1.02)" style="all:unset; cursor:{{ lf.cursor }}; display:block; flex:none; height:{{ lf.imgH }}; width:auto; max-width:none; aspect-ratio:{{ lf.ratio }}; box-sizing:border-box; transform-origin:{{ lf.origin }}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:{{ lf.shadow }}; overflow:hidden; transform:translateX({{ lf.bleedX }}) translateY({{ lf.lift }}) scale({{ lf.scale }}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:sepia(0.22) saturate(0.82) contrast(1.05);">
+            <button data-shape="leaf-{{ lf.cardNo }}" data-shape-alt="frame-{{ lf.figNo }}" onClick="{{ lf.open }}" onMouseEnter="{{ lf.hover }}" onMouseLeave="{{ lf.unhover }}" onFocus="{{ lf.hover }}" onBlur="{{ lf.unhover }}" style-hover="box-shadow:0 30px 60px -22px rgba(32,31,29,0.42), 0 3px 8px rgba(32,31,29,0.1); border-color:var(--color-accent); z-index:3; filter:sepia(0.1) saturate(1) contrast(1.02)" style="all:unset; cursor:{{ lf.cursor }}; display:block; flex:none; height:{{ lf.imgH }}; width:auto; max-width:none; aspect-ratio:{{ lf.ratio }}; box-sizing:border-box; transform-origin:{{ lf.origin }}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:{{ lf.shadow }}; overflow:hidden; transform:translateX({{ lf.bleedX }}) translateY({{ lf.lift }}) scale({{ lf.scale }}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:{{ lf.filter }};">
               <image-slot id="{{ lf.coverSlotId }}" src="{{ lf.cover }}" shape="rect" fit="cover" placeholder="{{ lf.placeholder }}" style-hover="transform:scale(1.12)" style="width:100%; height:100%; display:block; transform:scale(1); transition:transform 620ms cubic-bezier(.2,.7,.2,1);"></image-slot>
             </button>
             <div style="position:relative; z-index:5; min-width:12ch; flex:1 1 auto; text-align:{{ lf.align }}; padding-bottom:2px;">
@@ -177,7 +177,7 @@
         <sc-for list="{{ rightLeaves }}" as="lf" hint-placeholder-count="1">
         <div data-leaf="{{ lf.side }}" style="grid-column:{{ lf.col }}; grid-row:{{ lf.row }}; align-self:{{ lf.selfY }}; justify-self:{{ lf.selfX }}; min-width:0; max-width:100%; z-index:{{ lf.zIndex }}; transform:translate(calc(var(--mx, 0) * {{ lf.px }}), calc(var(--my, 0) * {{ lf.py }} + {{ lf.bleedY }})); transition:transform 900ms cubic-bezier(.2,.7,.2,1);">
           <div style="animation:leaf-drift {{ lf.dur }} ease-in-out infinite alternate; animation-delay:{{ lf.delay }}; display:flex; flex-direction:{{ lf.dir }}; align-items:{{ lf.alignItems }}; gap:12px 20px; width:100%;">
-            <button data-shape="leaf-{{ lf.cardNo }}" data-shape-alt="frame-{{ lf.figNo }}" onClick="{{ lf.open }}" onMouseEnter="{{ lf.hover }}" onMouseLeave="{{ lf.unhover }}" onFocus="{{ lf.hover }}" onBlur="{{ lf.unhover }}" style-hover="box-shadow:0 30px 60px -22px rgba(32,31,29,0.42), 0 3px 8px rgba(32,31,29,0.1); border-color:var(--color-accent); z-index:3; filter:sepia(0.1) saturate(1) contrast(1.02)" style="all:unset; cursor:{{ lf.cursor }}; display:block; flex:none; height:{{ lf.imgH }}; width:auto; max-width:none; aspect-ratio:{{ lf.ratio }}; box-sizing:border-box; transform-origin:{{ lf.origin }}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:{{ lf.shadow }}; overflow:hidden; transform:translateX({{ lf.bleedX }}) translateY({{ lf.lift }}) scale({{ lf.scale }}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:sepia(0.22) saturate(0.82) contrast(1.05);">
+            <button data-shape="leaf-{{ lf.cardNo }}" data-shape-alt="frame-{{ lf.figNo }}" onClick="{{ lf.open }}" onMouseEnter="{{ lf.hover }}" onMouseLeave="{{ lf.unhover }}" onFocus="{{ lf.hover }}" onBlur="{{ lf.unhover }}" style-hover="box-shadow:0 30px 60px -22px rgba(32,31,29,0.42), 0 3px 8px rgba(32,31,29,0.1); border-color:var(--color-accent); z-index:3; filter:sepia(0.1) saturate(1) contrast(1.02)" style="all:unset; cursor:{{ lf.cursor }}; display:block; flex:none; height:{{ lf.imgH }}; width:auto; max-width:none; aspect-ratio:{{ lf.ratio }}; box-sizing:border-box; transform-origin:{{ lf.origin }}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:{{ lf.shadow }}; overflow:hidden; transform:translateX({{ lf.bleedX }}) translateY({{ lf.lift }}) scale({{ lf.scale }}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:{{ lf.filter }};">
               <image-slot id="{{ lf.coverSlotId }}" src="{{ lf.cover }}" shape="rect" fit="cover" placeholder="{{ lf.placeholder }}" style-hover="transform:scale(1.12)" style="width:100%; height:100%; display:block; transform:scale(1); transition:transform 620ms cubic-bezier(.2,.7,.2,1);"></image-slot>
             </button>
             <div style="position:relative; z-index:5; min-width:12ch; flex:1 1 auto; text-align:{{ lf.align }}; padding-bottom:2px;">
@@ -265,11 +265,38 @@
       <div><dt style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-neutral-600);">Pages</dt><dd style="margin:0; font-feature-settings:'tnum' 1;">{{ current.pages }}</dd></div>
     </dl>
 
-    <figure class="plate" data-shape="frame-{{ current.figNo }}" style="margin:0; aspect-ratio:16/9; width:100%; position:relative; filter:sepia(0.22) saturate(0.82) contrast(1.05);">
-      <image-slot id="{{ current.heroSlotId }}" shape="rect" placeholder="{{ current.placeholder }}" style="width:100%; height:100%;"></image-slot>
+    <figure class="plate" data-shape="frame-{{ current.figNo }}" style="margin:0; aspect-ratio:16/9; width:100%; position:relative; filter:{{ heroFilter }};">
+      <sc-if value="{{ heroSlot }}" hint-placeholder-val="{{ true }}"><image-slot id="{{ current.heroSlotId }}" shape="rect" placeholder="{{ current.placeholder }}" style="width:100%; height:100%;"></image-slot></sc-if>
+      <sc-if value="{{ heroImg }}" hint-placeholder-val="{{ false }}"><img src="{{ current.hero }}" alt="{{ current.caption }}" style="width:100%; height:100%; display:block; object-fit:cover;"></sc-if>
     </figure>
     <p style="margin:14px 0 0; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="font-family:var(--font-heading); font-size:17px; color:var(--color-accent);">{{ current.figWord }} {{ current.numeral }}.</span> {{ current.caption }}</p>
 
+    <!-- the paper chapter: the manuscript's own blocks, on the same grid the essay uses. Wide plates
+         take a full row across both columns; every block sits on an explicit row so column 2 can
+         carry the aside above the first plate and, from there down, a caption beside each plate.
+         Blocks are memoized; the captions type on hover and the tail folds, so both are rebuilt. -->
+    <sc-if value="{{ isPaper }}" hint-placeholder-val="{{ false }}">
+    <section data-paper-body="" data-enter="" style="display:grid; grid-template-columns:minmax(0,8fr) minmax(0,4fr); gap:0 clamp(28px,5vw,80px); padding:calc(2.5*28px) 0; align-items:start;">
+      {{ paperBlocks }}
+      {{ paperCaptions }}
+      {{ paperTail }}
+      <aside style="grid-column:2; grid-row:{{ paperAsideRow }}; align-self:start; display:flex; flex-direction:column; gap:28px; font-size:13px; line-height:20px; color:var(--color-neutral-700);">
+        <sc-if value="{{ marginalia }}" hint-placeholder-val="{{ true }}">
+          <p style="margin:0; padding-left:var(--space-3); border-left:1px solid var(--color-accent); font-family:var(--font-heading); font-style:italic; font-size:19px; line-height:26px;">{{ current.margin }}</p>
+        </sc-if>
+        <div style="border-top:1px solid var(--color-divider); padding-top:14px;">
+          <p style="margin:0 0 6px; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-neutral-600);">Made with</p>
+          <p style="margin:0;">{{ current.stack }}</p>
+        </div>
+        <div style="border-top:1px solid var(--color-divider); padding-top:14px;">
+          <p style="margin:0 0 6px; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-neutral-600);">Further</p>
+          <p style="margin:0;"><a href="{{ current.href }}" target="{{ current.linkTarget }}" rel="{{ current.linkRel }}">{{ current.link }}</a></p>
+        </div>
+      </aside>
+    </section>
+    </sc-if>
+
+    <sc-if value="{{ isEssay }}" hint-placeholder-val="{{ true }}">
     <section data-enter="" style="display:grid; grid-template-columns:minmax(0,8fr) minmax(0,4fr); gap:28px clamp(28px,5vw,80px); padding:calc(2.5*28px) 0; align-items:start;">
       <div style="columns:2; column-gap:56px; column-rule:1px solid var(--color-divider); text-align:justify; hyphens:auto; color:color-mix(in srgb, var(--color-text) 84%, transparent); font-size:16px; line-height:28px;">
         <p style="margin:0 0 28px;"><span style="float:left; font-family:var(--deco); font-weight:400; font-size:64px; line-height:56px; padding:6px 12px 0 0; color:var(--color-text);">{{ current.dropCap }}</span>{{ current.body1 }}</p>
@@ -286,16 +313,20 @@
         </div>
         <div style="border-top:1px solid var(--color-divider); padding-top:14px;">
           <p style="margin:0 0 6px; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-neutral-600);">Further</p>
-          <p style="margin:0;"><a href="#">{{ current.link }}</a></p>
+          <p style="margin:0;"><a href="{{ current.href }}" target="{{ current.linkTarget }}" rel="{{ current.linkRel }}">{{ current.link }}</a></p>
         </div>
       </aside>
     </section>
+    </sc-if>
 
+    <!-- a paper carries its plates inline, so the two placeholder details belong only to a written chapter -->
+    <sc-if value="{{ isEssay }}" hint-placeholder-val="{{ true }}">
     <div style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:clamp(20px,4vw,56px);">
       <figure class="plate" style="margin:0; aspect-ratio:4/3; filter:sepia(0.22) saturate(0.82) contrast(1.05);"><image-slot id="{{ current.detailSlotA }}" shape="rect" placeholder="Detail: drawing or interface" style="width:100%; height:100%;"></image-slot></figure>
       <figure class="plate" style="margin:0; aspect-ratio:4/3; filter:sepia(0.22) saturate(0.82) contrast(1.05);"><image-slot id="{{ current.detailSlotB }}" shape="rect" placeholder="Detail: process or site" style="width:100%; height:100%;"></image-slot></figure>
     </div>
     <p style="margin:14px 0 0; font-size:13px; line-height:20px; color:var(--color-neutral-700);"><span style="font-family:var(--font-heading); font-size:17px; color:var(--color-accent);">Figs. 1–2.</span> Working states. Left, the drawing or interface; right, where it was made.</p>
+    </sc-if>
 
     <hr style="height:1px; border:0; margin:calc(3*28px) 0 0; background:var(--color-divider);">
     <nav style="display:flex; justify-content:space-between; align-items:baseline; gap:var(--space-4); padding:28px 0 calc(3*28px); flex-wrap:wrap;">
@@ -370,7 +401,7 @@
         <span style="color:var(--color-neutral-600);">stack:</span><span key="stack-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.stack }}</span>
         <span style="color:var(--color-neutral-600);">status:</span><span key="status-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.status }}</span>
         <span style="color:var(--color-neutral-600);">pages:</span><span key="pages-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.pages }}</span>
-        <span style="color:var(--color-neutral-600);">link:</span><a href="#" key="link-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.link }}</a>
+        <span style="color:var(--color-neutral-600);">link:</span><a href="{{ current.href }}" target="{{ current.linkTarget }}" rel="{{ current.linkRel }}" key="link-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.link }}</a>
       </div>
       <div style="display:flex; gap:6px; flex-wrap:wrap;"><span class="tag tag-outline" style="font-family:var(--mono);">{{ current.kind }}</span><span class="tag tag-neutral" style="font-family:var(--mono);">{{ current.year }}</span></div>
     </aside>
@@ -447,12 +478,13 @@ class Component extends DCLogic {
       body1: 'Every studio reviews drawings by printing them, marking them in red, and scanning them back in. Plot Room keeps the red pen and loses the printer. Comments attach to a coordinate on a sheet and follow that detail through revisions, so a note about a flashing on issue three still points at the flashing on issue nine.',
       body2: 'The interface is deliberately quiet: a sheet, a margin, a list. I wanted it to feel closer to a proofreader’s desk than to project-management software, because the people using it are proofreading, at scale, under deadline.',
       body3: 'Fourteen people in one studio have used it for a year. Their feedback is mostly about paper sizes and printer margins, which tells me the rest is working.' },
-    { title: 'Cuts', subtitle: 'Learning to draw building sections from plans alone.', kind: 'Research', year: 2024, page: 29, pages: '29–36', role: 'First author', with: 'Two co-authors at the institute', status: 'Published, peer reviewed', statusShort: 'published', stack: 'PyTorch, a dataset of 40,000 plan–section pairs, a lot of cleaning.', link: 'The paper, with code and dataset', caption: 'Predicted sections (grey) against the drawn ones (ink), from a held-out set.', placeholder: 'Plate: predicted vs. drawn sections',
-      margin: 'The model is wrong in interesting ways: it invents basements and forgets roofs. Both tell you something about what plans do not say.',
-      summary: 'A paper on whether a model can infer a building’s section from its plans. It mostly can, and the failures are more instructive than the successes.',
-      body1: 'The question was simple to state and awkward to answer: given a set of plans, can a model draw a plausible section? We assembled forty thousand plan–section pairs from public archives, cleaned them for a year, and trained something unremarkable on them.',
-      body2: 'The results were good enough to publish and bad enough to be interesting. The model understood floor-to-floor heights and stair positions. It invented basements where none existed, and it consistently forgot roofs, which are the one thing a plan says nothing about.',
-      body3: 'The paper argues that these failures map precisely onto the information a plan omits, and that this is a useful way to think about what drawings encode. The reviewers were kind. The dataset has been downloaded more often than the paper.' },
+    // The one entry backed by a real publication. It carries no body1..body3: its chapter body is
+    // the paper itself, loaded from `paper` on demand and rendered by renderPaper().
+    { title: 'From Prototype to Massing', subtitle: 'Learning graph correspondence for scalable facade modeling.', kind: 'Research', year: 2026, page: 29, pages: '29–46', role: 'Sole author', with: 'Thanks to Pablo Ruiz, Scott Duncan, An-Tai Lu, Wenxuan Xie, Yao Lu and Yuanben Gao', status: 'Accepted, ACADIA 2026', statusShort: 'accepted', stack: 'PyTorch, PyTorch Geometric, scikit-learn, NumPy and Matplotlib; a Rhino 8 demonstrator; a corpus of 6,505 prototype-massing pairs.', link: 'Camera-ready PDF', href: 'assets/prototype-to-massing/Shao_From-Prototype-to-Massing_ACADIA-2026_camera-ready.pdf', linkBlank: true, caption: 'Massing models from the corpus arrayed on a measuring grid, each solid form paired with the node-and-edge graph abstracted from its envelope.', placeholder: 'Plate: cover figure',
+      margin: 'The contribution is not automated facade generation, but an authoring model in which resolved geometry serves as a computational specification for project-scale propagation.',
+      summary: 'Facade articulation at building scale is usually resolved manually or through parametric systems that encode design intent as explicit rules. This paper investigates a complementary workflow in which a designer-authored prototype supplies transferable articulation logic. Prototype and target massing are represented as heterogeneous attributed graphs, and a Siamese graph attention network with instance-local triplet supervision embeds their segments in a shared metric space. Many-to-one nearest-neighbor retrieval then routes prototype Patterns to the larger target. On the original 85/15 within-corpus holdout, prototype-to-massing top-1 accuracy reached 96.5%, compared with a reported 76.5% raw-feature baseline. A Rhino demonstrator converts predicted correspondence into reusable facade Patterns, and qualitative applications on four built projects show the workflow across distinct massing organizations. The contribution is not automated facade generation, but an authoring model in which resolved geometry serves as a computational specification for project-scale propagation.',
+      cover: 'assets/prototype-to-massing/fig-01.jpg', hero: 'assets/prototype-to-massing/fig-01.jpg',
+      paper: './content/prototype-to-massing.js' },
     { title: 'Timber Index', subtitle: 'A side project cataloguing mass-timber connections, one joint at a time.', kind: 'Side project', year: 2023, page: 37, pages: '37–44', role: 'Everything', with: 'Contributors, eventually', status: 'Live, growing slowly', statusShort: 'live', stack: 'A static site, hand-drawn axonometrics, a spreadsheet as the database.', link: 'The index, 212 joints and counting', caption: 'Joint 087: a CLT-to-glulam hanger, drawn at 1:5.', placeholder: 'Capture: axonometric of a timber joint',
       margin: 'It started because I could not find a picture of a joint I needed. It continues because other people could not either.',
       summary: 'A catalogue of mass-timber connection details, each redrawn to the same conventions. Started for myself; now used by people I have never met.',
@@ -552,7 +584,7 @@ class Component extends DCLogic {
   why = [
     'A consultant kept a workbook of mullion spacings by hand. I wanted the drawing to write the workbook, not the other way round.',
     'Studios review sets by printing, redlining and scanning. I wanted the red pen without the printer, and notes that survive revisions.',
-    'The model was wrong in interesting ways; I wanted to know exactly which ways.',
+    'A designer resolves one bay by hand and then has to rebuild it as a rule system. I wanted the resolved geometry itself to carry the logic.',
     'I could not find a picture of a joint I needed that was not a manufacturer\u2019s render. So I drew it, then the next one.',
     'Every tool I use had started to propose things. I wanted to say what a proposing tool owes the person drawing.',
     'Scans were easy; models you could draw over were not. I wanted the boring part done by evening.',
@@ -581,7 +613,7 @@ class Component extends DCLogic {
     this.setState(nextState, () => { window.scrollTo({ top: 0 }); if (olds) requestAnimationFrame(() => this.morphTexts(olds)); });
     if (!olds) window.scrollTo({ top: 0 });
   }
-  signal(d) { return /shipped|live|published/i.test(d.status) ? 'var(--sig-ok)' : /beta/i.test(d.status) ? 'var(--sig-warn)' : 'var(--sig-info)'; }
+  signal(d) { return /shipped|live|published|accepted/i.test(d.status) ? 'var(--sig-ok)' : /beta/i.test(d.status) ? 'var(--sig-warn)' : 'var(--sig-info)'; }
   // Every named text slot is paired across the two registers; the old text travels to the new slot's position
   // while its glyphs are swapped one by one into the new text (a 3-glyph caseFlip band at the boundary — the repo's picker).
   // the photo a framed element is showing, as a URL (image-slot keeps its <img> in shadow DOM)
@@ -767,8 +799,12 @@ class Component extends DCLogic {
   }
   remeasureText() { (this.trInstances || []).forEach((t) => { try { t.remeasure(); } catch (e) {} }); }
   bez(t) { const c1 = .6, c2 = .2; let lo = 0, hi = 1; for (let i = 0; i < 24; i++) { const m = (lo + hi) / 2, x = 3*(1-m)*(1-m)*m*c1 + 3*(1-m)*m*m*c2 + m*m*m; if (x < t) lo = m; else hi = m; } const m = (lo + hi) / 2; return 3*(1-m)*m*m + m*m*m; }
-  startTyping(pi, len) { this.stopTyping(); this.setState({ hovered: pi, leafHover: true, typed: 0 }); this.typeTimer = setInterval(() => { this.setState((st) => { if (st.typed >= len) { clearInterval(this.typeTimer); return null; } return { typed: st.typed + 6 }; }); }, 22); }
-  stopTyping() { clearInterval(this.typeTimer); this.setState({ leafHover: false, typed: 0 }); }
+  // One typewriter serves whatever is being hovered: a Research leaf ('leaf-<idx>') or a figure in a
+  // paper chapter ('fig-<n>'). typingKey says whose text state.typed belongs to, so only that one
+  // element reads it. `patch` carries anything else the hover means, such as the leaves' `hovered`.
+  startTyping(key, len, patch) { this.stopTyping(); this.setState({ ...(patch || {}), typingKey: key, typed: 0 }); this.typeTimer = setInterval(() => { this.setState((st) => { if (st.typed >= len) { clearInterval(this.typeTimer); return null; } return { typed: st.typed + 6 }; }); }, 22); }
+  stopTyping() { clearInterval(this.typeTimer); this.setState({ typingKey: null, typed: 0 }); }
+  typedText(key, text) { return this.state.typingKey === key ? text.slice(0, this.state.typed || 0) : ''; }
   goHome() {
     // leaving the Development platform: remember its box so the cube can take over from it (see syncHome)
     const pf = this.state.view === 'page' ? this.platformRef.current : null;
@@ -928,11 +964,188 @@ class Component extends DCLogic {
         this.observer.unobserve(en.target);
       });
     }, { rootMargin: '100% 0px -8% 0px' });
-    this.observeReveals(); this.mountTextEffects(); this.syncParchment(); this.syncHome();
+    this.observeReveals(); this.mountTextEffects(); this.syncParchment(); this.syncHome(); this.syncPaper();
     this.hintTimer = setTimeout(() => this.setState({ hintGone: true }), 9000);
     setTimeout(() => this.measureTabs(), 400);
   }
-  componentDidUpdate() { this.observeReveals(); this.mountTextEffects(); this.measureTabs(); this.syncParchment(); this.syncHome(); }
+  componentDidUpdate() { this.observeReveals(); this.mountTextEffects(); this.measureTabs(); this.syncParchment(); this.syncHome(); this.syncPaper(); }
+
+  // A chapter whose entry carries a `paper` gets its body from an ES module under content/, fetched
+  // the first time that chapter is opened and then kept on the instance. Nothing is imported for the
+  // chapters written inline, and the front page never pays for the paper.
+  syncPaper() {
+    const { view, idx } = this.state; if (view !== 'chapter') return;
+    const d = this.data[idx]; if (!d || !d.paper) return;
+    this.papers = this.papers || {};
+    if (this.papers[idx] || this.paperLoading === idx) return;
+    this.paperLoading = idx;
+    import(d.paper).then((m) => { this.paperLoading = null; this.papers[idx] = m.default || m; this.forceUpdate(); })
+      .catch(() => { this.paperLoading = null; });
+  }
+  // runs -> inline children. A run is a string, {i}/{b}/{sup} for emphasis, or {m} for MathML the
+  // manuscript carried as OMML. The markup is generated at build time from the docx and lives in the
+  // repo, so it is trusted; there is no other way to get MathML into a React tree.
+  paperRuns(runs) {
+    const e = React.createElement;
+    return (runs || []).map((r, i) => {
+      if (typeof r === 'string') return r;
+      if (r.m) return e('math', { key: i, style: { fontSize: '1.02em' }, dangerouslySetInnerHTML: { __html: r.m } });
+      if (r.i) return e('em', { key: i }, r.i);
+      if (r.b) return e('strong', { key: i }, r.b);
+      if (r.sup) return e('sup', { key: i }, r.sup);
+      return null;
+    });
+  }
+  // The paper body, built once per loaded module and memoized on it. The app re-renders on every
+  // scroll event and on the glitch timer; handing React the same element objects each time lets it
+  // bail out of the whole subtree instead of rebuilding several hundred nodes a frame.
+  renderPaper(mod) {
+    if (!mod) return null;
+    if (mod.__els) return mod.__els;
+    const e = React.createElement;
+    const ink = 'color-mix(in srgb, var(--color-text) 84%, transparent)';
+    const rule = { borderTop: '1px solid var(--color-divider)', paddingTop: '14px' };
+    const label = { margin: '0 0 6px', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-neutral-600)' };
+    const body = { fontSize: '17px', lineHeight: '28px', textAlign: 'justify', hyphens: 'auto', color: ink, maxWidth: '68ch' };
+    const els = []; let row = 0, firstFigRow = 0, dropNext = false;
+    const caps = [], folds = [];
+    // Explicit rows: the blocks fill column 1 in order and a wide figure takes a whole row across
+    // both. Column 2 holds the aside above the first figure, then one caption cell per figure row.
+    const at = (wide) => { row++; return { gridRow: String(row), gridColumn: wide ? '1 / -1' : '1', minWidth: 0 }; };
+    // two captions must never land in the same cell; the second one steps down a row
+    const taken = new Set();
+    const capRow = (r) => { while (taken.has(r)) r++; taken.add(r); return r; };
+    // The frame is the plate's own hairline, drawn on the image and nothing else. The design system's
+    // .plate is a 6px surface mat plus a 1px outline that goes accent on hover; the mat is dropped so
+    // the outline lands on the image edge, and its sepia (meant for placeholder photographs) with it.
+    // Capping the figure's width at (capped height x aspect) is what keeps a portrait plate short
+    // without letting the frame float away from the image the way a max-height on the image would.
+    const CAP = 'min(78vh, 760px)';
+    const figEl = (b, key, style) => {
+      const cap = 'Fig. ' + b.n + '. ' + b.capText;
+      const hit = { onMouseEnter: () => this.startTyping('fig-' + b.n, cap.length), onMouseLeave: () => this.stopTyping(),
+        onFocus: () => this.startTyping('fig-' + b.n, cap.length), onBlur: () => this.stopTyping() };
+      return e('figure', { key, className: 'plate', 'data-fig': String(b.n), 'data-wide': b.wide ? '1' : null,
+        tabIndex: 0, 'aria-label': cap, ...hit,
+        style: { margin: 0, filter: 'none', border: 0, ...style } },
+        e('img', { key: 'i', src: b.src, alt: b.alt, width: b.w, height: b.h, loading: 'lazy', decoding: 'async',
+          style: { display: 'block', width: '100%', height: 'auto' } }));
+    };
+    const figWidth = (b) => 'min(100%, calc(' + CAP + ' * ' + (b.w / b.h).toFixed(4) + '))';
+    (mod.blocks || []).forEach((b, i) => {
+      const key = 'pb' + i;
+      if (b.k === 'byline') {
+        els.push(e('p', { key, style: { ...at(false), margin: '0 0 28px', fontFamily: 'var(--font-heading)', fontSize: '19px', lineHeight: '26px' } },
+          b.t, e('span', { key: 'a', style: { display: 'block', fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-600)' } }, b.aff)));
+      } else if (b.k === 'abstract') {
+        els.push(e('div', { key, style: { ...at(false), ...rule, margin: '0 0 20px' } },
+          e('p', { key: 'l', style: label }, 'Abstract'),
+          e('p', { key: 'p', style: { margin: 0, fontFamily: 'var(--font-heading)', fontSize: '18px', lineHeight: '30px', textAlign: 'justify', hyphens: 'auto', color: ink, maxWidth: '68ch' } }, this.paperRuns(b.r))));
+      } else if (b.k === 'keywords') {
+        els.push(e('p', { key, style: { ...at(false), margin: '0 0 28px', fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-600)', maxWidth: '68ch' } }, b.t));
+      } else if (b.k === 'h2') {
+        dropNext = /^Introduction$/i.test(b.t);
+        els.push(e('h2', { key, style: { ...at(false), ...rule, margin: '56px 0 20px', fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: '30px', lineHeight: '1.2', letterSpacing: '-0.01em' } }, b.t));
+      } else if (b.k === 'h3') {
+        els.push(e('h3', { key, style: { ...at(false), margin: '34px 0 14px', fontFamily: 'var(--font-heading)', fontStyle: 'italic', fontWeight: 400, fontSize: '22px', lineHeight: '1.25' } }, b.t));
+      } else if (b.k === 'p') {
+        const kids = this.paperRuns(b.r);
+        if (dropNext) {
+          dropNext = false;
+          const first = kids[0];
+          if (typeof first === 'string') {
+            kids[0] = first.slice(1);
+            kids.unshift(e('span', { key: 'dc', style: { float: 'left', fontFamily: 'var(--deco)', fontWeight: 400, fontSize: '64px', lineHeight: '56px', padding: '6px 12px 0 0', color: 'var(--color-text)' } }, first[0]));
+          }
+        }
+        els.push(e('p', { key, style: { ...at(false), margin: '0 0 28px', ...body } }, kids));
+      } else if (b.k === 'ul') {
+        els.push(e('ul', { key, style: { ...at(false), margin: '0 0 28px', padding: '0 0 0 1.4em', ...body, textAlign: 'left' } },
+          b.items.map((it, j) => e('li', { key: j, style: { margin: '0 0 10px' } }, this.paperRuns(it)))));
+      } else if (b.k === 'fig') {
+        const cell = at(b.wide);
+        if (!firstFigRow) firstFigRow = row;
+        // a wide plate already owns column 2 on its own row, so its caption drops to the next one,
+        // where it sits beside the paragraph that follows the figure
+        caps.push({ row: capRow(b.wide ? row + 1 : row), figs: [b] });
+        els.push(figEl(b, key, { ...cell, margin: b.wide ? '10px 0 34px' : '10px auto 34px', width: b.wide ? '100%' : figWidth(b) }));
+      } else if (b.k === 'figrow') {
+        // two plates on one row, sized in proportion to their aspect ratios so they stand the same
+        // height whichever constraint binds, the row's width or the height cap
+        const cell = at(false);
+        if (!firstFigRow) firstFigRow = row;
+        caps.push({ row: capRow(row), figs: b.figs });
+        els.push(e('div', { key, style: { ...cell, margin: '10px 0 34px', display: 'flex', gap: '20px', alignItems: 'flex-start', justifyContent: 'center' } },
+          b.figs.map((f, j) => figEl(f, 'f' + j, { flexGrow: f.w / f.h, flexShrink: 1, flexBasis: 0, minWidth: 0, maxWidth: 'calc(' + CAP + ' * ' + (f.w / f.h).toFixed(4) + ')' }))));
+      } else if (b.k === 'fold') {
+        // rendered by renderPaperTail: its open/closed state lives in component state, so it must
+        // not be baked into this memoized array
+        folds.push(b);
+      } else if (b.k === 'eq') {
+        els.push(e('div', { key, style: { ...at(false), position: 'relative', margin: '28px 0', padding: '0 4em 0 0' } },
+          // overflow-x alone computes overflow-y to auto, and a stretchy fence overhanging by a
+          // pixel is enough to raise a vertical scrollbar; the padding keeps that pixel visible
+          e('div', { key: 'm', style: { overflowX: 'auto', overflowY: 'hidden', padding: '6px 0', textAlign: 'center', fontSize: '19px' } },
+            e('math', { display: 'block', dangerouslySetInnerHTML: { __html: b.m } })),
+          e('span', { key: 'n', style: { position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--color-neutral-600)' } }, '(' + b.n + ')')));
+      }
+    });
+    mod.__els = els;
+    mod.__caps = caps;
+    mod.__folds = folds;
+    mod.__tailRow = row + 1;
+    mod.__asideRow = '1 / ' + (firstFigRow || row + 1);
+    return els;
+  }
+  // The caption column. It reads state.typed, so it is rebuilt every render and never memoized.
+  // One cell per figure row, holding a standing "Fig. N" kicker and the caption that types itself
+  // out while its plate is hovered or focused, the same typewriter the Research leaves use.
+  renderPaperCaptions(mod) {
+    if (!mod || !mod.__caps) return null;
+    const e = React.createElement;
+    const kicker = { margin: '0 0 6px', fontFamily: 'var(--deco)', fontSize: '10px', letterSpacing: '0.1em', color: 'var(--color-accent-700)', whiteSpace: 'nowrap' };
+    const line = { margin: 0, fontFamily: "'Libre Baskerville', var(--font-heading), serif", fontStyle: 'italic', fontSize: '15px', lineHeight: '21px', color: 'var(--color-neutral-700)', whiteSpace: 'pre-wrap', maxWidth: '30ch' };
+    return mod.__caps.map((c) => e('div', { key: 'pc' + c.row, 'data-figcaps': '', style: { gridColumn: 2, gridRow: String(c.row), alignSelf: 'start', margin: '10px 0 0', display: 'flex', flexDirection: 'column', gap: '20px' } },
+      c.figs.map((f) => {
+        const full = 'Fig. ' + f.n + '. ' + f.capText, typed = this.typedText('fig-' + f.n, full);
+        return e('div', { key: f.n, 'data-figcap': String(f.n) },
+          e('p', { key: 'k', style: kicker }, 'Fig. ' + f.n),
+          // the caret is only there while the line is still arriving: the .caret blink animates
+          // opacity, so hiding it by opacity alone would lose to its own keyframes
+          e('p', { key: 't', 'aria-live': 'polite', style: line }, typed,
+            typed && typed.length < full.length
+              ? e('span', { key: 'c', className: 'caret', 'aria-hidden': 'true', style: { display: 'inline-block', width: '1px', height: '0.9em', marginLeft: '2px', verticalAlign: '-0.1em', background: 'var(--color-accent)' } })
+              : null));
+      })));
+  }
+  // Acknowledgments and References: folded away by default, each its own toggle. Their open and
+  // closed shapes are memoized separately, so opening one does not rebuild the other.
+  renderPaperTail(mod, open) {
+    if (!mod || !mod.__folds || !mod.__folds.length) return null;
+    const e = React.createElement;
+    const cache = mod.__tail || (mod.__tail = {});
+    const small = { fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-700)' };
+    return e('div', { key: 'ptail', 'data-paper-tail': '', style: { gridColumn: '1', gridRow: String(mod.__tailRow), minWidth: 0, margin: '56px 0 0' } },
+      mod.__folds.map((f) => {
+        const on = !!open[f.id], ck = f.id + (on ? '-1' : '-0');
+        if (!cache[ck]) {
+          cache[ck] = e('div', { style: { borderTop: '1px solid var(--color-divider)', paddingTop: '14px', marginBottom: '20px' } },
+            e('button', { key: 'b', type: 'button', 'aria-expanded': on ? 'true' : 'false', 'aria-controls': 'fold-' + f.id,
+              onClick: () => this.togglePaperFold(f.id),
+              style: { all: 'unset', cursor: 'pointer', display: 'flex', width: '100%', alignItems: 'baseline', justifyContent: 'space-between', gap: '14px', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-neutral-600)' } },
+              e('span', { key: 't' }, f.t),
+              e('span', { key: 'm', 'aria-hidden': 'true', style: { fontFamily: 'var(--mono)', fontSize: '13px', color: 'var(--color-accent-700)' } }, on ? '−' : '+')),
+            on ? (f.id === 'refs'
+              ? e('ol', { key: 'c', id: 'fold-' + f.id, 'data-refs': '', style: { ...small, margin: '14px 0 0', padding: 0, listStyle: 'none', maxWidth: '78ch' } },
+                  f.items.map((it, j) => e('li', { key: j, style: { margin: '0 0 10px', paddingLeft: '1.6em', textIndent: '-1.6em' } }, this.paperRuns(it))))
+              : e('div', { key: 'c', id: 'fold-' + f.id, style: { ...small, margin: '14px 0 0', maxWidth: '78ch' } },
+                  f.items.map((it, j) => e('p', { key: j, style: { margin: '0 0 12px' } }, this.paperRuns(it)))))
+              : null);
+        }
+        return e(React.Fragment, { key: f.id }, cache[ck]);
+      }));
+  }
+  togglePaperFold(id) { this.setState((st) => { const o = st.paperOpen || {}; return { paperOpen: { ...o, [id]: !o[id] } }; }); }
   // the glowing glyphs of the hero title are the parchment's heat source: read each lit glyph span's inline glow
   // (the text effect writes a text-shadow whose alpha tracks brightness), project its centre into the roll's box
   feedParchment() {
@@ -1061,7 +1274,8 @@ class Component extends DCLogic {
     const projects = this.data.map((d, i) => {
       const m = this.reg(i) === 'mono';
       return { ...d, numeral: this.num(i), why: this.why[i], kindLower: d.kind.toLowerCase(), figNo: String(i + 1).padStart(2, '0'), slotId: 'toc-' + i, plateSlotId: 'plate-' + i, heroSlotId: 'cover-' + i, detailSlotA: 'detail-a-' + i, detailSlotB: 'detail-b-' + i,
-        dropCap: d.body1[0], body1: d.body1.slice(1), body1Full: d.body1, subtitleCover: this.cover(d.subtitle),
+        dropCap: (d.body1 || '')[0] || '', body1: (d.body1 || '').slice(1), body1Full: d.body1 || '', subtitleCover: this.cover(d.subtitle),
+        href: d.href || '#', linkTarget: d.linkBlank ? '_blank' : undefined, linkRel: d.linkBlank ? 'noopener' : undefined,
         previewOpacity: hovered === i ? '1' : '0',
         ghost: m ? 'SHT-' + String(i + 1).padStart(2, '0') : this.num(i),
         kickerWord: m ? 'Sheet' : 'Chapter', figWord: m ? 'Fig.' : 'Plate', backWord: m ? 'Sheet register' : 'Contents',
@@ -1089,15 +1303,19 @@ class Component extends DCLogic {
 
     // the margins only hold chapters that belong to this register; empty slots read as forthcoming
     const own = projects.filter((p) => this.pageOf(projects.indexOf(p)) === pageKey);
-    const leaves = [...own, ...forthcoming].slice(0, 6).map((p, k) => { const real = own.includes(p), pi = real ? projects.indexOf(p) : -1 - k; const on = real && hovered === pi && this.state.leafHover; const pos = leafPos[k % leafPos.length];
+    const leaves = [...own, ...forthcoming].slice(0, 6).map((p, k) => { const real = own.includes(p), pi = real ? projects.indexOf(p) : -1 - k; const on = real && this.state.typingKey === 'leaf-' + pi; const pos = leafPos[k % leafPos.length];
       // only the two large outer plates bleed, and they bleed outward far enough to cross the page edge
       const bleeds = ['-56px', '56px', '0px', '0px', '0px', '-60px'];
       const bleedX = bleeds[k % bleeds.length];
       const bleedY = ['0px', '0px', '52px', '0px', '0px', '0px'][k % 6];
       const detail = real ? p.subtitle + '\n' + p.role + ' · ' + p.status + ' · pp. ' + p.pages : '';
       const typed = on ? detail.slice(0, this.state.typed || 0) : '';
-      return { ...p, ...pos, idx: pi, cardNo: k + 1, typed, kicker: real ? 'Chapter ' + p.numeral + ' · ' + p.year : 'Forthcoming', detailDisplay: on ? 'block' : 'none', detailOpacity: on ? '1' : '0', caretOpacity: on && typed.length < detail.length ? '1' : '0', morphName: real ? 'row-' + k : 'leaf-' + k, figNo: real ? p.figNo : 'x' + k, placeholder: real ? p.placeholder : 'Plate: forthcoming', coverSlotId: real ? 'cover-' + pi : 'cover-next-' + k, open: real ? p.open : () => {}, bleedX, bleedY, zIndex: on ? 30 : 12 - k, origin: (pos.selfX === 'start' ? 'left ' : 'right ') + (pos.selfY === 'start' ? 'top' : pos.selfY === 'end' ? 'bottom' : 'center'), cursor: real ? 'pointer' : 'default', lift: on ? '-10px' : '0px', scale: on ? '1.06' : '1', shadow: on ? '0 24px 48px -20px rgba(32,31,29,0.35), 0 2px 6px rgba(32,31,29,0.08)' : '0 8px 24px -16px rgba(32,31,29,0.25)',
-        hover: () => { if (real) this.startTyping(pi, detail.length); }, unhover: () => { this.stopTyping(); } }; });
+      // a chapter with real imagery brings its own cover; the rest fall back to the position's stock plate.
+      // The sepia mat belongs to those stock photographs: a real render is shown as it is.
+      return { ...p, ...pos, cover: (real && p.cover) || pos.cover,
+        filter: (real && p.cover) ? 'none' : 'sepia(0.22) saturate(0.82) contrast(1.05)',
+        idx: pi, cardNo: k + 1, typed, kicker: real ? 'Chapter ' + p.numeral + ' · ' + p.year : 'Forthcoming', detailDisplay: on ? 'block' : 'none', detailOpacity: on ? '1' : '0', caretOpacity: on && typed.length < detail.length ? '1' : '0', morphName: real ? 'row-' + k : 'leaf-' + k, figNo: real ? p.figNo : 'x' + k, placeholder: real ? p.placeholder : 'Plate: forthcoming', coverSlotId: real ? 'cover-' + pi : 'cover-next-' + k, open: real ? p.open : () => {}, bleedX, bleedY, zIndex: on ? 30 : 12 - k, origin: (pos.selfX === 'start' ? 'left ' : 'right ') + (pos.selfY === 'start' ? 'top' : pos.selfY === 'end' ? 'bottom' : 'center'), cursor: real ? 'pointer' : 'default', lift: on ? '-10px' : '0px', scale: on ? '1.06' : '1', shadow: on ? '0 24px 48px -20px rgba(32,31,29,0.35), 0 2px 6px rgba(32,31,29,0.08)' : '0 8px 24px -16px rgba(32,31,29,0.25)',
+        hover: () => { if (real) this.startTyping('leaf-' + pi, detail.length, { hovered: pi }); }, unhover: () => { this.stopTyping(); } }; });
     const pageProjects = projects.filter((p) => this.pageOf(projects.indexOf(p)) === pageKey).map((p, k) => ({ ...p, shapeIdx: k + 1, dir: k % 2 ? 'rtl' : 'ltr', textCol: k % 2 ? '13 / 23' : '1 / 11', plateCol: k % 2 ? '1 / 13' : '11 / 23', cardRow: (16 + 9 * k) + ' / ' + (23 + 9 * k), bandNo: String(k + 1).padStart(2, '0'), morphName: k < 2 ? 'row-' + k : 'feat-' + (k - 2) + '-title', frameShape: k < 2 ? 'plate-' + k : 'frame-' + k }));
     const introChars = Array.from(page.intro);
     page.dropCap = introChars[0]; page.introRest = introChars.slice(1).join('');
@@ -1107,6 +1325,10 @@ class Component extends DCLogic {
     const pad = (n) => String(n).padStart(2, '0');
     const featured = this.featuredFor[pageKey].map((i, k) => ({ ...projects[i], plateNumeral: this.num(k) }));
     const current = projects[idx];
+    const paperMod = current.paper ? (this.papers || {})[idx] : null;
+    const paperBlocks = this.renderPaper(paperMod);
+    const paperCaptions = this.renderPaperCaptions(paperMod);
+    const paperTail = this.renderPaperTail(paperMod, this.state.paperOpen || {});
     const hov = projects[hovered] && this.pageOf(hovered) === pageKey ? projects[hovered] : pageProjects[0];
     const tabColor = (r) => brandReg === r ? 'var(--color-text)' : 'var(--color-neutral-600)';
     // the sheet's modules, placed off whichever table the width calls for. The template names a module
@@ -1143,6 +1365,9 @@ class Component extends DCLogic {
       isPage: view === 'page', marginalia, page, pageReg: page.reg, pageKey: pageKey, pageLabel: page.label,
       isSerifPage: view === 'page' && page.reg === 'serif', isMonoPage: view === 'page' && page.reg === 'mono',
       isMono: view === 'chapter' && mono, isSerif: view === 'chapter' && !mono, chapterKey: R + '-' + idx,
+      isPaper: view === 'chapter' && !mono && !!current.paper, isEssay: view === 'chapter' && !mono && !current.paper,
+      paperBlocks, paperCaptions, paperTail, paperAsideRow: (paperMod && paperMod.__asideRow) || 'auto',
+      heroImg: view === 'chapter' && !!current.hero, heroSlot: view === 'chapter' && !current.hero,
       rBody: mono ? this.MONO : 'var(--font-body)', rAlign: mono ? 'left' : 'justify', rTracking: mono ? '-0.03em' : '0',
       brandChars: (this.state.brandAnim || Array.from(this.BRAND).map((ch) => ({ ch, reg: brandReg, swap: false }))).map((c) => ({
         ch: c.ch, font: c.reg === 'mono' ? this.MONO : 'var(--font-heading)', tracking: c.reg === 'mono' ? '-0.03em' : '0',
@@ -1150,6 +1375,8 @@ class Component extends DCLogic {
       ...(mono
         ? { tBg: '#1b1a19', tSurface: '#292625', tText: '#f3f2f2', tAccent: '#f3f2f2', tAccent600: '#ffffff', tAccent700: '#e2dfdf', tAccent800: '#f3f2f2', tAccent100: 'color-mix(in srgb, #f3f2f2 10%, transparent)', tDivider: 'color-mix(in srgb, #f3f2f2 10%, transparent)', tN100: 'color-mix(in srgb, #f3f2f2 8%, transparent)', tN400: '#605d5d', tN500: '#8a8686', tN600: '#a19d9d', tN700: '#c4c0c0', tN800: '#e2dfdf' }
         : { tBg: '#f3f2f2', tSurface: '#eae9e9', tText: '#201f1d', tAccent: '#b68235', tAccent600: '#a06f24', tAccent700: '#7d5411', tAccent800: '#5a3b0a', tAccent100: '#fff3e4', tDivider: 'color-mix(in srgb, #201f1d 16%, transparent)', tN100: '#f8f4f4', tN400: '#bab6b6', tN500: '#9b9797', tN600: '#7d7979', tN700: '#605d5d', tN800: '#444141' }),
+      // the serif chapter shows a real render as it is; the sepia mat is for the placeholder photographs
+      heroFilter: current.hero ? 'none' : 'sepia(0.22) saturate(0.82) contrast(1.05)',
       rootRef: this.rootRef, heroRef: this.heroRef, scriptRef: this.scriptRef, parchLayerRef: this.parchLayerRef, platformRef: this.platformRef, heroTextRef: this.heroTextRef, sheetCount: pad(pageProjects.length),
       tabLeft: this.state.tab.left + 'px', tabWidth: this.state.tab.width + 'px',
       tabToolingColor: tabColor('mono'), tabWritingColor: tabColor('serif'),
