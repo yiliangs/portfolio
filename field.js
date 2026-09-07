@@ -73,6 +73,7 @@ export function mount(container) {
     setPointer(x, y, on) { ptr = { x, y, on: !!on }; },
     // boxes the threads stay out of (the headline block, the footer)
     setQuiet(list) { quiet = list || []; },
-    destroy() { alive = false; cancelAnimationFrame(raf); ro.disconnect(); if (canvas.parentNode) canvas.parentNode.removeChild(canvas); },
+    // shrinking the canvas to nothing hands the backing store back now rather than at the next collection
+    destroy() { alive = false; cancelAnimationFrame(raf); ro.disconnect(); canvas.width = canvas.height = 0; if (canvas.parentNode) canvas.parentNode.removeChild(canvas); },
   };
 }
