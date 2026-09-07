@@ -24,14 +24,17 @@ const app = read('app.js');
 const html = read('index.html');
 const built = { 'app.js': app, 'index.html': html };
 
-// the logic class, lifted out of the design source and given the two globals it constructs against
+// the logic class, lifted out of the design source and given the globals it constructs against: the
+// two it extends and the two browser objects its state field reads at construction (the viewport
+// for the landing, the address bar for the view a deep link names)
 function logic() {
   const src = read('design/Portfolio.dc.html');
   const body = /<script type="text\/x-dc"[^>]*>([\s\S]*?)<\/script>/.exec(src);
   assert.ok(body, 'design/Portfolio.dc.html has no logic script');
   const React = { createRef: () => ({ current: null }) };
   class DCLogic { constructor() { this.props = {}; this.state = {}; } setState() {} }
-  const Component = new Function('React', 'DCLogic', body[1] + '\nreturn Component;')(React, DCLogic);
+  const window = { innerWidth: 1440, innerHeight: 900 }, location = { hash: '' };
+  const Component = new Function('React', 'DCLogic', 'window', 'location', body[1] + '\nreturn Component;')(React, DCLogic, window, location);
   return new Component();
 }
 
