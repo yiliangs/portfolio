@@ -508,17 +508,17 @@
                 h("div", { key: "4", ref: V.notesRef, style: {"gridColumn":"1 / 2","gridRow":"1 / 2","height":"0"} }),
                 "\n\n    ",
                 "\n    ",
-                h("section", { key: "7", style: S(`grid-column:${V.land?.statement?.col ?? ""}; grid-row:${V.land?.statement?.row ?? ""}; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); padding:22px; box-sizing:border-box; overflow:hidden;`) },
+                h("section", { key: "7", ref: V.landingStatementRef, style: S(`grid-column:${V.land?.statement?.col ?? ""}; grid-row:${V.land?.statement?.row ?? ""}; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); padding:22px; box-sizing:border-box; overflow:hidden;`) },
                   "\n      ",
                   h("p", { key: "1|17.1dagtdl", "data-morph": "kicker", style: {"margin":"0 0 22px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
                     h(F,{key:0},"",I(V.page?.kicker,1),"")
                   ),
                   "\n      ",
-                  h("h1", { key: "3|16.1908cg2", "data-tr": "title", "data-reg": "mono", "data-morph": "title", style: {"margin":"0","fontFamily":"var(--mono)","fontWeight":"400","fontSize":"clamp(22px,2.6vw,32px)","lineHeight":"1.375","letterSpacing":"-0.02em","maxWidth":"34ch"} },
+                  h("h1", { key: "3|16.1908cg2", "data-tr": "title", "data-reg": "mono", "data-morph": "title", style: {"margin":"0","fontFamily":"var(--mono)","fontWeight":"400","fontSize":"clamp(22px,2.6vw,32px)","lineHeight":"1.375","letterSpacing":"-0.02em"} },
                     h(F,{key:0},"",I(V.page?.title,1),"")
                   ),
                   "\n      ",
-                  h("p", { key: "5|16.1y4952k", "data-tr": "wake", "data-reg": "mono", "data-morph": "intro", style: {"margin":"22px 0 0","maxWidth":"60ch","color":"var(--color-neutral-700)"} },
+                  h("p", { key: "5|16.1y4952k", "data-tr": "wake", "data-reg": "mono", "data-morph": "intro", style: {"margin":"22px 0 0","color":"var(--color-neutral-700)"} },
                     h(F,{key:0},"",I(V.page?.intro,1),"")
                   ),
                   "\n      ",
@@ -561,7 +561,7 @@
                         h(F,{key:0},"",I(Vi.p?.why,1),"")
                       ),
                       "\n        ",
-                      h("p", { key: "8|26.1pcf1c", "aria-live": "polite", style: S(`position:absolute; left:0; right:0; top:0; min-height:100%; margin:0; padding:10px; box-sizing:border-box; pointer-events:none; background:var(--color-bg); color:var(--color-neutral-700); font-size:12px; line-height:17px; white-space:pre-wrap; box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text); opacity:${Vi.p?.whyOpacity ?? ""}; transition:opacity 220ms ease;`) },
+                      h("p", { key: "8|26.1pcf1c", "aria-live": "polite", style: S(`position:absolute; left:0; right:0; top:${Vi.p?.whyTop ?? ""}; bottom:${Vi.p?.whyBottom ?? ""}; margin:0; padding:10px; box-sizing:border-box; pointer-events:none; background:var(--color-bg); color:var(--color-neutral-700); font-size:12px; line-height:17px; white-space:pre-wrap; box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text); opacity:${Vi.p?.whyOpacity ?? ""}; transition:opacity 220ms ease;`) },
                         h(F,{key:0},"",I(Vi.p?.typed,1),""),
                         h("span", { key: "1", "aria-hidden": "true", style: S(`display:inline-block; width:1px; height:0.9em; margin-left:2px; vertical-align:-0.1em; background:var(--color-text); opacity:${Vi.p?.caretOpacity ?? ""};`) })
                       ),
@@ -1938,8 +1938,8 @@
     // is drawn on, so they are read from the window here rather than waiting for componentDidMount's
     // first onResize: the first paint would otherwise be the wrong landing, replaced a frame later.
     state = { view: 'home', page: 'writing', cvReg: 'serif', idx: 10, hovered: 10, tab: { left: 0, width: 0 },
-      narrow: window.innerWidth < 1000, landingRows: this.visibleRows() };
-    contentsRef = React.createRef(); platesRef = React.createRef(); notesRef = React.createRef();
+      narrow: window.innerWidth < 1000, landingRows: this.visibleRows(), landingStatementRows: 12 };
+    contentsRef = React.createRef(); platesRef = React.createRef(); notesRef = React.createRef(); landingStatementRef = React.createRef();
     homeLayerRef = React.createRef(); homeRollRef = React.createRef(); homeCubeRef = React.createRef(); fogLayerRef = React.createRef(); 
     // the home fog lives only on the home view; it fades out (and stops) elsewhere
     syncFog() {
@@ -2175,29 +2175,47 @@
     // The desktop Development landing is the same drawing grid run full bleed: 22 columns across the
     // viewport, 44px rows, at least a screen tall. Only these five modules are placed by hand. The
     // statement opens the sheet at its first cell and the platform stands beside it on the same rows,
-    // taking the column the statement leaves off at, so no empty column falls between them. The three
-    // contact cells close the sheet in the bottom right corner, on the grid's last row, which is only
-    // known once landing-grid.js has grown the sheet to hold every plate; their row reads 'last' and is
-    // filled in from that placement. Everything else on the landing is a plate, pinned to a cell by the
+    // taking the column the statement leaves off at, so no empty column falls between them. Only the
+    // columns are a decision: two of the five rows are measured rather than chosen. The statement and
+    // the platform read 'fit', which is the rows the statement's own type takes at this width, counted
+    // off the page after it is laid out; the three contact cells close the sheet in the bottom right
+    // corner and read 'last', which is the grid's final row, known only once landing-grid.js has grown
+    // the sheet to hold every plate. Everything else on the landing is a plate, pinned to a cell by the
     // seeded draw rather than by a table. Plain literals like the sheet tables above, so
     // tools/check-landing-grid.mjs can read them without running this file.
     LANDING_WIDE = {
-      statement:     { col: '1 / 12',  row: '1 / 13' },
-      platform:      { col: '12 / 18', row: '1 / 13' },
+      statement:     { col: '1 / 12',  row: 'fit' },
+      platform:      { col: '12 / 18', row: 'fit' },
       contactEmail:  { col: '17 / 19', row: 'last' },
       contactGithub: { col: '19 / 21', row: 'last' },
       contactCv:     { col: '21 / 23', row: 'last' },
     };
+    LANDING_PAD = 22; // the padding every module of the drawing grid is set in
     // one seed per page load, kept on the instance: hovering a plate, scrolling, or leaving for another
     // tab and coming back all re-render the same composition. Only the row count can redraw it.
     landingSeed = (Math.random() * 4294967296) >>> 0;
     // the rows a screen shows under the 57px header; the sheet starts here and grows from it
     visibleRows() { return Math.max(6, Math.floor((window.innerHeight - 57) / 44)); }
+    // The statement's module is as tall as its type and no taller. The type is set to the module's full
+    // width, so how many rows it takes is a fact about this viewport rather than a number anyone can
+    // write in the table: it is read off the page after layout, the way measureTabs reads the tab strip
+    // and remeasureText re-reads the ripple's glyphs. The read is of the children rather than of
+    // scrollHeight, which is clipped by the module's own overflow:hidden guard and disagrees between
+    // browsers about the bottom padding. Writing back only on a change keeps componentDidUpdate from
+    // chasing itself: the module's width does not depend on its row span, so the answer is stable.
+    measureLandingStatement() {
+      const el = this.landingStatementRef.current; if (!el || !el.children.length) return;
+      const top = el.getBoundingClientRect().top;
+      const last = el.children[el.children.length - 1].getBoundingClientRect().bottom;
+      if (!(last > top)) return; // mid-transition, or the module is not laid out yet
+      const rows = Math.max(8, Math.ceil((last - top + this.LANDING_PAD) / 44));
+      if (rows !== this.state.landingStatementRows) this.setState({ landingStatementRows: rows });
+    }
     // The plate placement for the desktop landing. renderVals runs on every scroll frame and the draw
     // is not free, so it is memoised on everything it depends on. The module arrives by dynamic import
     // the way parchment.js does; until it lands the landing renders its corner blocks and no plates.
-    landingLayout(count, rows) {
-      const key = this.landingSeed + '|' + count + '|' + rows;
+    landingLayout(count, rows, statementRows) {
+      const key = this.landingSeed + '|' + count + '|' + rows + '|' + statementRows;
       if (this.landingCache && this.landingCache.key === key) return this.landingCache.out;
       if (!this.landingMod) {
         if (!this.landingLoading && !this.landingFailed) {
@@ -2209,15 +2227,14 @@
         return null;
       }
       const at = (s) => s.split('/').map((v) => parseInt(v, 10));
-      const sc = at(this.LANDING_WIDE.statement.col), sr = at(this.LANDING_WIDE.statement.row);
-      const pc = at(this.LANDING_WIDE.platform.col);
+      const sc = at(this.LANDING_WIDE.statement.col), pc = at(this.LANDING_WIDE.platform.col);
       const e0 = at(this.LANDING_WIDE.contactEmail.col), c1 = at(this.LANDING_WIDE.contactCv.col);
       let out = null;
       try {
         out = this.landingMod.placeLanding({ seed: this.landingSeed, cols: 22, rows, count,
           // the statement and the platform are handed over as the one block they read as, so the plates
           // keep their empty cell from the pair rather than from each of them
-          reserved: [{ col: sc[0], row: sr[0], w: pc[1] - sc[0], h: sr[1] - sr[0] }],
+          reserved: [{ col: sc[0], row: 1, w: pc[1] - sc[0], h: statementRows }],
           contact: { col: e0[0], w: c1[1] - e0[0] } });
       } catch (e) { out = null; }
       this.landingCache = { key, out };
@@ -2579,7 +2596,7 @@
       this.onUp = () => { if (!this.dragLast) return; this.dragLast = null; if (this.parch) this.parch.dragEnd(); const pf = this.platformRef.current; if (pf) pf.style.cursor = 'grab'; };
       window.addEventListener('pointerdown', this.onDown); window.addEventListener('pointerup', this.onUp); window.addEventListener('pointercancel', this.onUp);
       this.onScroll = () => { this.syncParchment(); this.syncHome(); this.setState({ scrollY: window.scrollY }); clearTimeout(this.remeasureTimer); this.remeasureTimer = setTimeout(() => this.remeasureText(), 120); };
-      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => setTimeout(() => { this.remeasureText(); this.syncParchment(); }, 50));
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => setTimeout(() => { this.remeasureText(); this.measureLandingStatement(); this.syncParchment(); }, 50));
       this.onResize = () => { this.setState({ narrow: window.innerWidth < 1000, landingRows: this.visibleRows() }); this.measureTabs(); this.syncParchment(); this.syncHome(); };
       this.onKey = (e) => {
         const t = e.target; if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
@@ -2593,7 +2610,7 @@
         else return;
         this.setState({ usedKeys: true });
       };
-      this.onResize(); window.addEventListener('resize', this.onResize);
+      this.onResize(); this.measureLandingStatement(); window.addEventListener('resize', this.onResize);
       window.addEventListener('scroll', this.onScroll, { passive: true });
       window.addEventListener('keydown', this.onKey);
       // One scroll brings a batch of modules in at once. The stagger is rebased to the first module of
@@ -2616,7 +2633,7 @@
       this.hintTimer = setTimeout(() => this.setState({ hintGone: true }), 9000);
       setTimeout(() => this.measureTabs(), 400);
     }
-    componentDidUpdate() { this.observeReveals(); this.mountTextEffects(); this.measureTabs(); this.syncParchment(); this.syncHome(); this.syncPaper(); }
+    componentDidUpdate() { this.observeReveals(); this.mountTextEffects(); this.measureTabs(); this.measureLandingStatement(); this.syncParchment(); this.syncHome(); this.syncPaper(); }
   
     // A chapter whose entry carries a `paper` gets its body from an ES module under content/, fetched
     // the first time that chapter is opened and then kept on the instance. Nothing is imported for the
@@ -3279,17 +3296,25 @@
       // A plate shows its picture and its title at rest and types its reason in on hover, at the Research
       // leaves' tempo, from the same typewriter.
       const landingWide = view === 'page' && page.reg === 'mono' && !this.state.narrow;
-      const lay = landingWide ? this.landingLayout(pageProjects.length, this.state.landingRows) : null;
+      const statementRows = this.state.landingStatementRows;
+      const lay = landingWide ? this.landingLayout(pageProjects.length, this.state.landingRows, statementRows) : null;
       const landingRows = lay ? lay.rows : this.state.landingRows;
       const land = {};
       for (const [name, spot] of Object.entries(this.LANDING_WIDE)) {
-        land[name] = { col: spot.col, row: spot.row === 'last' ? landingRows + ' / ' + (landingRows + 1) : spot.row };
+        land[name] = { col: spot.col,
+          row: spot.row === 'last' ? landingRows + ' / ' + (landingRows + 1)
+            : spot.row === 'fit' ? '1 / ' + (1 + statementRows) : spot.row };
       }
       const landingPlates = !lay ? [] : pageProjects.map((p, k) => {
         const b = lay.plates[k]; if (!b) return null;
         const on = this.state.typingKey === 'card-' + k;
         const typed = on ? p.why.slice(0, this.state.typed || 0) : '';
+        // the reason unrolls out of the plate rather than over it, so the picture and the title stay
+        // readable while it types. It hangs below the plate on the top half of the sheet and above it on
+        // the bottom half, so it never runs off the end of the page
+        const below = b.row <= lay.rows / 2;
         return { ...p, col: b.col + ' / ' + (b.col + b.w), row: b.row + ' / ' + (b.row + b.h),
+          whyTop: below ? '100%' : 'auto', whyBottom: below ? 'auto' : '100%',
           typed, whyOpacity: on ? '1' : '0', caretOpacity: on && typed.length < p.why.length ? '1' : '0',
           // the hovered plate rises over its neighbours: a module's right and bottom hairlines are drawn
           // outside its own box, so without this its lit frame would be covered on two sides
@@ -3380,7 +3405,7 @@
         projects, pageProjects, leaves, leftLeaves: leaves.filter((l) => l.side === 'left'), rightLeaves: leaves.filter((l) => l.side === 'right'), featured, current, next: projects[(idx + 1) % projects.length], hovered: hov, cv: cvViews.timeline,
         gridPlatesRow: gridRows.plates, gridAuthorRow: gridRows.author, gridColophonRow: gridRows.colophon, gridContactRow: gridRows.contact,
         sheet, sheetGridRef: this.sheetGridRef,
-        contentsRef: this.contentsRef, platesRef: this.platesRef, notesRef: this.notesRef, headRef: this.headRef, tabToolingRef: this.tabToolingRef, tabWritingRef: this.tabWritingRef,
+        contentsRef: this.contentsRef, platesRef: this.platesRef, notesRef: this.notesRef, landingStatementRef: this.landingStatementRef, headRef: this.headRef, tabToolingRef: this.tabToolingRef, tabWritingRef: this.tabWritingRef,
         goTooling: () => this.goPage('tooling'), goWriting: () => this.goPage('writing'),
         goPageCurrent: () => this.goPage(view === 'chapter' ? this.pageOf(idx) : pageKey), goNotes: () => this.go(this.notesRef),
         previewMono: () => this.setState({ previewReg: 'mono' }), previewSerif: () => this.setState({ previewReg: 'serif' }), previewNone: () => this.setState({ previewReg: null }),

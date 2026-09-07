@@ -36,8 +36,10 @@ const logicSrc = src.slice(closeAt);
 // ---------------------------------------------------------------- the placement table
 
 // LANDING_WIDE is a plain literal for the same reason SHEET_WIDE is: it can be read without running
-// the logic class. The contact cells take their row from the grid's last row, which is only known
-// once the placement has grown the sheet to fit, so their row reads 'last' rather than a span.
+// the logic class. Two of its rows are measured rather than chosen and so are written as words: the
+// statement and the platform read 'fit', the rows the statement's own type takes at this viewport
+// width, and the contact cells read 'last', the grid's final row, known only once the placement has
+// grown the sheet to hold every plate.
 function readTable(name) {
   const at = logicSrc.indexOf('  ' + name + ' = {');
   if (at < 0) { fail('the logic class has no ' + name + ' placement table'); return null; }
@@ -77,15 +79,17 @@ if (wide) {
   }
 
   // the corner blocks: the statement opens the sheet at its first cell and the platform stands
-  // beside it on the same rows, with no empty column between the two
-  const st = wide.statement && span(wide.statement.col), sr = wide.statement && span(wide.statement.row);
-  const pf = wide.platform && span(wide.platform.col), pr = wide.platform && span(wide.platform.row);
+  // beside it on the same rows, with no empty column between the two. Both take their height from the
+  // statement's measured type, so neither may write a row span of its own.
+  const st = wide.statement && span(wide.statement.col);
+  const pf = wide.platform && span(wide.platform.col);
   if (st && st[0] !== 1) fail('the statement does not open the sheet at column 1: ' + wide.statement.col);
-  if (sr && sr[0] !== 1) fail('the statement does not open the sheet at row 1: ' + wide.statement.row);
-  if (pr && pr[0] !== 1) fail('the platform does not stand on row 1 beside the statement: ' + wide.platform.row);
+  for (const name of ['statement', 'platform']) {
+    const e = wide[name];
+    if (e && e.row !== 'fit') fail('LANDING_WIDE.' + name + " takes a fixed row (" + e.row + "); the corner block is as tall as the statement's own type, written 'fit'");
+  }
   if (st && pf && pf[0] !== st[1]) fail('the platform does not take the column the statement leaves off at: statement ends at ' + st[1] + ', platform starts at ' + pf[0]);
-  if (sr && pr && (sr[1] !== pr[1])) fail('the statement and the platform end on different rows: ' + wide.statement.row + ' and ' + wide.platform.row);
-  if (st && pf && sr && pr) corner = { col: st[0], row: 1, w: pf[1] - st[0], h: Math.max(sr[1], pr[1]) - 1 };
+  if (st && pf) corner = { col: st[0], w: pf[1] - st[0] };
 
   // the contact cells close the sheet in the bottom right corner, three two-column cells running to
   // the last grid line, each on the row the placement ends on
@@ -102,11 +106,16 @@ if (wide) {
 
 const VIEWPORTS = [[1000, 700], [1280, 720], [1366, 768], [1440, 900], [1920, 1080], [2560, 1440]];
 const SEEDS = Array.from({ length: 50 }, (_, i) => i);
+// the corner block's height is the statement's measured type, so the check runs the range that
+// measures out across the widths the page is used at, from the floor measureLandingStatement holds
+// to two rows past the tallest reading
+const STATEMENT_ROWS = [8, 10, 12, 14];
 
 const contactSpec = wide && wide.contactEmail && wide.contactCv
   ? { col: span(wide.contactEmail.col)[0], w: span(wide.contactCv.col)[1] - span(wide.contactEmail.col)[0] }
   : { col: 17, w: 6 };
-const reserved = corner ? [corner] : [{ col: 1, row: 1, w: 17, h: 12 }];
+const cornerAt = (h) => (corner ? { col: corner.col, row: 1, w: corner.w, h } : { col: 1, row: 1, w: 17, h });
+let reserved = [cornerAt(12)];
 
 const boxes = (out) => {
   const all = out.plates.map((p, i) => ['plate ' + i, p]);
@@ -122,15 +131,17 @@ const overlaps = (a, b) =>
 let worst = 0, checked = 0;
 for (const [w, h] of VIEWPORTS) {
   const rows = Math.max(6, Math.floor((h - HEADER) / ROW));
+  for (const stRows of STATEMENT_ROWS) {
+  reserved = [cornerAt(stRows)];
   for (const seed of SEEDS) {
     const args = { seed, cols: COLUMNS, rows, count: PLATES, reserved, contact: contactSpec };
     let out;
     try { out = placeLanding(args); } catch (e) {
-      fail(w + 'x' + h + ' seed ' + seed + ': the placement gave up (' + e.message + ')');
+      fail(w + 'x' + h + ' statement ' + stRows + ' rows, seed ' + seed + ': the placement gave up (' + e.message + ')');
       continue;
     }
     checked++;
-    const at = w + 'x' + h + ' seed ' + seed + ': ';
+    const at = w + 'x' + h + ' statement ' + stRows + ' rows, seed ' + seed + ': ';
     if (out.rows < rows) fail(at + 'the placement returned fewer rows (' + out.rows + ') than the screen shows (' + rows + ')');
     worst = Math.max(worst, out.rows - rows);
     if (out.plates.length !== PLATES) fail(at + 'placed ' + out.plates.length + ' plates, not ' + PLATES);
@@ -163,6 +174,7 @@ for (const [w, h] of VIEWPORTS) {
     }
     const again = placeLanding(args);
     if (JSON.stringify(again) !== JSON.stringify(out)) fail(at + 'the placement is not deterministic: two runs of the same seed differ');
+  }
   }
 }
 
@@ -216,6 +228,10 @@ else {
         ['{{ p.type }}', 'typewriter on hover'],
         ['{{ p.untype }}', 'typewriter off hover'],
         ['{{ p.typed }}', 'typed description'],
+        // the typed panel hangs off the plate instead of covering it, so the picture and the title
+        // stay readable under the cursor; which edge it hangs from is the model's call
+        ['top:{{ p.whyTop }}', 'typed panel top edge'],
+        ['bottom:{{ p.whyBottom }}', 'typed panel bottom edge'],
       ];
       const ph = plate.outerHTML;
       for (const [needle, label] of hooks) {
@@ -225,8 +241,17 @@ else {
       if (!/grid-row:\{\{p\.row\}\}/.test(tight(ph))) fail('the desktop plate writes its own grid-row instead of reading it back from the placement');
     }
 
-    for (const [needle, label] of [['{{ platformRef }}', 'platform box'], ['{{ contentsRef }}', 'contents anchor'], ['{{ platesRef }}', 'plates anchor'], ['{{ notesRef }}', 'notes anchor']]) {
+    for (const [needle, label] of [['{{ platformRef }}', 'platform box'], ['{{ contentsRef }}', 'contents anchor'], ['{{ platesRef }}', 'plates anchor'], ['{{ notesRef }}', 'notes anchor'], ['{{ landingStatementRef }}', 'statement measuring ref']]) {
       if (!html.includes(needle)) fail('the desktop landing lost its ' + label + ' (' + needle + ')');
+    }
+    // a measure cap would leave the block wider than its type while its rows are cut to that type,
+    // which is the empty half the 'fit' row was meant to remove
+    const statement = main.querySelector('section');
+    if (statement) {
+      for (const el of [statement, ...statement.querySelectorAll('*')]) {
+        const s = tight(el.getAttribute('style') || '');
+        if (/max-width:\d/.test(s)) fail('the desktop statement caps its measure (' + el.tagName.toLowerCase() + ' has ' + /max-width:[^;]*/.exec(el.getAttribute('style'))[0] + '), so its type cannot fill the module its rows are measured from');
+      }
     }
   }
 }
@@ -238,5 +263,6 @@ if (failures.length) {
   for (const f of failures) console.error('  - ' + f);
   process.exit(1);
 }
-console.log('check-landing-grid: ' + checked + ' placements over ' + VIEWPORTS.length + ' viewports and ' + SEEDS.length +
-  ' seeds hold the grid (worst growth ' + worst + ' rows), and both landings are in the template');
+console.log('check-landing-grid: ' + checked + ' placements over ' + VIEWPORTS.length + ' viewports, ' +
+  STATEMENT_ROWS.length + ' statement heights and ' + SEEDS.length + ' seeds hold the grid (worst growth ' +
+  worst + ' rows), and both landings are in the template');
