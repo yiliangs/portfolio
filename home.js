@@ -17,12 +17,19 @@ const cubicInOut = (x) => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) 
 // ----- the cube is a tesseract -----
 const CS = 1;              // the cube's side, and the box the projection is refitted into
 // The figure turns in one 4D plane and no more. A simple rotation is the one a reader can follow: a quarter turn in
-// a single plane carries the tesseract onto itself, so the whole of it is a cycle of about four and a half seconds
+// a single plane carries the tesseract onto itself, so the whole of it is a cycle of a little over six seconds
 // that comes back to where it began and can be learned by watching. Turning in two planes at once, which is what
 // this did, never repeats and never settles into a shape; locking the two rates to a whole-number ratio makes it
 // periodic and no easier to read, because it is the second plane and not the long period that loses the reader.
-const HYPER_XW = 0.35;     // rad/s in the xw plane, the only plane the figure turns in
-const HYPER_D = 2.0;       // eye distance for the 4D perspective divide: the far cell shrinks, the near one swells
+const HYPER_XW = 0.245;    // rad/s in the xw plane, the only plane the figure turns in: a cycle of about 6.4 s
+// How small the far cell stands inside the near one at a settled pose, and the eye distance for the 4D perspective
+// divide, which is derived from it rather than set. The nesting is the thing anyone tunes and the distance is only
+// what the divide happens to want: the cells sit at w = +-0.5, so their scales are 1/(1 -+ 0.5/D) and the ratio
+// between them is (1 - 0.5/D)/(1 + 0.5/D). Inverting that keeps the two numbers from drifting apart. The nesting
+// cannot go below about 0.27: the divide is by 1 - w/D, and w reaches sqrt(0.75) at a pose off the plane the figure
+// turns in, so a closer eye than that would put a vertex behind it.
+const HYPER_NEST = 0.42;
+const HYPER_D = 0.5 * (1 + HYPER_NEST) / (1 - HYPER_NEST);
 const HYPER_INNER = 0.55;  // weight of the far cell and the connectors against the near cell's, which reads as depth
 // And the viewpoint holds still apart from a slow roll about the axis pointing at the reader. That is the only turn
 // of the three that takes nothing out of sight: pitch and yaw carry a face away behind the figure, roll only turns
@@ -30,7 +37,7 @@ const HYPER_INNER = 0.55;  // weight of the far cell and the connectors against 
 // thing that moves pitch and yaw is the cursor.
 const CUBE_PITCH = -0.22, CUBE_YAW = 0.5; // the three-quarter view the figure is read from
 const CUBE_ROLL = 0.28;    // rad the roll reaches either side of it
-const CUBE_ROLL_W = 0.13;  // rad/s of phase, so the rock takes about 48 s and is slower than the figure's own turn
+const CUBE_ROLL_W = 0.091; // rad/s of phase, so the rock takes about 69 s and is far slower than the figure's turn
 // The word counters the cube's turn completely and then wobbles by a bounded amount. It cannot instead keep a share
 // of that turn: a share of the roll tips the word off level by as much again, and the word is the one thing in the
 // figure that has to stay square to the reader, since it is read rather than looked at.

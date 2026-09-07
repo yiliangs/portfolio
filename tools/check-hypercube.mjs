@@ -53,7 +53,7 @@ const SHRINK = 2.5;  // refining the sweep fourfold has to shrink the worst move
 // more of the function than the home cube itself takes: the cube turns in the xw plane alone. The single-plane path
 // is walked as well, because it lies on a symmetry of the figure where cells fold through their own walls far more
 // often than they do anywhere off it, and it is the path the reader actually sees.
-const XW = 0.35, YW = 0.22;
+const XW = 0.245, YW = 0.22;
 
 const failures = [];
 const fail = (msg) => failures.push(msg);
