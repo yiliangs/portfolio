@@ -190,11 +190,11 @@
                   var Vi = Object.assign({}, V, {"lf": item, $index: i});
                   return h(F,{key:i},
                     "\n        ",
-                    h("div", { key: "1", "data-leaf": Vi.lf?.side, "data-slot": Vi.lf?.tune, style: S(`grid-column:${Vi.lf?.col ?? ""}; grid-row:${Vi.lf?.row ?? ""}; align-self:${Vi.lf?.selfY ?? ""}; justify-self:${Vi.lf?.selfX ?? ""}; min-width:0; max-width:100%; z-index:${Vi.lf?.zIndex ?? ""}; transform:translate(calc(var(--mx, 0) * ${Vi.lf?.px ?? ""}), calc(var(--my, 0) * ${Vi.lf?.py ?? ""} + ${Vi.lf?.bleedY ?? ""})); transition:transform 900ms cubic-bezier(.2,.7,.2,1);`) },
+                    h("div", { key: "1", "data-leaf": Vi.lf?.side, "data-slot": Vi.lf?.tune, style: S(`grid-column:${Vi.lf?.col ?? ""}; grid-row:${Vi.lf?.row ?? ""}; align-self:${Vi.lf?.selfY ?? ""}; justify-self:${Vi.lf?.selfX ?? ""}; min-width:0; max-width:100%; z-index:${Vi.lf?.zIndex ?? ""}; transform:translate(calc(var(--mx, 0) * ${Vi.lf?.px ?? ""} + ${Vi.lf?.offsetX ?? ""}), calc(var(--my, 0) * ${Vi.lf?.py ?? ""} + ${Vi.lf?.offsetY ?? ""})); transition:transform 900ms cubic-bezier(.2,.7,.2,1);`) },
                       "\n          ",
                       h("div", { key: "1", style: S(`animation:leaf-drift ${Vi.lf?.dur ?? ""} ease-in-out infinite alternate; animation-delay:${Vi.lf?.delay ?? ""}; display:flex; flex-direction:${Vi.lf?.dir ?? ""}; align-items:${Vi.lf?.alignItems ?? ""}; gap:12px 20px; width:100%;`) },
                         "\n            ",
-                        h("button", { key: "1", "data-shape": `leaf-${Vi.lf?.cardNo ?? ""}`, "data-shape-alt": `frame-${Vi.lf?.figNo ?? ""}`, onClick: Vi.lf?.open, onMouseEnter: Vi.lf?.hover, onMouseLeave: Vi.lf?.unhover, onFocus: Vi.lf?.hover, onBlur: Vi.lf?.unhover, style: S(`all:unset; cursor:${Vi.lf?.cursor ?? ""}; display:block; flex:none; height:${Vi.lf?.plateH ?? ""}; width:${Vi.lf?.plateW ?? ""}; max-width:${Vi.lf?.plateMaxW ?? ""}; aspect-ratio:${Vi.lf?.ratio ?? ""}; box-sizing:border-box; transform-origin:${Vi.lf?.origin ?? ""}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:${Vi.lf?.shadow ?? ""}; overflow:hidden; transform:translateX(${Vi.lf?.bleedX ?? ""}) translateY(${Vi.lf?.lift ?? ""}) scale(${Vi.lf?.scale ?? ""}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:${Vi.lf?.filter ?? ""};`), className: "scp3" },
+                        h("button", { key: "1", "data-shape": `leaf-${Vi.lf?.cardNo ?? ""}`, "data-shape-alt": `frame-${Vi.lf?.figNo ?? ""}`, onClick: Vi.lf?.open, onMouseEnter: Vi.lf?.hover, onMouseLeave: Vi.lf?.unhover, onFocus: Vi.lf?.hover, onBlur: Vi.lf?.unhover, style: S(`all:unset; cursor:${Vi.lf?.cursor ?? ""}; display:block; flex:none; height:${Vi.lf?.plateH ?? ""}; width:${Vi.lf?.plateW ?? ""}; max-width:${Vi.lf?.plateMaxW ?? ""}; aspect-ratio:${Vi.lf?.ratio ?? ""}; box-sizing:border-box; transform-origin:${Vi.lf?.origin ?? ""}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:${Vi.lf?.shadow ?? ""}; overflow:hidden; transform:translate(${Vi.lf?.bleedX ?? ""}, ${Vi.lf?.bleedY ?? ""}) translateY(${Vi.lf?.lift ?? ""}) scale(${Vi.lf?.scale ?? ""}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:${Vi.lf?.filter ?? ""};`), className: "scp3" },
                           "\n              ",
                           h("image-slot", { key: "1", id: Vi.lf?.coverSlotId, src: Vi.lf?.cover, shape: "rect", fit: "cover", placeholder: Vi.lf?.placeholder, style: {"width":"100%","height":"100%","display":"block","transform":"scale(1)","transition":"transform 620ms cubic-bezier(.2,.7,.2,1)"}, className: "scp4" }),
                           "\n            "
@@ -296,11 +296,11 @@
                   var Vi = Object.assign({}, V, {"lf": item, $index: i});
                   return h(F,{key:i},
                     "\n        ",
-                    h("div", { key: "1", "data-leaf": Vi.lf?.side, "data-slot": Vi.lf?.tune, style: S(`grid-column:${Vi.lf?.col ?? ""}; grid-row:${Vi.lf?.row ?? ""}; align-self:${Vi.lf?.selfY ?? ""}; justify-self:${Vi.lf?.selfX ?? ""}; min-width:0; max-width:100%; z-index:${Vi.lf?.zIndex ?? ""}; transform:translate(calc(var(--mx, 0) * ${Vi.lf?.px ?? ""}), calc(var(--my, 0) * ${Vi.lf?.py ?? ""} + ${Vi.lf?.bleedY ?? ""})); transition:transform 900ms cubic-bezier(.2,.7,.2,1);`) },
+                    h("div", { key: "1", "data-leaf": Vi.lf?.side, "data-slot": Vi.lf?.tune, style: S(`grid-column:${Vi.lf?.col ?? ""}; grid-row:${Vi.lf?.row ?? ""}; align-self:${Vi.lf?.selfY ?? ""}; justify-self:${Vi.lf?.selfX ?? ""}; min-width:0; max-width:100%; z-index:${Vi.lf?.zIndex ?? ""}; transform:translate(calc(var(--mx, 0) * ${Vi.lf?.px ?? ""} + ${Vi.lf?.offsetX ?? ""}), calc(var(--my, 0) * ${Vi.lf?.py ?? ""} + ${Vi.lf?.offsetY ?? ""})); transition:transform 900ms cubic-bezier(.2,.7,.2,1);`) },
                       "\n          ",
                       h("div", { key: "1", style: S(`animation:leaf-drift ${Vi.lf?.dur ?? ""} ease-in-out infinite alternate; animation-delay:${Vi.lf?.delay ?? ""}; display:flex; flex-direction:${Vi.lf?.dir ?? ""}; align-items:${Vi.lf?.alignItems ?? ""}; gap:12px 20px; width:100%;`) },
                         "\n            ",
-                        h("button", { key: "1", "data-shape": `leaf-${Vi.lf?.cardNo ?? ""}`, "data-shape-alt": `frame-${Vi.lf?.figNo ?? ""}`, onClick: Vi.lf?.open, onMouseEnter: Vi.lf?.hover, onMouseLeave: Vi.lf?.unhover, onFocus: Vi.lf?.hover, onBlur: Vi.lf?.unhover, style: S(`all:unset; cursor:${Vi.lf?.cursor ?? ""}; display:block; flex:none; height:${Vi.lf?.plateH ?? ""}; width:${Vi.lf?.plateW ?? ""}; max-width:${Vi.lf?.plateMaxW ?? ""}; aspect-ratio:${Vi.lf?.ratio ?? ""}; box-sizing:border-box; transform-origin:${Vi.lf?.origin ?? ""}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:${Vi.lf?.shadow ?? ""}; overflow:hidden; transform:translateX(${Vi.lf?.bleedX ?? ""}) translateY(${Vi.lf?.lift ?? ""}) scale(${Vi.lf?.scale ?? ""}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:${Vi.lf?.filter ?? ""};`), className: "scp3" },
+                        h("button", { key: "1", "data-shape": `leaf-${Vi.lf?.cardNo ?? ""}`, "data-shape-alt": `frame-${Vi.lf?.figNo ?? ""}`, onClick: Vi.lf?.open, onMouseEnter: Vi.lf?.hover, onMouseLeave: Vi.lf?.unhover, onFocus: Vi.lf?.hover, onBlur: Vi.lf?.unhover, style: S(`all:unset; cursor:${Vi.lf?.cursor ?? ""}; display:block; flex:none; height:${Vi.lf?.plateH ?? ""}; width:${Vi.lf?.plateW ?? ""}; max-width:${Vi.lf?.plateMaxW ?? ""}; aspect-ratio:${Vi.lf?.ratio ?? ""}; box-sizing:border-box; transform-origin:${Vi.lf?.origin ?? ""}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:${Vi.lf?.shadow ?? ""}; overflow:hidden; transform:translate(${Vi.lf?.bleedX ?? ""}, ${Vi.lf?.bleedY ?? ""}) translateY(${Vi.lf?.lift ?? ""}) scale(${Vi.lf?.scale ?? ""}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:${Vi.lf?.filter ?? ""};`), className: "scp3" },
                           "\n              ",
                           h("image-slot", { key: "1", id: Vi.lf?.coverSlotId, src: Vi.lf?.cover, shape: "rect", fit: "cover", placeholder: Vi.lf?.placeholder, style: {"width":"100%","height":"100%","display":"block","transform":"scale(1)","transition":"transform 620ms cubic-bezier(.2,.7,.2,1)"}, className: "scp4" }),
                           "\n            "
@@ -2351,15 +2351,15 @@
     // instead of pushing the collage past the fold. `h` is the height in vh, `w` the px cap on it.
     LEAF_SPREADS = {
       left: [
-        { row: 1, h: 66, w: 990, ratio: '4/3', maxW: '280px', titleSize: '26px', dir: 'row', alignItems: 'flex-end', px: '-18px', py: '-10px', dur: '7.5s', delay: '0s', bleedX: '-56px', bleedY: '0px', cover: 'https://picsum.photos/seed/halvorsen-cuts/800/600' },
+        { row: 1, h: 66, w: 990, ratio: '4/3', maxW: '280px', titleSize: '26px', dir: 'row', alignItems: 'flex-end', px: '-18px', py: '-10px', dur: '7.5s', delay: '0s', bleedX: '-56px', offsetY: '0px', cover: 'https://picsum.photos/seed/halvorsen-cuts/800/600' },
       ],
       right: [
-        { row: 2, h: 72, w: 1080, ratio: '3/4', maxW: '280px', titleSize: '26px', dir: 'row-reverse', alignItems: 'flex-end', px: '-26px', py: '-14px', dur: '9s', delay: '-3s', bleedX: '56px', bleedY: '0px', cover: 'https://picsum.photos/seed/halvorsen-machines/600/800' },
+        { row: 2, h: 72, w: 1080, ratio: '3/4', maxW: '280px', titleSize: '26px', dir: 'row-reverse', alignItems: 'flex-end', px: '-26px', py: '-14px', dur: '9s', delay: '-3s', bleedX: '56px', offsetY: '0px', cover: 'https://picsum.photos/seed/halvorsen-machines/600/800' },
         // stackH and stackW: the height a declared plate may take here instead of h and w. This spread is
         // laid out as a row, its stock plate 18vh tall with the caption beside it; a declared plate stacks
         // its title underneath (see below), and at 18vh that stack runs out of the row into the anchor
         // plate in the row beneath. The other spreads are the anchors, whose stacks the page was tuned around.
-        { row: 1, h: 54, w: 780, stackH: 39, stackW: 360, ratio: '3/2', maxW: '270px', titleSize: '17px', dir: 'row-reverse', alignItems: 'flex-start', px: '-22px', py: '-12px', dur: '10s', delay: '-1.5s', bleedX: '0px', bleedY: '0px', cover: 'https://picsum.photos/seed/halvorsen-4/900/600' },
+        { row: 1, h: 54, w: 780, stackH: 39, stackW: 360, ratio: '3/2', maxW: '270px', titleSize: '17px', dir: 'row-reverse', alignItems: 'flex-start', px: '-22px', py: '-12px', dur: '10s', delay: '-1.5s', bleedX: '0px', offsetY: '0px', cover: 'https://picsum.photos/seed/halvorsen-4/900/600' },
       ],
     };
     // Pair styles, handed to a gutter's pair cells in order and cycled once they run out. A cycled style
@@ -2368,16 +2368,16 @@
     // viewport, so a pair in the second column lifts clear of it rather than settling onto it.
     LEAF_PAIRS = {
       left: [
-        { h: 42, w: 660, ratio: '1/1', maxW: '140px', titleSize: '17px', dir: 'column', alignItems: 'flex-start', px: '-14px', py: '-8px', dur: '8s', delay: '-5s', bleedX: '0px', bleedY: '52px', cover: 'https://picsum.photos/seed/halvorsen-3/700/700' },
-        { h: 36, w: 600, ratio: '5/4', maxW: '150px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-20px', py: '-9px', dur: '8.5s', delay: '-2s', bleedX: '0px', bleedY: '0px', cover: 'https://picsum.photos/seed/halvorsen-5/700/560' },
-        { h: 39, w: 620, ratio: '4/5', maxW: '128px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-17px', py: '-12px', dur: '7.8s', delay: '-6s', bleedX: '0px', bleedY: '-18px', cover: 'https://picsum.photos/seed/halvorsen-7/560/700' },
-        { h: 33, w: 560, ratio: '3/2', maxW: '140px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-12px', py: '-7px', dur: '9.2s', delay: '-1s', bleedX: '0px', bleedY: '18px', cover: 'https://picsum.photos/seed/halvorsen-9/900/600' },
+        { h: 42, w: 660, ratio: '1/1', maxW: '140px', titleSize: '17px', dir: 'column', alignItems: 'flex-start', px: '-14px', py: '-8px', dur: '8s', delay: '-5s', bleedX: '0px', offsetY: '52px', cover: 'https://picsum.photos/seed/halvorsen-3/700/700' },
+        { h: 36, w: 600, ratio: '5/4', maxW: '150px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-20px', py: '-9px', dur: '8.5s', delay: '-2s', bleedX: '0px', offsetY: '0px', cover: 'https://picsum.photos/seed/halvorsen-5/700/560' },
+        { h: 39, w: 620, ratio: '4/5', maxW: '128px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-17px', py: '-12px', dur: '7.8s', delay: '-6s', bleedX: '0px', offsetY: '-18px', cover: 'https://picsum.photos/seed/halvorsen-7/560/700' },
+        { h: 33, w: 560, ratio: '3/2', maxW: '140px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-12px', py: '-7px', dur: '9.2s', delay: '-1s', bleedX: '0px', offsetY: '18px', cover: 'https://picsum.photos/seed/halvorsen-9/900/600' },
       ],
       right: [
-        { h: 45, w: 720, ratio: '2/3', maxW: '100px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-16px', py: '-11px', dur: '9.5s', delay: '-4s', bleedX: '-60px', bleedY: '0px', cover: 'https://picsum.photos/seed/halvorsen-6/600/900' },
-        { h: 36, w: 600, ratio: '1/1', maxW: '120px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-19px', py: '-10px', dur: '8.2s', delay: '-2.5s', bleedX: '0px', bleedY: '-12px', cover: 'https://picsum.photos/seed/halvorsen-8/700/700' },
-        { h: 30, w: 520, ratio: '4/5', maxW: '110px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-13px', py: '-6px', dur: '10.5s', delay: '-3.5s', bleedX: '0px', bleedY: '30px', cover: 'https://picsum.photos/seed/halvorsen-10/560/700' },
-        { h: 39, w: 640, ratio: '3/2', maxW: '130px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-21px', py: '-13px', dur: '7.2s', delay: '-0.5s', bleedX: '0px', bleedY: '-24px', cover: 'https://picsum.photos/seed/halvorsen-11/900/600' },
+        { h: 45, w: 720, ratio: '2/3', maxW: '100px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-16px', py: '-11px', dur: '9.5s', delay: '-4s', bleedX: '-60px', offsetY: '0px', cover: 'https://picsum.photos/seed/halvorsen-6/600/900' },
+        { h: 36, w: 600, ratio: '1/1', maxW: '120px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-19px', py: '-10px', dur: '8.2s', delay: '-2.5s', bleedX: '0px', offsetY: '-12px', cover: 'https://picsum.photos/seed/halvorsen-8/700/700' },
+        { h: 30, w: 520, ratio: '4/5', maxW: '110px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-13px', py: '-6px', dur: '10.5s', delay: '-3.5s', bleedX: '0px', offsetY: '30px', cover: 'https://picsum.photos/seed/halvorsen-10/560/700' },
+        { h: 39, w: 640, ratio: '3/2', maxW: '130px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-21px', py: '-13px', dur: '7.2s', delay: '-0.5s', bleedX: '0px', offsetY: '-24px', cover: 'https://picsum.photos/seed/halvorsen-11/900/600' },
       ],
     };
     // A gutter holds one leaf per spread row and two per pair row.
@@ -2406,7 +2406,12 @@
         align: side, imgH: size(st.h, st.w), ...(st.stackH ? { stackH: size(st.stackH, st.stackW) } : {}),
         ratio: st.ratio, maxW: st.maxW, titleSize: st.titleSize, dir: st.dir, alignItems: st.alignItems,
         px: st.px, py: st.py, dur: st.dur, delay: (parseFloat(st.delay) - 1.7 * wrap) + 's',
-        bleedX: st.bleedX, bleedY: st.bleedY, cover: st.cover });
+        // Two different moves, and conflating them is what pulled a plate off its own caption. The
+        // offset carries the whole leaf, plate and caption together, and is what a drag writes. The
+        // bleed carries the plate alone, which is how an anchor crosses the page edge while its title
+        // stays in the gutter. Either may be absent, and absent means nothing.
+        offsetX: st.offsetX || '0px', offsetY: st.offsetY || '0px',
+        bleedX: st.bleedX || '0px', bleedY: st.bleedY || '0px', cover: st.cover });
       return [...spreads.map((st, i) => slot(st, st.row, 0, 0, 'spreads.' + side + '.' + i)),
         ...[...diag, ...skipped].map((c, i) => slot(pairs[i % pairs.length], c.row, c.col, Math.floor(i / pairs.length), 'pairs.' + side + '.' + (i % pairs.length)))];
     }

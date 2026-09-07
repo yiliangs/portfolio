@@ -3,8 +3,9 @@
 // select it, drag it to move it, scale it with the slider, the bracket keys or the wheel, nudge it
 // with the arrows. Loaded only when the URL carries ?dev, so it ships nothing to the page otherwise.
 // Copy writes both tables as LEAF_SPREADS and LEAF_PAIRS blocks ready to paste back into
-// design/Portfolio.dc.html; Reset returns to the values it was mounted with. The d key hides and
-// shows the panel, Escape drops the selection.
+// design/Portfolio.dc.html, and paste reads such a block back in, so a session survives a reload
+// rather than living only in this tab. Reset returns to the values it was mounted with. The d key
+// hides and shows the panel, Escape drops the selection.
 //
 // The grid cell a leaf sits in is derived from the register by leafSlots and is not tuned here. It
 // does not need to be: an offset of any magnitude moves a leaf anywhere on the page, which is how
@@ -37,8 +38,9 @@ export function serialize(spreads, pairs) {
 const px = (s) => parseFloat(s) || 0;
 const round = (n) => Math.round(n * 1000) / 1000;
 
-// Where a leaf's DOM sits relative to the entry that placed it: the wrapper carries bleedY inside its
-// transform and the plate carries bleedX inside its own, which is why the two are moved separately.
+// A leaf can be moved two ways and they are not the same move. `offsetX`/`offsetY` sit on the wrapper
+// and carry the whole leaf, plate and caption together; that is what a drag writes. `bleedX`/`bleedY`
+// sit on the plate alone, which is how an anchor crosses the page edge while its title stays put.
 const bind = (key, spreads, pairs) => {
   const [which, side, i] = key.split('.');
   const t = which === 'spreads' ? spreads : pairs;
@@ -81,7 +83,7 @@ export function mount(api) {
     window.addEventListener('pointermove', move, true);
     window.addEventListener('pointerup', up, true);
   };
-  const hint = el('div', `margin:0 14px 6px; color:${DIM}; font-size:10px;`, 'click a leaf, drag to move, [ ] or wheel to scale, arrows to nudge; drag this header to park the panel');
+  const hint = el('div', `margin:0 14px 6px; color:${DIM}; font-size:10px;`, 'click a leaf, drag to move the card, alt-drag to bleed the plate alone, [ ] or wheel to scale, arrows to nudge; drag this header to park the panel');
   const list = el('div', '');
   const out = el('pre', `margin:8px 14px 0; white-space:pre; color:${DIM}; font-size:10px; max-height:180px; overflow:auto; user-select:text;`);
   root.append(head, hint, list);
@@ -114,7 +116,8 @@ export function mount(api) {
       range.type = 'range'; range.min = '0.3'; range.max = '2.5'; range.step = '0.01';
       const show = () => {
         const cur = liveOf(leaf.key);
-        vals.textContent = 'bleed ' + cur.bleedX + ' ' + cur.bleedY + '   scale ' + scaleOf(cur, base).toFixed(2);
+        vals.textContent = 'offset ' + cur.offsetX + ' ' + cur.offsetY
+          + '   bleed ' + cur.bleedX + ' ' + cur.bleedY + '   scale ' + scaleOf(cur, base).toFixed(2);
         range.value = String(scaleOf(cur, base));
         row.style.borderLeftColor = selected && selected.key === leaf.key ? GOLD : 'transparent';
         row.style.background = selected && selected.key === leaf.key ? 'rgba(182,130,53,0.10)' : 'transparent';
@@ -136,11 +139,13 @@ export function mount(api) {
   const ours = (records) => records.every((r) => root.contains(r.target));
 
   // ---------------------------------------------------------------- move
-  const nudge = (dx, dy) => {
+  // A drag or a nudge moves the card, so it writes the offset. Holding alt moves the plate alone
+  // against its caption, which is the bleed, and is how the off-page anchors were composed.
+  const move = (dx, dy, plateOnly) => {
     if (!selected) return;
-    const e = liveOf(selected.key);
-    e.bleedX = round(px(e.bleedX) + dx) + 'px';
-    e.bleedY = round(px(e.bleedY) + dy) + 'px';
+    const e = liveOf(selected.key), kx = plateOnly ? 'bleedX' : 'offsetX', ky = plateOnly ? 'bleedY' : 'offsetY';
+    e[kx] = round(px(e[kx]) + dx) + 'px';
+    e[ky] = round(px(e[ky]) + dy) + 'px';
     rerender(); refresh();
   };
   const scaleBy = (f) => {
@@ -159,14 +164,15 @@ export function mount(api) {
     const e = liveOf(wrap.dataset.slot);
     if (!e) return;
     selected = { key: wrap.dataset.slot };
-    drag = { key: wrap.dataset.slot, x: ev.clientX, y: ev.clientY, bx: px(e.bleedX), by: px(e.bleedY) };
+    const plateOnly = ev.altKey, kx = plateOnly ? 'bleedX' : 'offsetX', ky = plateOnly ? 'bleedY' : 'offsetY';
+    drag = { key: wrap.dataset.slot, x: ev.clientX, y: ev.clientY, kx, ky, bx: px(e[kx]), by: px(e[ky]) };
     refresh();
   };
   const onMove = (ev) => {
     if (!drag) return;
     const e = liveOf(drag.key);
-    e.bleedX = round(drag.bx + ev.clientX - drag.x) + 'px';
-    e.bleedY = round(drag.by + ev.clientY - drag.y) + 'px';
+    e[drag.kx] = round(drag.bx + ev.clientX - drag.x) + 'px';
+    e[drag.ky] = round(drag.by + ev.clientY - drag.y) + 'px';
     rerender(); refresh();
   };
   const onUp = () => { drag = null; };
@@ -195,7 +201,7 @@ export function mount(api) {
     const step = ev.shiftKey ? 10 : 1;
     if (NUDGE[ev.key]) {
       ev.preventDefault(); ev.stopPropagation();
-      nudge(NUDGE[ev.key][0] * step, NUDGE[ev.key][1] * step);
+      move(NUDGE[ev.key][0] * step, NUDGE[ev.key][1] * step, ev.altKey);
     } else if (ev.key === '[' || ev.key === ']') {
       ev.preventDefault(); ev.stopPropagation();
       scaleBy(ev.key === ']' ? 1.05 : 1 / 1.05);
@@ -205,8 +211,36 @@ export function mount(api) {
   // ---------------------------------------------------------------- buttons
   const bar = el('div', `display:flex; gap:6px; margin:10px 14px 0; padding-top:10px; border-top:1px solid ${RULE};`);
   const button = (text, fn, title) => { const b = el('button', `all:unset; cursor:pointer; padding:4px 10px; border:1px solid rgba(243,242,242,0.25); border-radius:3px; color:${INK};`, text); b.onclick = fn; b.title = title; return b; };
+  // The other half of copy. A tuning session lives in one tab's memory, and a reload used to end it;
+  // reading a block back in means the work can be parked and picked up, here or on another machine.
+  const apply = (text) => {
+    const grab = (name) => {
+      const a = text.indexOf(name + ' = {'), z = text.indexOf('\n  };', a);
+      if (a < 0 || z < 0) throw new Error('no ' + name + ' block in that text');
+      // eslint-disable-next-line no-new-func
+      return new Function('return {' + text.slice(a + name.length + 4, z) + '}')();
+    };
+    const read = { spreads: grab('LEAF_SPREADS'), pairs: grab('LEAF_PAIRS') };
+    for (const which of ['spreads', 'pairs']) {
+      const live = which === 'spreads' ? spreads : pairs;
+      for (const side of ['left', 'right']) {
+        const from = read[which][side] || [];
+        if (from.length !== live[side].length) throw new Error(which + '.' + side + ' has ' + from.length + ' entries, the page has ' + live[side].length);
+        live[side].forEach((e, i) => { for (const k of Object.keys(e)) delete e[k]; Object.assign(e, from[i]); });
+      }
+    }
+    rerender(); refresh();
+  };
+
   bar.append(
     button('copy', () => { const text = serialize(spreads, pairs); out.textContent = text; navigator.clipboard?.writeText(text).catch(() => {}); }, 'copy both tables ready to paste into design/Portfolio.dc.html'),
+    button('paste', async () => {
+      try {
+        const text = (await navigator.clipboard.readText()) || '';
+        apply(text);
+        out.textContent = 'read ' + text.length + ' characters back in';
+      } catch (e) { out.textContent = 'paste failed: ' + e.message; }
+    }, 'read a copied block back from the clipboard'),
     button('reset', () => {
       for (const which of ['spreads', 'pairs']) {
         const live = which === 'spreads' ? spreads : pairs;

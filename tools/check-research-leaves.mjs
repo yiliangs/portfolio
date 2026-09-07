@@ -72,16 +72,19 @@ const geo = loadGeometry();
 
 // Read left to right, top to bottom, in the order the gutters hand slots out. Every field a leaf
 // takes its place from is here; a change to any of them moves a plate the page was composed around.
+// offset carries the whole leaf and bleed carries the plate alone, so the two are frozen separately:
+// the composition's only plate bleeds are the two anchors and the small right pair, and its only
+// whole-leaf move is the 52px the left pair sits down by.
 const TUNED = {
   left: [
-    { row: '1', col: '1 / 3', selfY: 'start',  selfX: 'start', imgH: 'min(22vh, 330px)', ratio: '4/3', maxW: '280px', titleSize: '26px', dir: 'row',    alignItems: 'flex-end',   align: 'left', px: '-18px', py: '-10px', dur: '7.5s', delay: '0s',  bleedX: '-56px', bleedY: '0px' },
-    { row: '2', col: '1',     selfY: 'center', selfX: 'start', imgH: 'min(14vh, 220px)', ratio: '1/1', maxW: '140px', titleSize: '17px', dir: 'column', alignItems: 'flex-start', align: 'left', px: '-14px', py: '-8px',  dur: '8s',   delay: '-5s', bleedX: '0px',   bleedY: '52px' },
-    { row: '3', col: '2',     selfY: 'end',    selfX: 'end',   imgH: 'min(12vh, 200px)', ratio: '5/4', maxW: '150px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', align: 'left', px: '-20px', py: '-9px',  dur: '8.5s', delay: '-2s', bleedX: '0px',   bleedY: '0px' },
+    { row: '1', col: '1 / 3', selfY: 'start',  selfX: 'start', imgH: 'min(22vh, 330px)', ratio: '4/3', maxW: '280px', titleSize: '26px', dir: 'row',    alignItems: 'flex-end',   align: 'left', px: '-18px', py: '-10px', dur: '7.5s', delay: '0s',  bleedX: '-56px', bleedY: '0px', offsetX: '0px', offsetY: '0px' },
+    { row: '2', col: '1',     selfY: 'center', selfX: 'start', imgH: 'min(14vh, 220px)', ratio: '1/1', maxW: '140px', titleSize: '17px', dir: 'column', alignItems: 'flex-start', align: 'left', px: '-14px', py: '-8px',  dur: '8s',   delay: '-5s', bleedX: '0px',   bleedY: '0px', offsetX: '0px', offsetY: '52px' },
+    { row: '3', col: '2',     selfY: 'end',    selfX: 'end',   imgH: 'min(12vh, 200px)', ratio: '5/4', maxW: '150px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', align: 'left', px: '-20px', py: '-9px',  dur: '8.5s', delay: '-2s', bleedX: '0px',   bleedY: '0px', offsetX: '0px', offsetY: '0px' },
   ],
   right: [
-    { row: '2', col: '1 / 3', selfY: 'center', selfX: 'end', imgH: 'min(24vh, 360px)', ratio: '3/4', maxW: '280px', titleSize: '26px', dir: 'row-reverse', alignItems: 'flex-end',   align: 'right', px: '-26px', py: '-14px', dur: '9s',   delay: '-3s',   bleedX: '56px',  bleedY: '0px' },
+    { row: '2', col: '1 / 3', selfY: 'center', selfX: 'end', imgH: 'min(24vh, 360px)', ratio: '3/4', maxW: '280px', titleSize: '26px', dir: 'row-reverse', alignItems: 'flex-end',   align: 'right', px: '-26px', py: '-14px', dur: '9s',   delay: '-3s',   bleedX: '56px',  bleedY: '0px', offsetX: '0px', offsetY: '0px' },
     { row: '1', col: '1 / 3', selfY: 'start',  selfX: 'end', imgH: 'min(18vh, 260px)', ratio: '3/2', maxW: '270px', titleSize: '17px', dir: 'row-reverse', alignItems: 'flex-start', align: 'right', px: '-22px', py: '-12px', dur: '10s',  delay: '-1.5s', bleedX: '0px',   bleedY: '0px', stackH: 'min(13vh, 120px)' },
-    { row: '3', col: '2',     selfY: 'end',    selfX: 'end', imgH: 'min(15vh, 240px)', ratio: '2/3', maxW: '100px', titleSize: '15px', dir: 'column',      alignItems: 'flex-end',   align: 'right', px: '-16px', py: '-11px', dur: '9.5s', delay: '-4s',   bleedX: '-60px', bleedY: '0px' },
+    { row: '3', col: '2',     selfY: 'end',    selfX: 'end', imgH: 'min(15vh, 240px)', ratio: '2/3', maxW: '100px', titleSize: '15px', dir: 'column',      alignItems: 'flex-end',   align: 'right', px: '-16px', py: '-11px', dur: '9.5s', delay: '-4s',   bleedX: '-60px', bleedY: '0px', offsetX: '0px', offsetY: '0px' },
   ],
 };
 
