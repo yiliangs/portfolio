@@ -406,7 +406,7 @@
                       ),
                       "\n        ",
                       h("div", { key: "3", "data-shape": Vi.p?.frameShape, "data-shape-alt": `frame-${Vi.p?.figNo ?? ""}`, style: S(`grid-column:${Vi.p?.plateCol ?? ""}; grid-row:1; height:100%; box-shadow:inset 1px 0 0 0 var(--color-divider), inset 0 1px 0 0 var(--color-divider), 1px 0 0 0 var(--color-divider), 0 1px 0 0 var(--color-divider); box-sizing:border-box; position:relative; overflow:hidden;`) },
-                        h("image-slot", { key: "0", id: Vi.p?.plateSlotId, shape: "rect", placeholder: Vi.p?.placeholder, style: {"width":"100%","height":"100%"} })
+                        h("image-slot", { key: "0", id: Vi.p?.plateSlotId, src: Vi.p?.hero, shape: "rect", fit: "cover", placeholder: Vi.p?.placeholder, style: {"width":"100%","height":"100%"} })
                       ),
                       "\n      "
                     ),
@@ -540,7 +540,7 @@
                       "\n        ",
                       h("div", { key: "1", "data-shape": Vi.p?.frameShape, "data-shape-alt": `frame-${Vi.p?.figNo ?? ""}`, style: {"position":"relative","minHeight":"0","overflow":"hidden","boxShadow":"inset 0 -1px 0 0 var(--color-divider)"} },
                         "\n          ",
-                        h("image-slot", { key: "1", id: Vi.p?.plateSlotId, shape: "rect", placeholder: Vi.p?.placeholder, style: {"width":"100%","height":"100%"} }),
+                        h("image-slot", { key: "1", id: Vi.p?.plateSlotId, src: Vi.p?.hero, shape: "rect", fit: "cover", placeholder: Vi.p?.placeholder, style: {"width":"100%","height":"100%"} }),
                         "\n        "
                       ),
                       "\n        ",
@@ -1739,7 +1739,7 @@
                   "+"
                 ),
                 "\n      ",
-                h("image-slot", { key: "3", id: V.current?.heroSlotId, shape: "rect", placeholder: V.current?.placeholder, style: {"width":"100%","height":"100%"} }),
+                h("image-slot", { key: "3", id: V.current?.heroSlotId, src: V.current?.hero, shape: "rect", fit: "contain", placeholder: V.current?.placeholder, style: {"width":"100%","height":"100%"} }),
                 "\n      ",
                 h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
                   "+"
@@ -1860,7 +1860,7 @@
                   "+"
                 ),
                 "\n      ",
-                h("image-slot", { key: "3", id: V.current?.detailSlotA, shape: "rect", placeholder: "Detail: drawing or interface", style: {"width":"100%","height":"100%"} }),
+                h("image-slot", { key: "3", id: V.current?.detailSlotA, src: V.current?.detailA, shape: "rect", fit: "contain", placeholder: "Detail: drawing or interface", style: {"width":"100%","height":"100%"} }),
                 "\n      ",
                 h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
                   "+"
@@ -1874,7 +1874,7 @@
                   "+"
                 ),
                 "\n      ",
-                h("image-slot", { key: "3", id: V.current?.detailSlotB, shape: "rect", placeholder: "Detail: process or site", style: {"width":"100%","height":"100%"} }),
+                h("image-slot", { key: "3", id: V.current?.detailSlotB, src: V.current?.detailB, shape: "rect", fit: "contain", placeholder: "Detail: process or site", style: {"width":"100%","height":"100%"} }),
                 "\n      ",
                 h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
                   "+"
@@ -1951,11 +1951,19 @@
     headRef = React.createRef(); rootRef = React.createRef(); heroRef = React.createRef(); scriptRef = React.createRef(); parchLayerRef = React.createRef(); platformRef = React.createRef(); heroTextRef = React.createRef(); tabToolingRef = React.createRef(); tabWritingRef = React.createRef(); sheetGridRef = React.createRef();
     MONO = "'Geist Mono', ui-monospace, monospace";
     CUBE_COLLAPSE_MS = 1500; // the cube's collapse into the platform: dissolve, travel, press flat
-    romans = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX'];
+    // one numeral per entry of the register, so this list has to stay at least as long as data
+    romans = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX','XXI','XXII','XXIII','XXIV'];
   
     // Every entry carries its own `why`, the one-line reason on the landing card, and may carry `id` so
     // another entry can point at it with `linkTo`: the AI Layout sheet opens the ACADIA paper and the
     // Unit Stacking sheet opens the IJAC manuscript, in place, the way the index opens a chapter.
+    // An entry may also name its pictures. `hero`, with its real pixel size in `heroW`/`heroH`, is the
+    // large plate: the serif chapter cuts its plate to that ratio, the Development sheet letterboxes
+    // it into the rows it was given, and both Development landings show it as a cropped teaser. A
+    // Development entry may add `detailA` and `detailB` for the pair of small plates under the
+    // account. Every one of them is optional and independent: a slot with no field named for it keeps
+    // the worded placeholder it has always had, which is how an unfinished sheet is issued next to a
+    // finished one. tools/check-dev-plates.mjs holds the files and the stated sizes to the truth.
     data = [
       // The Natalie block: the platform first, then the seven parts of it issued as their own sheets.
       // Facts are read off the natalie repository's CLAUDE.md and the per-folder CONTEXT.md signposts.
@@ -2111,6 +2119,24 @@
         body1: 'Scanning a building is easy now. Getting a model you can draw over is not. The pipeline takes a raw point cloud and does the boring work: finds the floors, finds the walls, guesses the openings, and hands you something honest enough to start from.',
         body2: 'It is not machine learning, mostly. It is plane fitting, a handful of heuristics, and a great deal of respect for the ways old buildings are not square. The heuristics were written on site, in a barn, in February.',
         body3: 'It has been used on around thirty existing-building projects. Surveyors like it because it makes their scans useful; architects like it because it does not pretend to be finished.' },
+      // The two tools of 2026, the first sheets in the register issued with their own screen captures.
+      // Facts are read off the rhino-worktree-launcher and agent-usage-stat repositories.
+      { title: 'Rhino Worktree Launcher', subtitle: 'Run any branch of a Rhino plug-in, and know which one Rhino actually loaded.', kind: 'Tooling', year: 2026, page: 222, pages: '222–229', role: 'Designer and sole developer', with: 'Claude Code and Codex as the first users, over MCP', status: 'Released on GitHub', statusShort: 'released', stack: 'C# on .NET 8: a WPF desktop, an rwl command line and a stdio MCP server over one backend, with the Windows registry, MSBuild and process inspection doing the real work.', link: 'Source and releases on GitHub', href: 'https://github.com/yiliangs/rhino-worktree-launcher', linkBlank: true, caption: 'The launcher on an invented project: six worktrees, each with its launch mode, its uncommitted lines and its age.', placeholder: 'Capture: launcher window',
+        hero: 'assets/rhino-worktree-launcher/hero.png', heroW: 1080, heroH: 1500,
+        why: 'Rhino loads a plug-in by its ID, once, from whichever file registered last. Six worktrees of one plug-in gave me six files and one ID.',
+        margin: 'A plug-in can never witness its own loading. Something outside Rhino has to watch which file went in.',
+        summary: 'A native Windows tool that registers a Rhino plug-in repository, lists its Git worktrees, builds the one you pick and starts a Rhino that provably loaded that exact build. One backend serves a desktop, a command line and an MCP server, so an agent can launch a branch as easily as I can.',
+        body1: 'Git worktrees let several branches of a plug-in sit on disk at once, and Rhino undoes that: it resolves a plug-in by one ID from one registration, so every launch after the first loaded yesterday’s build under today’s name. The launcher takes the registration over for the length of a launch. It journals both registry hives, writes the selected .rhp in as Rhino’s install seed, and restores them when Rhino exits.',
+        body2: 'Success is not a process starting. The launcher polls the Rhino it started until that exact file is mapped in its address space. No code goes into the plug-in to report back, because a plug-in cannot see its own load. The rule was found the hard way, with an MCP server whose registry writes never reached the hive Rhino reads: every write now runs in a process the shell started, and is confirmed before Rhino starts.',
+        body3: 'It ships as a self-contained payload: a desktop, an rwl command line and a stdio MCP server, all over one backend. Coding agents were the first customers. They can build a branch, wait for a verified load, and read a named failure code, without asking me to click anything.' },
+      { title: 'Agent Usage Stat', subtitle: 'Not how many tokens I spent, but the shape of the work they went into.', kind: 'Side project', year: 2026, page: 230, pages: '230–237', role: 'Designer and developer', with: 'Grown from a script by Chris Hutchinson', status: 'Released, version 3.2', statusShort: 'released', stack: 'TypeScript and Electron: a headless helper hooked into each agent, a per-session JSON ledger that can live in a synced folder, and a portal of hand-drawn charts.', link: 'Source and releases on GitHub', href: 'https://github.com/yiliangs/agent-usage-stat', linkBlank: true, caption: 'One month of sessions as a wall-clock field: a column a day, a stripe per model family, shaded by token velocity.', placeholder: 'Capture: month timeline',
+        hero: 'assets/agent-usage-stat/hero.png', heroW: 1920, heroH: 1088, detailA: 'assets/agent-usage-stat/detail-a.png', detailB: 'assets/agent-usage-stat/detail-b.png',
+        why: 'Every usage dashboard I found was a bill. I wanted to see when I work with agents, on what, and in what rhythm, and let the cost come along as a side effect.',
+        margin: 'Thirty evenings of work read as thirty events on a calendar. Fold them onto the clock and what survives is the habit.',
+        summary: 'A private desktop atlas of my coding-agent sessions. Hooks capture each session as it ends, a local ledger keeps totals and never a prompt, and the views turn the ledger into rhythms: days, weeks, clocks, projects and model families, with the API-equivalent cost as one column among many.',
+        body1: 'The number every tool led with was the spend, and the spend told me nothing I could act on. What I wanted was pattern: which projects pulled me in at which hours, whether a change of model moved the working day, where the concurrent sessions clustered. So the ledger records time, project, machine and model for every session, keeps no prompt or response text, and the portal draws the time axis first.',
+        body2: 'The timeline is the view I built it for. A week is a dense wall-clock schedule with each session as a block. A month is thirty-one narrow days side by side, coloured by model family and shaded by token velocity, so a change of model or a run of late nights shows as a change of colour before anyone reads a number. The Pattern view folds the period onto the 168 hour-slots of a week.',
+        body3: 'Capture is the unglamorous half. Agents tear down their exit hooks in about a second, so a small shim hands the transcript to a detached worker and gets out of the way. Four agents, two operating systems, one ledger folder, and no server anywhere: the renderer reads its own protocol.' },
     ];
     pages = {
       writing: { reg: 'serif', label: 'Research', kicker: 'Essays · Research', bio: 'I write about what happens when machines start drawing too, and I publish the research that keeps me honest. The tools live next door, in mono.', title: 'Drawings, tools, and other arguments.', byline: 'by Yiliang Shao', edition: 'Edition of one', stamp: 'MMXXVI',
@@ -2120,8 +2146,8 @@
         colophon: 'Set in Newsreader and Lora on a near-white ground. Photographs are matted as plates. Nothing here is generated; everything here was drawn, built, or written by hand, sometimes slowly.',
         titleSize: 'clamp(48px,7vw,104px)', titleTracking: '-0.01em', bylineSize: '26px', bodySize: '17px', smallBodySize: '15.5px', stampSize: '40px', h2Size: '40px', h3Size: '34px', cvSize: '22px', capLeadSize: '18px', marginSize: '19px', marginStyle: 'italic', marginPrefix: '' },
       tooling: { reg: 'mono', label: 'Development', kicker: 'tooling · r+d · side projects', title: 'I build software for people who draw buildings, and I keep the drawings in charge.', byline: '>_ y.shao · oslo — this register is kept by hand and issued when something changes', edition: 'Rev 2026.09 · issued for review', stamp: 'SHT-00',
-        intro: 'Natalie first: the computing platform I own and build at SOM, issued as one sheet for the platform and seven for the parts of it I would show first, from a learned facade correspondence to a room layout solver. After it, four smaller things I made because I needed them in practice. Each is listed with the reason I built it, because the reason is usually the interesting part. The arguments about all this live next door, in serif.',
-        indexKicker: 'natalie, then four things I made because I needed them', indexTitle: '', indexNote: 'sheet numbers are stable across revisions; rev is the year of the last issue. click a row for the full sheet.',
+        intro: 'Natalie first: the computing platform I own and build at SOM, issued as one sheet for the platform and seven for the parts of it I would show first, from a learned facade correspondence to a room layout solver. After it, six smaller things I made because I needed them in practice. Each is listed with the reason I built it, because the reason is usually the interesting part. The arguments about all this live next door, in serif.',
+        indexKicker: 'natalie, then six things I made because I needed them', indexTitle: '', indexNote: 'sheet numbers are stable across revisions; rev is the year of the last issue. click a row for the full sheet.',
         platesKicker: 'Selected sheets', platesTitle: '', readWord: 'Open sheet', notesTitle: 'Trained as an architect. Stayed for the tooling.',
         colophon: 'set in geist mono on a dark sheet. figures are screen captures at 1:1, unretouched. no gold on this side: the essays keep the leaf, the tools keep the ink.',
         titleSize: 'clamp(36px,5.2vw,76px)', titleTracking: '-0.03em', bylineSize: '15px', bodySize: '15px', smallBodySize: '14px', stampSize: '28px', h2Size: '32px', h3Size: '26px', cvSize: '18px', capLeadSize: '13px', marginSize: '13px', marginStyle: 'normal', marginPrefix: '// ' },

@@ -299,7 +299,10 @@
     <!-- the platform takes the module the statement leaves off at, so no empty column stands between them -->
     <div ref="{{ platformRef }}" aria-hidden="true" style="grid-column:15 / 23; grid-row:2 / 12; min-height:0; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); cursor:grab; touch-action:none; user-select:none;"></div>
 
-    <!-- projects: one per band, alternating sides -->
+    <!-- projects: one per band, alternating sides. The band's plate shows the entry's hero as a
+         teaser: it is a slice of the card rather than the picture's own shape, so it takes fit
+         cover here and contain on the sheet the card opens. An entry that names no hero keeps the
+         placeholder slot, which is what an absent src leaves behind. -->
     <p ref="{{ contentsRef }}" data-morph="index-kicker" style="grid-column:1 / 7; grid-row:14 / 15; margin:0; display:flex; align-items:center; padding:0 22px; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent);  font-size:12px; letter-spacing:0.08em; color:var(--color-neutral-600);">{{ page.indexKicker }}</p>
     <sc-for list="{{ pageProjects }}" as="p" hint-placeholder-count="4">
       <div data-shape="card-{{ p.shapeIdx }}" onClick="{{ p.open }}" onMouseEnter="{{ p.hover }}" style="grid-column:1 / 23; grid-row:{{ p.cardRow }}; display:grid; grid-template-columns:repeat(22,1fr); cursor:pointer; color:var(--color-text); background:var(--color-bg); border-width:0; border-style:solid; border-color:var(--color-neutral-400); box-shadow:inset 1px 0 0 0 var(--color-neutral-400), inset 0 1px 0 0 var(--color-neutral-400), 1px 0 0 0 var(--color-neutral-400), 0 1px 0 0 var(--color-neutral-400); transition:box-shadow 240ms ease;" style-hover="box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text);">
@@ -308,7 +311,7 @@
           <p data-morph="{{ p.morphName }}" data-morph-alt="title-{{ p.figNo }}" style="margin:0; font-size:28px; line-height:34px; letter-spacing:-0.03em;">{{ p.title }}</p>
           <p data-morph="why-{{ p.figNo }}" data-morph-alt="lede-{{ p.figNo }}" style="margin:10px 0 0; color:var(--color-neutral-700); max-width:44ch;">{{ p.why }}</p>
         </div>
-        <div data-shape="{{ p.frameShape }}" data-shape-alt="frame-{{ p.figNo }}" style="grid-column:{{ p.plateCol }}; grid-row:1; height:100%; box-shadow:inset 1px 0 0 0 var(--color-divider), inset 0 1px 0 0 var(--color-divider), 1px 0 0 0 var(--color-divider), 0 1px 0 0 var(--color-divider); box-sizing:border-box; position:relative; overflow:hidden;"><image-slot id="{{ p.plateSlotId }}" shape="rect" placeholder="{{ p.placeholder }}" style="width:100%; height:100%;"></image-slot></div>
+        <div data-shape="{{ p.frameShape }}" data-shape-alt="frame-{{ p.figNo }}" style="grid-column:{{ p.plateCol }}; grid-row:1; height:100%; box-shadow:inset 1px 0 0 0 var(--color-divider), inset 0 1px 0 0 var(--color-divider), 1px 0 0 0 var(--color-divider), 0 1px 0 0 var(--color-divider); box-sizing:border-box; position:relative; overflow:hidden;"><image-slot id="{{ p.plateSlotId }}" src="{{ p.hero }}" shape="rect" fit="cover" placeholder="{{ p.placeholder }}" style="width:100%; height:100%;"></image-slot></div>
       </div>
     </sc-for>
     <div ref="{{ platesRef }}" style="grid-column:1 / 2; grid-row:{{ gridPlatesRow }}; height:0;"></div>
@@ -377,7 +380,7 @@
     <sc-for list="{{ landingPlates }}" as="p" hint-placeholder-count="6">
       <div data-shape="card-{{ p.shapeIdx }}" onClick="{{ p.open }}" onMouseEnter="{{ p.type }}" onMouseLeave="{{ p.untype }}" onFocus="{{ p.type }}" onBlur="{{ p.untype }}" tabIndex="0" aria-label="{{ p.title }}" style="grid-column:{{ p.col }}; grid-row:{{ p.row }}; position:relative; z-index:{{ p.zIndex }}; display:grid; grid-template-rows:minmax(0,1fr) 44px; cursor:pointer; box-sizing:border-box; color:var(--color-text); background:var(--color-bg); box-shadow:inset 1px 0 0 0 var(--color-neutral-400), inset 0 1px 0 0 var(--color-neutral-400), 1px 0 0 0 var(--color-neutral-400), 0 1px 0 0 var(--color-neutral-400); transition:box-shadow 240ms ease;" style-hover="z-index:30; box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text)">
         <div data-shape="{{ p.frameShape }}" data-shape-alt="frame-{{ p.figNo }}" style="position:relative; min-height:0; overflow:hidden; box-shadow:inset 0 -1px 0 0 var(--color-divider);">
-          <image-slot id="{{ p.plateSlotId }}" shape="rect" placeholder="{{ p.placeholder }}" style="width:100%; height:100%;"></image-slot>
+          <image-slot id="{{ p.plateSlotId }}" src="{{ p.hero }}" shape="rect" fit="cover" placeholder="{{ p.placeholder }}" style="width:100%; height:100%;"></image-slot>
         </div>
         <div style="min-width:0; padding:0 10px; box-sizing:border-box; display:flex; flex-direction:column; justify-content:center; overflow:hidden;">
           <p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.06em; color:var(--color-neutral-600); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ p.bandNo }} · {{ p.kindLower }} · {{ p.year }}</p>
@@ -854,10 +857,17 @@
     <div class="sheet-mod" data-enter="" style="grid-column:{{ sheet.specRev.col }}; grid-row:{{ sheet.specRev.row }}; --d:{{ sheet.specRev.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Rev / Scale</p><p key="spec-rev-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px; font-feature-settings:'tnum' 1;">{{ current.year }} · 1:1</p></div>
 
     <!-- the figure's height is a row count, not a ratio. Under the cursor it throws its own edges
-         across the sheet as guide lines and reads the cell back into its caption -->
+         across the sheet as guide lines and reads the cell back into its caption.
+         An entry that names a hero shows it here; one that names none keeps the placeholder slot,
+         which is what an absent src leaves behind: the binding is one whole {{ }}, so the compiled
+         prop is undefined and no src attribute is written at all. The fit is contain rather than
+         cover because a sheet plate is a box of whole rows, not a ratio, and these are screen
+         captures with type in them: a crop would cut the reading, so the plate letterboxes instead.
+         The picture stays inside an image-slot rather than becoming a plain <img> because the
+         landing-to-sheet morph reads the travelling photograph back out of the slot. -->
     <figure class="plate sheet-mod sheet-plate" data-enter="" data-shape="frame-{{ current.figNo }}" onMouseEnter="{{ sheet.hero.move }}" onMouseMove="{{ sheet.hero.move }}" onMouseLeave="{{ sheet.hero.leave }}" style="grid-column:{{ sheet.hero.col }}; grid-row:{{ sheet.hero.row }}; --d:{{ sheet.hero.delay }}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;">
       <span class="sheet-mark" aria-hidden="true" style="left:8px; top:5px;">+</span>
-      <image-slot id="{{ current.heroSlotId }}" shape="rect" placeholder="{{ current.placeholder }}" style="width:100%; height:100%;"></image-slot>
+      <image-slot id="{{ current.heroSlotId }}" src="{{ current.hero }}" shape="rect" fit="contain" placeholder="{{ current.placeholder }}" style="width:100%; height:100%;"></image-slot>
       <span class="sheet-mark" aria-hidden="true" style="right:8px; bottom:5px;">+</span>
     </figure>
     <p class="sheet-mod" data-enter="" style="grid-column:{{ sheet.heroCaption.col }}; grid-row:{{ sheet.heroCaption.row }}; --d:{{ sheet.heroCaption.delay }}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="min-width:0;"><span style="color:var(--color-accent);">{{ current.figWord }} {{ current.numeral }}.</span> <span key="cap-hero-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.caption }}</span></span><span style="flex:none; color:var(--color-neutral-600); white-space:nowrap;">{{ sheet.heroReadout }}</span></p>
@@ -885,15 +895,17 @@
       <div style="display:flex; gap:6px; flex-wrap:wrap;"><span class="tag tag-outline" style="font-family:var(--mono);">{{ current.kind }}</span><span class="tag tag-neutral" style="font-family:var(--mono);">{{ current.year }}</span></div>
     </aside>
 
-    <!-- two details, side by side on the wide sheet and stacked on the narrow one -->
+    <!-- two details, side by side on the wide sheet and stacked on the narrow one. Each takes its
+         own field, detailA and detailB, and falls back to the worded placeholder when the entry
+         names none: the two are independent, so a sheet may show one detail and leave the other -->
     <figure class="plate sheet-mod sheet-plate" data-enter="" onMouseEnter="{{ sheet.detailA.move }}" onMouseMove="{{ sheet.detailA.move }}" onMouseLeave="{{ sheet.detailA.leave }}" style="grid-column:{{ sheet.detailA.col }}; grid-row:{{ sheet.detailA.row }}; --d:{{ sheet.detailA.delay }}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;">
       <span class="sheet-mark" aria-hidden="true" style="left:8px; top:5px;">+</span>
-      <image-slot id="{{ current.detailSlotA }}" shape="rect" placeholder="Detail: drawing or interface" style="width:100%; height:100%;"></image-slot>
+      <image-slot id="{{ current.detailSlotA }}" src="{{ current.detailA }}" shape="rect" fit="contain" placeholder="Detail: drawing or interface" style="width:100%; height:100%;"></image-slot>
       <span class="sheet-mark" aria-hidden="true" style="right:8px; bottom:5px;">+</span>
     </figure>
     <figure class="plate sheet-mod sheet-plate" data-enter="" onMouseEnter="{{ sheet.detailB.move }}" onMouseMove="{{ sheet.detailB.move }}" onMouseLeave="{{ sheet.detailB.leave }}" style="grid-column:{{ sheet.detailB.col }}; grid-row:{{ sheet.detailB.row }}; --d:{{ sheet.detailB.delay }}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;">
       <span class="sheet-mark" aria-hidden="true" style="left:8px; top:5px;">+</span>
-      <image-slot id="{{ current.detailSlotB }}" shape="rect" placeholder="Detail: process or site" style="width:100%; height:100%;"></image-slot>
+      <image-slot id="{{ current.detailSlotB }}" src="{{ current.detailB }}" shape="rect" fit="contain" placeholder="Detail: process or site" style="width:100%; height:100%;"></image-slot>
       <span class="sheet-mark" aria-hidden="true" style="right:8px; bottom:5px;">+</span>
     </figure>
     <p class="sheet-mod" data-enter="" style="grid-column:{{ sheet.detailCaption.col }}; grid-row:{{ sheet.detailCaption.row }}; --d:{{ sheet.detailCaption.delay }}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="min-width:0;"><span style="color:var(--color-accent);">Figs. 1–2.</span> <span key="cap-detail-{{ current.figNo }}" data-tr="wake" data-reg="mono">Working states. Left, the drawing or interface; right, where it was made.</span></span><span style="flex:none; color:var(--color-neutral-600); white-space:nowrap;">{{ sheet.detailReadout }}</span></p>
@@ -937,11 +949,19 @@ class Component extends DCLogic {
   headRef = React.createRef(); rootRef = React.createRef(); heroRef = React.createRef(); scriptRef = React.createRef(); parchLayerRef = React.createRef(); platformRef = React.createRef(); heroTextRef = React.createRef(); tabToolingRef = React.createRef(); tabWritingRef = React.createRef(); sheetGridRef = React.createRef();
   MONO = "'Geist Mono', ui-monospace, monospace";
   CUBE_COLLAPSE_MS = 1500; // the cube's collapse into the platform: dissolve, travel, press flat
-  romans = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX'];
+  // one numeral per entry of the register, so this list has to stay at least as long as data
+  romans = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX','XXI','XXII','XXIII','XXIV'];
 
   // Every entry carries its own `why`, the one-line reason on the landing card, and may carry `id` so
   // another entry can point at it with `linkTo`: the AI Layout sheet opens the ACADIA paper and the
   // Unit Stacking sheet opens the IJAC manuscript, in place, the way the index opens a chapter.
+  // An entry may also name its pictures. `hero`, with its real pixel size in `heroW`/`heroH`, is the
+  // large plate: the serif chapter cuts its plate to that ratio, the Development sheet letterboxes
+  // it into the rows it was given, and both Development landings show it as a cropped teaser. A
+  // Development entry may add `detailA` and `detailB` for the pair of small plates under the
+  // account. Every one of them is optional and independent: a slot with no field named for it keeps
+  // the worded placeholder it has always had, which is how an unfinished sheet is issued next to a
+  // finished one. tools/check-dev-plates.mjs holds the files and the stated sizes to the truth.
   data = [
     // The Natalie block: the platform first, then the seven parts of it issued as their own sheets.
     // Facts are read off the natalie repository's CLAUDE.md and the per-folder CONTEXT.md signposts.
@@ -1097,6 +1117,24 @@ class Component extends DCLogic {
       body1: 'Scanning a building is easy now. Getting a model you can draw over is not. The pipeline takes a raw point cloud and does the boring work: finds the floors, finds the walls, guesses the openings, and hands you something honest enough to start from.',
       body2: 'It is not machine learning, mostly. It is plane fitting, a handful of heuristics, and a great deal of respect for the ways old buildings are not square. The heuristics were written on site, in a barn, in February.',
       body3: 'It has been used on around thirty existing-building projects. Surveyors like it because it makes their scans useful; architects like it because it does not pretend to be finished.' },
+    // The two tools of 2026, the first sheets in the register issued with their own screen captures.
+    // Facts are read off the rhino-worktree-launcher and agent-usage-stat repositories.
+    { title: 'Rhino Worktree Launcher', subtitle: 'Run any branch of a Rhino plug-in, and know which one Rhino actually loaded.', kind: 'Tooling', year: 2026, page: 222, pages: '222–229', role: 'Designer and sole developer', with: 'Claude Code and Codex as the first users, over MCP', status: 'Released on GitHub', statusShort: 'released', stack: 'C# on .NET 8: a WPF desktop, an rwl command line and a stdio MCP server over one backend, with the Windows registry, MSBuild and process inspection doing the real work.', link: 'Source and releases on GitHub', href: 'https://github.com/yiliangs/rhino-worktree-launcher', linkBlank: true, caption: 'The launcher on an invented project: six worktrees, each with its launch mode, its uncommitted lines and its age.', placeholder: 'Capture: launcher window',
+      hero: 'assets/rhino-worktree-launcher/hero.png', heroW: 1080, heroH: 1500,
+      why: 'Rhino loads a plug-in by its ID, once, from whichever file registered last. Six worktrees of one plug-in gave me six files and one ID.',
+      margin: 'A plug-in can never witness its own loading. Something outside Rhino has to watch which file went in.',
+      summary: 'A native Windows tool that registers a Rhino plug-in repository, lists its Git worktrees, builds the one you pick and starts a Rhino that provably loaded that exact build. One backend serves a desktop, a command line and an MCP server, so an agent can launch a branch as easily as I can.',
+      body1: 'Git worktrees let several branches of a plug-in sit on disk at once, and Rhino undoes that: it resolves a plug-in by one ID from one registration, so every launch after the first loaded yesterday’s build under today’s name. The launcher takes the registration over for the length of a launch. It journals both registry hives, writes the selected .rhp in as Rhino’s install seed, and restores them when Rhino exits.',
+      body2: 'Success is not a process starting. The launcher polls the Rhino it started until that exact file is mapped in its address space. No code goes into the plug-in to report back, because a plug-in cannot see its own load. The rule was found the hard way, with an MCP server whose registry writes never reached the hive Rhino reads: every write now runs in a process the shell started, and is confirmed before Rhino starts.',
+      body3: 'It ships as a self-contained payload: a desktop, an rwl command line and a stdio MCP server, all over one backend. Coding agents were the first customers. They can build a branch, wait for a verified load, and read a named failure code, without asking me to click anything.' },
+    { title: 'Agent Usage Stat', subtitle: 'Not how many tokens I spent, but the shape of the work they went into.', kind: 'Side project', year: 2026, page: 230, pages: '230–237', role: 'Designer and developer', with: 'Grown from a script by Chris Hutchinson', status: 'Released, version 3.2', statusShort: 'released', stack: 'TypeScript and Electron: a headless helper hooked into each agent, a per-session JSON ledger that can live in a synced folder, and a portal of hand-drawn charts.', link: 'Source and releases on GitHub', href: 'https://github.com/yiliangs/agent-usage-stat', linkBlank: true, caption: 'One month of sessions as a wall-clock field: a column a day, a stripe per model family, shaded by token velocity.', placeholder: 'Capture: month timeline',
+      hero: 'assets/agent-usage-stat/hero.png', heroW: 1920, heroH: 1088, detailA: 'assets/agent-usage-stat/detail-a.png', detailB: 'assets/agent-usage-stat/detail-b.png',
+      why: 'Every usage dashboard I found was a bill. I wanted to see when I work with agents, on what, and in what rhythm, and let the cost come along as a side effect.',
+      margin: 'Thirty evenings of work read as thirty events on a calendar. Fold them onto the clock and what survives is the habit.',
+      summary: 'A private desktop atlas of my coding-agent sessions. Hooks capture each session as it ends, a local ledger keeps totals and never a prompt, and the views turn the ledger into rhythms: days, weeks, clocks, projects and model families, with the API-equivalent cost as one column among many.',
+      body1: 'The number every tool led with was the spend, and the spend told me nothing I could act on. What I wanted was pattern: which projects pulled me in at which hours, whether a change of model moved the working day, where the concurrent sessions clustered. So the ledger records time, project, machine and model for every session, keeps no prompt or response text, and the portal draws the time axis first.',
+      body2: 'The timeline is the view I built it for. A week is a dense wall-clock schedule with each session as a block. A month is thirty-one narrow days side by side, coloured by model family and shaded by token velocity, so a change of model or a run of late nights shows as a change of colour before anyone reads a number. The Pattern view folds the period onto the 168 hour-slots of a week.',
+      body3: 'Capture is the unglamorous half. Agents tear down their exit hooks in about a second, so a small shim hands the transcript to a detached worker and gets out of the way. Four agents, two operating systems, one ledger folder, and no server anywhere: the renderer reads its own protocol.' },
   ];
   pages = {
     writing: { reg: 'serif', label: 'Research', kicker: 'Essays · Research', bio: 'I write about what happens when machines start drawing too, and I publish the research that keeps me honest. The tools live next door, in mono.', title: 'Drawings, tools, and other arguments.', byline: 'by Yiliang Shao', edition: 'Edition of one', stamp: 'MMXXVI',
@@ -1106,8 +1144,8 @@ class Component extends DCLogic {
       colophon: 'Set in Newsreader and Lora on a near-white ground. Photographs are matted as plates. Nothing here is generated; everything here was drawn, built, or written by hand, sometimes slowly.',
       titleSize: 'clamp(48px,7vw,104px)', titleTracking: '-0.01em', bylineSize: '26px', bodySize: '17px', smallBodySize: '15.5px', stampSize: '40px', h2Size: '40px', h3Size: '34px', cvSize: '22px', capLeadSize: '18px', marginSize: '19px', marginStyle: 'italic', marginPrefix: '' },
     tooling: { reg: 'mono', label: 'Development', kicker: 'tooling · r+d · side projects', title: 'I build software for people who draw buildings, and I keep the drawings in charge.', byline: '>_ y.shao · oslo — this register is kept by hand and issued when something changes', edition: 'Rev 2026.09 · issued for review', stamp: 'SHT-00',
-      intro: 'Natalie first: the computing platform I own and build at SOM, issued as one sheet for the platform and seven for the parts of it I would show first, from a learned facade correspondence to a room layout solver. After it, four smaller things I made because I needed them in practice. Each is listed with the reason I built it, because the reason is usually the interesting part. The arguments about all this live next door, in serif.',
-      indexKicker: 'natalie, then four things I made because I needed them', indexTitle: '', indexNote: 'sheet numbers are stable across revisions; rev is the year of the last issue. click a row for the full sheet.',
+      intro: 'Natalie first: the computing platform I own and build at SOM, issued as one sheet for the platform and seven for the parts of it I would show first, from a learned facade correspondence to a room layout solver. After it, six smaller things I made because I needed them in practice. Each is listed with the reason I built it, because the reason is usually the interesting part. The arguments about all this live next door, in serif.',
+      indexKicker: 'natalie, then six things I made because I needed them', indexTitle: '', indexNote: 'sheet numbers are stable across revisions; rev is the year of the last issue. click a row for the full sheet.',
       platesKicker: 'Selected sheets', platesTitle: '', readWord: 'Open sheet', notesTitle: 'Trained as an architect. Stayed for the tooling.',
       colophon: 'set in geist mono on a dark sheet. figures are screen captures at 1:1, unretouched. no gold on this side: the essays keep the leaf, the tools keep the ink.',
       titleSize: 'clamp(36px,5.2vw,76px)', titleTracking: '-0.03em', bylineSize: '15px', bodySize: '15px', smallBodySize: '14px', stampSize: '28px', h2Size: '32px', h3Size: '26px', cvSize: '18px', capLeadSize: '13px', marginSize: '13px', marginStyle: 'normal', marginPrefix: '// ' },
