@@ -2717,6 +2717,59 @@
             e('span', { key: 'n', style: { flex: 'none', width: '2.2em', textAlign: 'right', color: 'var(--color-neutral-600)', fontFeatureSettings: "'tnum' 1" } }, String(j + 1)),
             e('span', { key: 't', style: { paddingLeft: (l.d * 1.6) + 'em' } }, this.paperRuns(l.r))))));
     }
+    // Where every block of a paper stands on the body grid. Pure: it reads the block list and hands
+    // back placements, so the rows can be reasoned about, and checked, without building elements.
+    //
+    // The blocks fill column 1 in order, one row each, and a wide figure takes a whole row across
+    // both columns. Column 2 holds the aside above the first figure, then a caption beside each
+    // plate. Neither the aside nor a caption sits on a single row: a grid row is as tall as its
+    // tallest item, so a one-row caption taller than the block beside it pushes the rest of the body
+    // down by its own height, while a spanning one lays that height over the whole run of blocks it
+    // stands beside and lifts nothing until it is taller than all of them together.
+    static planPaperRows(blocks) {
+      const cells = [], caps = [];
+      // the rows a wide block takes: it reaches across both columns, so column 2 is spoken for there
+      const wideRows = [];
+      let row = 0, firstFigRow = 0;
+      const at = (wide) => { row++; if (wide) wideRows.push(row); return { gridRow: String(row), gridColumn: wide ? '1 / -1' : '1', minWidth: 0 }; };
+      // two captions must never land in the same cell; the second one steps down a row
+      const taken = new Set();
+      const capRow = (r) => { while (taken.has(r)) r++; taken.add(r); return r; };
+      (blocks || []).forEach((b, i) => {
+        const k = b && b.k;
+        if (k === 'fig') {
+          cells[i] = at(b.wide);
+          if (!firstFigRow) firstFigRow = row;
+          // a wide plate already owns column 2 on its own row, so its caption drops to the next one,
+          // where it sits beside the paragraph that follows the figure
+          caps.push({ row: capRow(b.wide ? row + 1 : row), figs: [b] });
+        } else if (k === 'figrow') {
+          cells[i] = at(false);
+          if (!firstFigRow) firstFigRow = row;
+          caps.push({ row: capRow(row), figs: b.figs });
+        } else {
+          // every block renderPaper draws takes a row of its own. A fold takes none: the tail carries
+          // its own open and closed state, so renderPaperTail places it on the row this leaves free.
+          cells[i] = k === 'fold' ? null : at(false);
+        }
+      });
+      const tailRow = row + 1;
+      // A caption reaches down to the earlier of the row the next caption starts on and the row of
+      // the next wide block, and past the tail when neither is left. It has to stop at a wide block
+      // because a wide block reaches across both columns and so owns column 2 on its row: a caption
+      // spanning through it shares that cell, and draws over the plate as soon as it is taller than
+      // the body between the two. The rows from a wide block down to the next caption stay uncovered,
+      // which is right, since nothing stands in column 2 there. A caption already standing on or
+      // below where its span would end (a wide plate closing the body, whose caption has nowhere left
+      // to drop) keeps the one row it has.
+      caps.forEach((c, i) => {
+        const nextCap = i + 1 < caps.length ? caps[i + 1].row : tailRow + 1;
+        const nextWide = wideRows.find((w) => w > c.row);
+        const next = nextWide === undefined ? nextCap : Math.min(nextCap, nextWide);
+        c.end = next > c.row ? next : c.row + 1;
+      });
+      return { cells, caps, tailRow, asideRow: '1 / ' + (firstFigRow || tailRow) };
+    }
     // The paper body, built once per loaded module and memoized on it. The app re-renders on every
     // scroll event and on the glitch timer; handing React the same element objects each time lets it
     // bail out of the whole subtree instead of rebuilding several hundred nodes a frame.
@@ -2729,14 +2782,11 @@
       const label = { margin: '0 0 6px', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-neutral-600)' };
       const body = { fontSize: '17px', lineHeight: '28px', textAlign: 'justify', hyphens: 'auto', color: ink, maxWidth: '68ch' };
       // a paper's drop capital waits for its Introduction; an essay module says `dropCap` and opens on one
-      const els = []; let row = 0, firstFigRow = 0, dropNext = !!mod.dropCap;
-      const caps = [], folds = [];
-      // Explicit rows: the blocks fill column 1 in order and a wide figure takes a whole row across
-      // both. Column 2 holds the aside above the first figure, then one caption cell per figure row.
-      const at = (wide) => { row++; return { gridRow: String(row), gridColumn: wide ? '1 / -1' : '1', minWidth: 0 }; };
-      // two captions must never land in the same cell; the second one steps down a row
-      const taken = new Set();
-      const capRow = (r) => { while (taken.has(r)) r++; taken.add(r); return r; };
+      const els = []; let dropNext = !!mod.dropCap;
+      const folds = [];
+      // every block's cell on the body grid, worked out ahead of the elements; this method owns no
+      // row counter of its own, it only reads the plan back block by block
+      const plan = Component.planPaperRows(mod.blocks);
       // The frame is the plate's own hairline, drawn on the image and nothing else. The design system's
       // .plate is a 6px surface mat plus a 1px outline that goes accent on hover; the mat is dropped so
       // the outline lands on the image edge, and its sepia (meant for placeholder photographs) with it.
@@ -2755,26 +2805,26 @@
       };
       const figWidth = (b) => 'min(100%, calc(' + CAP + ' * ' + (b.w / b.h).toFixed(4) + '))';
       (mod.blocks || []).forEach((b, i) => {
-        const key = 'pb' + i;
+        const key = 'pb' + i, cell = plan.cells[i];
         if (b.k === 'byline') {
           // one name over its affiliation per author, set in a row that wraps; an equal-contribution
           // mark sits after the name and its note closes the block
-          els.push(e('div', { key, style: { ...at(false), margin: '0 0 28px', display: 'flex', flexWrap: 'wrap', gap: '10px 32px', fontFamily: 'var(--font-heading)', fontSize: '19px', lineHeight: '26px' } },
+          els.push(e('div', { key, style: { ...cell, margin: '0 0 28px', display: 'flex', flexWrap: 'wrap', gap: '10px 32px', fontFamily: 'var(--font-heading)', fontSize: '19px', lineHeight: '26px' } },
             b.authors.map((a, j) => e('p', { key: j, style: { margin: 0 } },
               a.t, a.eq ? e('sup', { key: 'e', style: { fontSize: '12px', color: 'var(--color-neutral-600)' } }, '*') : null,
               e('span', { key: 'a', style: { display: 'block', fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-600)' } }, a.aff))),
             b.note ? e('p', { key: 'n', style: { margin: 0, flexBasis: '100%', fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-600)' } }, b.note) : null));
         } else if (b.k === 'abstract') {
-          els.push(e('div', { key, style: { ...at(false), ...rule, margin: '0 0 20px' } },
+          els.push(e('div', { key, style: { ...cell, ...rule, margin: '0 0 20px' } },
             e('p', { key: 'l', style: label }, 'Abstract'),
             e('p', { key: 'p', style: { margin: 0, fontFamily: 'var(--font-heading)', fontSize: '18px', lineHeight: '30px', textAlign: 'justify', hyphens: 'auto', color: ink, maxWidth: '68ch' } }, this.paperRuns(b.r))));
         } else if (b.k === 'keywords') {
-          els.push(e('p', { key, style: { ...at(false), margin: '0 0 28px', fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-600)', maxWidth: '68ch' } }, b.t));
+          els.push(e('p', { key, style: { ...cell, margin: '0 0 28px', fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-600)', maxWidth: '68ch' } }, b.t));
         } else if (b.k === 'h2') {
           dropNext = /^Introduction$/i.test(b.t);
-          els.push(e('h2', { key, style: { ...at(false), ...rule, margin: '56px 0 20px', fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: '30px', lineHeight: '1.2', letterSpacing: '-0.01em' } }, b.t));
+          els.push(e('h2', { key, style: { ...cell, ...rule, margin: '56px 0 20px', fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: '30px', lineHeight: '1.2', letterSpacing: '-0.01em' } }, b.t));
         } else if (b.k === 'h3') {
-          els.push(e('h3', { key, style: { ...at(false), margin: '34px 0 14px', fontFamily: 'var(--font-heading)', fontStyle: 'italic', fontWeight: 400, fontSize: '22px', lineHeight: '1.25' } }, b.t));
+          els.push(e('h3', { key, style: { ...cell, margin: '34px 0 14px', fontFamily: 'var(--font-heading)', fontStyle: 'italic', fontWeight: 400, fontSize: '22px', lineHeight: '1.25' } }, b.t));
         } else if (b.k === 'p') {
           const kids = this.paperRuns(b.r);
           if (dropNext) {
@@ -2785,36 +2835,28 @@
               kids.unshift(e('span', { key: 'dc', style: { float: 'left', fontFamily: 'var(--deco)', fontWeight: 400, fontSize: '64px', lineHeight: '56px', padding: '6px 12px 0 0', color: 'var(--color-text)' } }, first[0]));
             }
           }
-          els.push(e('p', { key, style: { ...at(false), margin: '0 0 28px', ...body } }, kids));
+          els.push(e('p', { key, style: { ...cell, margin: '0 0 28px', ...body } }, kids));
         } else if (b.k === 'ul') {
-          els.push(e('ul', { key, style: { ...at(false), margin: '0 0 28px', padding: '0 0 0 1.4em', ...body, textAlign: 'left' } },
+          els.push(e('ul', { key, style: { ...cell, margin: '0 0 28px', padding: '0 0 0 1.4em', ...body, textAlign: 'left' } },
             b.items.map((it, j) => e('li', { key: j, style: { margin: '0 0 10px' } }, this.paperRuns(it)))));
         } else if (b.k === 'fig') {
-          const cell = at(b.wide);
-          if (!firstFigRow) firstFigRow = row;
-          // a wide plate already owns column 2 on its own row, so its caption drops to the next one,
-          // where it sits beside the paragraph that follows the figure
-          caps.push({ row: capRow(b.wide ? row + 1 : row), figs: [b] });
           els.push(figEl(b, key, { ...cell, margin: b.wide ? '10px 0 34px' : '10px auto 34px', width: b.wide ? '100%' : figWidth(b) }));
         } else if (b.k === 'figrow') {
           // two plates on one row, sized in proportion to their aspect ratios so they stand the same
           // height whichever constraint binds, the row's width or the height cap
-          const cell = at(false);
-          if (!firstFigRow) firstFigRow = row;
-          caps.push({ row: capRow(row), figs: b.figs });
           els.push(e('div', { key, style: { ...cell, margin: '10px 0 34px', display: 'flex', gap: '20px', alignItems: 'flex-start', justifyContent: 'center' } },
             b.figs.map((f, j) => figEl(f, 'f' + j, { flexGrow: f.w / f.h, flexShrink: 1, flexBasis: 0, minWidth: 0, maxWidth: 'calc(' + CAP + ' * ' + (f.w / f.h).toFixed(4) + ')' }))));
         } else if (b.k === 'table') {
           // tables and listings sit in column 1 like paragraphs; they do not join the caption column
-          els.push(this.paperTable(b, key, at(false)));
+          els.push(this.paperTable(b, key, cell));
         } else if (b.k === 'alg') {
-          els.push(this.paperAlg(b, key, at(false)));
+          els.push(this.paperAlg(b, key, cell));
         } else if (b.k === 'fold') {
           // rendered by renderPaperTail: its open/closed state lives in component state, so it must
           // not be baked into this memoized array
           folds.push(b);
         } else if (b.k === 'eq') {
-          els.push(e('div', { key, style: { ...at(false), position: 'relative', margin: '28px 0', padding: '0 4em 0 0' } },
+          els.push(e('div', { key, style: { ...cell, position: 'relative', margin: '28px 0', padding: '0 4em 0 0' } },
             // overflow-x alone computes overflow-y to auto, and a stretchy fence overhanging by a
             // pixel is enough to raise a vertical scrollbar; the padding keeps that pixel visible
             e('div', { key: 'm', style: { overflowX: 'auto', overflowY: 'hidden', padding: '6px 0', textAlign: 'center', fontSize: '19px' } },
@@ -2824,21 +2866,23 @@
         }
       });
       mod.__els = els;
-      mod.__caps = caps;
+      mod.__caps = plan.caps;
       mod.__folds = folds;
-      mod.__tailRow = row + 1;
-      mod.__asideRow = '1 / ' + (firstFigRow || row + 1);
+      mod.__tailRow = plan.tailRow;
+      mod.__asideRow = plan.asideRow;
       return els;
     }
     // The caption column. It reads state.typed, so it is rebuilt every render and never memoized.
-    // One cell per figure row, holding a standing "Fig. N" kicker and the caption that types itself
-    // out while its plate is hovered or focused, the same typewriter the Research leaves use.
+    // One cell per plate row, holding a standing "Fig. N" kicker and the caption that types itself
+    // out while its plate is hovered or focused, the same typewriter the Research leaves use. The
+    // cell spans from its own row down to the next caption's, so a caption that types out long does
+    // not stretch the single row it starts on and push the body below it down.
     renderPaperCaptions(mod) {
       if (!mod || !mod.__caps) return null;
       const e = React.createElement;
       const kicker = { margin: '0 0 6px', fontFamily: 'var(--deco)', fontSize: '10px', letterSpacing: '0.1em', color: 'var(--color-accent-700)', whiteSpace: 'nowrap' };
       const line = { margin: 0, fontFamily: "'Libre Baskerville', var(--font-heading), serif", fontStyle: 'italic', fontSize: '15px', lineHeight: '21px', color: 'var(--color-neutral-700)', whiteSpace: 'pre-wrap', maxWidth: '30ch' };
-      return mod.__caps.map((c) => e('div', { key: 'pc' + c.row, 'data-figcaps': '', style: { gridColumn: 2, gridRow: String(c.row), alignSelf: 'start', margin: '10px 0 0', display: 'flex', flexDirection: 'column', gap: '20px' } },
+      return mod.__caps.map((c) => e('div', { key: 'pc' + c.row, 'data-figcaps': '', style: { gridColumn: 2, gridRow: c.row + ' / ' + c.end, alignSelf: 'start', margin: '10px 0 0', display: 'flex', flexDirection: 'column', gap: '20px' } },
         c.figs.map((f) => {
           const full = 'Fig. ' + f.n + '. ' + f.capText, typed = this.typedText('fig-' + f.n, full);
           return e('div', { key: f.n, 'data-figcap': String(f.n) },
