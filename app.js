@@ -346,151 +346,248 @@
         "\n\n\n\n  ",
         "\n  ",
         (V.isMonoPage ? h(F,{key:18},
+          "\n\n  ",
           "\n  ",
-          h("main", { key: "tooling", "data-screen-label": "Development", style: {"maxWidth":"1160px","margin":"0 auto","padding":"0 clamp(20px,4vw,48px) 88px","fontFamily":"var(--mono)","fontSize":"14px","lineHeight":"22px"} },
-            "\n    ",
-            h("div", { key: "1", style: {"marginTop":"88px","display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","borderRight":"1px solid color-mix(in srgb, var(--color-text) 16%, transparent)","borderBottom":"1px solid color-mix(in srgb, var(--color-text) 16%, transparent)","backgroundImage":"linear-gradient(to right, color-mix(in srgb, var(--color-text) 16%, transparent) 0 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--color-text) 16%, transparent) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
-              "\n\n    ",
+          (V.isLandingNarrow ? h(F,{key:2},
+            "\n  ",
+            h("main", { key: "tooling", "data-screen-label": "Development", style: {"maxWidth":"1160px","margin":"0 auto","padding":"0 clamp(20px,4vw,48px) 88px","fontFamily":"var(--mono)","fontSize":"14px","lineHeight":"22px"} },
               "\n    ",
-              h("section", { key: "2", style: {"gridColumn":"1 / 15","gridRow":"2 / 12","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)","padding":"22px","boxSizing":"border-box"} },
-                "\n      ",
-                h("p", { key: "1|17.1dagtdl", "data-morph": "kicker", style: {"margin":"0 0 22px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
-                  h(F,{key:0},"",I(V.page?.kicker,1),"")
+              h("div", { key: "1", style: {"marginTop":"88px","display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","borderRight":"1px solid color-mix(in srgb, var(--color-text) 16%, transparent)","borderBottom":"1px solid color-mix(in srgb, var(--color-text) 16%, transparent)","backgroundImage":"linear-gradient(to right, color-mix(in srgb, var(--color-text) 16%, transparent) 0 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--color-text) 16%, transparent) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
+                "\n\n    ",
+                "\n    ",
+                h("section", { key: "2", style: {"gridColumn":"1 / 15","gridRow":"2 / 12","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)","padding":"22px","boxSizing":"border-box"} },
+                  "\n      ",
+                  h("p", { key: "1|17.1dagtdl", "data-morph": "kicker", style: {"margin":"0 0 22px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
+                    h(F,{key:0},"",I(V.page?.kicker,1),"")
+                  ),
+                  "\n      ",
+                  h("h1", { key: "3|16.1908cg2", "data-tr": "title", "data-reg": "mono", "data-morph": "title", style: {"margin":"0","fontFamily":"var(--mono)","fontWeight":"400","fontSize":"clamp(22px,2.6vw,32px)","lineHeight":"1.375","letterSpacing":"-0.02em","maxWidth":"34ch"} },
+                    h(F,{key:0},"",I(V.page?.title,1),"")
+                  ),
+                  "\n      ",
+                  h("p", { key: "5|16.1y4952k", "data-tr": "wake", "data-reg": "mono", "data-morph": "intro", style: {"margin":"22px 0 0","maxWidth":"60ch","color":"var(--color-neutral-700)"} },
+                    h(F,{key:0},"",I(V.page?.intro,1),"")
+                  ),
+                  "\n      ",
+                  h("p", { key: "7|17.3x40kj", "data-morph": "byline", style: {"margin":"22px 0 0","fontSize":"12px","color":"var(--color-neutral-600)"} },
+                    h(F,{key:0},"",I(V.page?.byline,1),"")
+                  ),
+                  "\n    "
                 ),
-                "\n      ",
-                h("h1", { key: "3|16.1908cg2", "data-tr": "title", "data-reg": "mono", "data-morph": "title", style: {"margin":"0","fontFamily":"var(--mono)","fontWeight":"400","fontSize":"clamp(22px,2.6vw,32px)","lineHeight":"1.375","letterSpacing":"-0.02em","maxWidth":"34ch"} },
-                  h(F,{key:0},"",I(V.page?.title,1),"")
+                "\n    ",
+                "\n    ",
+                h("div", { key: "5", ref: V.platformRef, "aria-hidden": "true", style: {"gridColumn":"15 / 23","gridRow":"2 / 12","minHeight":"0","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)","cursor":"grab","touchAction":"none","userSelect":"none"} }),
+                "\n\n    ",
+                "\n    ",
+                h("p", { key: "8|22.11u5osx", ref: V.contentsRef, "data-morph": "index-kicker", style: {"gridColumn":"1 / 7","gridRow":"14 / 15","margin":"0","display":"flex","alignItems":"center","padding":"0 22px","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
+                  h(F,{key:0},"",I(V.page?.indexKicker,1),"")
                 ),
-                "\n      ",
-                h("p", { key: "5|16.1y4952k", "data-tr": "wake", "data-reg": "mono", "data-morph": "intro", style: {"margin":"22px 0 0","maxWidth":"60ch","color":"var(--color-neutral-700)"} },
-                  h(F,{key:0},"",I(V.page?.intro,1),"")
+                "\n    ",
+                h(F,{key:10},L(V.pageProjects).map(function(item,i){
+                  var Vi = Object.assign({}, V, {"p": item, $index: i});
+                  return h(F,{key:i},
+                    "\n      ",
+                    h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, onClick: Vi.p?.open, onMouseEnter: Vi.p?.hover, style: S(`grid-column:1 / 23; grid-row:${Vi.p?.cardRow ?? ""}; display:grid; grid-template-columns:repeat(22,1fr); cursor:pointer; color:var(--color-text); background:var(--color-bg); border-width:0; border-style:solid; border-color:var(--color-neutral-400); box-shadow:inset 1px 0 0 0 var(--color-neutral-400), inset 0 1px 0 0 var(--color-neutral-400), 1px 0 0 0 var(--color-neutral-400), 0 1px 0 0 var(--color-neutral-400); transition:box-shadow 240ms ease;`), className: "scp6" },
+                      "\n        ",
+                      h("div", { key: "1", style: S(`grid-column:${Vi.p?.textCol ?? ""}; grid-row:1; min-width:0; padding:22px; box-sizing:border-box; align-self:end;`) },
+                        "\n          ",
+                        h("p", { key: "1|49.14srs4v", style: {"margin":"0 0 22px","fontSize":"12px","color":"var(--color-neutral-600)"} },
+                          h(F,{key:0},"",I(Vi.p?.bandNo,1)," · ",I(Vi.p?.kindLower,3)," · ",I(Vi.p?.year,5),"")
+                        ),
+                        "\n          ",
+                        h("p", { key: "3|13.bo1o1h", "data-morph": Vi.p?.morphName, "data-morph-alt": `title-${Vi.p?.figNo ?? ""}`, style: {"margin":"0","fontSize":"28px","lineHeight":"34px","letterSpacing":"-0.03em"} },
+                          h(F,{key:0},"",I(Vi.p?.title,1),"")
+                        ),
+                        "\n          ",
+                        h("p", { key: "5|11.1lb77d7", "data-morph": `why-${Vi.p?.figNo ?? ""}`, "data-morph-alt": `lede-${Vi.p?.figNo ?? ""}`, style: {"margin":"10px 0 0","color":"var(--color-neutral-700)","maxWidth":"44ch"} },
+                          h(F,{key:0},"",I(Vi.p?.why,1),"")
+                        ),
+                        "\n        "
+                      ),
+                      "\n        ",
+                      h("div", { key: "3", "data-shape": Vi.p?.frameShape, "data-shape-alt": `frame-${Vi.p?.figNo ?? ""}`, style: S(`grid-column:${Vi.p?.plateCol ?? ""}; grid-row:1; height:100%; box-shadow:inset 1px 0 0 0 var(--color-divider), inset 0 1px 0 0 var(--color-divider), 1px 0 0 0 var(--color-divider), 0 1px 0 0 var(--color-divider); box-sizing:border-box; position:relative; overflow:hidden;`) },
+                        h("image-slot", { key: "0", id: Vi.p?.plateSlotId, shape: "rect", placeholder: Vi.p?.placeholder, style: {"width":"100%","height":"100%"} })
+                      ),
+                      "\n      "
+                    ),
+                    "\n    ");
+                })),
+                "\n    ",
+                h("div", { key: "12", ref: V.platesRef, style: S(`grid-column:1 / 2; grid-row:${V.gridPlatesRow ?? ""}; height:0;`) }),
+                "\n\n    ",
+                "\n    ",
+                h("section", { key: "15", ref: V.notesRef, style: S(`grid-column:1 / 11; grid-row:${V.gridAuthorRow ?? ""}; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); padding:22px; box-sizing:border-box;`) },
+                  "\n      ",
+                  h("p", { key: "1|3.377ldf", "data-morph": "notes-kicker", style: {"margin":"0 0 22px","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
+                    "who"
+                  ),
+                  "\n      ",
+                  h("p", { key: "3|21.b6meq3", "data-morph": "notes-title", style: {"margin":"0","fontWeight":"500","letterSpacing":"-0.02em"} },
+                    h(F,{key:0},"",I(V.page?.notesTitle,1),"")
+                  ),
+                  "\n      ",
+                  h("p", { key: "5|331.1a3pxw3", "data-morph": "notes-body", style: {"margin":"22px 0 0","color":"var(--color-neutral-700)","maxWidth":"44ch"} },
+                    "I spent my first years in practice drawing stair details and wondering why the software fought me. The next years were spent fixing that, first inside studios and then in research groups. I care about drawings as a language, about tools that stay out of the way, and about writing plainly on subjects that tempt people to be grand."
+                  ),
+                  "\n      ",
+                  h("p", { key: "7", style: {"margin":"22px 0 0","display":"flex","gap":"20px","fontSize":"13px"} },
+                    h("a", { key: "0|4.ykmo2w", href: V.cvMailto, style: {"color":"var(--color-text)","textDecorationColor":"var(--color-neutral-600)"} },
+                      "mail"
+                    ),
+                    h("a", { key: "1|6.1yz8dag", href: V.cvGithub, style: {"color":"var(--color-text)","textDecorationColor":"var(--color-neutral-600)"} },
+                      "github"
+                    ),
+                    h("button", { key: "2|2.3ho5a", onClick: V.goCvMono, style: {"all":"unset","cursor":"pointer","fontFamily":"var(--mono)","fontSize":"13px","color":"var(--color-text)","textDecoration":"underline","textDecorationColor":"var(--color-neutral-600)","textUnderlineOffset":"3px"} },
+                      "cv"
+                    )
+                  ),
+                  "\n    "
                 ),
-                "\n      ",
-                h("p", { key: "7|17.3x40kj", "data-morph": "byline", style: {"margin":"22px 0 0","fontSize":"12px","color":"var(--color-neutral-600)"} },
-                  h(F,{key:0},"",I(V.page?.byline,1),"")
+                "\n    ",
+                h("ol", { key: "17", style: S(`grid-column:12 / 23; grid-row:${V.gridAuthorRow ?? ""}; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); padding:22px; box-sizing:border-box; list-style:none; margin:0; font-feature-settings:'tnum' 1;`) },
+                  "\n      ",
+                  h(F,{key:1},L(V.cv).map(function(item,i){
+                    var Vi = Object.assign({}, V, {"c": item, $index: i});
+                    return h(F,{key:i},
+                      "\n        ",
+                      h("li", { key: "1", style: {"display":"grid","gridTemplateColumns":"9em minmax(0,1fr)","gap":"16px","padding":"0 0 22px","alignItems":"baseline"} },
+                        "\n          ",
+                        h("span", { key: "1|13.e5oaa2", "data-morph": `cv-${Vi.$index ?? ""}-years`, style: {"color":"var(--color-neutral-600)","fontSize":"13px"} },
+                          h(F,{key:0},"",I(Vi.c?.years,1),"")
+                        ),
+                        "\n          ",
+                        h("span", { key: "3", style: {"minWidth":"0"} },
+                          h("span", { key: "0|12.j15md4", "data-morph": `cv-${Vi.$index ?? ""}-role`, style: {"display":"block"} },
+                            h(F,{key:0},"",I(Vi.c?.role,1),"")
+                          ),
+                          h("span", { key: "1", "data-morph": `cv-${Vi.$index ?? ""}-note`, style: {"display":"block","color":"var(--color-neutral-600)","fontSize":"13px"} },
+                            h(F,{key:0},"",I(Vi.c?.place,1),""),
+                            (Vi.c?.hasNote ? h(F,{key:1},
+                              h(F,{key:0}," — ",I(Vi.c?.note,1),"")) : null)
+                          )
+                        ),
+                        "\n        "
+                      ),
+                      "\n      ");
+                  })),
+                  "\n    "
+                ),
+                "\n\n    ",
+                h("p", { key: "19|19.19w1nxe", "data-morph": "colophon", style: S(`grid-column:1 / 16; grid-row:${V.gridColophonRow ?? ""}; margin:0; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent);  padding:22px; box-sizing:border-box; color:var(--color-neutral-600); font-size:12px; line-height:18px;`) },
+                  h(F,{key:0},"",I(V.page?.colophon,1),"")
+                ),
+                "\n\n    ",
+                "\n    ",
+                h("a", { key: "22|5.49kwkt", href: V.cvMailto, style: S(`grid-column:1 / 3; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
+                  "email"
+                ),
+                "\n    ",
+                h("a", { key: "24|6.1yz8dag", href: V.cvGithub, style: S(`grid-column:3 / 5; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
+                  "github"
+                ),
+                "\n    ",
+                h("button", { key: "26|2.3ho5a", onClick: V.goCvMono, style: S(`all:unset; grid-column:5 / 7; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;`), className: "scp7" },
+                  "cv"
                 ),
                 "\n    "
               ),
+              "\n  "
+            ),
+            "\n  ") : null),
+          "\n\n  ",
+          "\n  ",
+          (V.isLandingWide ? h(F,{key:5},
+            "\n  ",
+            h("main", { key: "tooling", "data-screen-label": "Development", style: {"maxWidth":"none","margin":"0","padding":"0","fontFamily":"var(--mono)","fontSize":"14px","lineHeight":"22px"} },
               "\n    ",
-              "\n    ",
-              h("div", { key: "5", ref: V.platformRef, "aria-hidden": "true", style: {"gridColumn":"15 / 23","gridRow":"2 / 12","minHeight":"0","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)","cursor":"grab","touchAction":"none","userSelect":"none"} }),
-              "\n\n    ",
-              "\n    ",
-              h("p", { key: "8|22.11u5osx", ref: V.contentsRef, "data-morph": "index-kicker", style: {"gridColumn":"1 / 7","gridRow":"14 / 15","margin":"0","display":"flex","alignItems":"center","padding":"0 22px","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
-                h(F,{key:0},"",I(V.page?.indexKicker,1),"")
-              ),
-              "\n    ",
-              h(F,{key:10},L(V.pageProjects).map(function(item,i){
-                var Vi = Object.assign({}, V, {"p": item, $index: i});
-                return h(F,{key:i},
+              h("div", { key: "1", style: {"display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","minHeight":"calc(100vh - 57px)","boxSizing":"border-box","borderRight":"1px solid color-mix(in srgb, var(--color-text) 16%, transparent)","borderBottom":"1px solid color-mix(in srgb, var(--color-text) 16%, transparent)","backgroundImage":"linear-gradient(to right, color-mix(in srgb, var(--color-text) 16%, transparent) 0 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--color-text) 16%, transparent) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
+                "\n\n    ",
+                "\n    ",
+                h("div", { key: "2", ref: V.contentsRef, style: {"gridColumn":"1 / 2","gridRow":"1 / 2","height":"0"} }),
+                h("div", { key: "3", ref: V.platesRef, style: {"gridColumn":"1 / 2","gridRow":"1 / 2","height":"0"} }),
+                h("div", { key: "4", ref: V.notesRef, style: {"gridColumn":"1 / 2","gridRow":"1 / 2","height":"0"} }),
+                "\n\n    ",
+                "\n    ",
+                h("section", { key: "7", style: S(`grid-column:${V.land?.statement?.col ?? ""}; grid-row:${V.land?.statement?.row ?? ""}; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); padding:22px; box-sizing:border-box; overflow:hidden;`) },
                   "\n      ",
-                  h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, onClick: Vi.p?.open, onMouseEnter: Vi.p?.hover, style: S(`grid-column:1 / 23; grid-row:${Vi.p?.cardRow ?? ""}; display:grid; grid-template-columns:repeat(22,1fr); cursor:pointer; color:var(--color-text); background:var(--color-bg); border-width:0; border-style:solid; border-color:var(--color-neutral-400); box-shadow:inset 1px 0 0 0 var(--color-neutral-400), inset 0 1px 0 0 var(--color-neutral-400), 1px 0 0 0 var(--color-neutral-400), 0 1px 0 0 var(--color-neutral-400); transition:box-shadow 240ms ease;`), className: "scp6" },
-                    "\n        ",
-                    h("div", { key: "1", style: S(`grid-column:${Vi.p?.textCol ?? ""}; grid-row:1; min-width:0; padding:22px; box-sizing:border-box; align-self:end;`) },
-                      "\n          ",
-                      h("p", { key: "1|49.14srs4v", style: {"margin":"0 0 22px","fontSize":"12px","color":"var(--color-neutral-600)"} },
-                        h(F,{key:0},"",I(Vi.p?.bandNo,1)," · ",I(Vi.p?.kindLower,3)," · ",I(Vi.p?.year,5),"")
+                  h("p", { key: "1|17.1dagtdl", "data-morph": "kicker", style: {"margin":"0 0 22px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
+                    h(F,{key:0},"",I(V.page?.kicker,1),"")
+                  ),
+                  "\n      ",
+                  h("h1", { key: "3|16.1908cg2", "data-tr": "title", "data-reg": "mono", "data-morph": "title", style: {"margin":"0","fontFamily":"var(--mono)","fontWeight":"400","fontSize":"clamp(22px,2.6vw,32px)","lineHeight":"1.375","letterSpacing":"-0.02em","maxWidth":"34ch"} },
+                    h(F,{key:0},"",I(V.page?.title,1),"")
+                  ),
+                  "\n      ",
+                  h("p", { key: "5|16.1y4952k", "data-tr": "wake", "data-reg": "mono", "data-morph": "intro", style: {"margin":"22px 0 0","maxWidth":"60ch","color":"var(--color-neutral-700)"} },
+                    h(F,{key:0},"",I(V.page?.intro,1),"")
+                  ),
+                  "\n      ",
+                  h("p", { key: "7|17.3x40kj", "data-morph": "byline", style: {"margin":"22px 0 0","fontSize":"12px","color":"var(--color-neutral-600)"} },
+                    h(F,{key:0},"",I(V.page?.byline,1),"")
+                  ),
+                  "\n    "
+                ),
+                "\n    ",
+                "\n    ",
+                h("div", { key: "10", ref: V.platformRef, "aria-hidden": "true", style: S(`grid-column:${V.land?.platform?.col ?? ""}; grid-row:${V.land?.platform?.row ?? ""}; min-height:0; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); cursor:grab; touch-action:none; user-select:none;`) }),
+                "\n\n    ",
+                "\n    ",
+                h(F,{key:13},L(V.landingPlates).map(function(item,i){
+                  var Vi = Object.assign({}, V, {"p": item, $index: i});
+                  return h(F,{key:i},
+                    "\n      ",
+                    h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, onClick: Vi.p?.open, onMouseEnter: Vi.p?.type, onMouseLeave: Vi.p?.untype, onFocus: Vi.p?.type, onBlur: Vi.p?.untype, tabIndex: "0", "aria-label": Vi.p?.title, style: S(`grid-column:${Vi.p?.col ?? ""}; grid-row:${Vi.p?.row ?? ""}; position:relative; z-index:${Vi.p?.zIndex ?? ""}; display:grid; grid-template-rows:minmax(0,1fr) 44px; cursor:pointer; box-sizing:border-box; color:var(--color-text); background:var(--color-bg); box-shadow:inset 1px 0 0 0 var(--color-neutral-400), inset 0 1px 0 0 var(--color-neutral-400), 1px 0 0 0 var(--color-neutral-400), 0 1px 0 0 var(--color-neutral-400); transition:box-shadow 240ms ease;`), className: "scp8" },
+                      "\n        ",
+                      h("div", { key: "1", "data-shape": Vi.p?.frameShape, "data-shape-alt": `frame-${Vi.p?.figNo ?? ""}`, style: {"position":"relative","minHeight":"0","overflow":"hidden","boxShadow":"inset 0 -1px 0 0 var(--color-divider)"} },
+                        "\n          ",
+                        h("image-slot", { key: "1", id: Vi.p?.plateSlotId, shape: "rect", placeholder: Vi.p?.placeholder, style: {"width":"100%","height":"100%"} }),
+                        "\n        "
                       ),
-                      "\n          ",
-                      h("p", { key: "3|13.bo1o1h", "data-morph": Vi.p?.morphName, "data-morph-alt": `title-${Vi.p?.figNo ?? ""}`, style: {"margin":"0","fontSize":"28px","lineHeight":"34px","letterSpacing":"-0.03em"} },
-                        h(F,{key:0},"",I(Vi.p?.title,1),"")
+                      "\n        ",
+                      h("div", { key: "3", style: {"minWidth":"0","padding":"0 10px","boxSizing":"border-box","display":"flex","flexDirection":"column","justifyContent":"center","overflow":"hidden"} },
+                        "\n          ",
+                        h("p", { key: "1|49.14srs4v", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.06em","color":"var(--color-neutral-600)","whiteSpace":"nowrap","overflow":"hidden","textOverflow":"ellipsis"} },
+                          h(F,{key:0},"",I(Vi.p?.bandNo,1)," · ",I(Vi.p?.kindLower,3)," · ",I(Vi.p?.year,5),"")
+                        ),
+                        "\n          ",
+                        h("p", { key: "3|13.bo1o1h", "data-morph": Vi.p?.morphName, "data-morph-alt": `title-${Vi.p?.figNo ?? ""}`, style: {"margin":"2px 0 0","fontSize":"12px","lineHeight":"15px","letterSpacing":"-0.02em"} },
+                          h(F,{key:0},"",I(Vi.p?.title,1),"")
+                        ),
+                        "\n        "
                       ),
-                      "\n          ",
-                      h("p", { key: "5|11.1lb77d7", "data-morph": `why-${Vi.p?.figNo ?? ""}`, "data-morph-alt": `lede-${Vi.p?.figNo ?? ""}`, style: {"margin":"10px 0 0","color":"var(--color-neutral-700)","maxWidth":"44ch"} },
+                      "\n        ",
+                      "\n        ",
+                      h("p", { key: "6|11.1lb77d7", "data-morph": `why-${Vi.p?.figNo ?? ""}`, "data-morph-alt": `lede-${Vi.p?.figNo ?? ""}`, "aria-hidden": "true", style: {"position":"absolute","left":"0","right":"0","top":"0","bottom":"0","margin":"0","padding":"10px","boxSizing":"border-box","opacity":"0","pointerEvents":"none","color":"var(--color-neutral-700)","fontSize":"12px","lineHeight":"17px"} },
                         h(F,{key:0},"",I(Vi.p?.why,1),"")
                       ),
-                      "\n        "
-                    ),
-                    "\n        ",
-                    h("div", { key: "3", "data-shape": Vi.p?.frameShape, "data-shape-alt": `frame-${Vi.p?.figNo ?? ""}`, style: S(`grid-column:${Vi.p?.plateCol ?? ""}; grid-row:1; height:100%; box-shadow:inset 1px 0 0 0 var(--color-divider), inset 0 1px 0 0 var(--color-divider), 1px 0 0 0 var(--color-divider), 0 1px 0 0 var(--color-divider); box-sizing:border-box; position:relative; overflow:hidden;`) },
-                      h("image-slot", { key: "0", id: Vi.p?.plateSlotId, shape: "rect", placeholder: Vi.p?.placeholder, style: {"width":"100%","height":"100%"} })
-                    ),
-                    "\n      "
-                  ),
-                  "\n    ");
-              })),
-              "\n    ",
-              h("div", { key: "12", ref: V.platesRef, style: S(`grid-column:1 / 2; grid-row:${V.gridPlatesRow ?? ""}; height:0;`) }),
-              "\n\n    ",
-              "\n    ",
-              h("section", { key: "15", ref: V.notesRef, style: S(`grid-column:1 / 11; grid-row:${V.gridAuthorRow ?? ""}; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); padding:22px; box-sizing:border-box;`) },
-                "\n      ",
-                h("p", { key: "1|3.377ldf", "data-morph": "notes-kicker", style: {"margin":"0 0 22px","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
-                  "who"
-                ),
-                "\n      ",
-                h("p", { key: "3|21.b6meq3", "data-morph": "notes-title", style: {"margin":"0","fontWeight":"500","letterSpacing":"-0.02em"} },
-                  h(F,{key:0},"",I(V.page?.notesTitle,1),"")
-                ),
-                "\n      ",
-                h("p", { key: "5|331.1a3pxw3", "data-morph": "notes-body", style: {"margin":"22px 0 0","color":"var(--color-neutral-700)","maxWidth":"44ch"} },
-                  "I spent my first years in practice drawing stair details and wondering why the software fought me. The next years were spent fixing that, first inside studios and then in research groups. I care about drawings as a language, about tools that stay out of the way, and about writing plainly on subjects that tempt people to be grand."
-                ),
-                "\n      ",
-                h("p", { key: "7", style: {"margin":"22px 0 0","display":"flex","gap":"20px","fontSize":"13px"} },
-                  h("a", { key: "0|4.ykmo2w", href: V.cvMailto, style: {"color":"var(--color-text)","textDecorationColor":"var(--color-neutral-600)"} },
-                    "mail"
-                  ),
-                  h("a", { key: "1|6.1yz8dag", href: V.cvGithub, style: {"color":"var(--color-text)","textDecorationColor":"var(--color-neutral-600)"} },
-                    "github"
-                  ),
-                  h("button", { key: "2|2.3ho5a", onClick: V.goCvMono, style: {"all":"unset","cursor":"pointer","fontFamily":"var(--mono)","fontSize":"13px","color":"var(--color-text)","textDecoration":"underline","textDecorationColor":"var(--color-neutral-600)","textUnderlineOffset":"3px"} },
-                    "cv"
-                  )
-                ),
-                "\n    "
-              ),
-              "\n    ",
-              h("ol", { key: "17", style: S(`grid-column:12 / 23; grid-row:${V.gridAuthorRow ?? ""}; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); padding:22px; box-sizing:border-box; list-style:none; margin:0; font-feature-settings:'tnum' 1;`) },
-                "\n      ",
-                h(F,{key:1},L(V.cv).map(function(item,i){
-                  var Vi = Object.assign({}, V, {"c": item, $index: i});
-                  return h(F,{key:i},
-                    "\n        ",
-                    h("li", { key: "1", style: {"display":"grid","gridTemplateColumns":"9em minmax(0,1fr)","gap":"16px","padding":"0 0 22px","alignItems":"baseline"} },
-                      "\n          ",
-                      h("span", { key: "1|13.e5oaa2", "data-morph": `cv-${Vi.$index ?? ""}-years`, style: {"color":"var(--color-neutral-600)","fontSize":"13px"} },
-                        h(F,{key:0},"",I(Vi.c?.years,1),"")
+                      "\n        ",
+                      h("p", { key: "8|26.1pcf1c", "aria-live": "polite", style: S(`position:absolute; left:0; right:0; top:0; min-height:100%; margin:0; padding:10px; box-sizing:border-box; pointer-events:none; background:var(--color-bg); color:var(--color-neutral-700); font-size:12px; line-height:17px; white-space:pre-wrap; box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text); opacity:${Vi.p?.whyOpacity ?? ""}; transition:opacity 220ms ease;`) },
+                        h(F,{key:0},"",I(Vi.p?.typed,1),""),
+                        h("span", { key: "1", "aria-hidden": "true", style: S(`display:inline-block; width:1px; height:0.9em; margin-left:2px; vertical-align:-0.1em; background:var(--color-text); opacity:${Vi.p?.caretOpacity ?? ""};`) })
                       ),
-                      "\n          ",
-                      h("span", { key: "3", style: {"minWidth":"0"} },
-                        h("span", { key: "0|12.j15md4", "data-morph": `cv-${Vi.$index ?? ""}-role`, style: {"display":"block"} },
-                          h(F,{key:0},"",I(Vi.c?.role,1),"")
-                        ),
-                        h("span", { key: "1", "data-morph": `cv-${Vi.$index ?? ""}-note`, style: {"display":"block","color":"var(--color-neutral-600)","fontSize":"13px"} },
-                          h(F,{key:0},"",I(Vi.c?.place,1),""),
-                          (Vi.c?.hasNote ? h(F,{key:1},
-                            h(F,{key:0}," — ",I(Vi.c?.note,1),"")) : null)
-                        )
-                      ),
-                      "\n        "
+                      "\n      "
                     ),
-                    "\n      ");
+                    "\n    ");
                 })),
+                "\n\n    ",
+                "\n    ",
+                h("a", { key: "16|5.49kwkt", href: V.cvMailto, style: S(`grid-column:${V.land?.contactEmail?.col ?? ""}; grid-row:${V.land?.contactEmail?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
+                  "email"
+                ),
+                "\n    ",
+                h("a", { key: "18|6.1yz8dag", href: V.cvGithub, style: S(`grid-column:${V.land?.contactGithub?.col ?? ""}; grid-row:${V.land?.contactGithub?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
+                  "github"
+                ),
+                "\n    ",
+                h("button", { key: "20|2.3ho5a", onClick: V.goCvMono, style: S(`all:unset; grid-column:${V.land?.contactCv?.col ?? ""}; grid-row:${V.land?.contactCv?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;`), className: "scp7" },
+                  "cv"
+                ),
                 "\n    "
               ),
-              "\n\n    ",
-              h("p", { key: "19|19.19w1nxe", "data-morph": "colophon", style: S(`grid-column:1 / 16; grid-row:${V.gridColophonRow ?? ""}; margin:0; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent);  padding:22px; box-sizing:border-box; color:var(--color-neutral-600); font-size:12px; line-height:18px;`) },
-                h(F,{key:0},"",I(V.page?.colophon,1),"")
-              ),
-              "\n\n    ",
-              "\n    ",
-              h("a", { key: "22|5.49kwkt", href: V.cvMailto, style: S(`grid-column:1 / 3; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
-                "email"
-              ),
-              "\n    ",
-              h("a", { key: "24|6.1yz8dag", href: V.cvGithub, style: S(`grid-column:3 / 5; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
-                "github"
-              ),
-              "\n    ",
-              h("button", { key: "26|2.3ho5a", onClick: V.goCvMono, style: S(`all:unset; grid-column:5 / 7; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;`), className: "scp7" },
-                "cv"
-              ),
-              "\n    "
+              "\n  "
             ),
-            "\n  "
-          ),
-          "\n  ") : null),
+            "\n  ") : null),
+          "\n\n  ") : null),
         "\n\n  ",
         "\n  ",
         (V.isCvSerif ? h(F,{key:21},
@@ -908,7 +1005,7 @@
           "\n  ",
           h("main", { key: "cv-mono", "data-screen-label": "CV mono", className: "cvm", style: {"maxWidth":"min(1040px, 100% - 2 * clamp(24px, 5vw, 72px))","margin":"0 auto","boxSizing":"border-box","padding":"clamp(32px,5vw,72px) 22px"} },
             "\n\n    ",
-            h("button", { key: "1|10.buh750", onClick: V.goPageCurrent, style: {"all":"unset","cursor":"pointer","display":"inline-flex","alignItems":"center","margin":"0 0 28px","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)","transition":"color 200ms ease"}, className: "scp8" },
+            h("button", { key: "1|10.buh750", onClick: V.goPageCurrent, style: {"all":"unset","cursor":"pointer","display":"inline-flex","alignItems":"center","margin":"0 0 28px","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)","transition":"color 200ms ease"}, className: "scp9" },
               "<- back"
             ),
             "\n\n    ",
@@ -1837,7 +1934,11 @@
   // ---- logic (verbatim from design/Portfolio.dc.html) ---------------------------------------
   
   class Component extends DCLogic {
-    state = { view: 'home', page: 'writing', cvReg: 'serif', idx: 10, hovered: 10, tab: { left: 0, width: 0 } };
+    // narrow and landingRows decide which of the two Development landings renders and how many rows it
+    // is drawn on, so they are read from the window here rather than waiting for componentDidMount's
+    // first onResize: the first paint would otherwise be the wrong landing, replaced a frame later.
+    state = { view: 'home', page: 'writing', cvReg: 'serif', idx: 10, hovered: 10, tab: { left: 0, width: 0 },
+      narrow: window.innerWidth < 1000, landingRows: this.visibleRows() };
     contentsRef = React.createRef(); platesRef = React.createRef(); notesRef = React.createRef();
     homeLayerRef = React.createRef(); homeRollRef = React.createRef(); homeCubeRef = React.createRef(); fogLayerRef = React.createRef(); 
     // the home fog lives only on the home view; it fades out (and stops) elsewhere
@@ -2070,6 +2171,58 @@
       navBack:       { col: '1 / 23',  row: '86 / 88' },
       navNext:       { col: '1 / 23',  row: '89 / 91' },
     };
+  
+    // The desktop Development landing is the same drawing grid run full bleed: 22 columns across the
+    // viewport, 44px rows, at least a screen tall. Only these five modules are placed by hand. The
+    // statement opens the sheet at its first cell and the platform stands beside it on the same rows,
+    // taking the column the statement leaves off at, so no empty column falls between them. The three
+    // contact cells close the sheet in the bottom right corner, on the grid's last row, which is only
+    // known once landing-grid.js has grown the sheet to hold every plate; their row reads 'last' and is
+    // filled in from that placement. Everything else on the landing is a plate, pinned to a cell by the
+    // seeded draw rather than by a table. Plain literals like the sheet tables above, so
+    // tools/check-landing-grid.mjs can read them without running this file.
+    LANDING_WIDE = {
+      statement:     { col: '1 / 12',  row: '1 / 13' },
+      platform:      { col: '12 / 18', row: '1 / 13' },
+      contactEmail:  { col: '17 / 19', row: 'last' },
+      contactGithub: { col: '19 / 21', row: 'last' },
+      contactCv:     { col: '21 / 23', row: 'last' },
+    };
+    // one seed per page load, kept on the instance: hovering a plate, scrolling, or leaving for another
+    // tab and coming back all re-render the same composition. Only the row count can redraw it.
+    landingSeed = (Math.random() * 4294967296) >>> 0;
+    // the rows a screen shows under the 57px header; the sheet starts here and grows from it
+    visibleRows() { return Math.max(6, Math.floor((window.innerHeight - 57) / 44)); }
+    // The plate placement for the desktop landing. renderVals runs on every scroll frame and the draw
+    // is not free, so it is memoised on everything it depends on. The module arrives by dynamic import
+    // the way parchment.js does; until it lands the landing renders its corner blocks and no plates.
+    landingLayout(count, rows) {
+      const key = this.landingSeed + '|' + count + '|' + rows;
+      if (this.landingCache && this.landingCache.key === key) return this.landingCache.out;
+      if (!this.landingMod) {
+        if (!this.landingLoading && !this.landingFailed) {
+          this.landingLoading = true;
+          import('./landing-grid.js')
+            .then((m) => { this.landingLoading = false; this.landingMod = m; this.forceUpdate(); })
+            .catch(() => { this.landingLoading = false; this.landingFailed = true; });
+        }
+        return null;
+      }
+      const at = (s) => s.split('/').map((v) => parseInt(v, 10));
+      const sc = at(this.LANDING_WIDE.statement.col), sr = at(this.LANDING_WIDE.statement.row);
+      const pc = at(this.LANDING_WIDE.platform.col);
+      const e0 = at(this.LANDING_WIDE.contactEmail.col), c1 = at(this.LANDING_WIDE.contactCv.col);
+      let out = null;
+      try {
+        out = this.landingMod.placeLanding({ seed: this.landingSeed, cols: 22, rows, count,
+          // the statement and the platform are handed over as the one block they read as, so the plates
+          // keep their empty cell from the pair rather than from each of them
+          reserved: [{ col: sc[0], row: sr[0], w: pc[1] - sc[0], h: sr[1] - sr[0] }],
+          contact: { col: e0[0], w: c1[1] - e0[0] } });
+      } catch (e) { out = null; }
+      this.landingCache = { key, out };
+      return out;
+    }
   
     num(i) { return (this.props.numerals ?? 'roman') === 'roman' ? this.romans[i] : String(i + 1); }
     reg(i) { return /Research|Writing|Essay/.test(this.data[i].kind) ? 'serif' : 'mono'; }
@@ -2427,7 +2580,7 @@
       window.addEventListener('pointerdown', this.onDown); window.addEventListener('pointerup', this.onUp); window.addEventListener('pointercancel', this.onUp);
       this.onScroll = () => { this.syncParchment(); this.syncHome(); this.setState({ scrollY: window.scrollY }); clearTimeout(this.remeasureTimer); this.remeasureTimer = setTimeout(() => this.remeasureText(), 120); };
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => setTimeout(() => { this.remeasureText(); this.syncParchment(); }, 50));
-      this.onResize = () => { this.setState({ narrow: window.innerWidth < 1000 }); this.measureTabs(); this.syncParchment(); this.syncHome(); };
+      this.onResize = () => { this.setState({ narrow: window.innerWidth < 1000, landingRows: this.visibleRows() }); this.measureTabs(); this.syncParchment(); this.syncHome(); };
       this.onKey = (e) => {
         const t = e.target; if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
         const n = this.data.length, { view, idx } = this.state;
@@ -3120,6 +3273,29 @@
           idx: pi, cardNo: k + 1, typed, kicker: real ? 'Chapter ' + p.numeral + ' · ' + p.year : 'Forthcoming', detailDisplay: on ? 'block' : 'none', detailOpacity: on ? '1' : '0', caretOpacity: on && typed.length < detail.length ? '1' : '0', morphName: real ? 'row-' + k : 'leaf-' + k, figNo: real ? p.figNo : 'x' + k, placeholder: real ? p.placeholder : 'Plate: forthcoming', coverSlotId: real ? 'cover-' + pi : 'cover-next-' + k, open: real ? p.open : () => {}, bleedX, bleedY, zIndex: on ? 30 : 12 - k, origin: (pos.selfX === 'start' ? 'left ' : 'right ') + (pos.selfY === 'start' ? 'top' : pos.selfY === 'end' ? 'bottom' : 'center'), cursor: real ? 'pointer' : 'default', lift: on ? '-10px' : '0px', scale: on ? '1.06' : '1', shadow: on ? '0 24px 48px -20px rgba(32,31,29,0.35), 0 2px 6px rgba(32,31,29,0.08)' : '0 8px 24px -16px rgba(32,31,29,0.25)',
           hover: () => { if (real) this.startTyping('leaf-' + pi, detail.length, { hovered: pi }); }, unhover: () => { this.stopTyping(); } }; });
       const pageProjects = projects.filter((p) => this.pageOf(projects.indexOf(p)) === pageKey).map((p, k) => ({ ...p, shapeIdx: k + 1, dir: k % 2 ? 'rtl' : 'ltr', textCol: k % 2 ? '13 / 23' : '1 / 11', plateCol: k % 2 ? '1 / 13' : '11 / 23', cardRow: (16 + 9 * k) + ' / ' + (23 + 9 * k), bandNo: String(k + 1).padStart(2, '0'), morphName: k < 2 ? 'row-' + k : 'feat-' + (k - 2) + '-title', frameShape: k < 2 ? 'plate-' + k : 'frame-' + k }));
+      // The desktop Development landing. Its statement, platform and contact cells come off
+      // LANDING_WIDE; every project is a plate pinned to a cell by landing-grid.js, and the grid ends on
+      // whatever row that placement needed, so the contact band closes the sheet however far it grew.
+      // A plate shows its picture and its title at rest and types its reason in on hover, at the Research
+      // leaves' tempo, from the same typewriter.
+      const landingWide = view === 'page' && page.reg === 'mono' && !this.state.narrow;
+      const lay = landingWide ? this.landingLayout(pageProjects.length, this.state.landingRows) : null;
+      const landingRows = lay ? lay.rows : this.state.landingRows;
+      const land = {};
+      for (const [name, spot] of Object.entries(this.LANDING_WIDE)) {
+        land[name] = { col: spot.col, row: spot.row === 'last' ? landingRows + ' / ' + (landingRows + 1) : spot.row };
+      }
+      const landingPlates = !lay ? [] : pageProjects.map((p, k) => {
+        const b = lay.plates[k]; if (!b) return null;
+        const on = this.state.typingKey === 'card-' + k;
+        const typed = on ? p.why.slice(0, this.state.typed || 0) : '';
+        return { ...p, col: b.col + ' / ' + (b.col + b.w), row: b.row + ' / ' + (b.row + b.h),
+          typed, whyOpacity: on ? '1' : '0', caretOpacity: on && typed.length < p.why.length ? '1' : '0',
+          // the hovered plate rises over its neighbours: a module's right and bottom hairlines are drawn
+          // outside its own box, so without this its lit frame would be covered on two sides
+          zIndex: on ? '30' : '1',
+          type: () => { p.hover(); this.startTyping('card-' + k, p.why.length); }, untype: () => this.stopTyping() };
+      }).filter(Boolean);
       const introChars = Array.from(page.intro);
       page.dropCap = introChars[0]; page.introRest = introChars.slice(1).join('');
       // the Development page is placed on a 44px module: cards are 7 rows with two blank rows between
@@ -3176,6 +3352,7 @@
         cvReady: !!cvData, cvLoading: !cvData && !this.state.cvError, cvFailed: !cvData && !!this.state.cvError,
         cvEmail, cvMailto: 'mailto:' + cvEmail, cvGithub: cvLinks.github || this.CONTACT.github,
         isSerifPage: view === 'page' && page.reg === 'serif', isMonoPage: view === 'page' && page.reg === 'mono',
+        isLandingWide: landingWide, isLandingNarrow: !landingWide, land, landingPlates,
         isMono: view === 'chapter' && mono, isSerif: view === 'chapter' && !mono, chapterKey: R + '-' + idx,
         isPaper: view === 'chapter' && !mono && !!current.paper, isEssay: view === 'chapter' && !mono && !current.paper,
         paperBlocks, paperCaptions, paperTail, paperAsideRow: (paperMod && paperMod.__asideRow) || 'auto',
