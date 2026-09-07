@@ -256,6 +256,36 @@ else {
   }
 }
 
+// ---------------------------------------------------------------- the morph namespaces
+
+// The transition pairs an outgoing element with an incoming one by matching data-shape names, so
+// every name is a key in one shared namespace. A chapter names its figure 'frame-<figNo>', the
+// entry's global index zero-padded to two digits; a landing plate names its own frame for k, its
+// position in the register. Those are different numbers, and while k stayed single-digit the padding
+// kept them apart by accident: 'frame-2' is not 'frame-02'. At k = 10 the accident runs out and the
+// twelfth plate spells 'frame-11', which is the figure name of the eleventh entry, so opening the
+// Development landing made that entry's chapter plate fly into an unrelated plate. The stacked
+// landing hid it because those cards sit far below the fold and the engine culls what it cannot see;
+// the desktop landing puts all twelve on one screen. Hence this: a plate's own frame name stays out
+// of the namespaces the engine already owns, and the entry-to-chapter pairing rides on the alt.
+const frameShape = /frameShape:\s*([^,}]+)/.exec(logicSrc);
+if (!frameShape) fail('the logic class no longer builds a frameShape for the landing plates');
+else {
+  const expr = frameShape[1];
+  if (/'frame-'/.test(expr)) {
+    fail("the landing plate's frame name is built in the 'frame-' namespace (" + expr.trim() +
+      "), which chapters use for 'frame-<figNo>': at k >= 10 the two spell the same string and the " +
+      'transition pairs a chapter figure with an unrelated plate');
+  }
+  if (/'card-'/.test(expr)) {
+    fail("the landing plate's frame name is built in the 'card-' namespace (" + expr.trim() +
+      '), which the morph engine reserves for its rule-to-card fallback bucket');
+  }
+}
+if (!/data-shape-alt="frame-\{\{ p\.figNo \}\}"/.test(src)) {
+  fail('a landing plate no longer carries data-shape-alt="frame-{{ p.figNo }}", which is how it pairs with its own chapter');
+}
+
 // ---------------------------------------------------------------- report
 
 if (failures.length) {

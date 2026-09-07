@@ -2259,7 +2259,14 @@ class Component extends DCLogic {
         alignItems: declared ? (pos.side === 'left' ? 'flex-start' : 'flex-end') : pos.alignItems,
         idx: pi, cardNo: k + 1, typed, kicker: real ? 'Chapter ' + p.numeral + ' · ' + p.year : 'Forthcoming', detailDisplay: on ? 'block' : 'none', detailOpacity: on ? '1' : '0', caretOpacity: on && typed.length < detail.length ? '1' : '0', morphName: real ? 'row-' + k : 'leaf-' + k, figNo: real ? p.figNo : 'x' + k, placeholder: real ? p.placeholder : 'Plate: forthcoming', coverSlotId: real ? 'cover-' + pi : 'cover-next-' + k, open: real ? p.open : () => {}, bleedX, bleedY, zIndex: on ? 30 : 12 - k, origin: (pos.selfX === 'start' ? 'left ' : 'right ') + (pos.selfY === 'start' ? 'top' : pos.selfY === 'end' ? 'bottom' : 'center'), cursor: real ? 'pointer' : 'default', lift: on ? '-10px' : '0px', scale: on ? '1.06' : '1', shadow: on ? '0 24px 48px -20px rgba(32,31,29,0.35), 0 2px 6px rgba(32,31,29,0.08)' : '0 8px 24px -16px rgba(32,31,29,0.25)',
         hover: () => { if (real) this.startTyping('leaf-' + pi, detail.length, { hovered: pi }); }, unhover: () => { this.stopTyping(); } }; });
-    const pageProjects = projects.filter((p) => this.pageOf(projects.indexOf(p)) === pageKey).map((p, k) => ({ ...p, shapeIdx: k + 1, dir: k % 2 ? 'rtl' : 'ltr', textCol: k % 2 ? '13 / 23' : '1 / 11', plateCol: k % 2 ? '1 / 13' : '11 / 23', cardRow: (16 + 9 * k) + ' / ' + (23 + 9 * k), bandNo: String(k + 1).padStart(2, '0'), morphName: k < 2 ? 'row-' + k : 'feat-' + (k - 2) + '-title', frameShape: k < 2 ? 'plate-' + k : 'frame-' + k }));
+    // The morph engine pairs an outgoing element with an incoming one by matching data-shape and
+    // data-morph names, so every name is a key in a shared namespace and two namespaces must never
+    // be able to spell the same string. A landing plate's frame is named for its position in the
+    // register, k; the figure it holds is named for the entry's figNo, which is the global index
+    // zero-padded to two digits. Those are different numbers, so the frame name is kept out of the
+    // 'frame-<figNo>' namespace the chapters use and out of the 'card-' one the engine keeps its own
+    // fallback bucket in. The entry-to-chapter pairing is the plate's data-shape-alt, frame-<figNo>.
+    const pageProjects = projects.filter((p) => this.pageOf(projects.indexOf(p)) === pageKey).map((p, k) => ({ ...p, shapeIdx: k + 1, dir: k % 2 ? 'rtl' : 'ltr', textCol: k % 2 ? '13 / 23' : '1 / 11', plateCol: k % 2 ? '1 / 13' : '11 / 23', cardRow: (16 + 9 * k) + ' / ' + (23 + 9 * k), bandNo: String(k + 1).padStart(2, '0'), morphName: k < 2 ? 'row-' + k : 'feat-' + (k - 2) + '-title', frameShape: 'plate-frame-' + k }));
     // The desktop Development landing. Its statement, platform and contact cells come off
     // LANDING_WIDE; every project is a plate pinned to a cell by landing-grid.js, and the grid ends on
     // whatever row that placement needed, so the contact band closes the sheet however far it grew.
