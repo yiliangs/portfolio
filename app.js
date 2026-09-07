@@ -1739,9 +1739,13 @@
                   "+"
                 ),
                 "\n      ",
-                h("image-slot", { key: "3", id: V.current?.heroSlotId, src: V.current?.hero, shape: "rect", fit: "contain", placeholder: V.current?.placeholder, style: {"width":"100%","height":"100%"} }),
+                (V.heroVideo ? h(F,{key:3},
+                  h("video", { key: "0", src: V.current?.video, poster: V.current?.hero, autoPlay: true, muted: true, loop: true, playsInline: true, preload: "metadata", "aria-label": V.current?.caption, style: {"width":"100%","height":"100%","display":"block","objectFit":"contain","background":"var(--color-surface)"} })) : null),
                 "\n      ",
-                h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
+                (V.heroStill ? h(F,{key:5},
+                  h("image-slot", { key: "0", id: V.current?.heroSlotId, src: V.current?.hero, shape: "rect", fit: "contain", placeholder: V.current?.placeholder, style: {"width":"100%","height":"100%"} })) : null),
+                "\n      ",
+                h("span", { key: "7|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
                   "+"
                 ),
                 "\n    "
@@ -1975,13 +1979,16 @@
     // An entry may also name its pictures. `hero`, with its real pixel size in `heroW`/`heroH`, is the
     // large plate: the serif chapter cuts its plate to that ratio, the Development sheet gives it a
     // plate of its own proportion when it is portrait and letterboxes it into the standard rows when
-    // it is not, and both Development landings show it as a cropped teaser. Under the account a
-    // Development entry may either name `detailA` and `detailB` for the pair of small plates, or one
-    // `detail`, with `detailW`/`detailH`, for a single plate across the width the pair spanned; never
-    // both. `detailCaption` is the line under whichever of the two it is, and falls back to the
-    // sheet's own words. Every one of these is optional: a slot with no field named for it keeps the
-    // worded placeholder it has always had, which is how an unfinished sheet is issued next to a
-    // finished one. tools/check-dev-plates.mjs holds the files and the stated sizes to the truth.
+    // it is not, and both Development landings show it as a cropped teaser. An entry may also name
+    // `video`, an H.264 mp4 that is the same plate moving: the sheet plays it in place of the still,
+    // and `hero` is the frame it opens on, so a video is named beside a hero and never instead of one,
+    // and heroW/heroH describe both. Under the account a Development entry may either name `detailA`
+    // and `detailB` for the pair of small plates, or one `detail`, with `detailW`/`detailH`, for a
+    // single plate across the width the pair spanned; never both. `detailCaption` is the line under
+    // whichever of the two it is, and falls back to the sheet's own words. Every one of these is
+    // optional: a slot with no field named for it keeps the worded placeholder it has always had,
+    // which is how an unfinished sheet is issued next to a finished one. tools/check-dev-plates.mjs
+    // holds the files and the stated sizes to the truth.
     data = [
       // The Natalie block: the platform first, then the seven parts of it issued as their own sheets.
       // Facts are read off the natalie repository's CLAUDE.md and the per-folder CONTEXT.md signposts.
@@ -2430,8 +2437,10 @@
     signal(d) { return /shipped|live|published|accepted/i.test(d.status) ? 'var(--sig-ok)' : /beta/i.test(d.status) ? 'var(--sig-warn)' : 'var(--sig-info)'; }
     // Every named text slot is paired across the two registers; the old text travels to the new slot's position
     // while its glyphs are swapped one by one into the new text (a 3-glyph caseFlip band at the boundary — the repo's picker).
-    // the photo a framed element is showing, as a URL (image-slot keeps its <img> in shadow DOM)
-    slotSrc(el) { const s = el.matches('image-slot') ? el : el.querySelector('image-slot'); if (!s) return ''; const im = s.shadowRoot && s.shadowRoot.querySelector('img'); return (im && im.currentSrc) || s.getAttribute('src') || ''; }
+    // the photo a framed element is showing, as a URL (image-slot keeps its <img> in shadow DOM).
+    // A moving plate answers with its poster, which is the same still the landing card carries, so the
+    // photograph that flies between the two is one picture whether the plate it lands in moves or not
+    slotSrc(el) { const v = el.matches('video') ? el : el.querySelector('video'); if (v) return v.poster || ''; const s = el.matches('image-slot') ? el : el.querySelector('image-slot'); if (!s) return ''; const im = s.shadowRoot && s.shadowRoot.querySelector('img'); return (im && im.currentSrc) || s.getAttribute('src') || ''; }
     textStyle(el) { const c = getComputedStyle(el); return { fontFamily: c.fontFamily, fontSize: c.fontSize, fontWeight: c.fontWeight, fontStyle: c.fontStyle, letterSpacing: c.letterSpacing, lineHeight: c.lineHeight, textTransform: c.textTransform, textAlign: c.textAlign, textWrap: c.textWrap, color: c.color, hyphens: c.hyphens, WebkitTextStroke: c.webkitTextStroke }; }
     textRect(el, fallback) { try { const rg = document.createRange(); rg.selectNodeContents(el); const rc = rg.getBoundingClientRect(); return rc.width ? rc : fallback; } catch (e) { return fallback; } }
     captureTexts() {
@@ -2454,11 +2463,12 @@
       const clone = main.cloneNode(true);
       clone.style.cssText += '; position:absolute; top:' + rc.top + 'px; left:' + rc.left + 'px; width:' + rc.width + 'px; margin:0; box-sizing:border-box;';
       clone.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
-      // the snapshot can't carry a live <image-slot> (its shadow DOM doesn't clone with the photo),
-      // so bake each slot's current photo into a plain div as a background image
-      const liveSlots = [...main.querySelectorAll('image-slot')];
-      clone.querySelectorAll('image-slot').forEach((el, i) => {
-        const src = (() => { const s = liveSlots[i]; const im = s && s.shadowRoot && s.shadowRoot.querySelector('img'); return im && im.currentSrc || (s && s.getAttribute('src')) || ''; })();
+      // the snapshot can't carry a live <image-slot> (its shadow DOM doesn't clone with the photo) and
+      // has no business carrying a second copy of a playing <video>, so both are baked into a plain div
+      // as a background image: the slot's photo, and the moving plate's poster
+      const liveSlots = [...main.querySelectorAll('image-slot, video')];
+      clone.querySelectorAll('image-slot, video').forEach((el, i) => {
+        const src = this.slotSrc(liveSlots[i] || el);
         const d = document.createElement('div');
         d.style.cssText = 'width:100%; height:100%; background:var(--color-surface);' + (src ? ' background-image:url("' + src + '"); background-size:cover; background-position:center;' : '');
         el.replaceWith(d);
@@ -2535,12 +2545,12 @@
         const g = document.createElement('div'); g.style.cssText = 'position:absolute; box-sizing:border-box; border-style:solid; border-width:0; overflow:hidden; background-size:cover; background-position:center;'; layer.appendChild(g);
         const delay = Math.min(160, Math.max(0, rc.top) / vh * 160);
         // the photograph travels inside the frame: paint the captured plate on the flying box and
-        // keep the destination slot blank until the box lands on it
+        // keep the destination blank until the box lands on it, whether that is a slot or a video
         const photo = old.img || this.slotSrc(el);
         if (photo) {
           g.style.backgroundImage = 'url("' + photo + '")';
           g.animate([{ filter: old.filter && old.filter !== 'none' ? old.filter : 'none' }, { filter: c.filter && c.filter !== 'none' ? c.filter : 'none' }], { duration: dur, delay, easing, fill: 'both' });
-          const slot = el.matches('image-slot') ? el : el.querySelector('image-slot');
+          const slot = el.matches('image-slot, video') ? el : el.querySelector('image-slot, video');
           if (slot) { const prev = slot.style.opacity; slot.style.opacity = '0'; setTimeout(() => { slot.style.transition = 'opacity 200ms ease'; slot.style.opacity = prev || '1'; setTimeout(() => { slot.style.transition = ''; }, 240); }, dur + delay); }
         }
         const w0 = old.isRule ? '1px 0 0 0' : '1px', w1 = isRule ? '1px 0 0 0' : '1px';
@@ -3713,6 +3723,9 @@
         isPaper: view === 'chapter' && !mono && !!current.paper, isEssay: view === 'chapter' && !mono && !current.paper,
         paperBlocks, paperCaptions, paperTail, paperAsideRow: (paperMod && paperMod.__asideRow) || 'auto',
         heroImg: view === 'chapter' && !!current.hero, heroSlot: view === 'chapter' && !current.hero,
+        // the Development sheet's hero plate: the video when the entry names one, the slot otherwise.
+        // The serif chapter has no moving plate and keeps heroImg/heroSlot.
+        heroVideo: view === 'chapter' && !!current.video, heroStill: view === 'chapter' && !current.video,
         // one plate under the account, or the pair the sheet has always carried
         detailOne: oneDetail, detailPair: !oneDetail,
         rBody: mono ? this.MONO : 'var(--font-body)', rAlign: mono ? 'left' : 'justify', rTracking: mono ? '-0.03em' : '0',
