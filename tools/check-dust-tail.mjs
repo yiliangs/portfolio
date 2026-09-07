@@ -1,4 +1,5 @@
-// Checks the cut that gives every dust particle a tail of a set length.
+// Checks field.js's two pure helpers: the cut that gives every dust particle a tail of a set length, and the octave
+// weighting that gives the landscape a continuous amount of detail.
 //
 // The tail used to be an accident of two settings: ink was left on the canvas and thinned a little each frame, so how
 // far back a trail reached depended on the fade rate, the frame rate and how fast that particle happened to be
@@ -14,7 +15,7 @@
 //
 // Run with `npm run check`. Exits non-zero and prints every failure it found.
 
-import { tailPath } from '../field.js';
+import { tailPath, octaveWeights } from '../field.js';
 
 const EPS = 1e-9;
 const failures = [];
@@ -78,6 +79,56 @@ for (const tail of [9, 24, 200]) {
   if (Math.abs(at2 - tail * 2 / 3) > 1e-6) fail('the second band ends at ' + at2.toFixed(6) + ' px, not at two thirds of ' + tail);
 }
 
+// ---------------------------------------------------------------- the octave count blends
+
+// height() itself is a closure over params and the clock inside mount(), so it is not exported and not checked here.
+// octaveWeights is the whole of what made the count continuous, and it is pure, so it is what this holds to account.
+// The weights it returns at each whole number have to be the ones the old integer gates applied, or the landscape
+// would change shape the moment the setting became a fraction rather than a count.
+{
+  const w = new Float64Array(4);
+  const WHOLE = [[1, [1, 0, 0, 0]], [2, [1, 0.5, 0, 0]], [3, [1, 0.5, 0.25, 0]], [4, [1, 0.5, 0.25, 0.125]]];
+  for (const [octaves, want] of WHOLE) {
+    const sum = octaveWeights(octaves, w);
+    for (let i = 0; i < 4; i++) {
+      if (Math.abs(w[i] - want[i]) > EPS) {
+        fail('at octaves ' + octaves + ' the weight on octave ' + (i + 1) + ' is ' + w[i] + ', and the integer gates it ' +
+          'replaced gave ' + want[i] + ': the landscape would change shape as the setting became continuous');
+      }
+    }
+    const wantSum = want.reduce((a, b) => a + b, 0);
+    if (Math.abs(sum - wantSum) > EPS) fail('at octaves ' + octaves + ' the weight sum is ' + sum + ', not ' + wantSum);
+  }
+  // the map used to divide a height by 1.875, which is exactly the four octave sum; that has to still hold or the
+  // shading and contour levels would sit at a different place on the scale
+  if (Math.abs(octaveWeights(4, w) - 1.875) > EPS) {
+    fail('the four octave sum is no longer 1.875, so the contour map normalisation has drifted off its old scale');
+  }
+
+  // a fraction has to sit between the whole numbers on either side, on every octave and on the sum
+  const lo = new Float64Array(4), mid = new Float64Array(4), hi = new Float64Array(4);
+  const sLo = octaveWeights(1, lo), sMid = octaveWeights(1.5, mid), sHi = octaveWeights(2, hi);
+  for (let i = 0; i < 4; i++) {
+    if (mid[i] < Math.min(lo[i], hi[i]) - EPS || mid[i] > Math.max(lo[i], hi[i]) + EPS) {
+      fail('at octaves 1.5 the weight on octave ' + (i + 1) + ' is ' + mid[i] + ', outside the ' + lo[i] + ' to ' +
+        hi[i] + ' the whole numbers on either side give, so the slider does not blend');
+    }
+  }
+  if (!(sMid > sLo + EPS && sMid < sHi - EPS)) {
+    fail('at octaves 1.5 the weight sum is ' + sMid + ', not strictly between ' + sLo + ' and ' + sHi + ': the ' +
+      'setting is not doing anything between the whole numbers');
+  }
+
+  // and the whole slider has to climb, never step back
+  let prev = -1, prevAt = 0;
+  for (let o = 1; o <= 4.0001; o += 0.05) {
+    const s = octaveWeights(o, w);
+    if (s < prev - EPS) fail('the weight sum falls from ' + prev + ' at octaves ' + prevAt.toFixed(2) + ' to ' + s +
+      ' at ' + o.toFixed(2) + ', so more detail can mean less amplitude');
+    prev = s; prevAt = o;
+  }
+}
+
 // ---------------------------------------------------------------- report
 
 if (failures.length) {
@@ -86,4 +137,5 @@ if (failures.length) {
   process.exit(1);
 }
 console.log('check-dust-tail: an empty path draws nothing, a long path is cut to the tail length exactly, a short one ' +
-  'is drawn whole, and the three bands meet at the thirds');
+  'is drawn whole, the three bands meet at the thirds, and the octave weights match the old integer gates at every ' +
+  'whole number while blending between them');

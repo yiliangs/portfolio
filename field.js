@@ -13,7 +13,7 @@
 export const PARAMS = {
   landscape: {
     wavelength: [320, 60, 1200, 10, 'feature size, px'],
-    octaves: [3, 1, 4, 1, 'detail levels'],
+    octaves: [1.5, 1, 4, 0.1, 'detail levels; a fraction blends the next one in'],
     morphSpeed: [0.01, 0, 0.5, 0.005, 'how fast the contours deform'],
     showLandscape: [0, 'toggle', 'draw the height field and its contours'],
     contours: [5, 2, 40, 1, 'contour lines across the height range'],
@@ -31,7 +31,7 @@ export const PARAMS = {
   particles: {
     count: [1050, 100, 3000, 50, 'how many'],
     life: [24, 1, 30, 0.5, 'longest life, s'],
-    tail: [24, 0, 200, 1, 'tail length, px'],
+    tail: [66, 0, 200, 1, 'tail length, px'],
     alpha: [0.15, 0.02, 1, 0.01, 'ink opacity'],
     width: [0.8, 0.2, 3, 0.05, 'line width, px'],
   },
@@ -66,6 +66,20 @@ export function tailPath(pts, n, tail, out, splits) {
   if (splits[0] < 0) splits[0] = c - 1;
   if (splits[1] < 0) splits[1] = c - 1;
   return c;
+}
+
+// ----- the landscape's detail -----
+const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
+// The octave count is a continuous setting, not a count of terms. Each octave above the first is weighted by how far
+// the slider has passed the step into it, so half an octave is half of that octave's amplitude and the slider is
+// smooth end to end rather than stepping the landscape from one shape to another. Writes the four weights into out
+// and returns their sum, which is what a height has to be divided by to stay in the same range as the slider moves.
+export function octaveWeights(octaves, out) {
+  out[0] = 1;
+  out[1] = 0.5 * clamp01(octaves - 1);
+  out[2] = 0.25 * clamp01(octaves - 2);
+  out[3] = 0.125 * clamp01(octaves - 3);
+  return out[0] + out[1] + out[2] + out[3];
 }
 
 // cheap 3D value noise: eight lattice hashes, smoothstep blend
@@ -118,13 +132,16 @@ export function mount(container) {
     for (const p of P) { spawn(p); p.life = Math.random() * p.ttl; }
   };
   const ro = new ResizeObserver(resize); ro.observe(container); resize();
-  // the landscape: three octaves of noise, sliced at a depth that advances with time
+  // the landscape: noise sliced at a depth that advances with time, over as many octaves as the setting asks for.
+  // The count is continuous, so an octave fades in across the slider's step into it rather than appearing whole
+  const ow = new Float64Array(4);
   const height = (x, y) => {
     const z = t * params.morphSpeed, S = 1 / params.wavelength;
+    octaveWeights(params.octaves, ow);
     let h = noise(x * S, y * S, z);
-    if (params.octaves > 1) h += 0.5 * noise(x * S * 2.1 + 7.3, y * S * 2.1 + 3.1, z * 1.3 + 11);
-    if (params.octaves > 2) h += 0.25 * noise(x * S * 4.3 + 19, y * S * 4.3 + 5, z * 1.7 + 23);
-    if (params.octaves > 3) h += 0.125 * noise(x * S * 8.7 + 41, y * S * 8.7 + 13, z * 2.1 + 37);
+    if (ow[1] > 0) h += ow[1] * noise(x * S * 2.1 + 7.3, y * S * 2.1 + 3.1, z * 1.3 + 11);
+    if (ow[2] > 0) h += ow[2] * noise(x * S * 4.3 + 19, y * S * 4.3 + 5, z * 1.7 + 23);
+    if (ow[3] > 0) h += ow[3] * noise(x * S * 8.7 + 41, y * S * 8.7 + 13, z * 2.1 + 37);
     return h;
   };
   // the current at (x,y): the contour direction, which is the gradient turned a quarter turn, at a speed that
@@ -150,7 +167,10 @@ export function mount(container) {
   const drawMap = () => {
     if (!mapImg) return;
     const d = mapImg.data, L = params.contours, lv = mapLevels, hs = mapHeights;
-    for (let j = 0, k = 0; j < mapH; j++) for (let i = 0; i < mapW; i++, k++) { const h = height(i / MAP_SCALE, j / MAP_SCALE) / 1.875; hs[k] = h; lv[k] = Math.floor(h * L); }
+    // normalise by the weights actually in use, not by the four-octave sum, or the shading and the contour levels
+    // would drift every time the octave slider moved
+    const norm = octaveWeights(params.octaves, new Float64Array(4));
+    for (let j = 0, k = 0; j < mapH; j++) for (let i = 0; i < mapW; i++, k++) { const h = height(i / MAP_SCALE, j / MAP_SCALE) / norm; hs[k] = h; lv[k] = Math.floor(h * L); }
     // a contour is one pixel wide wherever the level steps to the right or downward neighbour
     for (let j = 0, k = 0; j < mapH; j++) for (let i = 0; i < mapW; i++, k++) {
       const line = (i + 1 < mapW && lv[k + 1] !== lv[k]) || (j + 1 < mapH && lv[k + mapW] !== lv[k]);
