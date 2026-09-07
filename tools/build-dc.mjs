@@ -442,7 +442,7 @@ ${RUNTIME}
   }
 
   // ---- logic (verbatim from ${SRC}) ---------------------------------------
-${logicSrc.replace(/^/gm, '  ').replace(/\s+$/, '')}
+${logicSrc.replace(/\r\n?/g, '\n').replace(/^/gm, '  ').replace(/\s+$/, '')}
 ${HOST}
 })();
 `;
