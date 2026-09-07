@@ -184,7 +184,7 @@
               "\n      ",
               "\n      ",
               "\n      ",
-              h("div", { key: "3", style: {"position":"relative","zIndex":"2","alignSelf":"stretch","minHeight":"0","display":"grid","gridTemplateColumns":"repeat(2, minmax(0,1fr))","gridTemplateRows":"repeat(3, minmax(0,1fr))","gap":"28px 24px","padding":"28px 0"} },
+              h("div", { key: "3", style: S(`position:relative; z-index:2; align-self:stretch; min-height:0; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); grid-template-rows:repeat(${V.leafRows ?? ""}, minmax(0,1fr)); gap:28px 24px; padding:28px 0;`) },
                 "\n        ",
                 h(F,{key:1},L(V.leftLeaves).map(function(item,i){
                   var Vi = Object.assign({}, V, {"lf": item, $index: i});
@@ -290,7 +290,7 @@
                 "\n      "
               ),
               "\n      ",
-              h("div", { key: "10", style: {"position":"relative","zIndex":"2","alignSelf":"stretch","minHeight":"0","display":"grid","gridTemplateColumns":"repeat(2, minmax(0,1fr))","gridTemplateRows":"repeat(3, minmax(0,1fr))","gap":"28px 24px","padding":"28px 0"} },
+              h("div", { key: "10", style: S(`position:relative; z-index:2; align-self:stretch; min-height:0; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); grid-template-rows:repeat(${V.leafRows ?? ""}, minmax(0,1fr)); gap:28px 24px; padding:28px 0;`) },
                 "\n        ",
                 h(F,{key:1},L(V.rightLeaves).map(function(item,i){
                   var Vi = Object.assign({}, V, {"lf": item, $index: i});
@@ -2251,6 +2251,76 @@
       return out;
     }
   
+    // ---- the Research margins ----------------------------------------------------------------
+    // The margins are a collage over two gutters, each a two-column grid whose row count follows the
+    // register rather than a fixed table. A gutter row takes one of two shapes. A spread is one leaf
+    // across both columns with its caption beside the plate; the composition opens with them, one on
+    // the left and two on the right, which is what sets the tall anchor opposite the wide plate. Every
+    // row beneath is a pair: up to two single-column leaves with their captions underneath.
+    //
+    // A slot's sizes are written as a numerator over the row count, so three rows reproduce the
+    // geometry the page was tuned at and a longer register shrinks every plate by the same factor
+    // instead of pushing the collage past the fold. `h` is the height in vh, `w` the px cap on it.
+    LEAF_SPREADS = {
+      left: [
+        { row: 1, h: 66, w: 990, ratio: '4/3', maxW: '280px', titleSize: '26px', dir: 'row', alignItems: 'flex-end', px: '-18px', py: '-10px', dur: '7.5s', delay: '0s', bleedX: '-56px', bleedY: '0px', cover: 'https://picsum.photos/seed/halvorsen-cuts/800/600' },
+      ],
+      right: [
+        { row: 2, h: 72, w: 1080, ratio: '3/4', maxW: '280px', titleSize: '26px', dir: 'row-reverse', alignItems: 'flex-end', px: '-26px', py: '-14px', dur: '9s', delay: '-3s', bleedX: '56px', bleedY: '0px', cover: 'https://picsum.photos/seed/halvorsen-machines/600/800' },
+        // stackH and stackW: the height a declared plate may take here instead of h and w. This spread is
+        // laid out as a row, its stock plate 18vh tall with the caption beside it; a declared plate stacks
+        // its title underneath (see below), and at 18vh that stack runs out of the row into the anchor
+        // plate in the row beneath. The other spreads are the anchors, whose stacks the page was tuned around.
+        { row: 1, h: 54, w: 780, stackH: 39, stackW: 360, ratio: '3/2', maxW: '270px', titleSize: '17px', dir: 'row-reverse', alignItems: 'flex-start', px: '-22px', py: '-12px', dur: '10s', delay: '-1.5s', bleedX: '0px', bleedY: '0px', cover: 'https://picsum.photos/seed/halvorsen-4/900/600' },
+      ],
+    };
+    // Pair styles, handed to a gutter's pair cells in order and cycled once they run out. A cycled style
+    // is offset in its drift phase, so two leaves of one make never breathe in step. The leaf above a
+    // pair row stacks its title beneath its plate and that stack reaches down into this row on a short
+    // viewport, so a pair in the second column lifts clear of it rather than settling onto it.
+    LEAF_PAIRS = {
+      left: [
+        { h: 42, w: 660, ratio: '1/1', maxW: '140px', titleSize: '17px', dir: 'column', alignItems: 'flex-start', px: '-14px', py: '-8px', dur: '8s', delay: '-5s', bleedX: '0px', bleedY: '52px', cover: 'https://picsum.photos/seed/halvorsen-3/700/700' },
+        { h: 36, w: 600, ratio: '5/4', maxW: '150px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-20px', py: '-9px', dur: '8.5s', delay: '-2s', bleedX: '0px', bleedY: '0px', cover: 'https://picsum.photos/seed/halvorsen-5/700/560' },
+        { h: 39, w: 620, ratio: '4/5', maxW: '128px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-17px', py: '-12px', dur: '7.8s', delay: '-6s', bleedX: '0px', bleedY: '-18px', cover: 'https://picsum.photos/seed/halvorsen-7/560/700' },
+        { h: 33, w: 560, ratio: '3/2', maxW: '140px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-12px', py: '-7px', dur: '9.2s', delay: '-1s', bleedX: '0px', bleedY: '18px', cover: 'https://picsum.photos/seed/halvorsen-9/900/600' },
+      ],
+      right: [
+        { h: 45, w: 720, ratio: '2/3', maxW: '100px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-16px', py: '-11px', dur: '9.5s', delay: '-4s', bleedX: '-60px', bleedY: '0px', cover: 'https://picsum.photos/seed/halvorsen-6/600/900' },
+        { h: 36, w: 600, ratio: '1/1', maxW: '120px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-19px', py: '-10px', dur: '8.2s', delay: '-2.5s', bleedX: '0px', bleedY: '-12px', cover: 'https://picsum.photos/seed/halvorsen-8/700/700' },
+        { h: 30, w: 520, ratio: '4/5', maxW: '110px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-13px', py: '-6px', dur: '10.5s', delay: '-3.5s', bleedX: '0px', bleedY: '30px', cover: 'https://picsum.photos/seed/halvorsen-10/560/700' },
+        { h: 39, w: 640, ratio: '3/2', maxW: '130px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-21px', py: '-13px', dur: '7.2s', delay: '-0.5s', bleedX: '0px', bleedY: '-24px', cover: 'https://picsum.photos/seed/halvorsen-11/900/600' },
+      ],
+    };
+    // A gutter holds one leaf per spread row and two per pair row.
+    leafCapacity(side, rows) { return 2 * rows - this.LEAF_SPREADS[side].length; }
+    // Leaves alternate gutters, so a row is added only once the fuller of the two runs out of cells.
+    // Three rows is the composition the page was tuned at, and the floor.
+    leafRows(count) {
+      const left = Math.ceil(count / 2), right = count - left;
+      let rows = 3;
+      while (left > this.leafCapacity('left', rows) || right > this.leafCapacity('right', rows)) rows++;
+      return rows;
+    }
+    // Its slots, in the order leaves take them: the spreads, then one cell per pair row down the zigzag
+    // diagonal from the gutter's outer column, then the cells the diagonal skipped. A short register
+    // therefore fills the margin airily, one leaf to a row, and only a long one puts two in the same row.
+    leafSlots(side, rows) {
+      const spreads = this.LEAF_SPREADS[side], pairs = this.LEAF_PAIRS[side];
+      const outer = side === 'left' ? 1 : 2, first = spreads.length + 1, diag = [], skipped = [];
+      for (let r = first; r <= rows; r++) { const c = (r - first) % 2 === 0 ? outer : 3 - outer; diag.push({ row: r, col: c }); skipped.push({ row: r, col: 3 - c }); }
+      const q = (n) => String(+(n / rows).toFixed(3)), size = (h, w) => 'min(' + q(h) + 'vh, ' + q(w) + 'px)';
+      const slot = (st, row, col, wrap) => ({ side, row: String(row), col: col ? String(col) : '1 / 3',
+        selfY: row === 1 ? 'start' : row === rows ? 'end' : 'center',
+        selfX: col ? (col === 1 ? 'start' : 'end') : (side === 'left' ? 'start' : 'end'),
+        align: side, imgH: size(st.h, st.w), ...(st.stackH ? { stackH: size(st.stackH, st.stackW) } : {}),
+        ratio: st.ratio, maxW: st.maxW, titleSize: st.titleSize, dir: st.dir, alignItems: st.alignItems,
+        px: st.px, py: st.py, dur: st.dur, delay: (parseFloat(st.delay) - 1.7 * wrap) + 's',
+        bleedX: st.bleedX, bleedY: st.bleedY, cover: st.cover });
+      return [...spreads.map((st) => slot(st, st.row, 0, 0)),
+        ...[...diag, ...skipped].map((c, i) => slot(pairs[i % pairs.length], c.row, c.col, Math.floor(i / pairs.length)))];
+    }
+  
     num(i) { return (this.props.numerals ?? 'roman') === 'roman' ? this.romans[i] : String(i + 1); }
     reg(i) { return /Research|Writing|Essay/.test(this.data[i].kind) ? 'serif' : 'mono'; }
     pageOf(i) { return this.reg(i) === 'mono' ? 'tooling' : 'writing'; }
@@ -3343,37 +3413,21 @@
           kickerWord: m ? 'Sheet' : 'Chapter', figWord: m ? 'Fig.' : 'Plate', backWord: m ? 'Sheet register' : 'Contents',
           signal: this.signal(d), shapeIdx: 0, open: () => this.open(i), hover: () => this.setState({ hovered: i }) };
       });
-      // one screen, two gutters. Each gutter: a large anchor (a real chapter), a mid leaf and a small one, set so the
-      // caption always has room on the inner side and nothing crosses the title column. Sizes are fractions of the gutter.
-      // each gutter is a 2×3 grid. The anchor (a real chapter) spans a row with its caption beside it; the smaller leaves
-      // take single cells with captions beneath, staggered across the two columns so the eye zigzags down the margin
-      const leafPos = [
-        { side: 'left',  col: '1 / 3', row: '1', selfY: 'start',  selfX: 'start', imgH: 'min(22vh, 330px)', ratio: '4/3', dir: 'row',         alignItems: 'flex-end',   align: 'left',  titleSize: '26px', px: '-18px', py: '-10px', dur: '7.5s', delay: '0s',    bleedX: '-72px', maxW: '280px', cover: 'https://picsum.photos/seed/halvorsen-cuts/800/600' },
-        { side: 'right', col: '1 / 3', row: '2', selfY: 'center', selfX: 'end',   imgH: 'min(24vh, 360px)', ratio: '3/4', dir: 'row-reverse', alignItems: 'flex-end',   align: 'right', titleSize: '26px', px: '-26px', py: '-14px', dur: '9s',   delay: '-3s',   bleedX: '72px', maxW: '280px', cover: 'https://picsum.photos/seed/halvorsen-machines/600/800' },
-        { side: 'left',  col: '1',     row: '2', selfY: 'center', selfX: 'start', imgH: 'min(14vh, 220px)', ratio: '1/1', dir: 'column',      alignItems: 'flex-start', align: 'left',  titleSize: '17px', px: '-14px', py: '-8px',  dur: '8s',   delay: '-5s',   bleedX: '-40px', maxW: '140px', cover: 'https://picsum.photos/seed/halvorsen-3/700/700' },
-        // stackH: the height a declared plate may take here instead of imgH. This slot is laid out as a
-        // row, its stock plate 18vh tall with the caption beside it; a declared plate stacks its title
-        // underneath (see below), and at 18vh that stack runs out of the row into the anchor plate in
-        // the row beneath. The other row slots are the two anchors, whose stacks the page was tuned around.
-        { side: 'right', col: '1 / 3', row: '1', selfY: 'start',  selfX: 'end',   imgH: 'min(18vh, 260px)', stackH: 'min(13vh, 120px)', ratio: '3/2', dir: 'row-reverse', alignItems: 'flex-start', align: 'right', titleSize: '17px', px: '-22px', py: '-12px', dur: '10s',  delay: '-1.5s', bleedX: '44px', maxW: '270px', cover: 'https://picsum.photos/seed/halvorsen-4/900/600' },
-        { side: 'left',  col: '2',     row: '3', selfY: 'end',    selfX: 'end',   imgH: 'min(12vh, 200px)', ratio: '5/4', dir: 'column',      alignItems: 'flex-start', align: 'left',  titleSize: '15px', px: '-20px', py: '-9px',  dur: '8.5s', delay: '-2s',   bleedX: '0px', maxW: '150px', cover: 'https://picsum.photos/seed/halvorsen-5/700/560' },
-        { side: 'right', col: '2',     row: '3', selfY: 'end',    selfX: 'end'  , imgH: 'min(15vh, 240px)', ratio: '2/3', dir: 'column',      alignItems: 'flex-end',   align: 'right', titleSize: '15px', px: '-16px', py: '-11px', dur: '9.5s', delay: '-4s',   bleedX: '30px', maxW: '100px', cover: 'https://picsum.photos/seed/halvorsen-6/600/900' },
-      ];
   
   
   
-      // beyond the written chapters, forthcoming leaves hold the stage as placeholders
-      const forthcoming = [{ title: 'Forthcoming', kind: 'Essay', year: '—', numeral: '·' }, { title: 'Forthcoming', kind: 'Research', year: '—', numeral: '·' }, { title: 'Forthcoming', kind: 'Essay', year: '—', numeral: '·' }, { title: 'Forthcoming', kind: 'Research', year: '—', numeral: '·' }];
-  
-  
-  
-      // the margins only hold chapters that belong to this register; empty slots read as forthcoming
+      // the margins only hold chapters that belong to this register
       const own = projects.filter((p) => this.pageOf(projects.indexOf(p)) === pageKey);
-      const leaves = [...own, ...forthcoming].slice(0, 6).map((p, k) => { const real = own.includes(p), pi = real ? projects.indexOf(p) : -1 - k; const on = real && this.state.typingKey === 'leaf-' + pi; const pos = leafPos[k % leafPos.length];
-        // only the two large outer plates bleed, and they bleed outward far enough to cross the page edge
-        const bleeds = ['-56px', '56px', '0px', '0px', '0px', '-60px'];
-        const bleedX = bleeds[k % bleeds.length];
-        const bleedY = ['0px', '0px', '52px', '0px', '0px', '0px'][k % 6];
+      // beyond the written chapters, forthcoming leaves hold the stage as placeholders. A thin register
+      // still has to read as a composition, so the stage never falls below the six leaves the page was
+      // tuned at; the shortfall is measured against that, not against a fixed number of slots.
+      const stage = [...own, ...Array.from({ length: Math.max(0, 6 - own.length) },
+        (_, i) => ({ title: 'Forthcoming', kind: i % 2 ? 'Research' : 'Essay', year: '—', numeral: '·' }))];
+      // every chapter of a register stands on its landing page, so the gutters grow to hold the stage
+      // rather than the stage being cut down to the gutters
+      const leafRows = this.leafRows(stage.length);
+      const gutters = { left: this.leafSlots('left', leafRows), right: this.leafSlots('right', leafRows) };
+      const leaves = stage.map((p, k) => { const real = own.includes(p), pi = real ? projects.indexOf(p) : -1 - k; const on = real && this.state.typingKey === 'leaf-' + pi; const pos = gutters[k % 2 === 0 ? 'left' : 'right'][Math.floor(k / 2)];
         const detail = real ? p.subtitle + '\n' + p.role + ' · ' + p.status + ' · pp. ' + p.pages : '';
         const typed = on ? detail.slice(0, this.state.typed || 0) : '';
         // the plate is the chapter's hero, the same image the chapter opens on and the leaf morphs
@@ -3396,7 +3450,7 @@
           plateMaxW: declared ? '100%' : 'none',
           dir: declared ? 'column' : pos.dir,
           alignItems: declared ? (pos.side === 'left' ? 'flex-start' : 'flex-end') : pos.alignItems,
-          idx: pi, cardNo: k + 1, typed, kicker: real ? 'Chapter ' + p.numeral + ' · ' + p.year : 'Forthcoming', detailDisplay: on ? 'block' : 'none', detailOpacity: on ? '1' : '0', caretOpacity: on && typed.length < detail.length ? '1' : '0', morphName: real ? 'row-' + k : 'leaf-' + k, figNo: real ? p.figNo : 'x' + k, placeholder: real ? p.placeholder : 'Plate: forthcoming', coverSlotId: real ? 'cover-' + pi : 'cover-next-' + k, open: real ? p.open : () => {}, bleedX, bleedY, zIndex: on ? 30 : 12 - k, origin: (pos.selfX === 'start' ? 'left ' : 'right ') + (pos.selfY === 'start' ? 'top' : pos.selfY === 'end' ? 'bottom' : 'center'), cursor: real ? 'pointer' : 'default', lift: on ? '-10px' : '0px', scale: on ? '1.06' : '1', shadow: on ? '0 24px 48px -20px rgba(32,31,29,0.35), 0 2px 6px rgba(32,31,29,0.08)' : '0 8px 24px -16px rgba(32,31,29,0.25)',
+          idx: pi, cardNo: k + 1, typed, kicker: real ? 'Chapter ' + p.numeral + ' · ' + p.year : 'Forthcoming', detailDisplay: on ? 'block' : 'none', detailOpacity: on ? '1' : '0', caretOpacity: on && typed.length < detail.length ? '1' : '0', morphName: real ? 'row-' + k : 'leaf-' + k, figNo: real ? p.figNo : 'x' + k, placeholder: real ? p.placeholder : 'Plate: forthcoming', coverSlotId: real ? 'cover-' + pi : 'cover-next-' + k, open: real ? p.open : () => {}, zIndex: on ? 30 : Math.max(1, 12 - k), origin: (pos.selfX === 'start' ? 'left ' : 'right ') + (pos.selfY === 'start' ? 'top' : pos.selfY === 'end' ? 'bottom' : 'center'), cursor: real ? 'pointer' : 'default', lift: on ? '-10px' : '0px', scale: on ? '1.06' : '1', shadow: on ? '0 24px 48px -20px rgba(32,31,29,0.35), 0 2px 6px rgba(32,31,29,0.08)' : '0 8px 24px -16px rgba(32,31,29,0.25)',
           hover: () => { if (real) this.startTyping('leaf-' + pi, detail.length, { hovered: pi }); }, unhover: () => { this.stopTyping(); } }; });
       // The morph engine pairs an outgoing element with an incoming one by matching data-shape and
       // data-morph names, so every name is a key in a shared namespace and two namespaces must never
@@ -3511,7 +3565,7 @@
         subBrandDisplay: this.state.narrow ? 'none' : 'inline', indexCols: this.state.narrow ? 'minmax(0,1fr)' : 'minmax(0,7fr) minmax(0,5fr)', previewDisplay: this.state.narrow ? 'none' : 'block',
         parallax: Math.round((this.state.scrollY || 0) * 0.18) + 'px',
         hintOpacity: this.state.hintGone || this.state.usedKeys ? '0' : '1', bloomHintOpacity: this.state.bloomTouched ? '0' : '1',
-        projects, pageProjects, leaves, leftLeaves: leaves.filter((l) => l.side === 'left'), rightLeaves: leaves.filter((l) => l.side === 'right'), featured, current, next: projects[(idx + 1) % projects.length], hovered: hov, cv: cvViews.timeline,
+        projects, pageProjects, leaves, leafRows, leftLeaves: leaves.filter((l) => l.side === 'left'), rightLeaves: leaves.filter((l) => l.side === 'right'), featured, current, next: projects[(idx + 1) % projects.length], hovered: hov, cv: cvViews.timeline,
         gridPlatesRow: gridRows.plates, gridAuthorRow: gridRows.author, gridColophonRow: gridRows.colophon, gridContactRow: gridRows.contact,
         sheet, sheetGridRef: this.sheetGridRef,
         contentsRef: this.contentsRef, platesRef: this.platesRef, notesRef: this.notesRef, landingStatementRef: this.landingStatementRef, headRef: this.headRef, tabToolingRef: this.tabToolingRef, tabWritingRef: this.tabWritingRef,
