@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "node tools/build-dc.mjs",
-    "check": "node tools/check-sheet-grid.mjs && node tools/check-roll-motion.mjs && node tools/check-hypercube.mjs && node tools/check-word-pose.mjs && node tools/check-dust-tail.mjs",
+    "check": "node tools/check-sheet-grid.mjs && node tools/check-roll-motion.mjs && node tools/check-burn-source.mjs && node tools/check-hypercube.mjs && node tools/check-word-pose.mjs && node tools/check-dust-tail.mjs",
     "check:paper": "node tools/check-paper.mjs",
     "cv": "node tools/export-cv.mjs",
     "test": "node --test tools/"
