@@ -678,12 +678,12 @@
             h("div", { key: "1", ref: V.sheetGridRef, style: {"--hair":"color-mix(in srgb, var(--color-text) 16%, transparent)","position":"relative","marginTop":"88px","display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","borderRight":"1px solid var(--hair)","borderBottom":"1px solid var(--hair)","backgroundImage":"linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
               "\n\n    ",
               "\n    ",
-              h("button", { key: "2|24.1chn43n", className: "sheet-mod", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.back?.col ?? ""}; grid-row:${V.sheet?.back?.row ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
+              h("button", { key: "2|24.1chn43n", className: "sheet-mod", "data-enter": "", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.back?.col ?? ""}; grid-row:${V.sheet?.back?.row ?? ""}; --d:${V.sheet?.back?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
                 h(F,{key:0},"← ",I(V.current?.backWord,1),"")
               ),
               "\n\n    ",
               "\n    ",
-              h("section", { key: "5", className: "sheet-mod", style: S(`grid-column:${V.sheet?.header?.col ?? ""}; grid-row:${V.sheet?.header?.row ?? ""}; padding:22px;`) },
+              h("section", { key: "5", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.header?.col ?? ""}; grid-row:${V.sheet?.header?.row ?? ""}; --d:${V.sheet?.header?.delay ?? ""}; padding:22px;`) },
                 "\n      ",
                 h("p", { key: "1|88.1oj3jfb", style: {"margin":"0 0 22px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-accent-700)","fontFeatureSettings":"'tnum' 1"} },
                   h(F,{key:0},"",I(V.current?.kickerWord,1)," ",I(V.current?.numeral,3)," · ",I(V.current?.kind,5)," · ",I(V.current?.year,7),"")
@@ -699,12 +699,12 @@
                 "\n    "
               ),
               "\n    ",
-              h("span", { key: "7|19.1h99e0b", className: "sheet-mod", "aria-hidden": "true", style: S(`grid-column:${V.sheet?.ghost?.col ?? ""}; grid-row:${V.sheet?.ghost?.row ?? ""}; display:flex; align-items:flex-end; justify-content:flex-end; padding:22px; font-family:'DM Mono', ui-monospace, monospace; font-weight:400; font-size:clamp(40px,5.5vw,84px); line-height:1; letter-spacing:-0.04em; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; user-select:none; font-feature-settings:'tnum' 1;`) },
+              h("span", { key: "7|19.1h99e0b", className: "sheet-mod", "data-enter": "", "aria-hidden": "true", style: S(`grid-column:${V.sheet?.ghost?.col ?? ""}; grid-row:${V.sheet?.ghost?.row ?? ""}; --d:${V.sheet?.ghost?.delay ?? ""}; display:flex; align-items:flex-end; justify-content:flex-end; padding:22px; font-family:'DM Mono', ui-monospace, monospace; font-weight:400; font-size:clamp(40px,5.5vw,84px); line-height:1; letter-spacing:-0.04em; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; user-select:none; font-feature-settings:'tnum' 1;`) },
                 h(F,{key:0},"",I(V.current?.ghost,1),"")
               ),
               "\n\n    ",
               "\n    ",
-              h("div", { key: "10", className: "sheet-mod", style: S(`grid-column:${V.sheet?.specSheet?.col ?? ""}; grid-row:${V.sheet?.specSheet?.row ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "10", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.specSheet?.col ?? ""}; grid-row:${V.sheet?.specSheet?.row ?? ""}; --d:${V.sheet?.specSheet?.delay ?? ""}; padding:11px 22px;`) },
                 h("p", { key: "0|5.3wrm2m", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Sheet"
                 ),
@@ -713,7 +713,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "12", className: "sheet-mod", style: S(`grid-column:${V.sheet?.specRole?.col ?? ""}; grid-row:${V.sheet?.specRole?.row ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "12", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.specRole?.col ?? ""}; grid-row:${V.sheet?.specRole?.row ?? ""}; --d:${V.sheet?.specRole?.delay ?? ""}; padding:11px 22px;`) },
                 h("p", { key: "0|4.yk2787", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Role"
                 ),
@@ -722,7 +722,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "14", className: "sheet-mod", style: S(`grid-column:${V.sheet?.specWith?.col ?? ""}; grid-row:${V.sheet?.specWith?.row ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "14", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.specWith?.col ?? ""}; grid-row:${V.sheet?.specWith?.row ?? ""}; --d:${V.sheet?.specWith?.delay ?? ""}; padding:11px 22px;`) },
                 h("p", { key: "0|4.yk5x1d", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "With"
                 ),
@@ -731,7 +731,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "16", className: "sheet-mod", style: S(`grid-column:${V.sheet?.specStatus?.col ?? ""}; grid-row:${V.sheet?.specStatus?.row ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "16", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.specStatus?.col ?? ""}; grid-row:${V.sheet?.specStatus?.row ?? ""}; --d:${V.sheet?.specStatus?.delay ?? ""}; padding:11px 22px;`) },
                 h("p", { key: "0|6.1m8lgyx", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Status"
                 ),
@@ -740,7 +740,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "18", className: "sheet-mod", style: S(`grid-column:${V.sheet?.specRev?.col ?? ""}; grid-row:${V.sheet?.specRev?.row ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "18", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.specRev?.col ?? ""}; grid-row:${V.sheet?.specRev?.row ?? ""}; --d:${V.sheet?.specRev?.delay ?? ""}; padding:11px 22px;`) },
                 h("p", { key: "0|11.1s8ry21", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Rev / Scale"
                 ),
@@ -750,7 +750,7 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("figure", { key: "21", className: "plate sheet-mod sheet-plate", "data-shape": `frame-${V.current?.figNo ?? ""}`, style: S(`grid-column:${V.sheet?.hero?.col ?? ""}; grid-row:${V.sheet?.hero?.row ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
+              h("figure", { key: "21", className: "plate sheet-mod sheet-plate", "data-enter": "", "data-shape": `frame-${V.current?.figNo ?? ""}`, onMouseEnter: V.sheet?.hero?.move, onMouseMove: V.sheet?.hero?.move, onMouseLeave: V.sheet?.hero?.leave, style: S(`grid-column:${V.sheet?.hero?.col ?? ""}; grid-row:${V.sheet?.hero?.row ?? ""}; --d:${V.sheet?.hero?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
                 "\n      ",
                 h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
                   "+"
@@ -764,15 +764,20 @@
                 "\n    "
               ),
               "\n    ",
-              h("p", { key: "23|79.l667xt", className: "sheet-mod", style: S(`grid-column:${V.sheet?.heroCaption?.col ?? ""}; grid-row:${V.sheet?.heroCaption?.row ?? ""}; margin:0; padding:11px 22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
-                h("span", { key: "0|44.1e4j9ob", style: {"color":"var(--color-accent)"} },
-                  h(F,{key:0},"",I(V.current?.figWord,1)," ",I(V.current?.numeral,3),".")
+              h("p", { key: "23|128.3ypuk8", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.heroCaption?.col ?? ""}; grid-row:${V.sheet?.heroCaption?.row ?? ""}; --d:${V.sheet?.heroCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
+                h("span", { key: "0|79.l667xt", style: {"minWidth":"0"} },
+                  h("span", { key: "0|44.1e4j9ob", style: {"color":"var(--color-accent)"} },
+                    h(F,{key:0},"",I(V.current?.figWord,1)," ",I(V.current?.numeral,3),".")
+                  ),
+                  h(F,{key:1}," ",I(V.current?.caption,1),"")
                 ),
-                h(F,{key:1}," ",I(V.current?.caption,1),"")
+                h("span", { key: "1|23.1l7l3dq", style: {"flex":"none","color":"var(--color-neutral-600)","whiteSpace":"nowrap"} },
+                  h(F,{key:0},"",I(V.sheet?.heroReadout,1),"")
+                )
               ),
               "\n\n    ",
               "\n    ",
-              h("div", { key: "26", className: "sheet-mod", style: S(`grid-column:${V.sheet?.body1?.col ?? ""}; grid-row:${V.sheet?.body1?.row ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:color-mix(in srgb, var(--color-text) 88%, transparent);`) },
+              h("div", { key: "26", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.body1?.col ?? ""}; grid-row:${V.sheet?.body1?.row ?? ""}; --d:${V.sheet?.body1?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:color-mix(in srgb, var(--color-text) 88%, transparent);`) },
                 "\n      ",
                 h("span", { key: "1|5.36tydg", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
                   "01 //"
@@ -783,7 +788,7 @@
                 "\n    "
               ),
               "\n    ",
-              h("div", { key: "28", className: "sheet-mod", style: S(`grid-column:${V.sheet?.body2?.col ?? ""}; grid-row:${V.sheet?.body2?.row ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:color-mix(in srgb, var(--color-text) 88%, transparent);`) },
+              h("div", { key: "28", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.body2?.col ?? ""}; grid-row:${V.sheet?.body2?.row ?? ""}; --d:${V.sheet?.body2?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:color-mix(in srgb, var(--color-text) 88%, transparent);`) },
                 "\n      ",
                 h("span", { key: "1|5.36uq3p", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
                   "02 //"
@@ -794,7 +799,7 @@
                 "\n    "
               ),
               "\n    ",
-              h("div", { key: "30", className: "sheet-mod", style: S(`grid-column:${V.sheet?.body3?.col ?? ""}; grid-row:${V.sheet?.body3?.row ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:color-mix(in srgb, var(--color-text) 88%, transparent);`) },
+              h("div", { key: "30", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.body3?.col ?? ""}; grid-row:${V.sheet?.body3?.row ?? ""}; --d:${V.sheet?.body3?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:color-mix(in srgb, var(--color-text) 88%, transparent);`) },
                 "\n      ",
                 h("span", { key: "1|5.36vhty", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
                   "03 //"
@@ -805,7 +810,7 @@
                 "\n    "
               ),
               "\n    ",
-              h("aside", { key: "32", className: "sheet-mod", style: S(`grid-column:${V.sheet?.aside?.col ?? ""}; grid-row:${V.sheet?.aside?.row ?? ""}; display:flex; flex-direction:column; gap:20px; padding:22px; font-size:12.5px; line-height:20px; color:var(--color-neutral-700);`) },
+              h("aside", { key: "32", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.aside?.col ?? ""}; grid-row:${V.sheet?.aside?.row ?? ""}; --d:${V.sheet?.aside?.delay ?? ""}; display:flex; flex-direction:column; gap:20px; padding:22px; font-size:12.5px; line-height:20px; color:var(--color-neutral-700);`) },
                 "\n      ",
                 (V.marginalia ? h(F,{key:1},
                   "\n        ",
@@ -858,27 +863,52 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("figure", { key: "35", className: "plate sheet-mod sheet-plate", style: S(`grid-column:${V.sheet?.detailA?.col ?? ""}; grid-row:${V.sheet?.detailA?.row ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
-                h("image-slot", { key: "0", id: V.current?.detailSlotA, shape: "rect", placeholder: "Detail: drawing or interface", style: {"width":"100%","height":"100%"} })
-              ),
-              "\n    ",
-              h("figure", { key: "37", className: "plate sheet-mod sheet-plate", style: S(`grid-column:${V.sheet?.detailB?.col ?? ""}; grid-row:${V.sheet?.detailB?.row ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
-                h("image-slot", { key: "0", id: V.current?.detailSlotB, shape: "rect", placeholder: "Detail: process or site", style: {"width":"100%","height":"100%"} })
-              ),
-              "\n    ",
-              h("p", { key: "39|97.76h6dp", className: "sheet-mod", style: S(`grid-column:${V.sheet?.detailCaption?.col ?? ""}; grid-row:${V.sheet?.detailCaption?.row ?? ""}; margin:0; padding:11px 22px; font-size:13px; line-height:20px; color:var(--color-neutral-700);`) },
-                h("span", { key: "0|10.bamrr4", style: {"color":"var(--color-accent)"} },
-                  "Figs. 1–2."
+              h("figure", { key: "35", className: "plate sheet-mod sheet-plate", "data-enter": "", onMouseEnter: V.sheet?.detailA?.move, onMouseMove: V.sheet?.detailA?.move, onMouseLeave: V.sheet?.detailA?.leave, style: S(`grid-column:${V.sheet?.detailA?.col ?? ""}; grid-row:${V.sheet?.detailA?.row ?? ""}; --d:${V.sheet?.detailA?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
+                "\n      ",
+                h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
+                  "+"
                 ),
-                " Working states. Left, the drawing or interface; right, where it was made."
+                "\n      ",
+                h("image-slot", { key: "3", id: V.current?.detailSlotA, shape: "rect", placeholder: "Detail: drawing or interface", style: {"width":"100%","height":"100%"} }),
+                "\n      ",
+                h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
+                  "+"
+                ),
+                "\n    "
+              ),
+              "\n    ",
+              h("figure", { key: "37", className: "plate sheet-mod sheet-plate", "data-enter": "", onMouseEnter: V.sheet?.detailB?.move, onMouseMove: V.sheet?.detailB?.move, onMouseLeave: V.sheet?.detailB?.leave, style: S(`grid-column:${V.sheet?.detailB?.col ?? ""}; grid-row:${V.sheet?.detailB?.row ?? ""}; --d:${V.sheet?.detailB?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
+                "\n      ",
+                h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
+                  "+"
+                ),
+                "\n      ",
+                h("image-slot", { key: "3", id: V.current?.detailSlotB, shape: "rect", placeholder: "Detail: process or site", style: {"width":"100%","height":"100%"} }),
+                "\n      ",
+                h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
+                  "+"
+                ),
+                "\n    "
+              ),
+              "\n    ",
+              h("p", { key: "39|148.mwbgpl", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.detailCaption?.col ?? ""}; grid-row:${V.sheet?.detailCaption?.row ?? ""}; --d:${V.sheet?.detailCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
+                h("span", { key: "0|97.76h6dp", style: {"minWidth":"0"} },
+                  h("span", { key: "0|10.bamrr4", style: {"color":"var(--color-accent)"} },
+                    "Figs. 1–2."
+                  ),
+                  " Working states. Left, the drawing or interface; right, where it was made."
+                ),
+                h("span", { key: "1|25.ibc6df", style: {"flex":"none","color":"var(--color-neutral-600)","whiteSpace":"nowrap"} },
+                  h(F,{key:0},"",I(V.sheet?.detailReadout,1),"")
+                )
               ),
               "\n\n    ",
               "\n    ",
-              h("button", { key: "42|24.1chn43n", className: "sheet-mod", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navBack?.col ?? ""}; grid-row:${V.sheet?.navBack?.row ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
+              h("button", { key: "42|24.1chn43n", className: "sheet-mod", "data-enter": "", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navBack?.col ?? ""}; grid-row:${V.sheet?.navBack?.row ?? ""}; --d:${V.sheet?.navBack?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
                 h(F,{key:0},"← ",I(V.current?.backWord,1),"")
               ),
               "\n    ",
-              h("button", { key: "44|110.pyry3", className: "sheet-mod", onClick: V.openNext, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navNext?.col ?? ""}; grid-row:${V.sheet?.navNext?.row ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:11px 22px; text-align:right; color:var(--color-text); background:var(--color-bg);`) },
+              h("button", { key: "44|110.pyry3", className: "sheet-mod", "data-enter": "", onClick: V.openNext, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navNext?.col ?? ""}; grid-row:${V.sheet?.navNext?.row ?? ""}; --d:${V.sheet?.navNext?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:11px 22px; text-align:right; color:var(--color-text); background:var(--color-bg);`) },
                 "\n      ",
                 h("span", { key: "1|47.13c0pry", style: {"fontSize":"11px","lineHeight":"14px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   h(F,{key:0},"Next · ",I(V.next?.kickerWord,1)," ",I(V.next?.numeral,3),"")
@@ -889,6 +919,15 @@
                 ),
                 "\n    "
               ),
+              "\n\n    ",
+              "\n    ",
+              h("div", { key: "47", "aria-hidden": "true", style: S(`position:absolute; z-index:4; pointer-events:none; left:0; right:0; height:1px; background:var(--color-text); top:${V.sheet?.guides?.top ?? ""}; opacity:${V.sheet?.guides?.on ?? ""}; transition:opacity 200ms ease;`) }),
+              "\n    ",
+              h("div", { key: "49", "aria-hidden": "true", style: S(`position:absolute; z-index:4; pointer-events:none; left:0; right:0; height:1px; background:var(--color-text); top:${V.sheet?.guides?.bottom ?? ""}; opacity:${V.sheet?.guides?.on ?? ""}; transition:opacity 200ms ease;`) }),
+              "\n    ",
+              h("div", { key: "51", "aria-hidden": "true", style: S(`position:absolute; z-index:4; pointer-events:none; top:0; bottom:0; width:1px; background:var(--color-text); left:${V.sheet?.guides?.left ?? ""}; opacity:${V.sheet?.guides?.on ?? ""}; transition:opacity 200ms ease;`) }),
+              "\n    ",
+              h("div", { key: "53", "aria-hidden": "true", style: S(`position:absolute; z-index:4; pointer-events:none; top:0; bottom:0; width:1px; background:var(--color-text); left:${V.sheet?.guides?.right ?? ""}; opacity:${V.sheet?.guides?.on ?? ""}; transition:opacity 200ms ease;`) }),
               "\n    "
             ),
             "\n  "
@@ -993,6 +1032,12 @@
     // drawing stacked, chosen off state.narrow (window.innerWidth < 1000). Both are written as plain
     // literals so tools/check-sheet-grid.mjs can read them without running this file, and the template
     // binds sheet.<name>.col / .row rather than carrying any span of its own.
+    // The plot-in stagger: 40ms per row of a module's starting row, so the sheet inks itself top to
+    // bottom. The table holds the raw figure; the IntersectionObserver rebases it to whichever module
+    // of the batch comes first and caps what is left, so the last module of any batch starts within a
+    // second of the first, whether that batch is the opening screenful or one module arriving on scroll.
+    PLOT_STEP = 40;
+    PLOT_CAP = 1000;
     SHEET_WIDE = {
       back:          { col: '1 / 7',   row: '1 / 2' },
       header:        { col: '1 / 15',  row: '3 / 11' },
@@ -1119,6 +1164,12 @@
     morphTexts(olds) {
       this.finishMorph(olds.layer);
       const root = this.rootRef.current, main = root && root.querySelector('main[data-screen-label]'); if (!main) return;
+      // the morph is the entry animation for whatever it carries: a module holding a morph target must
+      // not still be under its plot-in ground while its text is flying in, so those modules land drawn
+      main.querySelectorAll('[data-morph],[data-shape]').forEach((el) => {
+        const mod = el.closest('[data-enter]'); if (!mod) return;
+        mod.style.setProperty('--d', '0ms'); mod.setAttribute('data-enter', 'in');
+      });
       const vh = window.innerHeight, dur = 780, easing = 'cubic-bezier(.65,0,.15,1)';
       const layer = olds.layer;
       if (olds.snapshot) { olds.snapshot.animate([{ opacity: 1 }, { opacity: 1, offset: this.slideLeaves ? 0.55 : 0 }, { opacity: 0 }], { duration: this.slideLeaves ? 820 : 560, easing: 'cubic-bezier(.4,0,.6,1)', fill: 'forwards' }); }
@@ -1393,7 +1444,22 @@
       this.onResize(); window.addEventListener('resize', this.onResize);
       window.addEventListener('scroll', this.onScroll, { passive: true });
       window.addEventListener('keydown', this.onKey);
-      this.observer = new IntersectionObserver((entries) => entries.forEach((en) => { if (en.isIntersecting) { en.target.setAttribute('data-enter', 'in'); this.observer.unobserve(en.target); } }), { rootMargin: '0px 0px -8% 0px' });
+      // One scroll brings a batch of modules in at once. The stagger is rebased to the first module of
+      // each batch, so the sheet inks top to bottom wherever the reader joins it instead of making a
+      // module low on the sheet sit out the whole run before it draws: --d still comes from the
+      // placement table, only its origin moves. A module the scroll jumped clean over is revealed too,
+      // or it would sit blank above the reader for good.
+      this.observer = new IntersectionObserver((entries) => {
+        const hit = entries.filter((en) => en.isIntersecting || en.boundingClientRect.bottom < 0);
+        if (!hit.length) return;
+        const ds = hit.map((en) => parseFloat(en.target.style.getPropertyValue('--d')) || 0);
+        const base = Math.min(...ds);
+        hit.forEach((en, i) => {
+          if (en.target.style.getPropertyValue('--d')) en.target.style.setProperty('--d', Math.min(this.PLOT_CAP, Math.max(0, ds[i] - base)) + 'ms');
+          en.target.setAttribute('data-enter', 'in');
+          this.observer.unobserve(en.target);
+        });
+      }, { rootMargin: '100% 0px -8% 0px' });
       this.observeReveals(); this.mountTextEffects(); this.syncParchment(); this.syncHome();
       this.hintTimer = setTimeout(() => this.setState({ hintGone: true }), 9000);
       setTimeout(() => this.measureTabs(), 400);
@@ -1470,8 +1536,29 @@
       };
       this.parchRaf = requestAnimationFrame(tick);
     }
-    componentWillUnmount() { if (this.fog) { this.fog.destroy(); this.fog = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); this.observer?.disconnect(); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
+    componentWillUnmount() { if (this.fog) { this.fog.destroy(); this.fog = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); this.observer?.disconnect(); cancelAnimationFrame(this.cellRaf); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
     observeReveals() { document.querySelectorAll('[data-enter=""]').forEach((el) => this.observer.observe(el)); }
+    // the cursor's cell on the sheet grid, sampled once a frame and only written when the cell actually
+    // changes, so crossing a 48px column re-renders once rather than once per pixel of travel
+    onPlateMove(name, e) {
+      const grid = this.sheetGridRef.current; if (!grid) return;
+      const r = grid.getBoundingClientRect();
+      const x = Math.min(22, Math.max(1, Math.floor((e.clientX - r.left) / (r.width / 22)) + 1));
+      const y = Math.max(1, Math.floor((e.clientY - r.top) / 44) + 1);
+      this.lastPlate = name;
+      this.pendingCell = { plate: name, x, y };
+      if (this.cellRaf) return;
+      this.cellRaf = requestAnimationFrame(() => {
+        this.cellRaf = 0;
+        const c = this.pendingCell, s = this.state.cell; if (!c) return;
+        if (s && s.plate === c.plate && s.x === c.x && s.y === c.y) return;
+        this.setState({ cell: c });
+      });
+    }
+    onPlateLeave() {
+      cancelAnimationFrame(this.cellRaf); this.cellRaf = 0; this.pendingCell = null;
+      if (this.state.cell) this.setState({ cell: null });
+    }
     mountTextEffects() {
       if (!window.TextRippling || (this.props.textEffects ?? true) === false || this.morph) return;
       this.trInstances = this.trInstances || [];
@@ -1552,8 +1639,29 @@
       // the sheet's modules, placed off whichever table the width calls for. The template names a module
       // and reads its span back; nothing about where a module sits is written in the markup
       const place = this.state.narrow ? this.SHEET_NARROW : this.SHEET_WIDE;
+      const at = (s) => s.split('/').map((v) => parseInt(v, 10));
       const sheet = {};
-      for (const name of Object.keys(place)) sheet[name] = { col: place[name].col, row: place[name].row };
+      for (const name of Object.keys(place)) {
+        sheet[name] = { col: place[name].col, row: place[name].row,
+          delay: ((at(place[name].row)[0] - 1) * this.PLOT_STEP) + 'ms' };
+      }
+      // hovering a plate carries its own edges across the whole sheet as guide lines, and reads the
+      // cursor's cell back into that plate's caption. The lines are placed off the same table the plate
+      // is, so nothing has to be measured; the last plate is kept so the guides fade out where they were
+      const cur = this.state.cell;
+      const gp = place[(cur && cur.plate) || this.lastPlate || 'hero'];
+      const [gc0, gc1] = at(gp.col), [gr0, gr1] = at(gp.row);
+      const pad2 = (n) => String(n).padStart(2, '0');
+      const readout = cur ? 'x ' + pad2(cur.x) + ' · y ' + pad2(cur.y) : '';
+      sheet.guides = { on: cur ? '1' : '0',
+        top: ((gr0 - 1) * 44) + 'px', bottom: ((gr1 - 1) * 44) + 'px',
+        left: 'calc((100% / 22) * ' + (gc0 - 1) + ')', right: 'calc((100% / 22) * ' + (gc1 - 1) + ')' };
+      sheet.heroReadout = cur && cur.plate === 'hero' ? readout : '';
+      sheet.detailReadout = cur && cur.plate !== 'hero' ? readout : '';
+      for (const name of ['hero', 'detailA', 'detailB']) {
+        sheet[name].move = (e) => this.onPlateMove(name, e);
+        sheet[name].leave = () => this.onPlateLeave();
+      }
       return {
         isHome: view === 'home', showTabs: view !== 'home', goHome: () => this.goHome(),
         homeLayerRef: this.homeLayerRef, homeRollRef: this.homeRollRef, homeCubeRef: this.homeCubeRef, fogLayerRef: this.fogLayerRef, homeHeadRef: this.homeHeadRef, homeFootRef: this.homeFootRef,

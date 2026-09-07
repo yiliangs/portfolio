@@ -186,6 +186,21 @@ if (mono) {
 
       const cls = (item.getAttribute('class') || '').split(/\s+/);
       if (!cls.includes('sheet-mod')) fail('module is not a sheet-mod, so it draws no hairline frame and takes no hover: ' + where(item));
+
+      // the plot-in: data-enter is what the IntersectionObserver watches, --d is the module's stagger
+      if (item.getAttribute('data-enter') !== '') fail('module is not plotted in (needs data-enter=""): ' + where(item));
+      const d = declared(item, '--d');
+      const md = d && BIND.exec(d);
+      if (!d) fail('module has no --d, so it plots in with no stagger: ' + where(item));
+      else if (!md || md[2] !== 'delay') fail('module sets --d to ' + JSON.stringify(d) + ' instead of {{ sheet.<name>.delay }} on ' + where(item));
+      else if (name && md[1] !== name) fail('module places itself from sheet.' + name + ' but takes its stagger from sheet.' + md[1]);
+    }
+
+    // the guides are the only thing allowed out of the grid's flow, and there are four of them
+    if (overlays.length !== 4) fail('expected four plotting guides as absolutely positioned children of the grid, found ' + overlays.length);
+    for (const g of overlays) {
+      if (!declares(g, 'opacity')) fail('a plotting guide never fades: no opacity on ' + where(g));
+      if (declares(g, 'grid-column') || declares(g, 'grid-row')) fail('a plotting guide takes a grid cell; it is meant to be out of flow');
     }
 
     for (const el of [grid, ...grid.querySelectorAll('*')]) {
@@ -208,6 +223,11 @@ if (mono) {
     ['id="{{ current.detailSlotB }}"', 'detail slot B'],
     ['{{ goPageCurrent }}', 'back binding'],
     ['{{ openNext }}', 'next binding'],
+    ['{{ sheet.hero.move }}', 'hero plate pointer readout'],
+    ['{{ sheet.detailA.move }}', 'detail A pointer readout'],
+    ['{{ sheet.detailB.move }}', 'detail B pointer readout'],
+    ['{{ sheet.heroReadout }}', 'hero caption readout'],
+    ['{{ sheet.detailReadout }}', 'detail caption readout'],
   ];
   for (const [needle, label] of hooks) {
     if (!html.includes(needle)) fail('the sheet lost its ' + label + ' hook (' + needle + ')');
