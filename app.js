@@ -289,7 +289,7 @@
                     "GitHub"
                   ),
                   "\n          ",
-                  h("button", { key: "5|2.3hnb2", onClick: V.goCv, style: {"all":"unset","cursor":"pointer","fontFamily":"var(--font-heading)","fontSize":"14px","color":"var(--color-accent)","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp4" },
+                  h("button", { key: "5|2.3hnb2", onClick: V.goCvSerif, style: {"all":"unset","cursor":"pointer","fontFamily":"var(--font-heading)","fontSize":"14px","color":"var(--color-accent)","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp4" },
                     "CV"
                   ),
                   "\n        "
@@ -441,7 +441,7 @@
                   h("a", { key: "1|6.1yz8dag", href: V.cvGithub, style: {"color":"var(--color-text)","textDecorationColor":"var(--color-neutral-600)"} },
                     "github"
                   ),
-                  h("button", { key: "2|2.3ho5a", onClick: V.goCv, style: {"all":"unset","cursor":"pointer","fontFamily":"var(--mono)","fontSize":"13px","color":"var(--color-text)","textDecoration":"underline","textDecorationColor":"var(--color-neutral-600)","textUnderlineOffset":"3px"} },
+                  h("button", { key: "2|2.3ho5a", onClick: V.goCvMono, style: {"all":"unset","cursor":"pointer","fontFamily":"var(--mono)","fontSize":"13px","color":"var(--color-text)","textDecoration":"underline","textDecorationColor":"var(--color-neutral-600)","textUnderlineOffset":"3px"} },
                     "cv"
                   )
                 ),
@@ -490,7 +490,7 @@
                 "github"
               ),
               "\n    ",
-              h("button", { key: "26|2.3ho5a", onClick: V.goCv, style: S(`all:unset; position:relative; grid-column:16 / 23; grid-row:${V.gridContactRow ?? ""}; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:13px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;`), className: "scp6" },
+              h("button", { key: "26|2.3ho5a", onClick: V.goCvMono, style: S(`all:unset; position:relative; grid-column:16 / 23; grid-row:${V.gridContactRow ?? ""}; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:13px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;`), className: "scp6" },
                 "cv"
               ),
               "\n    "
@@ -500,7 +500,7 @@
           "\n  ") : null),
         "\n\n  ",
         "\n  ",
-        (V.isCv ? h(F,{key:21},
+        (V.isCvSerif ? h(F,{key:21},
           "\n  ",
           h("main", { key: "cv", "data-screen-label": "CV", style: {"maxWidth":"min(1040px, 100% - 2 * clamp(24px, 5vw, 72px))","margin":"0 auto","padding":"clamp(32px,5vw,72px) 0","fontFamily":"var(--r-body)","fontSize":"16.5px","lineHeight":"1.7"} },
             "\n\n    ",
@@ -660,7 +660,7 @@
                             h("div", { key: "1", className: "cv-row" },
                               "\n              ",
                               h("p", { key: "1|57.655oo3", style: {"margin":"0"} },
-                                h("span", { key: "0|17.4kap1o", style: {"fontSize":"0.85em","fontWeight":"600","letterSpacing":"0.09em","color":"var(--color-accent-700)"} },
+                                h("span", { key: "0|17.4kap1o", style: {"fontSize":"0.85em","fontWeight":"600","letterSpacing":"0.09em","textTransform":"uppercase","color":"var(--color-accent-700)"} },
                                   h(F,{key:0},"",I(Vii.blk?.heading,1),"")
                                 ),
                                 h("span", { key: "1|14.1yajgni", style: {"marginLeft":"9px","fontSize":"0.92em","fontStyle":"italic","color":"var(--color-neutral-700)"} },
@@ -901,7 +901,412 @@
           "\n  ") : null),
         "\n\n  ",
         "\n  ",
-        (V.isSerif ? h(F,{key:24},
+        (V.isCvMono ? h(F,{key:24},
+          "\n  ",
+          h("main", { key: "cv-mono", "data-screen-label": "CV mono", className: "cvm", style: {"maxWidth":"min(1040px, 100% - 2 * clamp(24px, 5vw, 72px))","margin":"0 auto","boxSizing":"border-box","padding":"clamp(32px,5vw,72px) 22px"} },
+            "\n\n    ",
+            h("button", { key: "1|10.buh750", onClick: V.goPageCurrent, style: {"all":"unset","cursor":"pointer","display":"inline-flex","alignItems":"center","margin":"0 0 28px","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)","transition":"color 200ms ease"}, className: "scp7" },
+              "<- back"
+            ),
+            "\n\n    ",
+            (V.cvLoading ? h(F,{key:3},
+              "\n      ",
+              h("p", { key: "1|7.11jo2ar", style: {"margin":"0","color":"var(--color-neutral-600)"} },
+                "loading"
+              ),
+              "\n    ") : null),
+            "\n    ",
+            (V.cvFailed ? h(F,{key:5},
+              "\n      ",
+              h("p", { key: "1|27.olyuth", style: {"margin":"0"} },
+                "the cv could not be loaded."
+              ),
+              "\n      ",
+              h("p", { key: "3|20.1b15267", style: {"margin":"10px 0 0"} },
+                h("a", { key: "0|13.923bmi", href: V.cvMailto, style: {"color":"var(--color-text)"} },
+                  "ask me for it"
+                )
+              ),
+              "\n    ") : null),
+            "\n\n    ",
+            (V.cvReady ? h(F,{key:7},
+              "\n\n    ",
+              "\n    ",
+              h("header", { key: "2", style: {"display":"flex","alignItems":"flex-start","justifyContent":"space-between","gap":"20px","flexWrap":"wrap"} },
+                "\n      ",
+                h("div", { key: "1", style: {"minWidth":"0"} },
+                  "\n        ",
+                  h("h1", { key: "1|16.rlozbn", style: {"margin":"0","fontFamily":"var(--mono)","fontWeight":"500","fontSize":"clamp(26px,3.4vw,38px)","lineHeight":"1.1","letterSpacing":"-0.03em","color":"var(--color-text)"} },
+                    h(F,{key:0},"",I(V.cvDoc?.name,1),"")
+                  ),
+                  "\n        ",
+                  h("p", { key: "3|22.1yjgoku", style: {"margin":"8px 0 0","fontSize":"12px","color":"var(--color-neutral-600)"} },
+                    h(F,{key:0},"",I(V.cvDoc?.bylineMono,1),"")
+                  ),
+                  "\n      "
+                ),
+                "\n      ",
+                h("div", { key: "3", style: {"display":"flex","flexDirection":"column","alignItems":"flex-end","gap":"3px","fontSize":"12px","lineHeight":"16px"} },
+                  "\n        ",
+                  h(F,{key:1},L(V.cvDoc?.contact).map(function(item,i){
+                    var Vi = Object.assign({}, V, {"cc": item, $index: i});
+                    return h(F,{key:i},
+                      "\n          ",
+                      h("a", { key: "1|10.nuuid9", href: Vi.cc?.href, style: {"color":"var(--color-neutral-700)","textDecorationColor":"var(--color-divider)"} },
+                        h(F,{key:0},"",I(Vi.cc?.t,1),"")
+                      ),
+                      "\n        ");
+                  })),
+                  "\n      "
+                ),
+                "\n    "
+              ),
+              "\n\n    ",
+              (V.cvDoc?.hasProfile ? h(F,{key:4},
+                "\n      ",
+                h("div", { key: "1", className: "cvm-sec cvm-sec-first" },
+                  h("p", { key: "0|6.xjo1kt", className: "cvm-sec-label" },
+                    "// bio"
+                  ),
+                  h("span", { key: "1", "aria-hidden": "true", className: "cvm-rule" })
+                ),
+                "\n      ",
+                h("p", { key: "3|19.1d3l3gj", style: {"margin":"0"} },
+                  h(F,{key:0},"",I(V.cvDoc?.profile,1),"")
+                ),
+                "\n    ") : null),
+              "\n\n    ",
+              (V.cvDoc?.hasWork ? h(F,{key:6},
+                "\n      ",
+                h("div", { key: "1", className: "cvm-sec" },
+                  h("p", { key: "0|13.1af2eob", className: "cvm-sec-label" },
+                    "// experience"
+                  ),
+                  h("span", { key: "1", "aria-hidden": "true", className: "cvm-rule" })
+                ),
+                "\n      ",
+                h(F,{key:3},L(V.cvDoc?.jobs).map(function(item,i){
+                  var Vi = Object.assign({}, V, {"job": item, $index: i});
+                  return h(F,{key:i},
+                    "\n      ",
+                    h("section", { key: "1", style: {"margin":"0 0 32px"} },
+                      "\n        ",
+                      h("div", { key: "1", className: "cvm-row" },
+                        "\n          ",
+                        h("span", { key: "1|15.13580kv", className: "cvm-date" },
+                          h(F,{key:0},"",I(Vi.job?.dates,1),"")
+                        ),
+                        "\n          ",
+                        h("p", { key: "3", style: {"margin":"0","fontWeight":"500","color":"var(--color-text)"} },
+                          h(F,{key:0},L(Vi.job?.units).map(function(item,i){
+                            var Vii = Object.assign({}, Vi, {"u": item, $index: i});
+                            return h(F,{key:i},
+                              h("span", { key: "0|9.97yq4s", style: {"whiteSpace":"nowrap"} },
+                                h(F,{key:0},"",I(Vii.u?.t,1),"")
+                              ),
+                              " ");
+                          })),
+                          (Vi.job?.hasLocation ? h(F,{key:1},
+                            h("span", { key: "0|20.6vfmsu", style: {"fontWeight":"400","color":"var(--color-neutral-600)"} },
+                              h(F,{key:0},"· ",I(Vi.job?.location,1),"")
+                            )) : null)
+                        ),
+                        "\n        "
+                      ),
+                      "\n        ",
+                      (Vi.job?.hasTitleRow ? h(F,{key:3},
+                        "\n          ",
+                        h("div", { key: "1", className: "cvm-row", style: {"margin":"4px 0 0"} },
+                          "\n            ",
+                          h("span", { key: "1|20.1pdh101", className: "cvm-date" },
+                            h(F,{key:0},"",I(Vi.job?.titleDates,1),"")
+                          ),
+                          "\n            ",
+                          h("p", { key: "3|15.1fgppa8", style: {"margin":"0","fontWeight":"500","color":"var(--color-text)"} },
+                            h(F,{key:0},"",I(Vi.job?.title,1),"")
+                          ),
+                          "\n          "
+                        ),
+                        "\n        ") : null),
+                      "\n        ",
+                      (Vi.job?.hasPrior ? h(F,{key:5},
+                        "\n          ",
+                        h("div", { key: "1", className: "cvm-row", style: {"margin":"4px 0 0"} },
+                          "\n            ",
+                          h("span", { key: "1", className: "cvm-date" }),
+                          "\n            ",
+                          h("p", { key: "3|19.6jkler", style: {"margin":"0","fontSize":"0.92em","color":"var(--color-neutral-500)"} },
+                            h(F,{key:0},"",I(Vi.job?.priorMono,1),"")
+                          ),
+                          "\n          "
+                        ),
+                        "\n        ") : null),
+                      "\n        ",
+                      h(F,{key:7},L(Vi.job?.highlights).map(function(item,i){
+                        var Vii = Object.assign({}, Vi, {"hl": item, $index: i});
+                        return h(F,{key:i},
+                          "\n          ",
+                          h("div", { key: "1", className: "cvm-row", style: {"margin":"6px 0 0"} },
+                            h("span", { key: "0", className: "cvm-date" }),
+                            h("p", { key: "1|8.ll1c7d", style: {"margin":"0","color":"var(--color-neutral-700)"} },
+                              h(F,{key:0},"",I(Vii.hl,1),"")
+                            )
+                          ),
+                          "\n        ");
+                      })),
+                      "\n        ",
+                      (Vi.job?.hasFunding ? h(F,{key:9},
+                        "\n          ",
+                        h("div", { key: "1", className: "cvm-row", style: {"margin":"6px 0 0"} },
+                          h("span", { key: "0", className: "cvm-date" }),
+                          h("p", { key: "1|17.qdfuzt", style: {"margin":"0","color":"var(--color-neutral-600)"} },
+                            h(F,{key:0},"",I(Vi.job?.funding,1),"")
+                          )
+                        ),
+                        "\n        ") : null),
+                      "\n        ",
+                      h(F,{key:11},L(Vi.job?.blocks).map(function(item,i){
+                        var Vii = Object.assign({}, Vi, {"blk": item, $index: i});
+                        return h(F,{key:i},
+                          "\n          ",
+                          h("div", { key: "1", style: {"margin":"20px 0 0"} },
+                            "\n            ",
+                            h("div", { key: "1", className: "cvm-row" },
+                              "\n              ",
+                              h("span", { key: "1|16.sx00m7", className: "cvm-date" },
+                                h(F,{key:0},"",I(Vii.blk?.period,1),"")
+                              ),
+                              "\n              ",
+                              h("p", { key: "3", style: {"margin":"0"} },
+                                h("span", { key: "0|21.1s7zsfp", style: {"fontWeight":"500","color":"var(--color-text)"} },
+                                  h(F,{key:0},"### ",I(Vii.blk?.heading,1),"")
+                                ),
+                                (Vii.blk?.hasRole ? h(F,{key:1},
+                                  h("span", { key: "0|17.1rwp7np", style: {"color":"var(--color-neutral-600)"} },
+                                    h(F,{key:0}," · ",I(Vii.blk?.role,1),"")
+                                  )) : null)
+                              ),
+                              "\n            "
+                            ),
+                            "\n            ",
+                            (Vii.blk?.hasIntro ? h(F,{key:3},
+                              "\n              ",
+                              h("div", { key: "1", className: "cvm-row", style: {"margin":"6px 0 0"} },
+                                h("span", { key: "0", className: "cvm-date" }),
+                                h("p", { key: "1|15.92a2dk", style: {"margin":"0","color":"var(--color-neutral-700)"} },
+                                  h(F,{key:0},"",I(Vii.blk?.intro,1),"")
+                                )
+                              ),
+                              "\n            ") : null),
+                            "\n            ",
+                            h(F,{key:5},L(Vii.blk?.entries).map(function(item,i){
+                              var Viii = Object.assign({}, Vii, {"ent": item, $index: i});
+                              return h(F,{key:i},
+                                "\n              ",
+                                h("div", { key: "1", className: "cvm-row", style: {"margin":"8px 0 0"} },
+                                  h("span", { key: "0", className: "cvm-date" }),
+                                  h("p", { key: "1", style: {"margin":"0"} },
+                                    h("span", { key: "0|14.osv4jv", style: {"fontWeight":"500","color":"var(--color-text)"} },
+                                      h(F,{key:0},"",I(Viii.ent?.name,1),"")
+                                    ),
+                                    ": ",
+                                    h(F,{key:2},L(Viii.ent?.parts).map(function(item,i){
+                                      var Viiii = Object.assign({}, Viii, {"run": item, $index: i});
+                                      return h(F,{key:i},
+                                        h("span", { key: "0|11.1s71c3w", style: S(`font-weight:${Viiii.run?.wm ?? ""}; color:${Viiii.run?.cm ?? ""};`) },
+                                          h(F,{key:0},"",I(Viiii.run?.t,1),"")
+                                        ));
+                                    }))
+                                  )
+                                ),
+                                "\n            ");
+                            })),
+                            "\n          "
+                          ),
+                          "\n        ");
+                      })),
+                      "\n        ",
+                      h(F,{key:13},L(Vi.job?.projects).map(function(item,i){
+                        var Vii = Object.assign({}, Vi, {"pr": item, $index: i});
+                        return h(F,{key:i},
+                          "\n          ",
+                          h("div", { key: "1", className: "cvm-row", style: {"margin":"8px 0 0"} },
+                            h("span", { key: "0", className: "cvm-date" }),
+                            h("p", { key: "1", style: {"margin":"0"} },
+                              h("span", { key: "0|13.1nb0yrq", style: {"fontWeight":"500","color":"var(--color-text)"} },
+                                h(F,{key:0},"",I(Vii.pr?.name,1),"")
+                              ),
+                              ": ",
+                              h(F,{key:2},L(Vii.pr?.parts).map(function(item,i){
+                                var Viii = Object.assign({}, Vii, {"run": item, $index: i});
+                                return h(F,{key:i},
+                                  h("span", { key: "0|11.1s71c3w", style: S(`font-weight:${Viii.run?.wm ?? ""}; color:${Viii.run?.cm ?? ""};`) },
+                                    h(F,{key:0},"",I(Viii.run?.t,1),"")
+                                  ));
+                              }))
+                            )
+                          ),
+                          "\n        ");
+                      })),
+                      "\n      "
+                    ),
+                    "\n      ");
+                })),
+                "\n    ") : null),
+              "\n\n    ",
+              (V.cvDoc?.hasResearch ? h(F,{key:8},
+                "\n      ",
+                h("div", { key: "1", className: "cvm-sec" },
+                  h("p", { key: "0|28.1oaxzln", className: "cvm-sec-label" },
+                    "// patent & publications"
+                  ),
+                  h("span", { key: "1", "aria-hidden": "true", className: "cvm-rule" })
+                ),
+                "\n      ",
+                "\n      ",
+                h(F,{key:4},L(V.cvDoc?.research).map(function(item,i){
+                  var Vi = Object.assign({}, V, {"rw": item, $index: i});
+                  return h(F,{key:i},
+                    "\n        ",
+                    h("div", { key: "1", className: "cvm-row", style: {"margin":"0 0 9px"} },
+                      "\n          ",
+                      h("span", { key: "1", className: "cvm-date" },
+                        (Vi.rw?.hasRightMono ? h(F,{key:0},
+                          h(F,{key:0},"",I(Vi.rw?.rightMono,1),"")) : null)
+                      ),
+                      "\n          ",
+                      h("p", { key: "3", style: {"margin":"0"} },
+                        h(F,{key:0},L(Vi.rw?.partsMono).map(function(item,i){
+                          var Vii = Object.assign({}, Vi, {"run": item, $index: i});
+                          return h(F,{key:i},
+                            h("span", { key: "0|11.1s71c3w", style: S(`font-weight:${Vii.run?.wm ?? ""}; color:${Vii.run?.cm ?? ""};`) },
+                              h(F,{key:0},"",I(Vii.run?.t,1),"")
+                            ));
+                        }))
+                      ),
+                      "\n        "
+                    ),
+                    "\n      ");
+                })),
+                "\n    ") : null),
+              "\n\n    ",
+              (V.cvDoc?.hasRecognition ? h(F,{key:10},
+                "\n      ",
+                h("div", { key: "1", className: "cvm-sec" },
+                  h("p", { key: "0|28.1ws7wlw", className: "cvm-sec-label" },
+                    "// recognition & service"
+                  ),
+                  h("span", { key: "1", "aria-hidden": "true", className: "cvm-rule" })
+                ),
+                "\n      ",
+                h(F,{key:3},L(V.cvDoc?.recognition).map(function(item,i){
+                  var Vi = Object.assign({}, V, {"rec": item, $index: i});
+                  return h(F,{key:i},
+                    "\n        ",
+                    h("div", { key: "1", className: "cvm-row", style: {"margin":"0 0 9px"} },
+                      h("span", { key: "0|15.6rvxcr", className: "cvm-date" },
+                        h(F,{key:0},"",I(Vi.rec?.right,1),"")
+                      ),
+                      h("p", { key: "1|14.1euav39", style: {"margin":"0"} },
+                        h(F,{key:0},"",I(Vi.rec?.line,1),"")
+                      )
+                    ),
+                    "\n      ");
+                })),
+                "\n    ") : null),
+              "\n\n    ",
+              (V.cvDoc?.hasTalks ? h(F,{key:12},
+                "\n      ",
+                h("div", { key: "1", className: "cvm-sec" },
+                  h("p", { key: "0|21.1ldbody", className: "cvm-sec-label" },
+                    "// talks & events"
+                  ),
+                  h("span", { key: "1", "aria-hidden": "true", className: "cvm-rule" })
+                ),
+                "\n      ",
+                h(F,{key:3},L(V.cvDoc?.talks).map(function(item,i){
+                  var Vi = Object.assign({}, V, {"tk": item, $index: i});
+                  return h(F,{key:i},
+                    "\n        ",
+                    h("div", { key: "1", className: "cvm-row", style: {"margin":"0 0 9px"} },
+                      h("span", { key: "0|14.14hrylc", className: "cvm-date" },
+                        h(F,{key:0},"",I(Vi.tk?.right,1),"")
+                      ),
+                      h("p", { key: "1|13.d4apoq", style: {"margin":"0"} },
+                        h(F,{key:0},"",I(Vi.tk?.line,1),"")
+                      )
+                    ),
+                    "\n      ");
+                })),
+                "\n    ") : null),
+              "\n\n    ",
+              (V.cvDoc?.hasOss ? h(F,{key:14},
+                "\n      ",
+                h("div", { key: "1", className: "cvm-sec" },
+                  h("p", { key: "0|14.rfw8ti", className: "cvm-sec-label" },
+                    "// open source"
+                  ),
+                  h("span", { key: "1", "aria-hidden": "true", className: "cvm-rule" })
+                ),
+                "\n      ",
+                h(F,{key:3},L(V.cvDoc?.oss).map(function(item,i){
+                  var Vi = Object.assign({}, V, {"os": item, $index: i});
+                  return h(F,{key:i},
+                    "\n        ",
+                    h("div", { key: "1", className: "cvm-row", style: {"margin":"0 0 9px"} },
+                      h("span", { key: "0", className: "cvm-date" }),
+                      h("p", { key: "1|41.12uu07a", style: {"margin":"0"} },
+                        h("span", { key: "0|13.jh3e1y", style: {"fontWeight":"500","color":"var(--color-text)"} },
+                          h(F,{key:0},"",I(Vi.os?.name,1),"")
+                        ),
+                        h(F,{key:1},": ",I(Vi.os?.desc,1),"")
+                      )
+                    ),
+                    "\n      ");
+                })),
+                "\n    ") : null),
+              "\n\n    ",
+              (V.cvDoc?.hasEducation ? h(F,{key:16},
+                "\n      ",
+                h("div", { key: "1", className: "cvm-sec" },
+                  h("p", { key: "0|12.1c8u5b3", className: "cvm-sec-label" },
+                    "// education"
+                  ),
+                  h("span", { key: "1", "aria-hidden": "true", className: "cvm-rule" })
+                ),
+                "\n      ",
+                h(F,{key:3},L(V.cvDoc?.education).map(function(item,i){
+                  var Vi = Object.assign({}, V, {"ed": item, $index: i});
+                  return h(F,{key:i},
+                    "\n        ",
+                    h("div", { key: "1", className: "cvm-row", style: {"margin":"0 0 9px"} },
+                      h("span", { key: "0|14.19ucjze", className: "cvm-date" },
+                        h(F,{key:0},"",I(Vi.ed?.right,1),"")
+                      ),
+                      h("p", { key: "1|62.wby89s", style: {"margin":"0"} },
+                        h("span", { key: "0|20.18k9b4m", style: {"fontWeight":"500","color":"var(--color-text)"} },
+                          h(F,{key:0},"",I(Vi.ed?.institution,1),"")
+                        ),
+                        h("span", { key: "1|3.375m7w", style: {"color":"var(--color-neutral-600)"} },
+                          " · "
+                        ),
+                        h(F,{key:2},"",I(Vi.ed?.rest,1),"")
+                      )
+                    ),
+                    "\n      ");
+                })),
+                "\n    ") : null),
+              "\n\n    ",
+              h("p", { key: "18|22.1w6fhve", style: {"margin":"40px 0 0","fontSize":"12px","color":"var(--color-neutral-600)"} },
+                h(F,{key:0},"",I(V.cvDoc?.footerMono,1),"")
+              ),
+              "\n\n    ") : null),
+            "\n  "
+          ),
+          "\n  ") : null),
+        "\n\n  ",
+        "\n  ",
+        (V.isSerif ? h(F,{key:27},
           "\n  ",
           h("main", { key: V.chapterKey, "data-screen-label": "Chapter", style: {"maxWidth":"1200px","margin":"0 auto","padding":"0 clamp(20px,5vw,72px)","backgroundImage":"radial-gradient(color-mix(in srgb, var(--color-text) 16%, transparent) 1px, transparent 1.1px)","backgroundSize":"28px 28px"} },
             "\n\n    ",
@@ -1087,7 +1492,7 @@
           "\n  ") : null),
         "\n\n  ",
         "\n  ",
-        (V.isMono ? h(F,{key:27},
+        (V.isMono ? h(F,{key:30},
           "\n  ",
           h("main", { key: V.chapterKey, "data-screen-label": "Chapter", style: {"maxWidth":"1160px","margin":"0 auto","padding":"0 clamp(20px,4vw,48px) 88px","fontFamily":"var(--mono)","fontSize":"14px","lineHeight":"22px"} },
             "\n    ",
@@ -1362,7 +1767,7 @@
   // ---- logic (verbatim from design/Portfolio.dc.html) ---------------------------------------
   
   class Component extends DCLogic {
-    state = { view: 'home', page: 'writing', idx: 2, hovered: 2, tab: { left: 0, width: 0 } };
+    state = { view: 'home', page: 'writing', cvReg: 'serif', idx: 2, hovered: 2, tab: { left: 0, width: 0 } };
     contentsRef = React.createRef(); platesRef = React.createRef(); notesRef = React.createRef();
     homeLayerRef = React.createRef(); homeRollRef = React.createRef(); homeCubeRef = React.createRef(); fogLayerRef = React.createRef(); homeHeadRef = React.createRef(); homeFootRef = React.createRef();
     // the home fog lives only on the home view; it fades out (and stops) elsewhere
@@ -1508,16 +1913,17 @@
     num(i) { return (this.props.numerals ?? 'roman') === 'roman' ? this.romans[i] : String(i + 1); }
     reg(i) { return /Research|Writing/.test(this.data[i].kind) ? 'serif' : 'mono'; }
     pageOf(i) { return this.reg(i) === 'mono' ? 'tooling' : 'writing'; }
-    // The CV is a serif document whichever page it was opened from, so it names its own register here
-    // and in transition() below; every other view keeps taking it from the page or the chapter.
-    regOf(view, idx, page) { return view === 'home' || view === 'cv' ? 'serif' : view === 'chapter' ? this.reg(idx) : this.pages[page].reg; }
-    curReg() { const { view, idx, page } = this.state; return this.regOf(view, idx, page); }
+    // The CV carries its own register: the link that opened it decides whether the document is set in
+    // serif or in mono, so cvReg is state the way page and idx are. Every other view keeps taking its
+    // register from the page or the chapter.
+    regOf(view, idx, page, cvReg) { return view === 'cv' ? (cvReg || 'serif') : view === 'home' ? 'serif' : view === 'chapter' ? this.reg(idx) : this.pages[page].reg; }
+    curReg() { const { view, idx, page, cvReg } = this.state; return this.regOf(view, idx, page, cvReg); }
     cover(s) { return s.replace(/\S/g, '·'); }
   
     // dramatic register change: a gold hairline drops at the tab, a paper curtain sweeps out from it, the new page re-typesets underneath
     transition(nextState) {
       this.parchTravel = true; this.cubeLead = false; this.plateLead = false; this.plateFrom = null;
-      const toReg = this.regOf(nextState.view, nextState.idx, nextState.page);
+      const toReg = this.regOf(nextState.view, nextState.idx, nextState.page, nextState.cvReg);
       const sameReg = toReg === this.curReg();
       this.finishMorph();
       this.slideLeaves = !sameReg;
@@ -1791,8 +2197,10 @@
       if (!this.homeKillTimer) this.homeKillTimer = setTimeout(() => { this.homeKillTimer = null; if (this.state.view !== 'home' && this.home) { this.home.destroy(); this.home = null; } }, 2200);
     }
     goPage(page) { this.transition({ view: 'page', page, idx: this.featuredFor[page][0], hovered: this.featuredFor[page][0] }); }
-    // the CV keeps the page it was opened from, so Escape and the back control return there
-    goCv() { this.transition({ view: 'cv', page: this.state.page }); }
+    // the CV keeps the page it was opened from, so Escape and the back control return there, and it
+    // takes the register of the link that opened it: the Research colophon asks for serif, the
+    // Development seams for mono. One document, two typesettings.
+    goCv(reg) { this.transition({ view: 'cv', cvReg: reg, page: this.state.page }); }
     open(i) { this.transition({ view: 'chapter', idx: i, page: this.pageOf(i) }); }
     scrollTo(ref) { const el = ref.current; if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: 'smooth' }); }
     go(ref) { if (this.state.view !== 'page') { this.setState({ view: 'page', page: this.pageOf(this.state.idx) }, () => setTimeout(() => this.scrollTo(ref), 60)); } else this.scrollTo(ref); }
@@ -2054,16 +2462,25 @@
         const glued = /[A-Za-z]/.test(before ? Array.from(before).pop() : '');
         const year = m[0].length === 4 && (m[0].slice(0, 2) === '19' || m[0].slice(0, 2) === '20');
         if (m.index > last) out.push(this.cvRun(text.slice(last, m.index)));
-        out.push(this.cvRun(m[0], glued || year ? null : '600'));
+        out.push(this.cvRun(m[0], glued || year ? 'plain' : 'strong'));
         last = m.index + m[0].length;
       }
       if (last < text.length) out.push(this.cvRun(text.slice(last)));
       return out;
     }
-    // one styled run of a line. Every field is a CSS value, so the template can set it without asking
-    // what it means; "inherit" is how a run says it wants the line's own treatment.
-    cvRun(t, w, fs, c) { return { t, w: w || 'inherit', fs: fs || 'inherit', c: c || 'inherit' }; }
-    CV_MUTED = 'var(--color-neutral-700)';
+    // One run of a line, drawn for both registers. Which runs carry emphasis is decided once, here;
+    // the second set of fields is that same decision rendered in the other typeface, not a second
+    // decision. w / fs / c are what the serif document sets a run in, wm / cm what the mono one does.
+    // The mono document never slants: Geist Mono ships no italic and a synthesised one reads as a
+    // rendering fault on a drawing sheet, so an italic venue becomes a plain one and a status tag
+    // says what it is with brackets instead.
+    CV_KINDS = {
+      plain:  { w: 'inherit', fs: 'inherit', c: 'inherit',                  wm: 'inherit', cm: 'inherit' },
+      strong: { w: '600',     fs: 'inherit', c: 'inherit',                  wm: '500',     cm: 'var(--color-text)' },
+      em:     { w: 'inherit', fs: 'italic',  c: 'inherit',                  wm: 'inherit', cm: 'inherit' },
+      tag:    { w: 'inherit', fs: 'italic',  c: 'var(--color-neutral-700)', wm: 'inherit', cm: 'var(--color-neutral-600)' },
+    };
+    cvRun(t, kind) { return { t, ...(this.CV_KINDS[kind] || this.CV_KINDS.plain) }; }
   
     cvModel(cv) {
       if (!cv) return null;
@@ -2080,18 +2497,23 @@
         // prior titles run oldest to newest with their start years: history, at a quarter of the space
         const prior = prog.slice(1).reverse()
           .map((t) => t.title + ' ' + String(t.start || '').slice(0, 4)).join(' → ');
+        // the mono register is typed, not set: the year leads and the arrow is two ASCII characters
+        const priorMono = prog.slice(1).reverse()
+          .map((t) => String(t.start || '').slice(0, 4) + ' ' + t.title).join(' -> ');
         return {
           units: units.map((u, i) => ({ t: u, loc: i === units.length - 1 && j.location ? ', ' + j.location : '' })),
+          location: j.location || '', hasLocation: !!j.location,
           dates: this.prettyRange(j.start, j.end),
           hasTitleRow: !!(prog.length || j.role),
           title: prog.length ? prog[0].title : (j.role || ''),
           // a single-title job has no dates of its own to show, so the employment qualifier takes the rail
           titleDates: prog.length ? this.prettyRange(prog[0].start, prog[0].end) : (j.employment || ''),
-          hasPrior: !!prior, prior,
+          hasPrior: !!prior, prior, priorMono,
           highlights: j.highlights || [],
           hasFunding: !!j.funding, funding: j.funding || '',
+          // the heading stays as it was written; the serif document is the one that shouts it, in CSS
           blocks: (j.blocks || []).map((b) => ({
-            heading: String(b.heading || '').toUpperCase(), role: b.role || '', period: b.period || '',
+            heading: b.heading || '', role: b.role || '', hasRole: !!b.role, period: b.period || '',
             hasIntro: !!b.intro, intro: b.intro || '',
             entries: (b.entries || []).map((e) => ({ name: e.name, parts: this.emphasizeMetrics(e.desc) })),
           })),
@@ -2101,32 +2523,57 @@
         };
       });
   
-      // the patent is set in the same grammar as a publication, and both share one section
+      // The patent is set in the same grammar as a publication, and both share one section. Each row
+      // is built once and drawn twice: the serif document punctuates with periods and a parenthesised
+      // status, the mono one with middots and a bracketed tag, off the same fields.
       const research = [];
       for (const p of cv.patents || []) {
-        const parts = [this.cvRun((p.title || '') + '. ')];
-        if (p.role) parts.push(this.cvRun(p.role + '. ', '600'));
         const facts = [];
         if (p.application_no) facts.push('US patent application ' + String(p.application_no).replace('US ', ''));
         if (p.claims && p.claims.total != null) facts.push(p.claims.total + ' claims');
-        if (facts.length) parts.push(this.cvRun(facts.join(', ') + '. '));
-        if (p.status) parts.push(this.cvRun('(' + p.status + ')', null, 'italic', this.CV_MUTED));
-        research.push({ parts, right: p.filed ? 'filed ' + this.prettyDate(p.filed) : '' });
+        const parts = [this.cvRun((p.title || '') + '. ')];
+        const partsMono = [this.cvRun(p.title || '')];
+        if (p.role) {
+          parts.push(this.cvRun(p.role + '. ', 'strong'));
+          partsMono.push(this.cvRun(' · '), this.cvRun(p.role, 'strong'));
+        }
+        if (facts.length) {
+          parts.push(this.cvRun(facts.join(', ') + '. '));
+          partsMono.push(this.cvRun(' · ' + facts.join(', ')));
+        }
+        if (p.status) {
+          parts.push(this.cvRun('(' + p.status + ')', 'tag'));
+          partsMono.push(this.cvRun(' '), this.cvRun('[' + p.status + ']', 'tag'));
+        }
+        research.push({
+          parts, partsMono,
+          right: p.filed ? 'filed ' + this.prettyDate(p.filed) : '',
+          rightMono: p.filed ? 'filed ' + String(p.filed).slice(0, 7) : '', hasRightMono: !!p.filed,
+        });
       }
       for (const p of cv.publications || []) {
         const published = p.status === 'published';
+        const venue = (p.venue || '') + (p.volume ? ', ' + p.volume : '');
+        // an unpublished paper carries an honest status tag and no year, so nothing reads as published
+        const tag = p.venue_short ? (p.status || '') + ', ' + p.venue_short : (p.type || '') + ', ' + (p.status || '');
+        const tagMono = p.venue_short ? (p.status || '') + ' · ' + p.venue_short : (p.type || '') + ' · ' + (p.status || '');
         const parts = [this.cvRun((p.title || '') + '. ')];
-        if (p.position) parts.push(this.cvRun(p.position + '. ', '600'));
+        const partsMono = [this.cvRun(p.title || '')];
+        if (p.position) {
+          parts.push(this.cvRun(p.position + '. ', 'strong'));
+          partsMono.push(this.cvRun(' · '), this.cvRun(p.position, 'strong'));
+        }
         if (published) {
-          parts.push(this.cvRun(p.venue || '', null, 'italic'));
+          parts.push(this.cvRun(p.venue || '', 'em'));
           if (p.volume) parts.push(this.cvRun(', ' + p.volume));
           parts.push(this.cvRun('.'));
+          partsMono.push(this.cvRun(' · ' + venue));
         } else {
-          // an unpublished paper carries an honest status tag and no year, so nothing reads as published
-          const tag = p.venue_short ? (p.status || '') + ', ' + p.venue_short : (p.type || '') + ', ' + (p.status || '');
-          parts.push(this.cvRun('(' + tag + ')', null, 'italic', this.CV_MUTED));
+          parts.push(this.cvRun('(' + tag + ')', 'tag'));
+          partsMono.push(this.cvRun(' '), this.cvRun('[' + tagMono + ']', 'tag'));
         }
-        research.push({ parts, right: published ? (p.year || '') : '' });
+        const year = published ? (p.year || '') : '';
+        research.push({ parts, partsMono, right: year, rightMono: year, hasRightMono: !!year });
       }
   
       // strict reverse chronology across both lists; within a year, recognition before service
@@ -2147,9 +2594,15 @@
         right: this.prettyRange(e.start, e.end),
       }));
       const stamp = cv.source_date ? this.prettyDate(cv.source_date) : '';
+      // the mono document stamps itself the way the sheet register stamps everything: the raw date, and
+      // the commit the facts were read at, because a drawing that cannot be traced to its issue is a sketch
+      const bylineMono = ['>_ cv', cv.source_date ? 'rev ' + String(cv.source_date).slice(0, 7) : '', 'issued from cv.json']
+        .filter(Boolean).join(' · ');
+      const footerMono = [(basics.name || '').toLowerCase(), cv.source_date || '',
+        cv.source_commit ? 'cv.json @ ' + cv.source_commit : ''].filter(Boolean).join(' · ');
   
       return {
-        name: basics.name || '', contact,
+        name: basics.name || '', contact, bylineMono, footerMono,
         hasProfile: !!cv.profile, profile: cv.profile || '',
         hasWork: jobs.length > 0, jobs,
         hasResearch: research.length > 0, research,
@@ -2251,6 +2704,7 @@
       const cvData = this.state.cvData, cvViews = this.cvViews(cvData);
       const cvBasics = (cvData && cvData.basics) || {}, cvLinks = cvBasics.links || {};
       const cvEmail = cvBasics.email || this.CONTACT.email;
+      const cvReg = this.state.cvReg || 'serif';
       // the sheet's modules, placed off whichever table the width calls for. The template names a module
       // and reads its span back; nothing about where a module sits is written in the markup
       const place = this.state.narrow ? this.SHEET_NARROW : this.SHEET_WIDE;
@@ -2283,7 +2737,8 @@
         goToolingFromCube: () => { this.goPage('tooling'); this.cubeLead = true; },
         homeCubeOn: () => { if (this.home) this.home.setHover(true); }, homeCubeOff: () => { if (this.home) this.home.setHover(false); },
         isPage: view === 'page', marginalia, page, pageReg: page.reg, pageKey: pageKey, pageLabel: page.label,
-        isCv: view === 'cv', goCv: () => this.goCv(), cvDoc: cvViews.doc,
+        isCvSerif: view === 'cv' && cvReg === 'serif', isCvMono: view === 'cv' && cvReg === 'mono',
+        goCvSerif: () => this.goCv('serif'), goCvMono: () => this.goCv('mono'), cvDoc: cvViews.doc,
         cvReady: !!cvData, cvLoading: !cvData && !this.state.cvError, cvFailed: !cvData && !!this.state.cvError,
         cvEmail, cvMailto: 'mailto:' + cvEmail, cvGithub: cvLinks.github || this.CONTACT.github,
         isSerifPage: view === 'page' && page.reg === 'serif', isMonoPage: view === 'page' && page.reg === 'mono',

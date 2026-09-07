@@ -91,10 +91,46 @@
       .cv-sec { margin-top: 32px; }
       .cv-job { margin-bottom: 26px; }
     }
+    /* The same document in the Development register: typed rather than set. The rail changes sides,
+       because the landing's dated index reads left to right from its date and this is the same
+       drawing; sections are commented rather than titled; and the sheet carries the landing's own
+       column hairlines. Only the vertical rules are drawn: nothing in a flowing document sits on a
+       44px module, so the horizontal ones would cut the text rather than measure it. */
+    .cvm { font-family: var(--mono); font-size: 14px; line-height: 1.7; color: var(--color-neutral-800);
+      background-image: linear-gradient(to right, color-mix(in srgb, var(--color-text) 12%, transparent) 0 1px, transparent 1px);
+      background-size: calc(100% / 22) 100%;
+      border-left: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent);
+      border-right: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent); }
+    /* 20ch, not 13: the longest thing the rail carries is a job's range, "Jul 2021 – Sep 2023", and a
+       column too narrow for it does not wrap, it overprints the entry beside it */
+    .cvm-row { display: grid; grid-template-columns: 20ch minmax(0,1fr); column-gap: 18px; align-items: baseline; }
+    /* a sub-line leaves the rail empty rather than repeating the date, which is what puts every body
+       column on one edge; on the narrow page an empty rail has nothing to hold and goes away */
+    .cvm-date { color: var(--color-neutral-600); white-space: nowrap; }
+    .cvm-sec { margin: 44px 0 14px; }
+    .cvm-sec-first { margin-top: 36px; }
+    .cvm-sec-label { margin: 0 0 8px; color: var(--color-neutral-600); }
+    .cvm-rule { display: block; height: 1px; background: color-mix(in srgb, var(--color-text) 16%, transparent); }
+    @media (max-width: 700px) {
+      .cvm-row { grid-template-columns: minmax(0,1fr); }
+      .cvm-date { margin-bottom: 2px; }
+      .cvm-date:empty { display: none; }
+      .cvm-sec { margin-top: 30px; }
+    }
     @media print {
       [data-print="hide"] { display: none !important; }
+      .sc-host > div { background: #ffffff !important; }
       main[data-screen-label="CV"] { max-width: none; padding: 0; font-size: 10pt; }
       main[data-screen-label="CV"] a { color: inherit; text-decoration: none; }
+      /* the mono CV is set on a dark sheet. Print re-tunes its tokens rather than flattening every
+         colour to black, so the rail, the section labels and the emphasis keep their hierarchy */
+      main[data-screen-label="CV mono"].cvm {
+        max-width: none; padding: 0; font-size: 10pt; border: 0;
+        background: #ffffff; background-image: none; color: #1a1a1a;
+        --color-text: #000000; --color-neutral-800: #1a1a1a; --color-neutral-700: #3a3a3a;
+        --color-neutral-600: #5a5a5a; --color-neutral-500: #767676; --color-divider: #cccccc;
+      }
+      main[data-screen-label="CV mono"] a { color: inherit; text-decoration: none; }
     }
   </style>
 </helmet>
@@ -198,7 +234,7 @@
         <span style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:clamp(20px, 3vw, 44px);">
           <a href="{{ cvMailto }}" style="color:var(--color-accent); text-decoration:none; letter-spacing:0.06em; display:flex; align-items:center; line-height:1; transition:color 200ms ease, letter-spacing 200ms ease;" style-hover="font-family:Cinzel, var(--font-heading); color:var(--color-accent-700); letter-spacing:0.1em">Email</a>
           <a href="{{ cvGithub }}" style="color:var(--color-accent); text-decoration:none; letter-spacing:0.06em; display:flex; align-items:center; line-height:1; transition:color 200ms ease, letter-spacing 200ms ease;" style-hover="font-family:Cinzel, var(--font-heading); color:var(--color-accent-700); letter-spacing:0.1em">GitHub</a>
-          <button onClick="{{ goCv }}" style="all:unset; cursor:pointer; font-family:var(--font-heading); font-size:14px; color:var(--color-accent); letter-spacing:0.06em; display:flex; align-items:center; line-height:1; transition:color 200ms ease, letter-spacing 200ms ease;" style-hover="font-family:Cinzel, var(--font-heading); color:var(--color-accent-700); letter-spacing:0.1em">CV</button>
+          <button onClick="{{ goCvSerif }}" style="all:unset; cursor:pointer; font-family:var(--font-heading); font-size:14px; color:var(--color-accent); letter-spacing:0.06em; display:flex; align-items:center; line-height:1; transition:color 200ms ease, letter-spacing 200ms ease;" style-hover="font-family:Cinzel, var(--font-heading); color:var(--color-accent-700); letter-spacing:0.1em">CV</button>
         </span>
       </nav>
       <div style="position:relative; z-index:2; align-self:stretch; min-height:0; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); grid-template-rows:repeat(3, minmax(0,1fr)); gap:28px 24px; padding:28px 0;">
@@ -259,7 +295,7 @@
       <p data-morph="notes-kicker" style="margin:0 0 22px; font-size:12px; letter-spacing:0.08em; color:var(--color-neutral-600);">who</p>
       <p data-morph="notes-title" style="margin:0; font-weight:500; letter-spacing:-0.02em;">{{ page.notesTitle }}</p>
       <p data-morph="notes-body" style="margin:22px 0 0; color:var(--color-neutral-700); max-width:44ch;">I spent my first years in practice drawing stair details and wondering why the software fought me. The next years were spent fixing that, first inside studios and then in research groups. I care about drawings as a language, about tools that stay out of the way, and about writing plainly on subjects that tempt people to be grand.</p>
-      <p style="margin:22px 0 0; display:flex; gap:20px; font-size:13px;"><a href="{{ cvMailto }}" style="color:var(--color-text); text-decoration-color:var(--color-neutral-600);">mail</a><a href="{{ cvGithub }}" style="color:var(--color-text); text-decoration-color:var(--color-neutral-600);">github</a><button onClick="{{ goCv }}" style="all:unset; cursor:pointer; font-family:var(--mono); font-size:13px; color:var(--color-text); text-decoration:underline; text-decoration-color:var(--color-neutral-600); text-underline-offset:3px;">cv</button></p>
+      <p style="margin:22px 0 0; display:flex; gap:20px; font-size:13px;"><a href="{{ cvMailto }}" style="color:var(--color-text); text-decoration-color:var(--color-neutral-600);">mail</a><a href="{{ cvGithub }}" style="color:var(--color-text); text-decoration-color:var(--color-neutral-600);">github</a><button onClick="{{ goCvMono }}" style="all:unset; cursor:pointer; font-family:var(--mono); font-size:13px; color:var(--color-text); text-decoration:underline; text-decoration-color:var(--color-neutral-600); text-underline-offset:3px;">cv</button></p>
     </section>
     <ol style="grid-column:12 / 23; grid-row:{{ gridAuthorRow }}; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); padding:22px; box-sizing:border-box; list-style:none; margin:0; font-feature-settings:'tnum' 1;">
       <sc-for list="{{ cv }}" as="c" hint-placeholder-count="5">
@@ -278,7 +314,7 @@
          by the two rows this band takes rather than the band naming its own place. -->
     <a href="{{ cvMailto }}" style="grid-column:1 / 8; grid-row:{{ gridContactRow }}; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:13px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;" style-hover="box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text)">email</a>
     <a href="{{ cvGithub }}" style="grid-column:8 / 16; grid-row:{{ gridContactRow }}; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:13px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;" style-hover="box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text)">github</a>
-    <button onClick="{{ goCv }}" style="all:unset; position:relative; grid-column:16 / 23; grid-row:{{ gridContactRow }}; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:13px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;" style-hover="box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text)">cv</button>
+    <button onClick="{{ goCvMono }}" style="all:unset; position:relative; grid-column:16 / 23; grid-row:{{ gridContactRow }}; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:13px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;" style-hover="box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text)">cv</button>
     </div>
   </main>
   </sc-if>
@@ -291,7 +327,7 @@
        the markup below only places what it returns, because the binding language has no room for
        either. Reached from the Research colophon and the Development who-block; left by the brand,
        by Escape, or by the back control. ============ -->
-  <sc-if value="{{ isCv }}" hint-placeholder-val="{{ false }}">
+  <sc-if value="{{ isCvSerif }}" hint-placeholder-val="{{ false }}">
   <main key="cv" data-screen-label="CV" style="max-width:min(1040px, 100% - 2 * clamp(24px, 5vw, 72px)); margin:0 auto; padding:clamp(32px,5vw,72px) 0; font-family:var(--r-body); font-size:16.5px; line-height:1.7;">
 
     <button onClick="{{ goPageCurrent }}" style="all:unset; cursor:pointer; display:inline-flex; align-items:center; margin:0 0 28px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-neutral-600); transition:color 200ms ease;" style-hover="color:var(--color-accent-700)">← Back</button>
@@ -356,7 +392,7 @@
         <sc-for list="{{ job.blocks }}" as="blk" hint-placeholder-count="1">
           <div style="margin:22px 0 0;">
             <div class="cv-row">
-              <p style="margin:0;"><span style="font-size:0.85em; font-weight:600; letter-spacing:0.09em; color:var(--color-accent-700);">{{ blk.heading }}</span><span style="margin-left:9px; font-size:0.92em; font-style:italic; color:var(--color-neutral-700);">{{ blk.role }}</span></p>
+              <p style="margin:0;"><span style="font-size:0.85em; font-weight:600; letter-spacing:0.09em; text-transform:uppercase; color:var(--color-accent-700);">{{ blk.heading }}</span><span style="margin-left:9px; font-size:0.92em; font-style:italic; color:var(--color-neutral-700);">{{ blk.role }}</span></p>
               <span class="cv-date">{{ blk.period }}</span>
             </div>
             <sc-if value="{{ blk.hasIntro }}" hint-placeholder-val="{{ true }}">
@@ -443,6 +479,139 @@
     </sc-if>
 
     <p style="margin:34px 0 0; text-align:center; font-family:var(--mono); font-size:11px; letter-spacing:0.06em; color:var(--color-neutral-600);">{{ cvDoc.footer }}</p>
+
+    </sc-if>
+  </main>
+  </sc-if>
+
+  <!-- ============ CURRICULUM VITAE, DEVELOPMENT REGISTER: the same document as the block above, off
+       the same cv.json and the same cvModel(), typed rather than set. The rail changes sides because
+       the landing's dated index reads out from its date and this is the same drawing; sections are
+       commented rather than titled; emphasis is weight 500 in full ink, because Geist Mono has one
+       weight to spare and no italic at all. Reached from the Development who-block and the contact
+       row; the Research colophon opens the serif one. No fact and no rule is duplicated here: the
+       strings this register punctuates differently arrive as extra fields on the one view model. ============ -->
+  <sc-if value="{{ isCvMono }}" hint-placeholder-val="{{ false }}">
+  <main key="cv-mono" data-screen-label="CV mono" class="cvm" style="max-width:min(1040px, 100% - 2 * clamp(24px, 5vw, 72px)); margin:0 auto; box-sizing:border-box; padding:clamp(32px,5vw,72px) 22px;">
+
+    <button onClick="{{ goPageCurrent }}" style="all:unset; cursor:pointer; display:inline-flex; align-items:center; margin:0 0 28px; font-size:12px; letter-spacing:0.08em; color:var(--color-neutral-600); transition:color 200ms ease;" style-hover="color:var(--color-text)">&lt;- back</button>
+
+    <sc-if value="{{ cvLoading }}" hint-placeholder-val="{{ false }}">
+      <p style="margin:0; color:var(--color-neutral-600);">loading</p>
+    </sc-if>
+    <sc-if value="{{ cvFailed }}" hint-placeholder-val="{{ false }}">
+      <p style="margin:0;">the cv could not be loaded.</p>
+      <p style="margin:10px 0 0;"><a href="{{ cvMailto }}" style="color:var(--color-text);">ask me for it</a></p>
+    </sc-if>
+
+    <sc-if value="{{ cvReady }}" hint-placeholder-val="{{ true }}">
+
+    <!-- the title block of a sheet: who it is, what revision, and where the facts were read -->
+    <header style="display:flex; align-items:flex-start; justify-content:space-between; gap:20px; flex-wrap:wrap;">
+      <div style="min-width:0;">
+        <h1 style="margin:0; font-family:var(--mono); font-weight:500; font-size:clamp(26px,3.4vw,38px); line-height:1.1; letter-spacing:-0.03em; color:var(--color-text);">{{ cvDoc.name }}</h1>
+        <p style="margin:8px 0 0; font-size:12px; color:var(--color-neutral-600);">{{ cvDoc.bylineMono }}</p>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:3px; font-size:12px; line-height:16px;">
+        <sc-for list="{{ cvDoc.contact }}" as="cc" hint-placeholder-count="2">
+          <a href="{{ cc.href }}" style="color:var(--color-neutral-700); text-decoration-color:var(--color-divider);">{{ cc.t }}</a>
+        </sc-for>
+      </div>
+    </header>
+
+    <sc-if value="{{ cvDoc.hasProfile }}" hint-placeholder-val="{{ true }}">
+      <div class="cvm-sec cvm-sec-first"><p class="cvm-sec-label">// bio</p><span aria-hidden="true" class="cvm-rule"></span></div>
+      <p style="margin:0;">{{ cvDoc.profile }}</p>
+    </sc-if>
+
+    <sc-if value="{{ cvDoc.hasWork }}" hint-placeholder-val="{{ true }}">
+      <div class="cvm-sec"><p class="cvm-sec-label">// experience</p><span aria-hidden="true" class="cvm-rule"></span></div>
+      <sc-for list="{{ cvDoc.jobs }}" as="job" hint-placeholder-count="2">
+      <section style="margin:0 0 32px;">
+        <div class="cvm-row">
+          <span class="cvm-date">{{ job.dates }}</span>
+          <p style="margin:0; font-weight:500; color:var(--color-text);"><sc-for list="{{ job.units }}" as="u" hint-placeholder-count="1"><span style="white-space:nowrap;">{{ u.t }}</span> </sc-for><sc-if value="{{ job.hasLocation }}" hint-placeholder-val="{{ true }}"><span style="font-weight:400; color:var(--color-neutral-600);">· {{ job.location }}</span></sc-if></p>
+        </div>
+        <sc-if value="{{ job.hasTitleRow }}" hint-placeholder-val="{{ true }}">
+          <div class="cvm-row" style="margin:4px 0 0;">
+            <span class="cvm-date">{{ job.titleDates }}</span>
+            <p style="margin:0; font-weight:500; color:var(--color-text);">{{ job.title }}</p>
+          </div>
+        </sc-if>
+        <sc-if value="{{ job.hasPrior }}" hint-placeholder-val="{{ false }}">
+          <div class="cvm-row" style="margin:4px 0 0;">
+            <span class="cvm-date"></span>
+            <p style="margin:0; font-size:0.92em; color:var(--color-neutral-500);">{{ job.priorMono }}</p>
+          </div>
+        </sc-if>
+        <sc-for list="{{ job.highlights }}" as="hl" hint-placeholder-count="1">
+          <div class="cvm-row" style="margin:6px 0 0;"><span class="cvm-date"></span><p style="margin:0; color:var(--color-neutral-700);">{{ hl }}</p></div>
+        </sc-for>
+        <sc-if value="{{ job.hasFunding }}" hint-placeholder-val="{{ false }}">
+          <div class="cvm-row" style="margin:6px 0 0;"><span class="cvm-date"></span><p style="margin:0; color:var(--color-neutral-600);">{{ job.funding }}</p></div>
+        </sc-if>
+        <sc-for list="{{ job.blocks }}" as="blk" hint-placeholder-count="1">
+          <div style="margin:20px 0 0;">
+            <div class="cvm-row">
+              <span class="cvm-date">{{ blk.period }}</span>
+              <p style="margin:0;"><span style="font-weight:500; color:var(--color-text);">### {{ blk.heading }}</span><sc-if value="{{ blk.hasRole }}" hint-placeholder-val="{{ true }}"><span style="color:var(--color-neutral-600);"> · {{ blk.role }}</span></sc-if></p>
+            </div>
+            <sc-if value="{{ blk.hasIntro }}" hint-placeholder-val="{{ true }}">
+              <div class="cvm-row" style="margin:6px 0 0;"><span class="cvm-date"></span><p style="margin:0; color:var(--color-neutral-700);">{{ blk.intro }}</p></div>
+            </sc-if>
+            <sc-for list="{{ blk.entries }}" as="ent" hint-placeholder-count="2">
+              <div class="cvm-row" style="margin:8px 0 0;"><span class="cvm-date"></span><p style="margin:0;"><span style="font-weight:500; color:var(--color-text);">{{ ent.name }}</span>: <sc-for list="{{ ent.parts }}" as="run" hint-placeholder-count="1"><span style="font-weight:{{ run.wm }}; color:{{ run.cm }};">{{ run.t }}</span></sc-for></p></div>
+            </sc-for>
+          </div>
+        </sc-for>
+        <sc-for list="{{ job.projects }}" as="pr" hint-placeholder-count="1">
+          <div class="cvm-row" style="margin:8px 0 0;"><span class="cvm-date"></span><p style="margin:0;"><span style="font-weight:500; color:var(--color-text);">{{ pr.name }}</span>: <sc-for list="{{ pr.parts }}" as="run" hint-placeholder-count="1"><span style="font-weight:{{ run.wm }}; color:{{ run.cm }};">{{ run.t }}</span></sc-for></p></div>
+        </sc-for>
+      </section>
+      </sc-for>
+    </sc-if>
+
+    <sc-if value="{{ cvDoc.hasResearch }}" hint-placeholder-val="{{ true }}">
+      <div class="cvm-sec"><p class="cvm-sec-label">// patent &amp; publications</p><span aria-hidden="true" class="cvm-rule"></span></div>
+      <!-- an unpublished paper leaves the rail empty and says so in brackets, so the year column
+           holds only work that actually has a year -->
+      <sc-for list="{{ cvDoc.research }}" as="rw" hint-placeholder-count="4">
+        <div class="cvm-row" style="margin:0 0 9px;">
+          <span class="cvm-date"><sc-if value="{{ rw.hasRightMono }}" hint-placeholder-val="{{ true }}">{{ rw.rightMono }}</sc-if></span>
+          <p style="margin:0;"><sc-for list="{{ rw.partsMono }}" as="run" hint-placeholder-count="3"><span style="font-weight:{{ run.wm }}; color:{{ run.cm }};">{{ run.t }}</span></sc-for></p>
+        </div>
+      </sc-for>
+    </sc-if>
+
+    <sc-if value="{{ cvDoc.hasRecognition }}" hint-placeholder-val="{{ true }}">
+      <div class="cvm-sec"><p class="cvm-sec-label">// recognition &amp; service</p><span aria-hidden="true" class="cvm-rule"></span></div>
+      <sc-for list="{{ cvDoc.recognition }}" as="rec" hint-placeholder-count="3">
+        <div class="cvm-row" style="margin:0 0 9px;"><span class="cvm-date">{{ rec.right }}</span><p style="margin:0;">{{ rec.line }}</p></div>
+      </sc-for>
+    </sc-if>
+
+    <sc-if value="{{ cvDoc.hasTalks }}" hint-placeholder-val="{{ true }}">
+      <div class="cvm-sec"><p class="cvm-sec-label">// talks &amp; events</p><span aria-hidden="true" class="cvm-rule"></span></div>
+      <sc-for list="{{ cvDoc.talks }}" as="tk" hint-placeholder-count="4">
+        <div class="cvm-row" style="margin:0 0 9px;"><span class="cvm-date">{{ tk.right }}</span><p style="margin:0;">{{ tk.line }}</p></div>
+      </sc-for>
+    </sc-if>
+
+    <sc-if value="{{ cvDoc.hasOss }}" hint-placeholder-val="{{ true }}">
+      <div class="cvm-sec"><p class="cvm-sec-label">// open source</p><span aria-hidden="true" class="cvm-rule"></span></div>
+      <sc-for list="{{ cvDoc.oss }}" as="os" hint-placeholder-count="1">
+        <div class="cvm-row" style="margin:0 0 9px;"><span class="cvm-date"></span><p style="margin:0;"><span style="font-weight:500; color:var(--color-text);">{{ os.name }}</span>: {{ os.desc }}</p></div>
+      </sc-for>
+    </sc-if>
+
+    <sc-if value="{{ cvDoc.hasEducation }}" hint-placeholder-val="{{ true }}">
+      <div class="cvm-sec"><p class="cvm-sec-label">// education</p><span aria-hidden="true" class="cvm-rule"></span></div>
+      <sc-for list="{{ cvDoc.education }}" as="ed" hint-placeholder-count="2">
+        <div class="cvm-row" style="margin:0 0 9px;"><span class="cvm-date">{{ ed.right }}</span><p style="margin:0;"><span style="font-weight:500; color:var(--color-text);">{{ ed.institution }}</span><span style="color:var(--color-neutral-600);"> · </span>{{ ed.rest }}</p></div>
+      </sc-for>
+    </sc-if>
+
+    <p style="margin:40px 0 0; font-size:12px; color:var(--color-neutral-600);">{{ cvDoc.footerMono }}</p>
 
     </sc-if>
   </main>
@@ -610,7 +779,7 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;textEffects&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Book&quot;},&quot;numerals&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;roman&quot;,&quot;options&quot;:[&quot;roman&quot;,&quot;arabic&quot;],&quot;tsType&quot;:&quot;'roman' | 'arabic'&quot;,&quot;section&quot;:&quot;Book&quot;},&quot;marginalia&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Book&quot;}}">
 class Component extends DCLogic {
-  state = { view: 'home', page: 'writing', idx: 2, hovered: 2, tab: { left: 0, width: 0 } };
+  state = { view: 'home', page: 'writing', cvReg: 'serif', idx: 2, hovered: 2, tab: { left: 0, width: 0 } };
   contentsRef = React.createRef(); platesRef = React.createRef(); notesRef = React.createRef();
   homeLayerRef = React.createRef(); homeRollRef = React.createRef(); homeCubeRef = React.createRef(); fogLayerRef = React.createRef(); homeHeadRef = React.createRef(); homeFootRef = React.createRef();
   // the home fog lives only on the home view; it fades out (and stops) elsewhere
@@ -756,16 +925,17 @@ class Component extends DCLogic {
   num(i) { return (this.props.numerals ?? 'roman') === 'roman' ? this.romans[i] : String(i + 1); }
   reg(i) { return /Research|Writing/.test(this.data[i].kind) ? 'serif' : 'mono'; }
   pageOf(i) { return this.reg(i) === 'mono' ? 'tooling' : 'writing'; }
-  // The CV is a serif document whichever page it was opened from, so it names its own register here
-  // and in transition() below; every other view keeps taking it from the page or the chapter.
-  regOf(view, idx, page) { return view === 'home' || view === 'cv' ? 'serif' : view === 'chapter' ? this.reg(idx) : this.pages[page].reg; }
-  curReg() { const { view, idx, page } = this.state; return this.regOf(view, idx, page); }
+  // The CV carries its own register: the link that opened it decides whether the document is set in
+  // serif or in mono, so cvReg is state the way page and idx are. Every other view keeps taking its
+  // register from the page or the chapter.
+  regOf(view, idx, page, cvReg) { return view === 'cv' ? (cvReg || 'serif') : view === 'home' ? 'serif' : view === 'chapter' ? this.reg(idx) : this.pages[page].reg; }
+  curReg() { const { view, idx, page, cvReg } = this.state; return this.regOf(view, idx, page, cvReg); }
   cover(s) { return s.replace(/\S/g, '·'); }
 
   // dramatic register change: a gold hairline drops at the tab, a paper curtain sweeps out from it, the new page re-typesets underneath
   transition(nextState) {
     this.parchTravel = true; this.cubeLead = false; this.plateLead = false; this.plateFrom = null;
-    const toReg = this.regOf(nextState.view, nextState.idx, nextState.page);
+    const toReg = this.regOf(nextState.view, nextState.idx, nextState.page, nextState.cvReg);
     const sameReg = toReg === this.curReg();
     this.finishMorph();
     this.slideLeaves = !sameReg;
@@ -1039,8 +1209,10 @@ class Component extends DCLogic {
     if (!this.homeKillTimer) this.homeKillTimer = setTimeout(() => { this.homeKillTimer = null; if (this.state.view !== 'home' && this.home) { this.home.destroy(); this.home = null; } }, 2200);
   }
   goPage(page) { this.transition({ view: 'page', page, idx: this.featuredFor[page][0], hovered: this.featuredFor[page][0] }); }
-  // the CV keeps the page it was opened from, so Escape and the back control return there
-  goCv() { this.transition({ view: 'cv', page: this.state.page }); }
+  // the CV keeps the page it was opened from, so Escape and the back control return there, and it
+  // takes the register of the link that opened it: the Research colophon asks for serif, the
+  // Development seams for mono. One document, two typesettings.
+  goCv(reg) { this.transition({ view: 'cv', cvReg: reg, page: this.state.page }); }
   open(i) { this.transition({ view: 'chapter', idx: i, page: this.pageOf(i) }); }
   scrollTo(ref) { const el = ref.current; if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: 'smooth' }); }
   go(ref) { if (this.state.view !== 'page') { this.setState({ view: 'page', page: this.pageOf(this.state.idx) }, () => setTimeout(() => this.scrollTo(ref), 60)); } else this.scrollTo(ref); }
@@ -1302,16 +1474,25 @@ class Component extends DCLogic {
       const glued = /[A-Za-z]/.test(before ? Array.from(before).pop() : '');
       const year = m[0].length === 4 && (m[0].slice(0, 2) === '19' || m[0].slice(0, 2) === '20');
       if (m.index > last) out.push(this.cvRun(text.slice(last, m.index)));
-      out.push(this.cvRun(m[0], glued || year ? null : '600'));
+      out.push(this.cvRun(m[0], glued || year ? 'plain' : 'strong'));
       last = m.index + m[0].length;
     }
     if (last < text.length) out.push(this.cvRun(text.slice(last)));
     return out;
   }
-  // one styled run of a line. Every field is a CSS value, so the template can set it without asking
-  // what it means; "inherit" is how a run says it wants the line's own treatment.
-  cvRun(t, w, fs, c) { return { t, w: w || 'inherit', fs: fs || 'inherit', c: c || 'inherit' }; }
-  CV_MUTED = 'var(--color-neutral-700)';
+  // One run of a line, drawn for both registers. Which runs carry emphasis is decided once, here;
+  // the second set of fields is that same decision rendered in the other typeface, not a second
+  // decision. w / fs / c are what the serif document sets a run in, wm / cm what the mono one does.
+  // The mono document never slants: Geist Mono ships no italic and a synthesised one reads as a
+  // rendering fault on a drawing sheet, so an italic venue becomes a plain one and a status tag
+  // says what it is with brackets instead.
+  CV_KINDS = {
+    plain:  { w: 'inherit', fs: 'inherit', c: 'inherit',                  wm: 'inherit', cm: 'inherit' },
+    strong: { w: '600',     fs: 'inherit', c: 'inherit',                  wm: '500',     cm: 'var(--color-text)' },
+    em:     { w: 'inherit', fs: 'italic',  c: 'inherit',                  wm: 'inherit', cm: 'inherit' },
+    tag:    { w: 'inherit', fs: 'italic',  c: 'var(--color-neutral-700)', wm: 'inherit', cm: 'var(--color-neutral-600)' },
+  };
+  cvRun(t, kind) { return { t, ...(this.CV_KINDS[kind] || this.CV_KINDS.plain) }; }
 
   cvModel(cv) {
     if (!cv) return null;
@@ -1328,18 +1509,23 @@ class Component extends DCLogic {
       // prior titles run oldest to newest with their start years: history, at a quarter of the space
       const prior = prog.slice(1).reverse()
         .map((t) => t.title + ' ' + String(t.start || '').slice(0, 4)).join(' → ');
+      // the mono register is typed, not set: the year leads and the arrow is two ASCII characters
+      const priorMono = prog.slice(1).reverse()
+        .map((t) => String(t.start || '').slice(0, 4) + ' ' + t.title).join(' -> ');
       return {
         units: units.map((u, i) => ({ t: u, loc: i === units.length - 1 && j.location ? ', ' + j.location : '' })),
+        location: j.location || '', hasLocation: !!j.location,
         dates: this.prettyRange(j.start, j.end),
         hasTitleRow: !!(prog.length || j.role),
         title: prog.length ? prog[0].title : (j.role || ''),
         // a single-title job has no dates of its own to show, so the employment qualifier takes the rail
         titleDates: prog.length ? this.prettyRange(prog[0].start, prog[0].end) : (j.employment || ''),
-        hasPrior: !!prior, prior,
+        hasPrior: !!prior, prior, priorMono,
         highlights: j.highlights || [],
         hasFunding: !!j.funding, funding: j.funding || '',
+        // the heading stays as it was written; the serif document is the one that shouts it, in CSS
         blocks: (j.blocks || []).map((b) => ({
-          heading: String(b.heading || '').toUpperCase(), role: b.role || '', period: b.period || '',
+          heading: b.heading || '', role: b.role || '', hasRole: !!b.role, period: b.period || '',
           hasIntro: !!b.intro, intro: b.intro || '',
           entries: (b.entries || []).map((e) => ({ name: e.name, parts: this.emphasizeMetrics(e.desc) })),
         })),
@@ -1349,32 +1535,57 @@ class Component extends DCLogic {
       };
     });
 
-    // the patent is set in the same grammar as a publication, and both share one section
+    // The patent is set in the same grammar as a publication, and both share one section. Each row
+    // is built once and drawn twice: the serif document punctuates with periods and a parenthesised
+    // status, the mono one with middots and a bracketed tag, off the same fields.
     const research = [];
     for (const p of cv.patents || []) {
-      const parts = [this.cvRun((p.title || '') + '. ')];
-      if (p.role) parts.push(this.cvRun(p.role + '. ', '600'));
       const facts = [];
       if (p.application_no) facts.push('US patent application ' + String(p.application_no).replace('US ', ''));
       if (p.claims && p.claims.total != null) facts.push(p.claims.total + ' claims');
-      if (facts.length) parts.push(this.cvRun(facts.join(', ') + '. '));
-      if (p.status) parts.push(this.cvRun('(' + p.status + ')', null, 'italic', this.CV_MUTED));
-      research.push({ parts, right: p.filed ? 'filed ' + this.prettyDate(p.filed) : '' });
+      const parts = [this.cvRun((p.title || '') + '. ')];
+      const partsMono = [this.cvRun(p.title || '')];
+      if (p.role) {
+        parts.push(this.cvRun(p.role + '. ', 'strong'));
+        partsMono.push(this.cvRun(' · '), this.cvRun(p.role, 'strong'));
+      }
+      if (facts.length) {
+        parts.push(this.cvRun(facts.join(', ') + '. '));
+        partsMono.push(this.cvRun(' · ' + facts.join(', ')));
+      }
+      if (p.status) {
+        parts.push(this.cvRun('(' + p.status + ')', 'tag'));
+        partsMono.push(this.cvRun(' '), this.cvRun('[' + p.status + ']', 'tag'));
+      }
+      research.push({
+        parts, partsMono,
+        right: p.filed ? 'filed ' + this.prettyDate(p.filed) : '',
+        rightMono: p.filed ? 'filed ' + String(p.filed).slice(0, 7) : '', hasRightMono: !!p.filed,
+      });
     }
     for (const p of cv.publications || []) {
       const published = p.status === 'published';
+      const venue = (p.venue || '') + (p.volume ? ', ' + p.volume : '');
+      // an unpublished paper carries an honest status tag and no year, so nothing reads as published
+      const tag = p.venue_short ? (p.status || '') + ', ' + p.venue_short : (p.type || '') + ', ' + (p.status || '');
+      const tagMono = p.venue_short ? (p.status || '') + ' · ' + p.venue_short : (p.type || '') + ' · ' + (p.status || '');
       const parts = [this.cvRun((p.title || '') + '. ')];
-      if (p.position) parts.push(this.cvRun(p.position + '. ', '600'));
+      const partsMono = [this.cvRun(p.title || '')];
+      if (p.position) {
+        parts.push(this.cvRun(p.position + '. ', 'strong'));
+        partsMono.push(this.cvRun(' · '), this.cvRun(p.position, 'strong'));
+      }
       if (published) {
-        parts.push(this.cvRun(p.venue || '', null, 'italic'));
+        parts.push(this.cvRun(p.venue || '', 'em'));
         if (p.volume) parts.push(this.cvRun(', ' + p.volume));
         parts.push(this.cvRun('.'));
+        partsMono.push(this.cvRun(' · ' + venue));
       } else {
-        // an unpublished paper carries an honest status tag and no year, so nothing reads as published
-        const tag = p.venue_short ? (p.status || '') + ', ' + p.venue_short : (p.type || '') + ', ' + (p.status || '');
-        parts.push(this.cvRun('(' + tag + ')', null, 'italic', this.CV_MUTED));
+        parts.push(this.cvRun('(' + tag + ')', 'tag'));
+        partsMono.push(this.cvRun(' '), this.cvRun('[' + tagMono + ']', 'tag'));
       }
-      research.push({ parts, right: published ? (p.year || '') : '' });
+      const year = published ? (p.year || '') : '';
+      research.push({ parts, partsMono, right: year, rightMono: year, hasRightMono: !!year });
     }
 
     // strict reverse chronology across both lists; within a year, recognition before service
@@ -1395,9 +1606,15 @@ class Component extends DCLogic {
       right: this.prettyRange(e.start, e.end),
     }));
     const stamp = cv.source_date ? this.prettyDate(cv.source_date) : '';
+    // the mono document stamps itself the way the sheet register stamps everything: the raw date, and
+    // the commit the facts were read at, because a drawing that cannot be traced to its issue is a sketch
+    const bylineMono = ['>_ cv', cv.source_date ? 'rev ' + String(cv.source_date).slice(0, 7) : '', 'issued from cv.json']
+      .filter(Boolean).join(' · ');
+    const footerMono = [(basics.name || '').toLowerCase(), cv.source_date || '',
+      cv.source_commit ? 'cv.json @ ' + cv.source_commit : ''].filter(Boolean).join(' · ');
 
     return {
-      name: basics.name || '', contact,
+      name: basics.name || '', contact, bylineMono, footerMono,
       hasProfile: !!cv.profile, profile: cv.profile || '',
       hasWork: jobs.length > 0, jobs,
       hasResearch: research.length > 0, research,
@@ -1499,6 +1716,7 @@ class Component extends DCLogic {
     const cvData = this.state.cvData, cvViews = this.cvViews(cvData);
     const cvBasics = (cvData && cvData.basics) || {}, cvLinks = cvBasics.links || {};
     const cvEmail = cvBasics.email || this.CONTACT.email;
+    const cvReg = this.state.cvReg || 'serif';
     // the sheet's modules, placed off whichever table the width calls for. The template names a module
     // and reads its span back; nothing about where a module sits is written in the markup
     const place = this.state.narrow ? this.SHEET_NARROW : this.SHEET_WIDE;
@@ -1531,7 +1749,8 @@ class Component extends DCLogic {
       goToolingFromCube: () => { this.goPage('tooling'); this.cubeLead = true; },
       homeCubeOn: () => { if (this.home) this.home.setHover(true); }, homeCubeOff: () => { if (this.home) this.home.setHover(false); },
       isPage: view === 'page', marginalia, page, pageReg: page.reg, pageKey: pageKey, pageLabel: page.label,
-      isCv: view === 'cv', goCv: () => this.goCv(), cvDoc: cvViews.doc,
+      isCvSerif: view === 'cv' && cvReg === 'serif', isCvMono: view === 'cv' && cvReg === 'mono',
+      goCvSerif: () => this.goCv('serif'), goCvMono: () => this.goCv('mono'), cvDoc: cvViews.doc,
       cvReady: !!cvData, cvLoading: !cvData && !this.state.cvError, cvFailed: !cvData && !!this.state.cvError,
       cvEmail, cvMailto: 'mailto:' + cvEmail, cvGithub: cvLinks.github || this.CONTACT.github,
       isSerifPage: view === 'page' && page.reg === 'serif', isMonoPage: view === 'page' && page.reg === 'mono',

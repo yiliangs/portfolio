@@ -89,10 +89,46 @@
       .cv-sec { margin-top: 32px; }
       .cv-job { margin-bottom: 26px; }
     }
+    /* The same document in the Development register: typed rather than set. The rail changes sides,
+       because the landing's dated index reads left to right from its date and this is the same
+       drawing; sections are commented rather than titled; and the sheet carries the landing's own
+       column hairlines. Only the vertical rules are drawn: nothing in a flowing document sits on a
+       44px module, so the horizontal ones would cut the text rather than measure it. */
+    .cvm { font-family: var(--mono); font-size: 14px; line-height: 1.7; color: var(--color-neutral-800);
+      background-image: linear-gradient(to right, color-mix(in srgb, var(--color-text) 12%, transparent) 0 1px, transparent 1px);
+      background-size: calc(100% / 22) 100%;
+      border-left: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent);
+      border-right: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent); }
+    /* 20ch, not 13: the longest thing the rail carries is a job's range, "Jul 2021 – Sep 2023", and a
+       column too narrow for it does not wrap, it overprints the entry beside it */
+    .cvm-row { display: grid; grid-template-columns: 20ch minmax(0,1fr); column-gap: 18px; align-items: baseline; }
+    /* a sub-line leaves the rail empty rather than repeating the date, which is what puts every body
+       column on one edge; on the narrow page an empty rail has nothing to hold and goes away */
+    .cvm-date { color: var(--color-neutral-600); white-space: nowrap; }
+    .cvm-sec { margin: 44px 0 14px; }
+    .cvm-sec-first { margin-top: 36px; }
+    .cvm-sec-label { margin: 0 0 8px; color: var(--color-neutral-600); }
+    .cvm-rule { display: block; height: 1px; background: color-mix(in srgb, var(--color-text) 16%, transparent); }
+    @media (max-width: 700px) {
+      .cvm-row { grid-template-columns: minmax(0,1fr); }
+      .cvm-date { margin-bottom: 2px; }
+      .cvm-date:empty { display: none; }
+      .cvm-sec { margin-top: 30px; }
+    }
     @media print {
       [data-print="hide"] { display: none !important; }
+      .sc-host > div { background: #ffffff !important; }
       main[data-screen-label="CV"] { max-width: none; padding: 0; font-size: 10pt; }
       main[data-screen-label="CV"] a { color: inherit; text-decoration: none; }
+      /* the mono CV is set on a dark sheet. Print re-tunes its tokens rather than flattening every
+         colour to black, so the rail, the section labels and the emphasis keep their hierarchy */
+      main[data-screen-label="CV mono"].cvm {
+        max-width: none; padding: 0; font-size: 10pt; border: 0;
+        background: #ffffff; background-image: none; color: #1a1a1a;
+        --color-text: #000000; --color-neutral-800: #1a1a1a; --color-neutral-700: #3a3a3a;
+        --color-neutral-600: #5a5a5a; --color-neutral-500: #767676; --color-divider: #cccccc;
+      }
+      main[data-screen-label="CV mono"] a { color: inherit; text-decoration: none; }
     }
   </style>
 <style>
@@ -103,6 +139,7 @@
 .scp4:hover{font-family:Cinzel, var(--font-heading) !important;color:var(--color-accent-700) !important;letter-spacing:0.1em !important}
 .scp5:hover{box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text) !important}
 .scp6:hover{box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text) !important}
+.scp7:hover{color:var(--color-text) !important}
 </style>
 </head>
 <body>
