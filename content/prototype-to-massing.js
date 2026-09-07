@@ -7,7 +7,7 @@ export default {
   title: "From Prototype to Massing: Learning Graph Correspondence for Scalable Facade Modeling",
   byline: "Yiliang Shao, Skidmore, Owings & Merrill",
   blocks: [
-    { k: "byline", t: "Yiliang Shao", aff: "Skidmore, Owings & Merrill" },
+    { k: "byline", authors: [{ t: "Yiliang Shao", aff: "Skidmore, Owings & Merrill" }] },
     { k: "abstract", r: ["Facade articulation at building scale is usually resolved manually or through parametric systems that encode design intent as explicit rules. This paper investigates a complementary workflow in which a designer-authored prototype supplies transferable articulation logic. Prototype and target massing are represented as heterogeneous attributed graphs, and a Siamese graph attention network with instance-local triplet supervision embeds their segments in a shared metric space. Many-to-one nearest-neighbor retrieval then routes prototype Patterns to the larger target. On the original 85/15 within-corpus holdout, prototype-to-massing top-1 accuracy reached 96.5%, compared with a reported 76.5% raw-feature baseline. A Rhino demonstrator converts predicted correspondence into reusable facade Patterns, and qualitative applications on four built projects show the workflow across distinct massing organizations. The contribution is not automated facade generation, but an authoring model in which resolved geometry serves as a computational specification for project-scale propagation."] },
     { k: "keywords", t: "Keywords: facade articulation transfer, example-based modeling, heterogeneous graph attention network, triplet metric learning, graph correspondence" },
     { k: "h2", t: "Introduction" },

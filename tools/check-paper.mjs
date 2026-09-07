@@ -116,7 +116,20 @@ function checkBlock(where, b, seq) {
   if (!KINDS.includes(b.k)) return fail(where, 'block kind "' + b.k + '" is outside what renderPaper handles (' + KINDS.join(', ') + ')');
   switch (b.k) {
     case 'byline':
-      checkText(where + '.t', b.t); checkText(where + '.aff', b.aff); break;
+      // one entry per author, because a paper with three of them has three affiliations to set and
+      // a single t/aff pair can only carry one. `eq` marks an equal-contribution author, `note` is
+      // the line that explains the mark.
+      if (!Array.isArray(b.authors) || !b.authors.length) { fail(where, 'a byline needs a non-empty authors array of {t, aff}'); break; }
+      b.authors.forEach((a, j) => {
+        const at = where + '.authors[' + j + ']';
+        if (!a || typeof a !== 'object') return fail(at, 'an author must be an object with t and aff');
+        if (typeof a.t !== 'string' || !a.t) fail(at, 'an author needs a name t');
+        if (typeof a.aff !== 'string' || !a.aff) fail(at, 'an author needs an affiliation aff');
+        if (a.eq !== undefined && typeof a.eq !== 'boolean') fail(at, 'eq marks equal contribution and must be a boolean');
+        checkText(at + '.t', String(a.t || '')); checkText(at + '.aff', String(a.aff || ''));
+      });
+      if (b.note !== undefined) { if (typeof b.note !== 'string') fail(where, 'note must be a string'); else checkText(where + '.note', b.note); }
+      break;
     case 'keywords': case 'h2': case 'h3':
       checkText(where + '.t', String(b.t || '')); break;
     case 'abstract': case 'p':

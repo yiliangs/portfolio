@@ -8,7 +8,7 @@ export default {
   title: "Deciding How Many Floor Types a Tower Needs: An Exact Feasibility Method for Residential Unit Programs",
   byline: "Yiliang Shao, Skidmore, Owings & Merrill",
   blocks: [
-    {"k": "byline", "t": "Yiliang Shao", "aff": "Skidmore, Owings & Merrill"},
+    {"k": "byline", "authors": [{"t": "Yiliang Shao", "aff": "Skidmore, Owings & Merrill"}]},
     {"k": "abstract", "r": ["Residential towers are delivered through repeated floor products: each additional floor template carries coordination, documentation, and procurement consequences, so a unit program must fit a limited, sufficiently repeated template kit. This paper decides exactly whether it does, separating optimal, infeasible, and not-solved outcomes and, for an infeasible program, isolating the requirement that binds. The model carries a building-wide template cap, a minimum production run per template, heterogeneous plates, and continuous unit-area bands, made tractable at whole-tower scale by a count-vector reformulation. A synthetic stress test proves three templates impossible and four sufficient, with template variety rather than plate tolerance binding; a bounded-count relaxation admits 9.3 to 13.5 percent more units. On De Piek, a documented Rotterdam tower, the method certifies a compact stacking at fully locked plates. The result is an exact instrument for testing whether a program is deliverable as a repeatable floor-product system."]},
     {"k": "keywords", "t": "Keywords: residential development; unit-mix stacking; floor-template repetition; infeasibility diagnosis; exact optimization; constructability; early-stage design"},
     {"k": "h2", "t": "Introduction"},
