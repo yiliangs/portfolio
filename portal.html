@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Background field — tuning portal</title>
+<style>
+  :root {
+    --ink: #e8e6e2;
+    --dim: rgba(232,230,226,0.52);
+    --line: rgba(232,230,226,0.14);
+    --panel: rgba(14,14,16,0.82);
+    --accent: #b68235;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #0d0d0e; overflow: hidden; }
+  #bg { position: fixed; inset: 0; z-index: 0; }
+
+  /* Sample content so the field can be judged as a background, not as art. */
+  #stage {
+    position: fixed; inset: 0; z-index: 1; display: grid; place-items: center;
+    pointer-events: none; transition: opacity .3s;
+  }
+  #stage.off { opacity: 0; }
+  #stage .card { text-align: center; max-width: 46ch; padding: 0 24px; }
+  #stage h1 {
+    font: 300 clamp(30px,4.4vw,58px)/1.08 'Cormorant Garamond', Georgia, serif;
+    letter-spacing: -0.01em; margin: 0 0 14px; color: #f3f2f2;
+    text-shadow: 0 2px 24px rgba(0,0,0,.55);
+  }
+  #stage p {
+    font: 400 15px/1.7 Lora, Georgia, serif; margin: 0; color: rgba(243,242,242,.8);
+    text-shadow: 0 1px 16px rgba(0,0,0,.6);
+  }
+
+  #panel {
+    position: fixed; top: 0; right: 0; bottom: 0; width: 336px; z-index: 3;
+    background: var(--panel); backdrop-filter: blur(14px);
+    border-left: 1px solid var(--line); color: var(--ink);
+    font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+    display: flex; flex-direction: column;
+    transition: transform .32s cubic-bezier(.65,0,.15,1);
+  }
+  #panel.closed { transform: translateX(336px); }
+
+  #panelHead {
+    padding: 16px 18px 12px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+  }
+  #panelHead b { font-weight: 600; letter-spacing: .04em; font-size: 12px; }
+  #panelHead span { color: var(--dim); font-size: 10.5px; letter-spacing: .06em; }
+
+  #groups { overflow-y: auto; flex: 1; padding: 4px 18px 18px; }
+  #groups::-webkit-scrollbar { width: 8px; }
+  #groups::-webkit-scrollbar-thumb { background: rgba(232,230,226,.16); border-radius: 4px; }
+
+  .group > h2 {
+    font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--accent); margin: 20px 0 8px; font-weight: 600;
+  }
+  .row { margin-bottom: 11px; }
+  .row .lab {
+    display: flex; justify-content: space-between; align-items: baseline;
+    gap: 8px; margin-bottom: 3px;
+  }
+  .row .lab i { font-style: normal; color: var(--dim); font-size: 10.5px; letter-spacing: .03em; }
+  .row .lab output { font-variant-numeric: tabular-nums; color: var(--ink); font-size: 11px; }
+  .row input[type=range] {
+    width: 100%; height: 3px; -webkit-appearance: none; appearance: none;
+    background: rgba(232,230,226,.18); border-radius: 2px; outline: none; margin: 0;
+  }
+  .row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%;
+    background: var(--ink); cursor: grab; border: 0;
+  }
+  .row input[type=color] {
+    width: 100%; height: 22px; padding: 0; border: 1px solid var(--line);
+    background: none; border-radius: 3px; cursor: pointer;
+  }
+  .row .note { color: var(--dim); font-size: 10px; margin-top: 2px; line-height: 1.45; }
+
+  #panelFoot {
+    padding: 12px 18px 16px; border-top: 1px solid var(--line);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  button {
+    font: inherit; color: var(--ink); background: rgba(232,230,226,.07);
+    border: 1px solid var(--line); border-radius: 4px; padding: 7px 10px;
+    cursor: pointer; letter-spacing: .04em; text-align: left;
+  }
+  button:hover { background: rgba(232,230,226,.14); }
+  .btnRow { display: flex; gap: 8px; }
+  .btnRow button { flex: 1; text-align: center; }
+
+  #toggle {
+    position: fixed; top: 14px; right: 14px; z-index: 4; width: 34px; height: 34px;
+    display: grid; place-items: center; padding: 0; border-radius: 4px;
+    background: var(--panel); backdrop-filter: blur(14px);
+    font: 15px/1 ui-monospace, monospace;
+  }
+  #panel:not(.closed) ~ #toggle { right: 350px; }
+
+  #toast {
+    position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%);
+    z-index: 5; background: var(--panel); backdrop-filter: blur(14px);
+    border: 1px solid var(--line); border-radius: 4px; color: var(--ink);
+    font: 11.5px ui-monospace, monospace; padding: 8px 14px; letter-spacing: .04em;
+    opacity: 0; transition: opacity .25s; pointer-events: none;
+  }
+  #toast.on { opacity: 1; }
+
+  #out {
+    position: fixed; inset: 0; z-index: 6; background: rgba(8,8,9,.93);
+    display: none; padding: 5vh 6vw;
+  }
+  #out.on { display: block; }
+  #out textarea {
+    width: 100%; height: 100%; background: #111113; color: var(--ink);
+    border: 1px solid var(--line); border-radius: 4px; padding: 16px;
+    font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; resize: none;
+  }
+  #out .close {
+    position: absolute; top: calc(5vh - 30px); right: 6vw;
+  }
+</style>
+</head>
+<body>
+  <div id="bg"></div>
+
+  <div id="stage">
+    <div class="card">
+      <h1>Yiliang Shao</h1>
+      <p>Sample copy, sitting where real copy would sit. If the field competes with this, turn down FIELD_CONTRAST, CONTOUR_INK or WARP_STRENGTH.</p>
+    </div>
+  </div>
+
+  <aside id="panel">
+    <div id="panelHead">
+      <b>BACKGROUND FIELD</b>
+      <span id="fps">— fps</span>
+    </div>
+    <div id="groups"></div>
+    <div id="panelFoot">
+      <div class="btnRow">
+        <button id="btnStage">Hide copy</button>
+        <button id="btnFreeze">Freeze time</button>
+      </div>
+      <div class="btnRow">
+        <button id="btnReset">Reset</button>
+        <button id="btnExport">Export block</button>
+      </div>
+    </div>
+  </aside>
+  <button id="toggle" title="Toggle panel">◧</button>
+
+  <div id="toast"></div>
+  <div id="out">
+    <button class="close" id="btnCloseOut">close</button>
+    <textarea id="outText" spellcheck="false"></textarea>
+  </div>
+
+<script type="module">
+import { mount } from './src/background-field.js';
+import { FRAGMENT_SHADER } from './src/background-field.glsl.js';
+
+// ── The portal never edits the shader file. It reads the TUNABLES block out of
+//    the exported source, builds controls from it, and rewrites the same block
+//    in a working copy before handing it back through setFragmentShader. That
+//    keeps the shipped shader exactly as authored: plain consts at the top.
+
+const BLOCK_START = FRAGMENT_SHADER.indexOf('//  TUNABLES');
+const BLOCK_END = FRAGMENT_SHADER.indexOf('uniform float uTime');
+const BLOCK = FRAGMENT_SHADER.slice(BLOCK_START, BLOCK_END);
+
+// Ranges the value alone cannot imply. Anything absent gets a heuristic range.
+const RANGES = {
+  FBM_OCTAVES:    [1, 6, 1],
+  FBM_LACUNARITY: [1.4, 3.2, 0.01],
+  FBM_GAIN:       [0.2, 0.85, 0.01],
+  FIELD_SCALE:    [0.5, 8, 0.05],
+  FIELD_DRIFT:    [0, 0.4, 0.002],
+  WARP_SCALE:     [0.2, 4, 0.02],
+  WARP_STRENGTH:  [0, 2.5, 0.01],
+  CURSOR_RADIUS:  [0.05, 1.2, 0.01],
+  CURSOR_FALLOFF: [0.5, 5, 0.05],
+  CURSOR_CORE:    [0, 0.6, 0.005],
+  CURSOR_PUSH:    [0, 1, 0.005],
+  CURSOR_SWIRL:   [0, 3.2, 0.01],
+  CURSOR_LIFT:    [0, 0.6, 0.005],
+  FIELD_LOW:      [0, 1, 0.005],
+  FIELD_HIGH:     [0, 1, 0.005],
+  FIELD_CONTRAST: [0, 1, 0.01],
+  CONTOUR_COUNT:  [0, 24, 0.5],
+  CONTOUR_WIDTH:  [0, 0.4, 0.002],
+  CONTOUR_INK:    [0, 1, 0.01],
+  CONTOUR_AA:     [0.2, 5, 0.05],
+  RAMP_A0:        [0, 1, 0.005], RAMP_A1: [0, 1, 0.005],
+  RAMP_B0:        [0, 1, 0.005], RAMP_B1: [0, 1, 0.005],
+  GRAIN_AMOUNT:   [0, 0.25, 0.002],
+  GRAIN_SCALE:    [0.2, 4, 0.05],
+  GRAIN_HZ:       [0, 60, 1],
+  VIGNETTE_START: [0, 1.6, 0.01],
+  VIGNETTE_END:   [0, 2.2, 0.01],
+  VIGNETTE_DEPTH: [0, 1, 0.01],
+};
+
+// ── parse the block into groups of controls ────────────────────────────────
+const GROUP_RE = /^\/\/ ([A-Za-z ]+?) -{3,}/;
+const NUM_RE = /^const\s+(int|float)\s+([A-Z0-9_]+)\s*=\s*(-?[\d.]+)\s*;(?:\s*\/\/\s*(.*))?/;
+const VEC_RE = /^const\s+vec3\s+([A-Z0-9_]+)\s*=\s*vec3\(([^)]*)\)\s*;(?:\s*\/\/\s*(.*))?/;
+
+const CONT_RE = /^\/\/\s?(.*)$/;
+
+const groups = [];
+let current = null;
+let lastItem = null;   // the const that a following comment line still describes
+for (const raw of BLOCK.split('\n')) {
+  const line = raw.trim();
+  if (!line) { lastItem = null; continue; }            // a blank line ends a note
+  const g = line.match(GROUP_RE);
+  if (g) {
+    current = { name: g[1].trim(), items: [] };
+    groups.push(current);
+    lastItem = null;
+    continue;
+  }
+  if (!current) continue;
+  const n = line.match(NUM_RE);
+  if (n) {
+    lastItem = { kind: n[1], name: n[2], value: parseFloat(n[3]), note: n[4] || '' };
+    current.items.push(lastItem);
+    continue;
+  }
+  const v = line.match(VEC_RE);
+  if (v) {
+    lastItem = {
+      kind: 'vec3', name: v[1],
+      value: v[2].split(',').map((x) => parseFloat(x)), note: v[3] || '',
+    };
+    current.items.push(lastItem);
+    continue;
+  }
+  // A comment on its own line continues the note of the const above it, so a
+  // wrapped explanation arrives whole instead of cut at the line break.
+  const cont = line.match(CONT_RE);
+  if (cont && lastItem) lastItem.note = (lastItem.note + ' ' + cont[1]).trim();
+  else lastItem = null;
+}
+
+const DEFAULTS = {};
+for (const g of groups) for (const it of g.items) {
+  DEFAULTS[it.name] = Array.isArray(it.value) ? it.value.slice() : it.value;
+}
+const state = JSON.parse(JSON.stringify(DEFAULTS));
+
+// ── rewrite the source with the current state ──────────────────────────────
+const fmt = (v, kind) => (kind === 'int' ? String(Math.round(v)) : v.toFixed(3));
+
+function buildShader() {
+  let src = FRAGMENT_SHADER;
+  for (const g of groups) for (const it of g.items) {
+    const v = state[it.name];
+    if (it.kind === 'vec3') {
+      src = src.replace(
+        new RegExp(`(const\\s+vec3\\s+${it.name}\\s*=\\s*)vec3\\([^)]*\\)`),
+        `$1vec3(${v.map((c) => c.toFixed(3)).join(', ')})`,
+      );
+    } else {
+      src = src.replace(
+        new RegExp(`(const\\s+${it.kind}\\s+${it.name}\\s*=\\s*)-?[\\d.]+`),
+        `$1${fmt(v, it.kind)}`,
+      );
+    }
+  }
+  return src;
+}
+
+// ── mount ──────────────────────────────────────────────────────────────────
+const field = mount(document.getElementById('bg'));
+
+let pending = 0;
+function apply() {
+  cancelAnimationFrame(pending);
+  pending = requestAnimationFrame(() => field.setFragmentShader(buildShader()));
+}
+
+// ── controls ───────────────────────────────────────────────────────────────
+const hex = (rgb) => '#' + rgb.map((c) =>
+  Math.round(Math.min(1, Math.max(0, c)) * 255).toString(16).padStart(2, '0')).join('');
+const unhex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+
+const host = document.getElementById('groups');
+const writers = [];
+
+for (const g of groups) {
+  const sec = document.createElement('div');
+  sec.className = 'group';
+  sec.innerHTML = `<h2>${g.name}</h2>`;
+  for (const it of g.items) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    if (it.kind === 'vec3') {
+      row.innerHTML =
+        `<div class="lab"><i>${it.name}</i></div>` +
+        `<input type="color" value="${hex(it.value)}">`;
+      const input = row.querySelector('input');
+      input.addEventListener('input', () => { state[it.name] = unhex(input.value); apply(); });
+      writers.push(() => { input.value = hex(state[it.name]); });
+    } else {
+      const [min, max, step] = RANGES[it.name] || [0, Math.max(1, it.value * 3), 0.01];
+      row.innerHTML =
+        `<div class="lab"><i>${it.name}</i><output>${fmt(it.value, it.kind)}</output></div>` +
+        `<input type="range" min="${min}" max="${max}" step="${step}" value="${it.value}">` +
+        (it.note ? `<div class="note">${it.note}</div>` : '');
+      const input = row.querySelector('input');
+      const out = row.querySelector('output');
+      input.addEventListener('input', () => {
+        state[it.name] = parseFloat(input.value);
+        out.textContent = fmt(state[it.name], it.kind);
+        apply();
+      });
+      writers.push(() => { input.value = state[it.name]; out.textContent = fmt(state[it.name], it.kind); });
+    }
+    sec.appendChild(row);
+  }
+  host.appendChild(sec);
+}
+
+// ── buttons ────────────────────────────────────────────────────────────────
+const toast = (msg) => {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('on');
+  clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('on'), 1600);
+};
+
+document.getElementById('toggle').onclick = () =>
+  document.getElementById('panel').classList.toggle('closed');
+
+document.getElementById('btnStage').onclick = (e) => {
+  const off = document.getElementById('stage').classList.toggle('off');
+  e.target.textContent = off ? 'Show copy' : 'Hide copy';
+};
+
+let frozen = false;
+document.getElementById('btnFreeze').onclick = (e) => {
+  frozen = !frozen;
+  field.setPaused(frozen);
+  e.target.textContent = frozen ? 'Resume time' : 'Freeze time';
+};
+
+document.getElementById('btnReset').onclick = () => {
+  Object.assign(state, JSON.parse(JSON.stringify(DEFAULTS)));
+  writers.forEach((w) => w());
+  apply();
+  toast('reset to the committed values');
+};
+
+document.getElementById('btnExport').onclick = () => {
+  const src = buildShader();
+  const block = src.slice(src.indexOf('// ─'), src.indexOf('uniform float uTime')).trimEnd();
+  const ta = document.getElementById('outText');
+  ta.value = block;
+  document.getElementById('out').classList.add('on');
+  ta.focus(); ta.select();
+  navigator.clipboard?.writeText(block).then(
+    () => toast('tunables block copied'),
+    () => toast('select and copy'),
+  );
+};
+document.getElementById('btnCloseOut').onclick = () =>
+  document.getElementById('out').classList.remove('on');
+
+// ── fps readout, so a tuning choice that costs frames is visible ───────────
+let frames = 0, last = performance.now();
+(function meter(now) {
+  requestAnimationFrame(meter);
+  frames++;
+  if (now - last >= 500) {
+    document.getElementById('fps').textContent = Math.round(frames * 1000 / (now - last)) + ' fps';
+    frames = 0; last = now;
+  }
+})(last);
+</script>
+</body>
+</html>

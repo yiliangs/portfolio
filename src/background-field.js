@@ -1,6 +1,6 @@
 // background-field.js — the three.js half of the background effect.
 // One full-screen quad, one fragment shader, one pass. No render targets.
-// mount(container) -> { setPaused, destroy }
+// mount(container) -> { setFragmentShader, setPaused, destroy }
 //
 // Division of labour with background-field.glsl.js: everything here is
 // plumbing (context, sizing, uniforms, the frame loop). Everything that
@@ -139,6 +139,13 @@ export function mount(container) {
   raf = requestAnimationFrame(tick);
 
   return {
+    // Tuning hook: swap the fragment shader in place, keeping the clock, the
+    // eased pointer and the context. Used by the local tuning portal so that
+    // dragging a slider does not restart the field.
+    setFragmentShader(source) {
+      material.fragmentShader = source;
+      material.needsUpdate = true;
+    },
     setPaused(value) {
       const next = Boolean(value);
       if (next === paused) return;
