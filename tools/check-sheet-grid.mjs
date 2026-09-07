@@ -18,7 +18,7 @@ import { JSDOM } from 'jsdom';
 
 const SRC = 'design/Portfolio.dc.html';
 const COLUMNS = 22; // grid lines run 1..COLUMNS+1
-const RESERVED = ['guides', 'heroReadout', 'detailReadout']; // renderVals puts these on the same object
+const RESERVED = ['heroReadout', 'detailReadout']; // renderVals puts these on the same object
 
 const failures = [];
 const fail = (msg) => failures.push(msg);
@@ -142,10 +142,10 @@ if (mono) {
     const g = tight(styleOf(grid));
     if (!g.includes('grid-auto-rows:44px')) fail('the sheet grid does not set grid-auto-rows:44px');
     if (!g.includes('gap:0')) fail('the sheet grid does not set gap:0');
-    if (!g.includes('position:relative')) fail('the sheet grid is not positioned, so the plotting guides have nothing to measure against');
+    if (!g.includes('position:relative')) fail('the sheet grid is not positioned, so nothing laid over it could measure against it');
 
     // Grid items are the placed modules. sc-if / sc-for only wrap them, so look through those; an
-    // absolutely positioned child is an overlay (the guides), not a module, and takes no cell.
+    // absolutely positioned child would be an overlay, not a module, and would take no cell.
     const items = [], overlays = [];
     const collect = (parent) => {
       for (const child of parent.children) {
@@ -242,12 +242,9 @@ if (mono) {
       if (/sheet\.(hero|detail)Readout/.test(el.innerHTML)) fail('the coordinate readout carries data-tr; it changes per cell and the effect would rebuild under it');
     }
 
-    // the guides are the only thing allowed out of the grid's flow, and there are four of them
-    if (overlays.length !== 4) fail('expected four plotting guides as absolutely positioned children of the grid, found ' + overlays.length);
-    for (const g of overlays) {
-      if (!declares(g, 'opacity')) fail('a plotting guide never fades: no opacity on ' + where(g));
-      if (declares(g, 'grid-column') || declares(g, 'grid-row')) fail('a plotting guide takes a grid cell; it is meant to be out of flow');
-    }
+    // nothing sits out of the grid's flow: the full-sheet guide lines the plate hover once threw were
+    // dropped because they read as a stray boundary through the text, and a hover lights only its own frame
+    for (const o of overlays) fail('an absolutely positioned child sits over the grid out of flow: ' + where(o));
 
     for (const el of [grid, ...grid.querySelectorAll('*')]) {
       if (declares(el, 'aspect-ratio')) {
