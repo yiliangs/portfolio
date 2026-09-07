@@ -946,7 +946,7 @@
                 "\n      ",
                 h("div", { key: "1", style: {"minWidth":"0"} },
                   "\n        ",
-                  h("h1", { key: "1|16.rlozbn", style: {"margin":"0","fontFamily":"var(--mono)","fontWeight":"700","fontSize":"clamp(26px,3.4vw,38px)","lineHeight":"1.1","letterSpacing":"-0.03em","color":"var(--color-text)"} },
+                  h("h1", { key: "1|16.rlozbn", style: {"margin":"0","fontFamily":"var(--mono)","fontWeight":"400","fontSize":"clamp(26px,3.4vw,38px)","lineHeight":"1.1","letterSpacing":"-0.03em","color":"var(--color-text)"} },
                     h(F,{key:0},"",I(V.cvDoc?.name,1),"")
                   ),
                   "\n        ",
