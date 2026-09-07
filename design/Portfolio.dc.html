@@ -216,7 +216,7 @@
       <!-- loose pages: each chapter is a leaf adrift in the margins; it drifts on its own, follows the cursor a little, and lifts to show its colophon on hover -->
       <div style="position:relative; z-index:2; align-self:stretch; min-height:0; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); grid-template-rows:repeat({{ leafRows }}, minmax(0,1fr)); gap:28px 24px; padding:28px 0;">
         <sc-for list="{{ leftLeaves }}" as="lf" hint-placeholder-count="1">
-        <div data-leaf="{{ lf.side }}" style="grid-column:{{ lf.col }}; grid-row:{{ lf.row }}; align-self:{{ lf.selfY }}; justify-self:{{ lf.selfX }}; min-width:0; max-width:100%; z-index:{{ lf.zIndex }}; transform:translate(calc(var(--mx, 0) * {{ lf.px }}), calc(var(--my, 0) * {{ lf.py }} + {{ lf.bleedY }})); transition:transform 900ms cubic-bezier(.2,.7,.2,1);">
+        <div data-leaf="{{ lf.side }}" data-slot="{{ lf.tune }}" style="grid-column:{{ lf.col }}; grid-row:{{ lf.row }}; align-self:{{ lf.selfY }}; justify-self:{{ lf.selfX }}; min-width:0; max-width:100%; z-index:{{ lf.zIndex }}; transform:translate(calc(var(--mx, 0) * {{ lf.px }}), calc(var(--my, 0) * {{ lf.py }} + {{ lf.bleedY }})); transition:transform 900ms cubic-bezier(.2,.7,.2,1);">
           <div style="animation:leaf-drift {{ lf.dur }} ease-in-out infinite alternate; animation-delay:{{ lf.delay }}; display:flex; flex-direction:{{ lf.dir }}; align-items:{{ lf.alignItems }}; gap:12px 20px; width:100%;">
             <button data-shape="leaf-{{ lf.cardNo }}" data-shape-alt="frame-{{ lf.figNo }}" onClick="{{ lf.open }}" onMouseEnter="{{ lf.hover }}" onMouseLeave="{{ lf.unhover }}" onFocus="{{ lf.hover }}" onBlur="{{ lf.unhover }}" style-hover="box-shadow:0 30px 60px -22px rgba(32,31,29,0.42), 0 3px 8px rgba(32,31,29,0.1); border-color:var(--color-accent); z-index:3; filter:sepia(0.1) saturate(1) contrast(1.02)" style="all:unset; cursor:{{ lf.cursor }}; display:block; flex:none; height:{{ lf.plateH }}; width:{{ lf.plateW }}; max-width:{{ lf.plateMaxW }}; aspect-ratio:{{ lf.ratio }}; box-sizing:border-box; transform-origin:{{ lf.origin }}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:{{ lf.shadow }}; overflow:hidden; transform:translateX({{ lf.bleedX }}) translateY({{ lf.lift }}) scale({{ lf.scale }}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:{{ lf.filter }};">
               <image-slot id="{{ lf.coverSlotId }}" src="{{ lf.cover }}" shape="rect" fit="cover" placeholder="{{ lf.placeholder }}" style-hover="transform:scale(1.12)" style="width:100%; height:100%; display:block; transform:scale(1); transition:transform 620ms cubic-bezier(.2,.7,.2,1);"></image-slot>
@@ -257,7 +257,7 @@
       </nav>
       <div style="position:relative; z-index:2; align-self:stretch; min-height:0; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); grid-template-rows:repeat({{ leafRows }}, minmax(0,1fr)); gap:28px 24px; padding:28px 0;">
         <sc-for list="{{ rightLeaves }}" as="lf" hint-placeholder-count="1">
-        <div data-leaf="{{ lf.side }}" style="grid-column:{{ lf.col }}; grid-row:{{ lf.row }}; align-self:{{ lf.selfY }}; justify-self:{{ lf.selfX }}; min-width:0; max-width:100%; z-index:{{ lf.zIndex }}; transform:translate(calc(var(--mx, 0) * {{ lf.px }}), calc(var(--my, 0) * {{ lf.py }} + {{ lf.bleedY }})); transition:transform 900ms cubic-bezier(.2,.7,.2,1);">
+        <div data-leaf="{{ lf.side }}" data-slot="{{ lf.tune }}" style="grid-column:{{ lf.col }}; grid-row:{{ lf.row }}; align-self:{{ lf.selfY }}; justify-self:{{ lf.selfX }}; min-width:0; max-width:100%; z-index:{{ lf.zIndex }}; transform:translate(calc(var(--mx, 0) * {{ lf.px }}), calc(var(--my, 0) * {{ lf.py }} + {{ lf.bleedY }})); transition:transform 900ms cubic-bezier(.2,.7,.2,1);">
           <div style="animation:leaf-drift {{ lf.dur }} ease-in-out infinite alternate; animation-delay:{{ lf.delay }}; display:flex; flex-direction:{{ lf.dir }}; align-items:{{ lf.alignItems }}; gap:12px 20px; width:100%;">
             <button data-shape="leaf-{{ lf.cardNo }}" data-shape-alt="frame-{{ lf.figNo }}" onClick="{{ lf.open }}" onMouseEnter="{{ lf.hover }}" onMouseLeave="{{ lf.unhover }}" onFocus="{{ lf.hover }}" onBlur="{{ lf.unhover }}" style-hover="box-shadow:0 30px 60px -22px rgba(32,31,29,0.42), 0 3px 8px rgba(32,31,29,0.1); border-color:var(--color-accent); z-index:3; filter:sepia(0.1) saturate(1) contrast(1.02)" style="all:unset; cursor:{{ lf.cursor }}; display:block; flex:none; height:{{ lf.plateH }}; width:{{ lf.plateW }}; max-width:{{ lf.plateMaxW }}; aspect-ratio:{{ lf.ratio }}; box-sizing:border-box; transform-origin:{{ lf.origin }}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:{{ lf.shadow }}; overflow:hidden; transform:translateX({{ lf.bleedX }}) translateY({{ lf.lift }}) scale({{ lf.scale }}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:{{ lf.filter }};">
               <image-slot id="{{ lf.coverSlotId }}" src="{{ lf.cover }}" shape="rect" fit="cover" placeholder="{{ lf.placeholder }}" style-hover="transform:scale(1.12)" style="width:100%; height:100%; display:block; transform:scale(1); transition:transform 620ms cubic-bezier(.2,.7,.2,1);"></image-slot>
@@ -1389,15 +1389,17 @@ class Component extends DCLogic {
     const outer = side === 'left' ? 1 : 2, first = spreads.length + 1, diag = [], skipped = [];
     for (let r = first; r <= rows; r++) { const c = (r - first) % 2 === 0 ? outer : 3 - outer; diag.push({ row: r, col: c }); skipped.push({ row: r, col: 3 - c }); }
     const q = (n) => String(+(n / rows).toFixed(3)), size = (h, w) => 'min(' + q(h) + 'vh, ' + q(w) + 'px)';
-    const slot = (st, row, col, wrap) => ({ side, row: String(row), col: col ? String(col) : '1 / 3',
+    // `tune` names the entry this slot came out of, so the collage can say what placed each leaf.
+    // The tuning panel behind ?dev is its only reader; the page itself never looks at it.
+    const slot = (st, row, col, wrap, tune) => ({ side, tune, row: String(row), col: col ? String(col) : '1 / 3',
       selfY: row === 1 ? 'start' : row === rows ? 'end' : 'center',
       selfX: col ? (col === 1 ? 'start' : 'end') : (side === 'left' ? 'start' : 'end'),
       align: side, imgH: size(st.h, st.w), ...(st.stackH ? { stackH: size(st.stackH, st.stackW) } : {}),
       ratio: st.ratio, maxW: st.maxW, titleSize: st.titleSize, dir: st.dir, alignItems: st.alignItems,
       px: st.px, py: st.py, dur: st.dur, delay: (parseFloat(st.delay) - 1.7 * wrap) + 's',
       bleedX: st.bleedX, bleedY: st.bleedY, cover: st.cover });
-    return [...spreads.map((st) => slot(st, st.row, 0, 0)),
-      ...[...diag, ...skipped].map((c, i) => slot(pairs[i % pairs.length], c.row, c.col, Math.floor(i / pairs.length)))];
+    return [...spreads.map((st, i) => slot(st, st.row, 0, 0, 'spreads.' + side + '.' + i)),
+      ...[...diag, ...skipped].map((c, i) => slot(pairs[i % pairs.length], c.row, c.col, Math.floor(i / pairs.length), 'pairs.' + side + '.' + (i % pairs.length)))];
   }
 
   num(i) { return (this.props.numerals ?? 'roman') === 'roman' ? this.romans[i] : String(i + 1); }
@@ -1836,6 +1838,14 @@ class Component extends DCLogic {
         this.observer.unobserve(en.target);
       });
     }, { rootMargin: '100% 0px -8% 0px' });
+    // ?dev opens the Research margins in a tuning panel (leaves-dev.js), which adjusts the two style
+    // tables in place and re-renders. The flag is the only thing that fetches it, so the page ships
+    // nothing for it otherwise, the same arrangement field.js has for the home field.
+    if (new URLSearchParams(location.search).has('dev')) {
+      import('./leaves-dev.js')
+        .then((m) => { if (!this.dead) this.leafTuner = m.mount({ spreads: this.LEAF_SPREADS, pairs: this.LEAF_PAIRS, rerender: () => this.forceUpdate() }); })
+        .catch((e) => console.error('leaves-dev', e));
+    }
     this.observeReveals(); this.mountTextEffects(); this.syncParchment(); this.syncHome(); this.syncPaper();
     this.hintTimer = setTimeout(() => this.setState({ hintGone: true }), 9000);
     setTimeout(() => this.measureTabs(), 400);
@@ -2228,7 +2238,7 @@ class Component extends DCLogic {
     };
     this.parchRaf = requestAnimationFrame(tick);
   }
-  componentWillUnmount() { if (this.fog) { this.fog.destroy(); this.fog = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); window.removeEventListener('popstate', this.onPop); this.observer?.disconnect(); cancelAnimationFrame(this.cellRaf); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
+  componentWillUnmount() { this.dead = true; if (this.leafTuner) { this.leafTuner.destroy(); this.leafTuner = null; } if (this.fog) { this.fog.destroy(); this.fog = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); window.removeEventListener('popstate', this.onPop); this.observer?.disconnect(); cancelAnimationFrame(this.cellRaf); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
   observeReveals() { document.querySelectorAll('[data-enter=""]').forEach((el) => this.observer.observe(el)); }
   // the cursor's cell on the sheet grid, sampled once a frame and only written when the cell actually
   // changes, so crossing a 48px column re-renders once rather than once per pixel of travel

@@ -190,7 +190,7 @@
                   var Vi = Object.assign({}, V, {"lf": item, $index: i});
                   return h(F,{key:i},
                     "\n        ",
-                    h("div", { key: "1", "data-leaf": Vi.lf?.side, style: S(`grid-column:${Vi.lf?.col ?? ""}; grid-row:${Vi.lf?.row ?? ""}; align-self:${Vi.lf?.selfY ?? ""}; justify-self:${Vi.lf?.selfX ?? ""}; min-width:0; max-width:100%; z-index:${Vi.lf?.zIndex ?? ""}; transform:translate(calc(var(--mx, 0) * ${Vi.lf?.px ?? ""}), calc(var(--my, 0) * ${Vi.lf?.py ?? ""} + ${Vi.lf?.bleedY ?? ""})); transition:transform 900ms cubic-bezier(.2,.7,.2,1);`) },
+                    h("div", { key: "1", "data-leaf": Vi.lf?.side, "data-slot": Vi.lf?.tune, style: S(`grid-column:${Vi.lf?.col ?? ""}; grid-row:${Vi.lf?.row ?? ""}; align-self:${Vi.lf?.selfY ?? ""}; justify-self:${Vi.lf?.selfX ?? ""}; min-width:0; max-width:100%; z-index:${Vi.lf?.zIndex ?? ""}; transform:translate(calc(var(--mx, 0) * ${Vi.lf?.px ?? ""}), calc(var(--my, 0) * ${Vi.lf?.py ?? ""} + ${Vi.lf?.bleedY ?? ""})); transition:transform 900ms cubic-bezier(.2,.7,.2,1);`) },
                       "\n          ",
                       h("div", { key: "1", style: S(`animation:leaf-drift ${Vi.lf?.dur ?? ""} ease-in-out infinite alternate; animation-delay:${Vi.lf?.delay ?? ""}; display:flex; flex-direction:${Vi.lf?.dir ?? ""}; align-items:${Vi.lf?.alignItems ?? ""}; gap:12px 20px; width:100%;`) },
                         "\n            ",
@@ -296,7 +296,7 @@
                   var Vi = Object.assign({}, V, {"lf": item, $index: i});
                   return h(F,{key:i},
                     "\n        ",
-                    h("div", { key: "1", "data-leaf": Vi.lf?.side, style: S(`grid-column:${Vi.lf?.col ?? ""}; grid-row:${Vi.lf?.row ?? ""}; align-self:${Vi.lf?.selfY ?? ""}; justify-self:${Vi.lf?.selfX ?? ""}; min-width:0; max-width:100%; z-index:${Vi.lf?.zIndex ?? ""}; transform:translate(calc(var(--mx, 0) * ${Vi.lf?.px ?? ""}), calc(var(--my, 0) * ${Vi.lf?.py ?? ""} + ${Vi.lf?.bleedY ?? ""})); transition:transform 900ms cubic-bezier(.2,.7,.2,1);`) },
+                    h("div", { key: "1", "data-leaf": Vi.lf?.side, "data-slot": Vi.lf?.tune, style: S(`grid-column:${Vi.lf?.col ?? ""}; grid-row:${Vi.lf?.row ?? ""}; align-self:${Vi.lf?.selfY ?? ""}; justify-self:${Vi.lf?.selfX ?? ""}; min-width:0; max-width:100%; z-index:${Vi.lf?.zIndex ?? ""}; transform:translate(calc(var(--mx, 0) * ${Vi.lf?.px ?? ""}), calc(var(--my, 0) * ${Vi.lf?.py ?? ""} + ${Vi.lf?.bleedY ?? ""})); transition:transform 900ms cubic-bezier(.2,.7,.2,1);`) },
                       "\n          ",
                       h("div", { key: "1", style: S(`animation:leaf-drift ${Vi.lf?.dur ?? ""} ease-in-out infinite alternate; animation-delay:${Vi.lf?.delay ?? ""}; display:flex; flex-direction:${Vi.lf?.dir ?? ""}; align-items:${Vi.lf?.alignItems ?? ""}; gap:12px 20px; width:100%;`) },
                         "\n            ",
@@ -2398,15 +2398,17 @@
       const outer = side === 'left' ? 1 : 2, first = spreads.length + 1, diag = [], skipped = [];
       for (let r = first; r <= rows; r++) { const c = (r - first) % 2 === 0 ? outer : 3 - outer; diag.push({ row: r, col: c }); skipped.push({ row: r, col: 3 - c }); }
       const q = (n) => String(+(n / rows).toFixed(3)), size = (h, w) => 'min(' + q(h) + 'vh, ' + q(w) + 'px)';
-      const slot = (st, row, col, wrap) => ({ side, row: String(row), col: col ? String(col) : '1 / 3',
+      // `tune` names the entry this slot came out of, so the collage can say what placed each leaf.
+      // The tuning panel behind ?dev is its only reader; the page itself never looks at it.
+      const slot = (st, row, col, wrap, tune) => ({ side, tune, row: String(row), col: col ? String(col) : '1 / 3',
         selfY: row === 1 ? 'start' : row === rows ? 'end' : 'center',
         selfX: col ? (col === 1 ? 'start' : 'end') : (side === 'left' ? 'start' : 'end'),
         align: side, imgH: size(st.h, st.w), ...(st.stackH ? { stackH: size(st.stackH, st.stackW) } : {}),
         ratio: st.ratio, maxW: st.maxW, titleSize: st.titleSize, dir: st.dir, alignItems: st.alignItems,
         px: st.px, py: st.py, dur: st.dur, delay: (parseFloat(st.delay) - 1.7 * wrap) + 's',
         bleedX: st.bleedX, bleedY: st.bleedY, cover: st.cover });
-      return [...spreads.map((st) => slot(st, st.row, 0, 0)),
-        ...[...diag, ...skipped].map((c, i) => slot(pairs[i % pairs.length], c.row, c.col, Math.floor(i / pairs.length)))];
+      return [...spreads.map((st, i) => slot(st, st.row, 0, 0, 'spreads.' + side + '.' + i)),
+        ...[...diag, ...skipped].map((c, i) => slot(pairs[i % pairs.length], c.row, c.col, Math.floor(i / pairs.length), 'pairs.' + side + '.' + (i % pairs.length)))];
     }
   
     num(i) { return (this.props.numerals ?? 'roman') === 'roman' ? this.romans[i] : String(i + 1); }
@@ -2845,6 +2847,14 @@
           this.observer.unobserve(en.target);
         });
       }, { rootMargin: '100% 0px -8% 0px' });
+      // ?dev opens the Research margins in a tuning panel (leaves-dev.js), which adjusts the two style
+      // tables in place and re-renders. The flag is the only thing that fetches it, so the page ships
+      // nothing for it otherwise, the same arrangement field.js has for the home field.
+      if (new URLSearchParams(location.search).has('dev')) {
+        import('./leaves-dev.js')
+          .then((m) => { if (!this.dead) this.leafTuner = m.mount({ spreads: this.LEAF_SPREADS, pairs: this.LEAF_PAIRS, rerender: () => this.forceUpdate() }); })
+          .catch((e) => console.error('leaves-dev', e));
+      }
       this.observeReveals(); this.mountTextEffects(); this.syncParchment(); this.syncHome(); this.syncPaper();
       this.hintTimer = setTimeout(() => this.setState({ hintGone: true }), 9000);
       setTimeout(() => this.measureTabs(), 400);
@@ -3237,7 +3247,7 @@
       };
       this.parchRaf = requestAnimationFrame(tick);
     }
-    componentWillUnmount() { if (this.fog) { this.fog.destroy(); this.fog = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); window.removeEventListener('popstate', this.onPop); this.observer?.disconnect(); cancelAnimationFrame(this.cellRaf); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
+    componentWillUnmount() { this.dead = true; if (this.leafTuner) { this.leafTuner.destroy(); this.leafTuner = null; } if (this.fog) { this.fog.destroy(); this.fog = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); window.removeEventListener('popstate', this.onPop); this.observer?.disconnect(); cancelAnimationFrame(this.cellRaf); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
     observeReveals() { document.querySelectorAll('[data-enter=""]').forEach((el) => this.observer.observe(el)); }
     // the cursor's cell on the sheet grid, sampled once a frame and only written when the cell actually
     // changes, so crossing a 48px column re-renders once rather than once per pixel of travel
