@@ -66,6 +66,22 @@
     .sheet-mod[data-enter]::after { opacity: 0; }
     .sheet-mod[data-enter="in"]::after { opacity: 1; transition: box-shadow 240ms ease, opacity 260ms ease var(--d, 0ms); }
     .sheet-mod[data-enter="in"]::before { opacity: 0; transition: opacity 420ms ease calc(var(--d, 0ms) + 220ms); }
+    /* The CV: the same document templates/resume.typ sets as a PDF in the private curriculum-vitae
+       repository, typeset for a screen. Every entry is a two-column row, body left and date right on a
+       mono rail. Under 700px the rail has nowhere to go, so the date drops beneath the body rather than
+       squeezing the line. Printing keeps only the column: the running head and the three fixed canvas
+       layers carry data-print="hide" and go away, and the measure opens to the page. */
+    .cv-row { display: grid; grid-template-columns: minmax(0,1fr) auto; column-gap: 14px; align-items: baseline; }
+    .cv-date { font-family: var(--mono); font-size: 0.8em; line-height: 1.6; color: var(--color-neutral-600); text-align: right; white-space: nowrap; }
+    @media (max-width: 700px) {
+      .cv-row { grid-template-columns: minmax(0,1fr); }
+      .cv-date { text-align: left; margin-top: 2px; }
+    }
+    @media print {
+      [data-print="hide"] { display: none !important; }
+      main[data-screen-label="CV"] { max-width: none; padding: 0; font-size: 10pt; }
+      main[data-screen-label="CV"] a { color: inherit; text-decoration: none; }
+    }
   </style>
 <style>
 .scp0:hover{color:var(--color-accent-700) !important}
