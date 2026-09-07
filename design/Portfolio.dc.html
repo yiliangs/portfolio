@@ -1707,21 +1707,23 @@ class Component extends DCLogic {
       }));
   }
   togglePaperFold(id) { this.setState((st) => { const o = st.paperOpen || {}; return { paperOpen: { ...o, [id]: !o[id] } }; }); }
-  // the glowing glyphs of the hero title are the parchment's heat source: read each lit glyph span's inline glow
-  // (the text effect writes a text-shadow whose alpha tracks brightness), project its centre into the roll's box
+  // the glowing glyphs of the hero column are the parchment's heat source. Every text pane standing on the sheet
+  // feeds it, the headline and the note beneath it alike, so the cursor burns the roll wherever it rakes the ink.
+  // Read each lit glyph span's inline glow (the text effect writes a text-shadow whose alpha tracks brightness) and
+  // hand the roll the glyph's ink box; how finely that box is sampled is the sim's business, not the page's.
   feedParchment() {
-    const roll = this.parchLayerRef.current, title = this.heroTextRef.current && this.heroTextRef.current.querySelector('[data-tr="title"]');
-    if (!this.parch || !roll || !title) return;
+    const roll = this.parchLayerRef.current, col = this.heroTextRef.current;
+    if (!this.parch || !roll || !col) return;
     const rr = roll.getBoundingClientRect(); if (!rr.width) return;
     const out = [];
-    title.querySelectorAll('span[style*="text-shadow"]').forEach((s) => {
+    col.querySelectorAll('[data-tr] span[style*="text-shadow"]').forEach((s) => {
       // the effect writes `0 0 {14*b}px rgba(...)`; the browser serialises it as `rgba(...) 0px 0px {14*b}px` — read the blur
-      const ts = s.style.textShadow; const m = /(\d+(?:\.\d+)?)px\s*$/.exec(ts) || /0px\s+0px\s+(\d+(?:\.\d+)?)px/.exec(ts); const w = Math.min(1, m ? parseFloat(m[1]) / 14 : 0); if (w < 0.2) return;
+      const ts = s.style.textShadow; const m = /(\d+(?:\.\d+)?)px\s*$/.exec(ts) || /0px\s+0px\s+(\d+(?:\.\d+)?)px/.exec(ts); const glow = Math.min(1, m ? parseFloat(m[1]) / 14 : 0); if (glow < 0.2) return;
       const b = s.getBoundingClientRect(); if (!b.width) return;
-      // heat sits on the glyph's profile: sample points around the x-height box of the glyph, not its centre
-      const x0 = b.left + b.width * 0.15, x1 = b.right - b.width * 0.15, y0 = b.top + b.height * 0.3, y1 = b.top + b.height * 0.78;
-      const pts = [[x0, y0], [x1, y0], [x0, y1], [x1, y1], [(x0 + x1) / 2, y0], [(x0 + x1) / 2, y1]];
-      for (const [x, y] of pts) out.push({ x: (x - rr.left) / rr.width, y: (y - rr.top) / rr.height, w });
+      // heat sits on the letterform, so report the x-height box rather than the span's, which carries the
+      // ascender and descender space around the ink
+      const x = b.left + b.width * 0.15, y = b.top + b.height * 0.3;
+      out.push({ x: (x - rr.left) / rr.width, y: (y - rr.top) / rr.height, w: b.width * 0.7 / rr.width, h: b.height * 0.48 / rr.height, glow });
     });
     this.parch.setSources(out);
   }

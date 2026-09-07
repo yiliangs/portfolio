@@ -72,6 +72,8 @@ const HEAT = {
   glyphMin: 0.55,  // glyph glow intensity below which a glyph only warms the paper, never kindles it
   radius: 0.035,  // uv units — a glyph edge's ignition reach (tight: the char starts on the letterform)
   rate: 3.2,      // heat/s at a fully lit glyph edge
+  peak: 0.42,     // fraction of that rate the hottest cell may take, whatever the lit ink is (see stepSources);
+                  // set so a lit headline opens its hole at the speed it did before the field was normalised
   smolderRate: 0.6,// heat/s self-burn past ignition; scales radiation. Sets how fast the front creeps
   reach: 1.8,       // cells — radiation reach
   ignite: 0.22,     // kindling point: below it warmth cools; at/above it self-sustains
@@ -81,6 +83,24 @@ const HEAT = {
   rewind: 4.4,      // playback speed of the reversed burn (1 = the burn's own timing)
   unburnRate: 3.0,  // heat/s the un-burned cells lose as they cool back to paper
 };
+// How finely a lit glyph's ink box is sampled, in the roll's own uv. The kernel a source heats through is an
+// ellipse (d2 = du*du*3.5 + dv*dv < radius*radius), so it reaches radius/sqrt(3.5) in u and radius in v: one
+// sample per kernel the box spans is all the sheet can tell apart, and closer points land inside a neighbour's
+// reach and buy nothing but cost. Capped at six to a glyph, the profile the headline has always burned with:
+// three down the axis spanning the most kernels, two across the other. A glyph of body type is under one kernel
+// either way and comes back as a single point, so a paragraph feeds the sim a paragraph's worth of points rather
+// than six times that. Exported so tools/check-burn-source.mjs can pin the rule.
+export function boxSamples(uLo, uHi, vLo, vHi) {
+  const stepU = HEAT.radius / Math.sqrt(3.5), stepV = HEAT.radius;
+  const n = (span, step) => Math.max(1, Math.min(3, Math.round(span / step)));
+  let nu = n(uHi - uLo, stepU), nv = n(vHi - vLo, stepV);
+  if (nu === 3 && nv === 3) { if ((uHi - uLo) / stepU >= (vHi - vLo) / stepV) nv = 2; else nu = 2; }
+  const out = [];
+  for (let p = 0; p < nu; p++) for (let q = 0; q < nv; q++)
+    out.push([nu === 1 ? (uLo + uHi) / 2 : uLo + (uHi - uLo) * p / (nu - 1),
+      nv === 1 ? (vLo + vHi) / 2 : vLo + (vHi - vLo) * q / (nv - 1)]);
+  return out;
+}
 
 const FRAG_COMMON = `
   uniform sampler2D uHeat; uniform vec3 uGold; uniform float uHeal;
@@ -303,7 +323,8 @@ export function mount(container) {
   let over = false, tx = 0, ty = 0, cx = 0, cy = 0, raf, alive = true, last = performance.now(), t = 0;
   // drag orbit on the platform: turn (about the sheet normal) and elevation offsets, with inertia, decaying back home
   let dTurn = 0, dTilt = 0, vTurn = 0, vTilt = 0, dragging = false;
-  let sources = []; // [{u, v, w}] glowing glyphs projected onto the roll; w = intensity 0..1
+  let sources = []; // [{u, v, w}] points sampled off the glowing glyphs' ink boxes; w = intensity 0..1
+  const srcHeat = new Float32Array(GW * GH); // heat the sources put into each cell this step
   let allGoneAt = -1, reversing = false, rewindT = 0;
   const px = tex.image.data;
 
@@ -320,8 +341,40 @@ export function mount(container) {
     }
     if (!any) reversing = false;
   }
+  // glowing glyphs are the heat: each lit point radiates into the sheet with its intensity, over a reach of
+  // HEAT.radius in v and radius/sqrt(3.5) in u. That is a couple of cells either way, so the sources scatter into
+  // the cells they can actually reach rather than every cell asking every source — the sheet's whole hero column
+  // can be alight without the per-frame cost following the glyph count.
+  const SRC_RI = Math.ceil(HEAT.radius / Math.sqrt(3.5) * GW), SRC_RJ = Math.ceil(HEAT.radius * GH);
+  function stepSources(dt) {
+    srcHeat.fill(0);
+    if (!sources.length) return;
+    const R2 = HEAT.radius * HEAT.radius;
+    let peak = 0;
+    for (let s = 0; s < sources.length; s++) {
+      const g = sources[s], ci = g.u * GW - 0.5, cj = g.v * GH - 0.5;
+      const i0 = Math.max(0, Math.ceil(ci - SRC_RI)), i1 = Math.min(GW - 1, Math.floor(ci + SRC_RI));
+      const j0 = Math.max(0, Math.ceil(cj - SRC_RJ)), j1 = Math.min(GH - 1, Math.floor(cj + SRC_RJ));
+      for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+        const du = (i + 0.5) / GW - g.u, dv = (j + 0.5) / GH - g.v, d2 = du * du * 3.5 + dv * dv;
+        if (d2 >= R2) continue;
+        const prox = 1 - Math.sqrt(d2) / HEAT.radius;
+        const k = j * GW + i, put = srcHeat[k] + HEAT.rate * g.w * g.w * prox * prox * dt;
+        srcHeat[k] = put; if (put > peak) peak = put;
+      }
+    }
+    // Points that fall in one cell stack, and how many do is an artefact of the type: six around a headline
+    // letterform, one to a glyph of body type, several where two lines of it run close. So the field is normalised
+    // on what it delivers rather than on how many points delivered it — the hottest cell takes HEAT.peak of the
+    // named rate, whatever the ink. A lit paragraph then opens a wide front at the speed a lit word opens a narrow
+    // one, instead of a slow smoulder that never reaches the kindling point. Only ever scaled down: a single faint
+    // glyph still merely warms the paper.
+    const cap = HEAT.rate * HEAT.peak * dt;
+    if (peak > cap) { const s = cap / peak; for (let k = 0; k < GW * GH; k++) srcHeat[k] *= s; }
+  }
   function stepHeat(dt) {
-    const R2 = HEAT.radius * HEAT.radius, reach = HEAT.reach | 0, reachSq = HEAT.reach * HEAT.reach;
+    const reach = HEAT.reach | 0, reachSq = HEAT.reach * HEAT.reach;
+    stepSources(dt);
     // radiators: burning (>= ignite) or fresh embers
     const rad = [];
     for (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) { const k = j * GW + i; const burned = burnedAt[k] >= 0; if (burned ? t - burnedAt[k] < HEAT.emberS : heat[k] >= HEAT.ignite) rad.push(k); }
@@ -329,10 +382,7 @@ export function mount(container) {
     let remaining = 0;
     for (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) {
       const k = j * GW + i; if (burnedAt[k] >= 0) continue; remaining++;
-      let input = 0;
-      // glowing glyphs are the heat: each lit glyph radiates into the sheet with its intensity; only the brightest
-      // (past HEAT.glyphMin) can actually kindle paper, dimmer ones merely warm it
-      for (let s = 0; s < sources.length; s++) { const g = sources[s]; const du = (i + 0.5) / GW - g.u, dv = (j + 0.5) / GH - g.v; const d2 = du * du * 3.5 + dv * dv; if (d2 < R2) { const prox = 1 - Math.sqrt(d2) / HEAT.radius; input += HEAT.rate * g.w * g.w * prox * prox * dt; } }
+      let input = srcHeat[k];
       if (rad.length) {
         let s = 0;
         for (let gy = -reach; gy <= reach; gy++) for (let gx = -reach; gx <= reach; gx++) { const ii = i + gx, jj = j + gy; if (ii < 0 || jj < 0 || ii >= GW || jj >= GH || (gx === 0 && gy === 0)) continue; const kk = jj * GW + ii; if (!radGrid.has(kk)) continue; const d2 = gx * gx + gy * gy; if (d2 > reachSq) continue; s += 1 - Math.sqrt(d2) / HEAT.reach; }
@@ -422,21 +472,30 @@ export function mount(container) {
     isPlatform() { return unroll > 0.95; },
     // the platform's sheet size, column head-room and pose — so the home cube can land as this exact plate
     platformFrame() { return { W, H, stack: MAX_STACK + GAP, tilt: ISO_TILT, turn: ISO_TURN }; },
-    // glyphs: [{x, y, w}] with x,y in container fractions (0..1) and w the glyph's glow intensity 0..1.
+    // glyphs: [{x, y, w, h, glow}] — a lit glyph's ink box in container fractions (0..1) and its glow 0..1.
+    // The page reports where the lit ink is and how bright; how finely a box is sampled is the sim's own business,
+    // because it depends on the grid: a headline letterform spans several cells and is traced around its profile,
+    // a glyph of body type is smaller than one kernel and contributes a single point.
     // container -> world at z≈0 -> the roll's local frame (rotated +90° about z: local x = world y, local y = -world x) -> uv
     setSources(glyphs) {
       sources = [];
       if (reversing) return;
-      for (const g of glyphs) {
-        if (g.w < HEAT.glyphMin) continue;
-        const wx = ((g.x - 0.5) * visW - group.position.x) / as, wy = ((0.5 - g.y) * visH - group.position.y) / as;
+      const project = (x, y) => {
+        const wx = ((x - 0.5) * visW - group.position.x) / as, wy = ((0.5 - y) * visH - group.position.y) / as;
         const rz = group.rotation.z, lx = wx * Math.cos(rz) + wy * Math.sin(rz), ly = -wx * Math.sin(rz) + wy * Math.cos(rz);
-        const u = 0.5 + lx / W, v = 0.5 + ly / H;
-        if (u < -0.05 || u > 1.05 || v < -0.05 || v > 1.05) continue;
-        sources.push({ u, v, w: (g.w - HEAT.glyphMin) / (1 - HEAT.glyphMin) });
+        return [0.5 + lx / W, 0.5 + ly / H];
+      };
+      for (const g of glyphs) {
+        if (g.glow < HEAT.glyphMin) continue;
+        const w = (g.glow - HEAT.glyphMin) / (1 - HEAT.glyphMin);
+        const a = project(g.x, g.y), b = project(g.x + g.w, g.y + g.h);
+        const uLo = Math.min(a[0], b[0]), uHi = Math.max(a[0], b[0]), vLo = Math.min(a[1], b[1]), vHi = Math.max(a[1], b[1]);
+        if (uHi < -0.05 || uLo > 1.05 || vHi < -0.05 || vLo > 1.05) continue;
+        for (const [u, v] of boxSamples(uLo, uHi, vLo, vHi)) {
+          if (u < -0.05 || u > 1.05 || v < -0.05 || v > 1.05) continue;
+          sources.push({ u, v, w });
+        }
       }
-      // many nearby points would stack heat; normalise so a fully lit glyph outline burns at ~rate
-      if (sources.length > 24) { const k = 24 / sources.length; for (const s of sources) s.w *= Math.sqrt(k); }
     },
     setUnroll(k) { unroll = Math.max(0, Math.min(1, k)); },
     // a register change: whatever state the burn is in, rewind it at 10x so the roll arrives unburned
