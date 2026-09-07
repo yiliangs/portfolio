@@ -44,8 +44,7 @@
          neighbour's outer stroke: keep the modules in reading order or the seams double.
          The frame is a layer of its own so it lands above whatever the module holds, which is how a
          plate keeps its left and top lines over a photograph. No z-index anywhere in here: painting
-         order alone gives content, then ground, then frame, and leaves the guides free to sit above
-         the lot. — */
+         order alone gives content, then ground, then frame. — */
     .sheet-mod { position: relative; box-sizing: border-box; background: var(--color-bg); }
     .sheet-mod::after { content: ''; position: absolute; inset: 0; pointer-events: none;
       box-shadow: inset 1px 0 0 0 var(--hair), inset 0 1px 0 0 var(--hair), 1px 0 0 0 var(--hair), 0 1px 0 0 var(--hair);

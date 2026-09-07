@@ -1913,15 +1913,6 @@
                 ),
                 "\n    "
               ),
-              "\n\n    ",
-              "\n    ",
-              h("div", { key: "47", "aria-hidden": "true", style: S(`position:absolute; z-index:4; pointer-events:none; left:0; right:0; height:1px; background:var(--color-text); top:${V.sheet?.guides?.top ?? ""}; opacity:${V.sheet?.guides?.on ?? ""}; transition:opacity 200ms ease;`) }),
-              "\n    ",
-              h("div", { key: "49", "aria-hidden": "true", style: S(`position:absolute; z-index:4; pointer-events:none; left:0; right:0; height:1px; background:var(--color-text); top:${V.sheet?.guides?.bottom ?? ""}; opacity:${V.sheet?.guides?.on ?? ""}; transition:opacity 200ms ease;`) }),
-              "\n    ",
-              h("div", { key: "51", "aria-hidden": "true", style: S(`position:absolute; z-index:4; pointer-events:none; top:0; bottom:0; width:1px; background:var(--color-text); left:${V.sheet?.guides?.left ?? ""}; opacity:${V.sheet?.guides?.on ?? ""}; transition:opacity 200ms ease;`) }),
-              "\n    ",
-              h("div", { key: "53", "aria-hidden": "true", style: S(`position:absolute; z-index:4; pointer-events:none; top:0; bottom:0; width:1px; background:var(--color-text); left:${V.sheet?.guides?.right ?? ""}; opacity:${V.sheet?.guides?.on ?? ""}; transition:opacity 200ms ease;`) }),
               "\n    "
             ),
             "\n  "
@@ -3049,7 +3040,6 @@
       const r = grid.getBoundingClientRect();
       const x = Math.min(22, Math.max(1, Math.floor((e.clientX - r.left) / (r.width / 22)) + 1));
       const y = Math.max(1, Math.floor((e.clientY - r.top) / 44) + 1);
-      this.lastPlate = name;
       this.pendingCell = { plate: name, x, y };
       if (this.cellRaf) return;
       this.cellRaf = requestAnimationFrame(() => {
@@ -3475,17 +3465,10 @@
         sheet[name] = { col: place[name].col, row: place[name].row,
           delay: ((at(place[name].row)[0] - 1) * this.PLOT_STEP) + 'ms' };
       }
-      // hovering a plate carries its own edges across the whole sheet as guide lines, and reads the
-      // cursor's cell back into that plate's caption. The lines are placed off the same table the plate
-      // is, so nothing has to be measured; the last plate is kept so the guides fade out where they were
+      // hovering a plate reads the cursor's cell back into that plate's caption
       const cur = this.state.cell;
-      const gp = place[(cur && cur.plate) || this.lastPlate || 'hero'];
-      const [gc0, gc1] = at(gp.col), [gr0, gr1] = at(gp.row);
       const pad2 = (n) => String(n).padStart(2, '0');
       const readout = cur ? 'x ' + pad2(cur.x) + ' · y ' + pad2(cur.y) : '';
-      sheet.guides = { on: cur ? '1' : '0',
-        top: ((gr0 - 1) * 44) + 'px', bottom: ((gr1 - 1) * 44) + 'px',
-        left: 'calc((100% / 22) * ' + (gc0 - 1) + ')', right: 'calc((100% / 22) * ' + (gc1 - 1) + ')' };
       sheet.heroReadout = cur && cur.plate === 'hero' ? readout : '';
       sheet.detailReadout = cur && cur.plate !== 'hero' ? readout : '';
       for (const name of ['hero', 'detailA', 'detailB']) {
