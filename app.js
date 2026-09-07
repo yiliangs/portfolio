@@ -480,6 +480,19 @@
               h("p", { key: "19|19.19w1nxe", "data-morph": "colophon", style: S(`grid-column:1 / 16; grid-row:${V.gridColophonRow ?? ""}; margin:0; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent);  padding:22px; box-sizing:border-box; color:var(--color-neutral-600); font-size:12px; line-height:18px;`) },
                 h(F,{key:0},"",I(V.page?.colophon,1),"")
               ),
+              "\n\n    ",
+              "\n    ",
+              h("a", { key: "22|5.49kwkt", href: V.cvMailto, style: S(`grid-column:1 / 8; grid-row:${V.gridContactRow ?? ""}; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:13px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp6" },
+                "email"
+              ),
+              "\n    ",
+              h("a", { key: "24|6.1yz8dag", href: V.cvGithub, style: S(`grid-column:8 / 16; grid-row:${V.gridContactRow ?? ""}; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:13px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp6" },
+                "github"
+              ),
+              "\n    ",
+              h("button", { key: "26|2.3ho5a", onClick: V.goCv, style: S(`all:unset; position:relative; grid-column:16 / 23; grid-row:${V.gridContactRow ?? ""}; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:13px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;`), className: "scp6" },
+                "cv"
+              ),
               "\n    "
             ),
             "\n  "
@@ -2228,7 +2241,8 @@
       page.dropCap = introChars[0]; page.introRest = introChars.slice(1).join('');
       // the Development page is placed on a 44px module: cards are 7 rows with two blank rows between
       const lastCardEnd = 23 + 9 * Math.max(0, pageProjects.length - 1);
-      const gridRows = { plates: lastCardEnd + ' / ' + (lastCardEnd + 1), author: (lastCardEnd + 2) + ' / ' + (lastCardEnd + 18), colophon: (lastCardEnd + 20) + ' / ' + (lastCardEnd + 23) };
+      // the contact band closes the sheet: two rows for air, after the same two-row gap the colophon takes
+      const gridRows = { plates: lastCardEnd + ' / ' + (lastCardEnd + 1), author: (lastCardEnd + 2) + ' / ' + (lastCardEnd + 18), colophon: (lastCardEnd + 20) + ' / ' + (lastCardEnd + 23), contact: (lastCardEnd + 25) + ' / ' + (lastCardEnd + 27) };
       const pad = (n) => String(n).padStart(2, '0');
       const featured = this.featuredFor[pageKey].map((i, k) => ({ ...projects[i], plateNumeral: this.num(k) }));
       const current = projects[idx];
@@ -2290,7 +2304,7 @@
         parallax: Math.round((this.state.scrollY || 0) * 0.18) + 'px',
         hintOpacity: this.state.hintGone || this.state.usedKeys ? '0' : '1', bloomHintOpacity: this.state.bloomTouched ? '0' : '1',
         projects, pageProjects, leaves, leftLeaves: leaves.filter((l) => l.side === 'left'), rightLeaves: leaves.filter((l) => l.side === 'right'), featured, current, next: projects[(idx + 1) % projects.length], hovered: hov, cv: cvViews.timeline,
-        gridPlatesRow: gridRows.plates, gridAuthorRow: gridRows.author, gridColophonRow: gridRows.colophon,
+        gridPlatesRow: gridRows.plates, gridAuthorRow: gridRows.author, gridColophonRow: gridRows.colophon, gridContactRow: gridRows.contact,
         sheet, sheetGridRef: this.sheetGridRef,
         contentsRef: this.contentsRef, platesRef: this.platesRef, notesRef: this.notesRef, headRef: this.headRef, tabToolingRef: this.tabToolingRef, tabWritingRef: this.tabWritingRef,
         goTooling: () => this.goPage('tooling'), goWriting: () => this.goPage('writing'),
