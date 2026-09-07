@@ -21,7 +21,7 @@
 
 import { readFileSync, existsSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
-import { DC_SOURCE, readLogicSource, readEntries, registerOf } from './dc-data.mjs';
+import { DC_SOURCE, readLogicSource, readEntries, readTable, readNumber, registerOf } from './dc-data.mjs';
 
 const BUILT = 'app.js';
 
@@ -124,6 +124,115 @@ if (!mono.some((d) => PLATE_FIELDS.every((f) => !d[f]))) {
   fail('every Development entry now names a plate, so nothing exercises the placeholder slot any more');
 }
 
+// ---------------------------------------------------------------- the portrait hero's plate
+
+// A hero taller than it is wide is given a plate cut to its own proportion on the wide sheet: it
+// keeps the sheet's left edge, spans PORTRAIT_COLS of the twenty-two columns, and takes the rows
+// portraitRows() asks for, with every module from the hero caption down moving by the rows the plate
+// gained. The rule is written once, in the logic class; this reads it back rather than restating it,
+// then holds the table it produces to what check-sheet-grid holds the written tables to, plus the
+// two properties that are the point of the rule.
+const COLUMNS = 22;
+let portraitReport = 'none';
+
+function readPortraitRule(logicSrc) {
+  const m = /\n\s*portraitRows\(w,\s*h\)\s*\{\s*return ([^;]+);\s*\}/.exec(logicSrc);
+  if (!m) throw new Error('the logic class has no portraitRows(w, h) rule');
+  const self = {
+    PORTRAIT_COLS: readNumber('PORTRAIT_COLS', logicSrc),
+    SHEET_COL: readNumber('SHEET_COL', logicSrc),
+    SHEET_ROW: readNumber('SHEET_ROW', logicSrc),
+  };
+  const rows = new Function('self', 'w', 'h', 'return ' + m[1].replace(/this\./g, 'self.'));
+  return { ...self, rows: (w, h) => rows(self, w, h) };
+}
+
+const at = (s) => s.split('/').map((v) => parseInt(v, 10));
+
+// renderVals builds the wide sheet's table this way when the entry's hero is portrait.
+function portraitTable(table, rule, entry) {
+  const heroSpan = at(table.hero.row);
+  const heroRows = rule.rows(entry.heroW, entry.heroH);
+  const grew = heroRows - (heroSpan[1] - heroSpan[0]);
+  const movesFrom = at(table.heroCaption.row)[0];
+  const out = {};
+  for (const [name, spot] of Object.entries(table)) {
+    const span = at(spot.row);
+    const shift = span[0] >= movesFrom ? grew : 0;
+    out[name] = {
+      col: name === 'hero' ? '1 / ' + (1 + rule.PORTRAIT_COLS) : spot.col,
+      row: name === 'hero' ? span[0] + ' / ' + (span[0] + heroRows) : (span[0] + shift) + ' / ' + (span[1] + shift),
+    };
+  }
+  return { table: out, heroRows, grew, movesFrom };
+}
+
+try {
+  const logicSrc = readLogicSource();
+  const rule = readPortraitRule(logicSrc);
+  const wide = readTable('SHEET_WIDE', logicSrc);
+  if (rule.PORTRAIT_COLS < 1 || rule.PORTRAIT_COLS >= COLUMNS) {
+    fail('PORTRAIT_COLS is ' + rule.PORTRAIT_COLS + ', which is not a span of the ' + COLUMNS + ' column grid');
+  }
+  const sitters = mono.filter((d) => d.heroW > 0 && d.heroH > d.heroW);
+  for (const d of sitters) {
+    const { table, heroRows, grew } = portraitTable(wide, rule, d);
+    const where = 'the ' + d.title + " sheet's portrait plate";
+    if (!Number.isInteger(heroRows) || heroRows < 1) { fail(where + ' asks for ' + heroRows + ' rows, which is not a whole count of cells'); continue; }
+    if (grew < 0) fail(where + ' is shorter than the standard plate, so the rule is doing nothing for it');
+
+    // the plate is the picture's proportion, rounded up to whole rows: never shorter than the
+    // picture needs at that width, and never a whole row taller
+    const needed = rule.PORTRAIT_COLS * rule.SHEET_COL * d.heroH / d.heroW;
+    const height = heroRows * rule.SHEET_ROW;
+    if (height < needed) fail(where + ' is ' + height + 'px for a picture that needs ' + needed.toFixed(1) + 'px at that width');
+    if (height - needed >= rule.SHEET_ROW) fail(where + ' is ' + (height - needed).toFixed(1) + 'px taller than the picture, which is a whole empty row or more');
+
+    // whole cells, on the grid, and nothing laid over anything
+    const boxes = [];
+    for (const [name, spot] of Object.entries(table)) {
+      const c = at(spot.col), r = at(spot.row);
+      if (![...c, ...r].every(Number.isInteger)) { fail(where + ' leaves ' + name + ' on a span this check cannot read: ' + spot.col + ' x ' + spot.row); continue; }
+      if (c[0] < 1 || c[1] > COLUMNS + 1 || c[0] >= c[1]) fail(where + ' puts ' + name + ' off the grid: columns ' + spot.col);
+      if (r[0] < 1 || r[0] >= r[1]) fail(where + ' puts ' + name + ' off the grid: rows ' + spot.row);
+      boxes.push([name, c, r]);
+    }
+    for (let i = 0; i < boxes.length; i++) {
+      for (let j = i + 1; j < boxes.length; j++) {
+        const [a, ac, ar] = boxes[i], [b, bc, br] = boxes[j];
+        if (ac[0] < bc[1] && bc[0] < ac[1] && ar[0] < br[1] && br[0] < ar[1]) {
+          fail(where + ' lays ' + a + ' and ' + b + ' over the same cells');
+        }
+      }
+    }
+
+    // the hero keeps the left edge and the span the rule gives it
+    const heroCol = at(table.hero.col);
+    if (heroCol[0] !== 1 || heroCol[1] !== 1 + rule.PORTRAIT_COLS) fail(where + ' does not keep column 1 and span ' + rule.PORTRAIT_COLS + ' columns: ' + table.hero.col);
+
+    // everything from the hero caption down moved by exactly the rows the plate gained, and nothing
+    // above it moved at all
+    const movesFrom = at(wide.heroCaption.row)[0];
+    for (const [name, spot] of Object.entries(wide)) {
+      if (name === 'hero') continue;
+      const was = at(spot.row), now = at(table[name].row);
+      const want = was[0] >= movesFrom ? grew : 0;
+      if (now[0] - was[0] !== want || now[1] - was[1] !== want) {
+        fail(where + ' moves ' + name + ' by ' + (now[0] - was[0]) + ' rows, not ' + want);
+      }
+      if (spot.col !== table[name].col) fail(where + ' changes the columns of ' + name + ', which only the hero may do');
+    }
+    const heroWas = at(wide.hero.row), heroNow = at(table.hero.row);
+    if (heroNow[0] !== heroWas[0]) fail(where + ' does not start where the standard plate starts');
+    if (heroNow[1] - heroWas[1] !== grew) fail(where + ' ends ' + (heroNow[1] - heroWas[1]) + ' rows later, not ' + grew);
+  }
+  if (!sitters.length) fail('no Development entry has a portrait hero, so the portrait plate rule is never exercised');
+  portraitReport = sitters.map((d) => d.title + ' on ' + rule.PORTRAIT_COLS + ' columns by ' +
+    portraitTable(wide, rule, d).heroRows + ' rows').join(', ');
+} catch (e) {
+  fail('the portrait plate rule cannot be read back: ' + e.message);
+}
+
 // ---------------------------------------------------------------- the slots in the template
 
 const src = readFileSync(DC_SOURCE, 'utf8');
@@ -222,4 +331,5 @@ if (failures.length) {
   process.exit(1);
 }
 console.log('check-dev-plates: ' + mono.length + ' Development entries, ' +
-  mono.filter((d) => d.hero).length + ' with a hero plate, ' + slots.length + ' slots checked');
+  mono.filter((d) => d.hero).length + ' with a hero plate, ' + slots.length + ' slots checked; ' +
+  'portrait plate: ' + portraitReport);

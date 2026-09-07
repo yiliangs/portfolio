@@ -37,6 +37,35 @@ export function readEntries(logicSrc = readLogicSource()) {
   return entries;
 }
 
+// A placement table (SHEET_WIDE, SHEET_NARROW, LANDING_WIDE) as { module: { col, row } }. This one
+// throws on anything it cannot read, so a caller that only wants to consume a table already known
+// good does not have to repeat the reporting; tools/check-sheet-grid.mjs keeps its own lenient
+// reader because guarding what could hide in the table is its whole job.
+export function readTable(name, logicSrc = readLogicSource()) {
+  const at = logicSrc.indexOf('  ' + name + ' = {');
+  if (at < 0) throw new Error('the logic class has no ' + name + ' placement table');
+  const end = logicSrc.indexOf('\n  };', at);
+  if (end < 0) throw new Error(name + ' is not closed with "  };" so it cannot be read');
+  const entry = /^\s*([A-Za-z_$][\w$]*):\s*\{\s*col:\s*'([^']*)',\s*row:\s*'([^']*)'\s*\},?\s*$/;
+  const table = {};
+  for (const line of logicSrc.slice(at, end).split('\n').slice(1)) {
+    const m = entry.exec(line);
+    if (m) table[m[1]] = { col: m[2], row: m[3] };
+  }
+  if (!Object.keys(table).length) throw new Error(name + ' read back empty');
+  return table;
+}
+
+// A plain numeric field of the logic class, so a rule written there can be read back rather than
+// copied into a check. The value is an expression, not always a literal.
+export function readNumber(name, logicSrc = readLogicSource()) {
+  const m = new RegExp('\\n\\s*' + name + ' = ([^;]+);').exec(logicSrc);
+  if (!m) throw new Error('the logic class has no ' + name);
+  const value = new Function('return (' + m[1] + ')')();
+  if (!Number.isFinite(value)) throw new Error(name + ' is not a number: ' + m[1]);
+  return value;
+}
+
 // reg(i) in the logic class, kept as one line so the two cannot drift apart silently.
 export const registerOf = (entry) => (/Research|Writing|Essay/.test(entry.kind) ? 'serif' : 'mono');
 

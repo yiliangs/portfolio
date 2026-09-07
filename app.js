@@ -2129,12 +2129,12 @@
         body1: 'Git worktrees let several branches of a plug-in sit on disk at once, and Rhino undoes that: it resolves a plug-in by one ID from one registration, so every launch after the first loaded yesterday’s build under today’s name. The launcher takes the registration over for the length of a launch. It journals both registry hives, writes the selected .rhp in as Rhino’s install seed, and restores them when Rhino exits.',
         body2: 'Success is not a process starting. The launcher polls the Rhino it started until that exact file is mapped in its address space. No code goes into the plug-in to report back, because a plug-in cannot see its own load. The rule was found the hard way, with an MCP server whose registry writes never reached the hive Rhino reads: every write now runs in a process the shell started, and is confirmed before Rhino starts.',
         body3: 'It ships as a self-contained payload: a desktop, an rwl command line and a stdio MCP server, all over one backend. Coding agents were the first customers. They can build a branch, wait for a verified load, and read a named failure code, without asking me to click anything.' },
-      { title: 'Agent Usage Stat', subtitle: 'Not how many tokens I spent, but the shape of the work they went into.', kind: 'Side project', year: 2026, page: 230, pages: '230–237', role: 'Designer and developer', with: 'Grown from a script by Chris Hutchinson', status: 'Released, version 3.2', statusShort: 'released', stack: 'TypeScript and Electron: a headless helper hooked into each agent, a per-session JSON ledger that can live in a synced folder, and a portal of hand-drawn charts.', link: 'Source and releases on GitHub', href: 'https://github.com/yiliangs/agent-usage-stat', linkBlank: true, caption: 'One month of sessions as a wall-clock field: a column a day, a stripe per model family, shaded by token velocity.', placeholder: 'Capture: month timeline',
+      { title: 'Agent Usage Stat', subtitle: 'I was never interested in how many tokens I spent. I wanted to see the pattern behind them.', kind: 'Side project', year: 2026, page: 230, pages: '230–237', role: 'Designer and developer', with: 'Grown from a script by Chris Hutchinson', status: 'Released, version 3.2', statusShort: 'released', stack: 'TypeScript and Electron: a headless helper hooked into each agent, a per-session JSON ledger that can live in a synced folder, and a portal of hand-drawn charts.', link: 'Source and releases on GitHub', href: 'https://github.com/yiliangs/agent-usage-stat', linkBlank: true, caption: 'One month of sessions as a wall-clock field: a column a day, a stripe per model family, shaded by token velocity.', placeholder: 'Capture: month timeline',
         hero: 'assets/agent-usage-stat/hero.png', heroW: 1920, heroH: 1088, detailA: 'assets/agent-usage-stat/detail-a.png', detailB: 'assets/agent-usage-stat/detail-b.png',
-        why: 'Every usage dashboard I found was a bill. I wanted to see when I work with agents, on what, and in what rhythm, and let the cost come along as a side effect.',
+        why: 'Every dashboard counted tokens. I was not interested in how many I had spent; I wanted to see the pattern behind the spending.',
         margin: 'Thirty evenings of work read as thirty events on a calendar. Fold them onto the clock and what survives is the habit.',
         summary: 'A private desktop atlas of my coding-agent sessions. Hooks capture each session as it ends, a local ledger keeps totals and never a prompt, and the views turn the ledger into rhythms: days, weeks, clocks, projects and model families, with the API-equivalent cost as one column among many.',
-        body1: 'The number every tool led with was the spend, and the spend told me nothing I could act on. What I wanted was pattern: which projects pulled me in at which hours, whether a change of model moved the working day, where the concurrent sessions clustered. So the ledger records time, project, machine and model for every session, keeps no prompt or response text, and the portal draws the time axis first.',
+        body1: 'I was not interested in how many tokens I spent. I wanted the pattern behind them: which projects pulled me in at which hours, whether a change of model moved the working day, where the concurrent sessions clustered. So the ledger records time, project, machine and model for every session, keeps no prompt or response text, and the portal draws the time axis first.',
         body2: 'The timeline is the view I built it for. A week is a dense wall-clock schedule with each session as a block. A month is thirty-one narrow days side by side, coloured by model family and shaded by token velocity, so a change of model or a run of late nights shows as a change of colour before anyone reads a number. The Pattern view folds the period onto the 168 hour-slots of a week.',
         body3: 'Capture is the unglamorous half. Agents tear down their exit hooks in about a second, so a small shim hands the transcript to a detached worker and gets out of the way. Four agents, two operating systems, one ledger folder, and no server anywhere: the renderer reads its own protocol.' },
     ];
@@ -2165,6 +2165,17 @@
     // second of the first, whether that batch is the opening screenful or one module arriving on scroll.
     PLOT_STEP = 40;
     PLOT_CAP = 1000;
+    // The plate a portrait hero is given on the wide sheet: half the sheet's columns, and the rows that
+    // width needs at the picture's own ratio, rounded up so the plate is never shorter than the picture
+    // and the two thin bands land top and bottom rather than left and right. SHEET_COL is the sheet's
+    // column at its full measure, the 1160px main less its two 48px margins over 22 columns, so the
+    // count is a fact about the entry rather than about the window: a narrower window shrinks every
+    // column together and the plate keeps its cells. Written as plain literals and one expression so
+    // tools/check-dev-plates.mjs can read the rule back without running this class.
+    PORTRAIT_COLS = 11;
+    SHEET_COL = (1160 - 96) / 22;
+    SHEET_ROW = 44;
+    portraitRows(w, h) { return Math.ceil(this.PORTRAIT_COLS * this.SHEET_COL * h / (w * this.SHEET_ROW)); }
     SHEET_WIDE = {
       back:          { col: '1 / 7',   row: '1 / 2' },
       header:        { col: '1 / 15',  row: '3 / 11' },
@@ -3483,13 +3494,30 @@
       const cvEmail = cvBasics.email || this.CONTACT.email;
       const cvReg = this.state.cvReg || 'serif';
       // the sheet's modules, placed off whichever table the width calls for. The template names a module
-      // and reads its span back; nothing about where a module sits is written in the markup
+      // and reads its span back; nothing about where a module sits is written in the markup.
+      //
+      // One entry moves the table: a hero taller than it is wide. Contained in the standard plate, a
+      // portrait capture is a stripe of picture between two wide bands of nothing, so on the wide sheet
+      // it is given a plate cut to its own proportion instead. The plate keeps the sheet's left edge,
+      // takes PORTRAIT_COLS of the twenty-two columns and as many whole rows as that width needs at the
+      // picture's ratio, and every module from the hero caption down moves by the rows it gained. The
+      // cells to the right of the plate are left as drawn grid, the way they are beside the title. The
+      // narrow sheet is a single column of full-width modules and keeps its own table.
       const place = this.state.narrow ? this.SHEET_NARROW : this.SHEET_WIDE;
       const at = (s) => s.split('/').map((v) => parseInt(v, 10));
+      const heroSpan = at(place.hero.row);
+      const portrait = !this.state.narrow && current.heroW > 0 && current.heroH > current.heroW;
+      const heroRows = portrait ? this.portraitRows(current.heroW, current.heroH) : heroSpan[1] - heroSpan[0];
+      const grew = heroRows - (heroSpan[1] - heroSpan[0]);
+      const movesFrom = at(place.heroCaption.row)[0];
       const sheet = {};
       for (const name of Object.keys(place)) {
-        sheet[name] = { col: place[name].col, row: place[name].row,
-          delay: ((at(place[name].row)[0] - 1) * this.PLOT_STEP) + 'ms' };
+        const span = at(place[name].row);
+        const shift = span[0] >= movesFrom ? grew : 0;
+        sheet[name] = {
+          col: name === 'hero' && portrait ? '1 / ' + (1 + this.PORTRAIT_COLS) : place[name].col,
+          row: name === 'hero' ? span[0] + ' / ' + (span[0] + heroRows) : (span[0] + shift) + ' / ' + (span[1] + shift),
+          delay: ((span[0] + shift - 1) * this.PLOT_STEP) + 'ms' };
       }
       // hovering a plate reads the cursor's cell back into that plate's caption
       const cur = this.state.cell;
