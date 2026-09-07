@@ -911,11 +911,6 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;textEffects&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Book&quot;},&quot;numerals&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;roman&quot;,&quot;options&quot;:[&quot;roman&quot;,&quot;arabic&quot;],&quot;tsType&quot;:&quot;'roman' | 'arabic'&quot;,&quot;section&quot;:&quot;Book&quot;},&quot;marginalia&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Book&quot;}}">
 class Component extends DCLogic {
-  // narrow and landingRows decide which of the two Development landings renders and how many rows it
-  // is drawn on, so they are read from the window here rather than waiting for componentDidMount's
-  // first onResize: the first paint would otherwise be the wrong landing, replaced a frame later.
-  state = { view: 'home', page: 'writing', cvReg: 'serif', idx: 10, hovered: 10, tab: { left: 0, width: 0 },
-    narrow: window.innerWidth < 1000, landingRows: this.visibleRows(), landingStatementRows: 12 };
   contentsRef = React.createRef(); platesRef = React.createRef(); notesRef = React.createRef(); landingStatementRef = React.createRef();
   homeLayerRef = React.createRef(); homeRollRef = React.createRef(); homeCubeRef = React.createRef(); fogLayerRef = React.createRef(); 
   // the home fog lives only on the home view; it fades out (and stops) elsewhere
@@ -1117,6 +1112,13 @@ class Component extends DCLogic {
       titleSize: 'clamp(36px,5.2vw,76px)', titleTracking: '-0.03em', bylineSize: '15px', bodySize: '15px', smallBodySize: '14px', stampSize: '28px', h2Size: '32px', h3Size: '26px', cvSize: '18px', capLeadSize: '13px', marginSize: '13px', marginStyle: 'normal', marginPrefix: '// ' },
   };
   featuredFor = { writing: [10, 11], tooling: [0, 1] };
+  // narrow and landingRows decide which of the two Development landings renders and how many rows it
+  // is drawn on, so they are read from the window here rather than waiting for componentDidMount's
+  // first onResize: the first paint would otherwise be the wrong landing, replaced a frame later. The
+  // address bar is read the same way, so a deep link paints the view it names, not the home first.
+  state = { view: 'home', page: 'writing', cvReg: 'serif', idx: 10, hovered: 10, tab: { left: 0, width: 0 },
+    narrow: window.innerWidth < 1000, landingRows: this.visibleRows(), landingStatementRows: 12,
+    ...this.routeState(this.parseRoute(location.hash)) };
 
   // Where every module of a Development sheet sits on the 22 column, 44px row drawing grid, as
   // "start / end" grid lines. The wide table is the desk-width sheet; the narrow table is the same
@@ -1337,6 +1339,7 @@ class Component extends DCLogic {
     if (!sameReg) this.retypeBrand(this.curReg(), toReg);
     this.setState(nextState, () => { window.scrollTo({ top: 0 }); if (olds) requestAnimationFrame(() => this.morphTexts(olds)); });
     if (!olds) window.scrollTo({ top: 0 });
+    this.record(nextState);
   }
   signal(d) { return /shipped|live|published|accepted/i.test(d.status) ? 'var(--sig-ok)' : /beta/i.test(d.status) ? 'var(--sig-warn)' : 'var(--sig-info)'; }
   // Every named text slot is paired across the two registers; the old text travels to the new slot's position
@@ -1605,10 +1608,49 @@ class Component extends DCLogic {
   // the CV keeps the page it was opened from, so Escape and the back control return there, and it
   // takes the register of the link that opened it: the Research colophon asks for serif, the
   // Development seams for mono. One document, two typesettings.
-  goCv(reg) { this.transition({ view: 'cv', cvReg: reg, page: this.state.page }); }
+  goCv(reg, page) { this.transition({ view: 'cv', cvReg: reg, page: page || this.state.page }); }
   open(i) { this.transition({ view: 'chapter', idx: i, page: this.pageOf(i) }); }
   scrollTo(ref) { const el = ref.current; if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: 'smooth' }); }
-  go(ref) { if (this.state.view !== 'page') { this.setState({ view: 'page', page: this.pageOf(this.state.idx) }, () => setTimeout(() => this.scrollTo(ref), 60)); } else this.scrollTo(ref); }
+  go(ref) { if (this.state.view !== 'page') { const page = this.pageOf(this.state.idx); this.setState({ view: 'page', page }, () => setTimeout(() => this.scrollTo(ref), 60)); this.record({ view: 'page', page }); } else this.scrollTo(ref); }
+
+  // Every view has an address: #/ for the home, #/writing and #/tooling for the two landings, #/cv/<register>
+  // for the CV, #/<slug> for a chapter (its id, or its title as a slug). A transition pushes the address it
+  // arrives at, so the browser's back and forward buttons walk the views the reader walked, and the address on
+  // arrival opens the view it names. The history entry carries the state behind the address (the page the CV
+  // was opened from, say), and the address alone is parsed only when there is no entry: a typed or pasted link.
+  slugOf(i) { const d = this.data[i]; return d.id || d.title.toLowerCase().replace(/[’']/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
+  routeOf(st) { return st.view === 'home' ? '/' : st.view === 'page' ? '/' + st.page : st.view === 'cv' ? '/cv/' + st.cvReg : '/' + this.slugOf(st.idx); }
+  parseRoute(hash) {
+    let path = ''; try { path = decodeURIComponent((hash || '').replace(/^#/, '')); } catch (e) { return null; }
+    if (path === '' || path === '/') return { view: 'home' };
+    if (path === '/writing' || path === '/tooling') return { view: 'page', page: path.slice(1) };
+    const cv = path.match(/^\/cv(?:\/(serif|mono))?$/); if (cv) return { view: 'cv', cvReg: cv[1] || 'serif' };
+    const i = this.data.findIndex((d, k) => '/' + this.slugOf(k) === path); return i >= 0 ? { view: 'chapter', idx: i } : null;
+  }
+  // the state a parsed address stands for, filled out the way goPage, open and goCv fill it
+  routeState(r) {
+    if (!r) return {};
+    if (r.view === 'page') return { view: 'page', page: r.page, idx: this.featuredFor[r.page][0], hovered: this.featuredFor[r.page][0] };
+    if (r.view === 'chapter') return { view: 'chapter', idx: r.idx, hovered: r.idx, page: this.pageOf(r.idx) };
+    if (r.view === 'cv') return { view: 'cv', cvReg: r.cvReg };
+    return { view: 'home' };
+  }
+  record(nextState, replace) {
+    if (this.restoring || !window.history) return;
+    const st = { ...this.state, ...nextState }, entry = { view: st.view, page: st.page, idx: st.idx, cvReg: st.cvReg }, url = '#' + this.routeOf(st);
+    // a turn to the view already showing (the Writing tab from Writing) rewrites the entry rather than stacking one
+    if (replace || url === location.hash) history.replaceState(entry, '', url); else history.pushState(entry, '', url);
+  }
+  restore(entry) {
+    // arrive through the methods a click would use, so each view's entrance plays the way it does from a click
+    this.restoring = true;
+    try {
+      if (entry.view === 'home') this.goHome();
+      else if (entry.view === 'page') this.goPage(entry.page);
+      else if (entry.view === 'cv') this.goCv(entry.cvReg, entry.page);
+      else if (entry.view === 'chapter') this.open(entry.idx);
+    } finally { this.restoring = false; }
+  }
 
   BRAND = 'Yiliang Shao';
   SYMBOLS = '!@#$%^&*+=<>?/|~';
@@ -1683,6 +1725,10 @@ class Component extends DCLogic {
     this.onResize(); this.measureLandingStatement(); window.addEventListener('resize', this.onResize);
     window.addEventListener('scroll', this.onScroll, { passive: true });
     window.addEventListener('keydown', this.onKey);
+    // the first entry gets the state behind its address, so a return to it restores the view as it was opened
+    this.record({}, true);
+    this.onPop = (e) => { const entry = e.state && e.state.view ? e.state : this.routeState(this.parseRoute(location.hash)); if (entry.view) this.restore(entry); };
+    window.addEventListener('popstate', this.onPop);
     // One scroll brings a batch of modules in at once. The stagger is rebased to the first module of
     // each batch, so the sheet inks top to bottom wherever the reader joins it instead of making a
     // module low on the sheet sit out the whole run before it draws: --d still comes from the
@@ -2091,7 +2137,7 @@ class Component extends DCLogic {
     };
     this.parchRaf = requestAnimationFrame(tick);
   }
-  componentWillUnmount() { if (this.fog) { this.fog.destroy(); this.fog = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); this.observer?.disconnect(); cancelAnimationFrame(this.cellRaf); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
+  componentWillUnmount() { if (this.fog) { this.fog.destroy(); this.fog = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); window.removeEventListener('popstate', this.onPop); this.observer?.disconnect(); cancelAnimationFrame(this.cellRaf); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
   observeReveals() { document.querySelectorAll('[data-enter=""]').forEach((el) => this.observer.observe(el)); }
   // the cursor's cell on the sheet grid, sampled once a frame and only written when the cell actually
   // changes, so crossing a 48px column re-renders once rather than once per pixel of travel
