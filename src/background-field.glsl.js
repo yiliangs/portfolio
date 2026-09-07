@@ -53,7 +53,10 @@ const int   FBM_OCTAVES    = 6;      // detail in the form; each one costs a
 const float FBM_LACUNARITY = 2.090;   // frequency step per octave
 const float FBM_GAIN       = 0.540;   // amplitude step per octave
 const float MASS_SCALE     = 2.420;   // features across the short axis
-const float MASS_DRIFT     = 0.018;  // domain units/sec the mass slides
+const float MASS_DRIFT     = 0.065;  // domain units/sec the mass slides. At
+                                     // MASS_SCALE 2.42 a feature crosses the
+                                     // short axis in about 37s; 0.018 took
+                                     // over two minutes
 const float MASS_WARP      = 0.550;   // domain warp; 0 gives plain round blobs
 const float MASS_LOW       = 0.460;  // fBm at or under this takes no ink
 const float MASS_HIGH      = 0.950;   // and at or over this is full mass
@@ -67,8 +70,39 @@ const float MASS_GAMMA     = 0.800;   // <1 broadens the dim middle of the
 // grain grow noisier as the form deepens rather than merely darker.
 const float DUST_DENSITY   = 1.30;   // >1 lets the deepest core go solid
 const float DUST_GAIN      = 0.40;   // peak luminance removed by one grain
-const float DUST_SCALE     = 1.0;    // 1.0 = one grain per device pixel
+const float GRAIN_PX       = 1.9;    // size of the finest grains, in device
+                                     // pixels. Below about 1.5 the shapes
+                                     // cannot resolve and it collapses back
+                                     // toward per-pixel speckle
+const float GRAIN_COARSE   = 0.42;   // relative size of the second, larger
+                                     // population of grains
+const float GRAIN_MIX      = 0.40;   // how much of that coarser population is
+                                     // blended in. 0 gives one uniform grain
+                                     // size, which is the giveaway of a
+                                     // procedural effect
+const float GRAIN_SPREAD   = 0.30;   // smooth noise is bell-shaped about 0.5,
+                                     // not flat, so thresholding it raw makes
+                                     // the dissolve wildly non-linear: nothing
+                                     // at all below about 0.15 and solid above
+                                     // 0.85. This stretches it back toward a
+                                     // flat distribution. The few percent that
+                                     // clamp at each end become grains that
+                                     // always take ink, or never do, which is
+                                     // true of a real emulsion too
+const float DUST_SOFT      = 0.30;   // width of the threshold ramp, as a
+                                     // fraction of the threshold. 0 is a hard
+                                     // on/off dissolve in which every grain
+                                     // carries identical weight, which is a
+                                     // large part of why a naive dissolve
+                                     // reads as a noise filter
 const float DUST_HZ        = 14.0;   // reseeds/sec; 0.0 freezes the dust
+
+// Tooth ---------------------------------------------------------------------
+// The sheet's own texture: a slow variation in how readily each patch takes
+// ink. Without it the stipple is mechanically even at every scale above the
+// pixel, which no real medium is, and the eye reads that evenness as digital.
+const float TOOTH_SCALE    = 26.0;   // tooth features per screen height
+const float TOOTH_DEPTH    = 0.30;   // 0 is a perfectly even sheet
 
 // Haze ----------------------------------------------------------------------
 // A little mass laid smoothly under the dust, so the form still reads where
@@ -149,9 +183,27 @@ void main() {
 
   // ── the dissolve. A pixel takes ink when its draw falls under the local
   //    mass, so grain variance rises with ink density instead of holding flat.
+  //    The draw is a SMOOTH field, not a per-pixel hash. Thresholding a hash
+  //    can only ever cut square pixels, and thresholding a regular dither
+  //    lattice leaves a visible weave; thresholding smooth noise cuts grains
+  //    with irregular outlines. Two scales are blended so the grains come in a
+  //    range of sizes rather than one, which is what stops the eye reading the
+  //    texture as an effect laid over the picture.
   float seed = floor(t * DUST_HZ);
-  float draw = hash12(gl_FragCoord.xy * DUST_SCALE + seed * 137.13);
-  float inked = step(draw, clamp(mass * DUST_DENSITY, 0.0, 1.0));
+  vec2  gp   = gl_FragCoord.xy / GRAIN_PX + seed * 17.31;
+  float draw = mix(vnoise(gp), vnoise(gp * GRAIN_COARSE + 53.17), GRAIN_MIX);
+  draw = clamp((draw - 0.5) / GRAIN_SPREAD + 0.5, 0.0, 1.0);
+
+  // How readily this patch of sheet takes ink at all.
+  float tooth = 1.0 + (vnoise(vUv * TOOTH_SCALE * vec2(aspect, 1.0)) - 0.5)
+                      * 2.0 * TOOTH_DEPTH;
+
+  // A soft edge on the threshold gives grains a range of densities rather than
+  // one weight. The width is proportional to the threshold so it closes to
+  // nothing as the mass does, which keeps bare paper exactly bare.
+  float thr = clamp(mass * DUST_DENSITY * tooth, 0.0, 1.0);
+  float w = max(DUST_SOFT * thr, 1e-5);
+  float inked = 1.0 - smoothstep(thr - w, thr + w, draw);
 
   vec3 col = COL_PAPER
            - COL_INK * mass * HAZE_GAIN
