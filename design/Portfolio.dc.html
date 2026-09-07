@@ -1727,14 +1727,26 @@ class Component extends DCLogic {
     });
     this.parch.setSources(out);
   }
+  // The roll travels between two poses the reader actually saw, and only those. A view with no anchor (a sheet, the
+  // CV) fades the layer away, and the pose it was last placed at goes with it: a travel out of a pose that was never
+  // on screen is a model arriving from nowhere. Anything still in flight is dropped here for the same reason, since
+  // the anchor it was heading for has left the page and its last tick would write the opacity back over the fade.
+  dropParchPose() {
+    const layer = this.parchLayerRef.current, root = this.rootRef.current;
+    if (this.parchTween) { cancelAnimationFrame(this.parchRaf); this.parchTween = null; }
+    clearTimeout(this.parchFadeTimer); this.parchFadeTimer = null; this.parchPending = null; this.parchHold = false;
+    this.parchPose = null; this.parchT0 = null;
+    if (layer && root && layer.parentNode !== root) { root.insertBefore(layer, root.firstChild); layer.style.zIndex = '1'; }
+  }
   syncParchment() {
     const layer = this.parchLayerRef.current, root = this.rootRef.current; if (!layer || !root) return;
     if (!this.parch && !this.parchLoading && !this.parchFailed) { this.parchLoading = true; import('./parchment.js').then((m) => { this.parchLoading = false; if (this.parchLayerRef.current && !this.parch) { try { this.parch = m.mount(this.parchLayerRef.current); } catch (e) { this.parchFailed = true; return; } this.syncParchment(); } }).catch(() => { this.parchLoading = false; this.parchFailed = true; }); return; }
     if (!this.parch) return;
     const ph = this.state.view === 'home' ? this.homeRollRef.current : (this.scriptRef.current || this.platformRef.current);
-    // chapter/sheet views have no anchor for the roll: fade the layer away rather than leave it parked mid-page
+    // chapter/sheet views have no anchor for the roll: fade the layer away rather than leave it parked mid-page,
+    // and let go of the pose with it so the next landing places the roll rather than flying it in from off screen
     layer.style.transition = 'opacity 420ms cubic-bezier(.65,0,.15,1)';
-    if (!ph) { layer.style.opacity = '0'; return; }
+    if (!ph) { this.dropParchPose(); layer.style.opacity = '0'; return; }
     if (!this.parchHold) layer.style.opacity = '0.8';
     const pr = ph.getBoundingClientRect(), k = ph === this.platformRef.current ? 1 : 0;
     const to = { x: pr.left, y: pr.top, w: pr.width, h: pr.height, k };
