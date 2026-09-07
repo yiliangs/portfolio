@@ -267,9 +267,12 @@
       <div><dt style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-neutral-600);">Pages</dt><dd style="margin:0; font-feature-settings:'tnum' 1;">{{ current.pages }}</dd></div>
     </dl>
 
-    <figure class="plate" data-shape="frame-{{ current.figNo }}" style="margin:0; aspect-ratio:16/9; width:100%; position:relative; filter:{{ heroFilter }};">
+    <!-- the plate takes the hero image's own ratio when the entry declares one, so a drawing that is
+         not 16:9 is shown whole; object-fit is contain rather than cover so that a wrong or missing
+         ratio letterboxes the image instead of silently cutting its edges off -->
+    <figure class="plate" data-shape="frame-{{ current.figNo }}" style="margin:0; aspect-ratio:{{ heroRatio }}; width:100%; position:relative; filter:{{ heroFilter }};">
       <sc-if value="{{ heroSlot }}" hint-placeholder-val="{{ true }}"><image-slot id="{{ current.heroSlotId }}" shape="rect" placeholder="{{ current.placeholder }}" style="width:100%; height:100%;"></image-slot></sc-if>
-      <sc-if value="{{ heroImg }}" hint-placeholder-val="{{ false }}"><img src="{{ current.hero }}" alt="{{ current.caption }}" style="width:100%; height:100%; display:block; object-fit:cover;"></sc-if>
+      <sc-if value="{{ heroImg }}" hint-placeholder-val="{{ false }}"><img src="{{ current.hero }}" alt="{{ current.caption }}" style="width:100%; height:100%; display:block; object-fit:contain;"></sc-if>
     </figure>
     <p style="margin:14px 0 0; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="font-family:var(--font-heading); font-size:17px; color:var(--color-accent);">{{ current.figWord }} {{ current.numeral }}.</span> {{ current.caption }}</p>
 
@@ -487,10 +490,10 @@ class Component extends DCLogic {
       paper: './content/prototype-to-massing.js' },
     // The second real publication, in submission. Its body carries tables and algorithm
     // listings the first paper never needed, which is what renderPaper's table and alg kinds are for.
-    { title: 'Deciding How Many Floor Types a Tower Needs', subtitle: 'An exact feasibility method for residential unit programs.', kind: 'Research', year: 2026, page: 47, pages: '47–80', role: 'Sole author', with: 'Code and instances on Zenodo; De Piek, Rotterdam, as the real-building case', status: 'In submission, IJAC 2026', statusShort: 'in submission', stack: 'The count-vector MILP in Python, modelled with PuLP and solved by HiGHS, cross-checked on Gurobi 13.0.2 and SCIP against a pymoo genetic-algorithm baseline; solver, instances and experiment scripts at github.com/yiliangs/unit-mix-stacking.', link: 'Manuscript PDF', href: 'assets/floor-types/Shao_Deciding-How-Many-Floor-Types_IJAC-2026_manuscript.pdf', linkBlank: true, caption: 'Development-rationalized unit-mix stacking: assemble F floors from at most K repeatable floor products, require each selected product to serve a minimum number of floors, and respect the program and plate-area budgets.', placeholder: 'Plate: figure 1',
+    { title: 'Deciding How Many Floor Types a Tower Needs', subtitle: 'An exact feasibility method for residential unit programs.', kind: 'Research', year: 2026, page: 47, pages: '47–80', role: 'Sole author', with: 'Code and instances on Zenodo; De Piek, Rotterdam, as the real-building case', status: 'In submission, IJAC 2026', statusShort: 'in submission', stack: 'The count-vector MILP in Python, modelled with PuLP and solved by HiGHS, cross-checked on Gurobi 13.0.2 and SCIP against a pymoo genetic-algorithm baseline; solver, instances and experiment scripts at github.com/yiliangs/unit-mix-stacking.', link: 'Manuscript PDF', href: 'assets/floor-types/Shao_Deciding-How-Many-Floor-Types_IJAC-2026_manuscript.pdf', linkBlank: true, caption: 'The count-vector reformulation. V 1 carries the count-by-area coupling explicitly; V 2 pre-enumerates feasible count vectors and selects templates linearly.', placeholder: 'Plate: figure 4',
       margin: 'The result is an exact instrument for testing whether a program is deliverable as a repeatable floor-product system.',
       summary: 'Residential towers are delivered through repeated floor products: each additional floor template carries coordination, documentation, and procurement consequences, so a unit program must fit a limited, sufficiently repeated template kit. This paper decides exactly whether it does, separating optimal, infeasible, and not-solved outcomes and, for an infeasible program, isolating the requirement that binds. The model carries a building-wide template cap, a minimum production run per template, heterogeneous plates, and continuous unit-area bands, made tractable at whole-tower scale by a count-vector reformulation. A synthetic stress test proves three templates impossible and four sufficient, with template variety rather than plate tolerance binding; a bounded-count relaxation admits 9.3 to 13.5 percent more units. On De Piek, a documented Rotterdam tower, the method certifies a compact stacking at fully locked plates. The result is an exact instrument for testing whether a program is deliverable as a repeatable floor-product system.',
-      cover: 'assets/floor-types/fig-01.png', hero: 'assets/floor-types/fig-01.png',
+      cover: 'assets/floor-types/fig-01.png', hero: 'assets/floor-types/hero.png', heroW: 2401, heroH: 1175,
       paper: './content/floor-types.js' },
     { title: 'Timber Index', subtitle: 'A side project cataloguing mass-timber connections, one joint at a time.', kind: 'Side project', year: 2023, page: 37, pages: '37–44', role: 'Everything', with: 'Contributors, eventually', status: 'Live, growing slowly', statusShort: 'live', stack: 'A static site, hand-drawn axonometrics, a spreadsheet as the database.', link: 'The index, 212 joints and counting', caption: 'Joint 087: a CLT-to-glulam hanger, drawn at 1:5.', placeholder: 'Capture: axonometric of a timber joint',
       margin: 'It started because I could not find a picture of a joint I needed. It continues because other people could not either.',
@@ -1438,6 +1441,9 @@ class Component extends DCLogic {
         : { tBg: '#f3f2f2', tSurface: '#eae9e9', tText: '#201f1d', tAccent: '#b68235', tAccent600: '#a06f24', tAccent700: '#7d5411', tAccent800: '#5a3b0a', tAccent100: '#fff3e4', tDivider: 'color-mix(in srgb, #201f1d 16%, transparent)', tN100: '#f8f4f4', tN400: '#bab6b6', tN500: '#9b9797', tN600: '#7d7979', tN700: '#605d5d', tN800: '#444141' }),
       // the serif chapter shows a real render as it is; the sepia mat is for the placeholder photographs
       heroFilter: current.hero ? 'none' : 'sepia(0.22) saturate(0.82) contrast(1.05)',
+      // an entry that states its hero's pixel size gets a plate cut to that ratio; everything else,
+      // the placeholder plates included, keeps the 16:9 the register was drawn on
+      heroRatio: current.heroW && current.heroH ? current.heroW + '/' + current.heroH : '16/9',
       rootRef: this.rootRef, heroRef: this.heroRef, scriptRef: this.scriptRef, parchLayerRef: this.parchLayerRef, platformRef: this.platformRef, heroTextRef: this.heroTextRef, sheetCount: pad(pageProjects.length),
       tabLeft: this.state.tab.left + 'px', tabWidth: this.state.tab.width + 'px',
       tabToolingColor: tabColor('mono'), tabWritingColor: tabColor('serif'),
