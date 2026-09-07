@@ -77,6 +77,10 @@
     /* the rail holds a fixed width so every date in the document starts on the same line, however
        short the entry above it: a ragged right column reads as a mistake rather than as a rail */
     .cv-date { font-family: var(--mono); font-size: 0.8em; font-weight: 500; line-height: 1.6; min-width: 11ch; color: var(--color-neutral-600); text-align: right; white-space: nowrap; }
+    /* A title and the description running on after it have to separate on more than one axis, or the
+       line reads as one grey band. The title takes the ink and the weight, the description steps down
+       in all three at once: lighter, greyer, and a size smaller. */
+    .cv-desc { font-size: 0.95em; font-weight: 400; color: var(--color-neutral-700); }
     /* The section rule and the job are the two things that set the document's vertical rhythm, so
        both live here rather than inline: a media query cannot reach an inline margin, and the narrow
        page needs roughly half the air the wide one does. */
@@ -108,7 +112,15 @@
     .cvm-row { display: grid; grid-template-columns: 20ch minmax(0,1fr); column-gap: 18px; align-items: baseline; }
     /* a sub-line leaves the rail empty rather than repeating the date, which is what puts every body
        column on one edge; on the narrow page an empty rail has nothing to hold and goes away */
-    .cvm-date { font-weight: 500; color: var(--color-neutral-600); white-space: nowrap; }
+    .cvm-date { font-weight: 500; color: var(--color-neutral-500); white-space: nowrap; }
+    /* the same separation, further apart: on a dark sheet the two ends have more room to travel.
+       .cvm-desc is running text and stops at neutral-500, which clears 4.5:1 on this ground;
+       .cvm-qual is for the one-line qualifiers, which may go dimmer because nobody reads a paragraph
+       of them. .cvm-pub keeps full size because a publication row is a title with its own tail. */
+    .cvm-desc { font-size: 0.93em; font-weight: 400; color: var(--color-neutral-500); }
+    .cvm-qual { font-size: 0.93em; font-weight: 400; color: var(--color-neutral-400); }
+    .cvm-pub { font-weight: 400; color: var(--color-neutral-500); }
+    .cvm-body { color: var(--color-neutral-700); }
     .cvm-sec { margin: 44px 0 14px; }
     .cvm-sec-first { margin-top: 36px; }
     .cvm-sec-label { margin: 0 0 8px; font-weight: 500; color: var(--color-neutral-600); }
@@ -375,21 +387,21 @@
         <!-- tier 1: the employer heads the entry. Each org unit is one unbreakable run, so the name
              wraps between entities and never mid-name; the location glues to the last unit, muted -->
         <div class="cv-row">
-          <p style="margin:0; font-size:1.05em;"><sc-for list="{{ job.units }}" as="u" hint-placeholder-count="1"><span style="white-space:nowrap; font-weight:600;">{{ u.t }}<span style="font-weight:400; color:var(--color-neutral-700);">{{ u.loc }}</span></span> </sc-for></p>
+          <p style="margin:0; font-size:1.05em;"><sc-for list="{{ job.units }}" as="u" hint-placeholder-count="1"><span style="white-space:nowrap; font-weight:700;">{{ u.t }}<span style="font-weight:400; color:var(--color-neutral-700);">{{ u.loc }}</span></span> </sc-for></p>
           <span class="cv-date">{{ job.dates }}</span>
         </div>
         <!-- tier 2: the current title with its own dates, then one faint line of the prior ones -->
         <sc-if value="{{ job.hasTitleRow }}" hint-placeholder-val="{{ true }}">
           <div class="cv-row" style="margin:4px 0 0; padding-left:11px;">
-            <p style="margin:0; font-weight:600;">{{ job.title }}</p>
+            <p style="margin:0; font-weight:700;">{{ job.title }}</p>
             <span class="cv-date">{{ job.titleDates }}</span>
           </div>
         </sc-if>
         <sc-if value="{{ job.hasPrior }}" hint-placeholder-val="{{ false }}">
-          <p style="margin:4px 0 0; padding-left:22px; font-size:0.86em; color:var(--color-neutral-600);">{{ job.prior }}</p>
+          <p style="margin:4px 0 0; padding-left:22px; font-size:0.9em; color:var(--color-neutral-600);">{{ job.prior }}</p>
         </sc-if>
         <sc-for list="{{ job.highlights }}" as="hl" hint-placeholder-count="1">
-          <p style="margin:6px 0 0; padding-left:22px; font-size:0.92em; color:var(--color-neutral-700);">{{ hl }}</p>
+          <p style="margin:6px 0 0; padding-left:22px; font-size:0.95em; color:var(--color-neutral-600);">{{ hl }}</p>
         </sc-for>
         <sc-if value="{{ job.hasFunding }}" hint-placeholder-val="{{ false }}">
           <p style="margin:6px 0 0; padding-left:22px; font-size:0.9em; font-style:italic; color:var(--color-neutral-600);">{{ job.funding }}</p>
@@ -397,23 +409,23 @@
         <sc-for list="{{ job.blocks }}" as="blk" hint-placeholder-count="1">
           <div style="margin:22px 0 0;">
             <div class="cv-row">
-              <p style="margin:0;"><span style="font-size:0.85em; font-weight:600; letter-spacing:0.09em; text-transform:uppercase; color:var(--color-accent-700);">{{ blk.heading }}</span><span style="margin-left:9px; font-size:0.92em; font-style:italic; color:var(--color-neutral-700);">{{ blk.role }}</span></p>
+              <p style="margin:0;"><span style="font-size:0.85em; font-weight:700; letter-spacing:0.09em; text-transform:uppercase; color:var(--color-accent-700);">{{ blk.heading }}</span><span style="margin-left:9px; font-size:0.92em; font-style:italic; color:var(--color-neutral-700);">{{ blk.role }}</span></p>
               <span class="cv-date">{{ blk.period }}</span>
             </div>
             <sc-if value="{{ blk.hasIntro }}" hint-placeholder-val="{{ true }}">
-              <p style="margin:6px 0 0; padding-left:22px; font-size:0.92em; color:var(--color-neutral-700);">{{ blk.intro }}</p>
+              <p class="cv-desc" style="margin:6px 0 0; padding-left:22px;">{{ blk.intro }}</p>
             </sc-if>
             <!-- tier 3: the entries. emphasizeMetrics has already split the description into runs, so
                  the numbers arrive as their own parts and only they are set semibold -->
             <sc-for list="{{ blk.entries }}" as="ent" hint-placeholder-count="2">
-              <p style="margin:9px 0 0; padding-left:22px;"><span style="font-weight:600;">{{ ent.name }}.</span> <sc-for list="{{ ent.parts }}" as="run" hint-placeholder-count="1"><span style="font-weight:{{ run.w }};">{{ run.t }}</span></sc-for></p>
+              <p style="margin:9px 0 0; padding-left:22px;"><span style="font-weight:700;">{{ ent.name }}.</span> <span class="cv-desc"><sc-for list="{{ ent.parts }}" as="run" hint-placeholder-count="1"><span style="font-weight:{{ run.w }}; color:{{ run.c }};">{{ run.t }}</span></sc-for></span></p>
             </sc-for>
           </div>
         </sc-for>
         <!-- the lab's flagship projects read as entries of the job that scoped them, without dates of
              their own: the project lifespans outrun the tenure and a date column would overclaim it -->
         <sc-for list="{{ job.projects }}" as="pr" hint-placeholder-count="1">
-          <p style="margin:9px 0 0; padding-left:22px;"><span style="font-weight:600;">{{ pr.name }}.</span> <sc-for list="{{ pr.parts }}" as="run" hint-placeholder-count="1"><span style="font-weight:{{ run.w }};">{{ run.t }}</span></sc-for></p>
+          <p style="margin:9px 0 0; padding-left:22px;"><span style="font-weight:700;">{{ pr.name }}.</span> <span class="cv-desc"><sc-for list="{{ pr.parts }}" as="run" hint-placeholder-count="1"><span style="font-weight:{{ run.w }}; color:{{ run.c }};">{{ run.t }}</span></sc-for></span></p>
         </sc-for>
       </section>
       </sc-for>
@@ -466,7 +478,7 @@
         <span aria-hidden="true" class="cv-rule"></span>
       </div>
       <sc-for list="{{ cvDoc.oss }}" as="os" hint-placeholder-count="1">
-        <p style="margin:0 0 9px;"><span style="font-weight:600;">{{ os.name }}.</span> {{ os.desc }}</p>
+        <p style="margin:0 0 9px;"><span style="font-weight:700;">{{ os.name }}.</span> <span class="cv-desc">{{ os.desc }}</span></p>
       </sc-for>
     </sc-if>
 
@@ -477,7 +489,7 @@
       </div>
       <sc-for list="{{ cvDoc.education }}" as="ed" hint-placeholder-count="2">
         <div class="cv-row" style="margin:0 0 9px;">
-          <p style="margin:0;"><span style="font-weight:600;">{{ ed.institution }}.</span> {{ ed.rest }}</p>
+          <p style="margin:0;"><span style="font-weight:700;">{{ ed.institution }}.</span> <span class="cv-desc">{{ ed.rest }}</span></p>
           <span class="cv-date">{{ ed.right }}</span>
         </div>
       </sc-for>
@@ -526,7 +538,7 @@
 
     <sc-if value="{{ cvDoc.hasProfile }}" hint-placeholder-val="{{ true }}">
       <div class="cvm-sec cvm-sec-first"><p class="cvm-sec-label">// bio</p><span aria-hidden="true" class="cvm-rule"></span></div>
-      <p style="margin:0;">{{ cvDoc.profile }}</p>
+      <p class="cvm-body" style="margin:0;">{{ cvDoc.profile }}</p>
     </sc-if>
 
     <sc-if value="{{ cvDoc.hasWork }}" hint-placeholder-val="{{ true }}">
@@ -540,37 +552,37 @@
         <sc-if value="{{ job.hasTitleRow }}" hint-placeholder-val="{{ true }}">
           <div class="cvm-row" style="margin:4px 0 0;">
             <span class="cvm-date">{{ job.titleDates }}</span>
-            <p style="margin:0; font-weight:600; color:var(--color-text);">{{ job.title }}</p>
+            <p style="margin:0; font-weight:700; color:var(--color-text);">{{ job.title }}</p>
           </div>
         </sc-if>
         <sc-if value="{{ job.hasPrior }}" hint-placeholder-val="{{ false }}">
           <div class="cvm-row" style="margin:4px 0 0;">
             <span class="cvm-date"></span>
-            <p style="margin:0; font-size:0.92em; color:var(--color-neutral-500);">{{ job.priorMono }}</p>
+            <p class="cvm-qual" style="margin:0;">{{ job.priorMono }}</p>
           </div>
         </sc-if>
         <sc-for list="{{ job.highlights }}" as="hl" hint-placeholder-count="1">
-          <div class="cvm-row" style="margin:6px 0 0;"><span class="cvm-date"></span><p style="margin:0; color:var(--color-neutral-600);">{{ hl }}</p></div>
+          <div class="cvm-row" style="margin:6px 0 0;"><span class="cvm-date"></span><p class="cvm-qual" style="margin:0;">{{ hl }}</p></div>
         </sc-for>
         <sc-if value="{{ job.hasFunding }}" hint-placeholder-val="{{ false }}">
-          <div class="cvm-row" style="margin:6px 0 0;"><span class="cvm-date"></span><p style="margin:0; color:var(--color-neutral-600);">{{ job.funding }}</p></div>
+          <div class="cvm-row" style="margin:6px 0 0;"><span class="cvm-date"></span><p class="cvm-qual" style="margin:0;">{{ job.funding }}</p></div>
         </sc-if>
         <sc-for list="{{ job.blocks }}" as="blk" hint-placeholder-count="1">
           <div style="margin:20px 0 0;">
             <div class="cvm-row">
               <span class="cvm-date">{{ blk.period }}</span>
-              <p style="margin:0;"><span style="font-weight:700; color:var(--color-text);">### {{ blk.heading }}</span><sc-if value="{{ blk.hasRole }}" hint-placeholder-val="{{ true }}"><span style="color:var(--color-neutral-600);"> · {{ blk.role }}</span></sc-if></p>
+              <p style="margin:0;"><span style="font-size:1.05em; font-weight:700; color:var(--color-text);">### {{ blk.heading }}</span><sc-if value="{{ blk.hasRole }}" hint-placeholder-val="{{ true }}"><span style="color:var(--color-neutral-600);"> · {{ blk.role }}</span></sc-if></p>
             </div>
             <sc-if value="{{ blk.hasIntro }}" hint-placeholder-val="{{ true }}">
-              <div class="cvm-row" style="margin:6px 0 0;"><span class="cvm-date"></span><p style="margin:0; color:var(--color-neutral-600);">{{ blk.intro }}</p></div>
+              <div class="cvm-row" style="margin:6px 0 0;"><span class="cvm-date"></span><p class="cvm-desc" style="margin:0;">{{ blk.intro }}</p></div>
             </sc-if>
             <sc-for list="{{ blk.entries }}" as="ent" hint-placeholder-count="2">
-              <div class="cvm-row" style="margin:8px 0 0;"><span class="cvm-date"></span><p style="margin:0;"><span style="font-weight:600; color:var(--color-text);">{{ ent.name }}</span>: <sc-for list="{{ ent.parts }}" as="run" hint-placeholder-count="1"><span style="font-weight:{{ run.wm }}; color:{{ run.cm }};">{{ run.t }}</span></sc-for></p></div>
+              <div class="cvm-row" style="margin:8px 0 0;"><span class="cvm-date"></span><p style="margin:0;"><span style="font-weight:700; color:var(--color-text);">{{ ent.name }}</span><span class="cvm-desc">: <sc-for list="{{ ent.parts }}" as="run" hint-placeholder-count="1"><span style="font-weight:{{ run.wm }}; color:{{ run.cm }};">{{ run.t }}</span></sc-for></span></p></div>
             </sc-for>
           </div>
         </sc-for>
         <sc-for list="{{ job.projects }}" as="pr" hint-placeholder-count="1">
-          <div class="cvm-row" style="margin:8px 0 0;"><span class="cvm-date"></span><p style="margin:0;"><span style="font-weight:600; color:var(--color-text);">{{ pr.name }}</span>: <sc-for list="{{ pr.parts }}" as="run" hint-placeholder-count="1"><span style="font-weight:{{ run.wm }}; color:{{ run.cm }};">{{ run.t }}</span></sc-for></p></div>
+          <div class="cvm-row" style="margin:8px 0 0;"><span class="cvm-date"></span><p style="margin:0;"><span style="font-weight:700; color:var(--color-text);">{{ pr.name }}</span><span class="cvm-desc">: <sc-for list="{{ pr.parts }}" as="run" hint-placeholder-count="1"><span style="font-weight:{{ run.wm }}; color:{{ run.cm }};">{{ run.t }}</span></sc-for></span></p></div>
         </sc-for>
       </section>
       </sc-for>
@@ -583,7 +595,7 @@
       <sc-for list="{{ cvDoc.research }}" as="rw" hint-placeholder-count="4">
         <div class="cvm-row" style="margin:0 0 9px;">
           <span class="cvm-date"><sc-if value="{{ rw.hasRightMono }}" hint-placeholder-val="{{ true }}">{{ rw.rightMono }}</sc-if></span>
-          <p style="margin:0;"><sc-for list="{{ rw.partsMono }}" as="run" hint-placeholder-count="3"><span style="font-weight:{{ run.wm }}; color:{{ run.cm }};">{{ run.t }}</span></sc-for></p>
+          <p class="cvm-pub" style="margin:0;"><sc-for list="{{ rw.partsMono }}" as="run" hint-placeholder-count="3"><span style="font-weight:{{ run.wm }}; color:{{ run.cm }};">{{ run.t }}</span></sc-for></p>
         </div>
       </sc-for>
     </sc-if>
@@ -591,28 +603,28 @@
     <sc-if value="{{ cvDoc.hasRecognition }}" hint-placeholder-val="{{ true }}">
       <div class="cvm-sec"><p class="cvm-sec-label">// recognition &amp; service</p><span aria-hidden="true" class="cvm-rule"></span></div>
       <sc-for list="{{ cvDoc.recognition }}" as="rec" hint-placeholder-count="3">
-        <div class="cvm-row" style="margin:0 0 9px;"><span class="cvm-date">{{ rec.right }}</span><p style="margin:0;">{{ rec.line }}</p></div>
+        <div class="cvm-row" style="margin:0 0 9px;"><span class="cvm-date">{{ rec.right }}</span><p class="cvm-body" style="margin:0;">{{ rec.line }}</p></div>
       </sc-for>
     </sc-if>
 
     <sc-if value="{{ cvDoc.hasTalks }}" hint-placeholder-val="{{ true }}">
       <div class="cvm-sec"><p class="cvm-sec-label">// talks &amp; events</p><span aria-hidden="true" class="cvm-rule"></span></div>
       <sc-for list="{{ cvDoc.talks }}" as="tk" hint-placeholder-count="4">
-        <div class="cvm-row" style="margin:0 0 9px;"><span class="cvm-date">{{ tk.right }}</span><p style="margin:0;">{{ tk.line }}</p></div>
+        <div class="cvm-row" style="margin:0 0 9px;"><span class="cvm-date">{{ tk.right }}</span><p class="cvm-body" style="margin:0;">{{ tk.line }}</p></div>
       </sc-for>
     </sc-if>
 
     <sc-if value="{{ cvDoc.hasOss }}" hint-placeholder-val="{{ true }}">
       <div class="cvm-sec"><p class="cvm-sec-label">// open source</p><span aria-hidden="true" class="cvm-rule"></span></div>
       <sc-for list="{{ cvDoc.oss }}" as="os" hint-placeholder-count="1">
-        <div class="cvm-row" style="margin:0 0 9px;"><span class="cvm-date"></span><p style="margin:0;"><span style="font-weight:600; color:var(--color-text);">{{ os.name }}</span>: {{ os.desc }}</p></div>
+        <div class="cvm-row" style="margin:0 0 9px;"><span class="cvm-date"></span><p style="margin:0;"><span style="font-weight:700; color:var(--color-text);">{{ os.name }}</span><span class="cvm-desc">: {{ os.desc }}</span></p></div>
       </sc-for>
     </sc-if>
 
     <sc-if value="{{ cvDoc.hasEducation }}" hint-placeholder-val="{{ true }}">
       <div class="cvm-sec"><p class="cvm-sec-label">// education</p><span aria-hidden="true" class="cvm-rule"></span></div>
       <sc-for list="{{ cvDoc.education }}" as="ed" hint-placeholder-count="2">
-        <div class="cvm-row" style="margin:0 0 9px;"><span class="cvm-date">{{ ed.right }}</span><p style="margin:0;"><span style="font-weight:600; color:var(--color-text);">{{ ed.institution }}</span><span style="color:var(--color-neutral-600);"> · </span>{{ ed.rest }}</p></div>
+        <div class="cvm-row" style="margin:0 0 9px;"><span class="cvm-date">{{ ed.right }}</span><p style="margin:0;"><span style="font-weight:700; color:var(--color-text);">{{ ed.institution }}</span><span class="cvm-desc"> · {{ ed.rest }}</span></p></div>
       </sc-for>
     </sc-if>
 
@@ -1493,9 +1505,13 @@ class Component extends DCLogic {
   // says what it is with brackets instead.
   CV_KINDS = {
     plain:  { w: 'inherit', fs: 'inherit', c: 'inherit',                  wm: 'inherit', cm: 'inherit' },
-    strong: { w: '600',     fs: 'inherit', c: 'inherit',                  wm: '600',     cm: 'var(--color-text)' },
+    // a metric has to lift out of the description without reaching the title it sits under, so it
+    // takes a step of weight and a step of value, never the title's own full ink
+    strong: { w: '600',     fs: 'inherit', c: 'var(--color-text)',        wm: '600',     cm: 'var(--color-neutral-800)' },
     em:     { w: 'inherit', fs: 'italic',  c: 'inherit',                  wm: 'inherit', cm: 'inherit' },
-    tag:    { w: 'inherit', fs: 'italic',  c: 'var(--color-neutral-700)', wm: 'inherit', cm: 'var(--color-neutral-600)' },
+    tag:    { w: 'inherit', fs: 'italic',  c: 'var(--color-neutral-700)', wm: 'inherit', cm: 'var(--color-neutral-400)' },
+    // the head of a publication row, which is a title with a description running on after it
+    title:  { w: 'inherit', fs: 'inherit', c: 'inherit',                  wm: '700',     cm: 'var(--color-text)' },
   };
   cvRun(t, kind) { return { t, ...(this.CV_KINDS[kind] || this.CV_KINDS.plain) }; }
 
@@ -1549,7 +1565,7 @@ class Component extends DCLogic {
       if (p.application_no) facts.push('US patent application ' + String(p.application_no).replace('US ', ''));
       if (p.claims && p.claims.total != null) facts.push(p.claims.total + ' claims');
       const parts = [this.cvRun((p.title || '') + '. ')];
-      const partsMono = [this.cvRun(p.title || '')];
+      const partsMono = [this.cvRun(p.title || '', 'title')];
       if (p.role) {
         parts.push(this.cvRun(p.role + '. ', 'strong'));
         partsMono.push(this.cvRun(' · '), this.cvRun(p.role, 'strong'));
@@ -1575,7 +1591,7 @@ class Component extends DCLogic {
       const tag = p.venue_short ? (p.status || '') + ', ' + p.venue_short : (p.type || '') + ', ' + (p.status || '');
       const tagMono = p.venue_short ? (p.status || '') + ' · ' + p.venue_short : (p.type || '') + ' · ' + (p.status || '');
       const parts = [this.cvRun((p.title || '') + '. ')];
-      const partsMono = [this.cvRun(p.title || '')];
+      const partsMono = [this.cvRun(p.title || '', 'title')];
       if (p.position) {
         parts.push(this.cvRun(p.position + '. ', 'strong'));
         partsMono.push(this.cvRun(' · '), this.cvRun(p.position, 'strong'));

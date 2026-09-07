@@ -595,7 +595,7 @@
                           h(F,{key:0},L(Vi.job?.units).map(function(item,i){
                             var Vii = Object.assign({}, Vi, {"u": item, $index: i});
                             return h(F,{key:i},
-                              h("span", { key: "0|33.7n66lg", style: {"whiteSpace":"nowrap","fontWeight":"600"} },
+                              h("span", { key: "0|33.7n66lg", style: {"whiteSpace":"nowrap","fontWeight":"700"} },
                                 h(F,{key:0},"",I(Vii.u?.t,1),""),
                                 h("span", { key: "1|11.mxc9me", style: {"fontWeight":"400","color":"var(--color-neutral-700)"} },
                                   h(F,{key:0},"",I(Vii.u?.loc,1),"")
@@ -616,7 +616,7 @@
                         "\n          ",
                         h("div", { key: "1", className: "cv-row", style: {"margin":"4px 0 0","paddingLeft":"11px"} },
                           "\n            ",
-                          h("p", { key: "1|15.1fgppa8", style: {"margin":"0","fontWeight":"600"} },
+                          h("p", { key: "1|15.1fgppa8", style: {"margin":"0","fontWeight":"700"} },
                             h(F,{key:0},"",I(Vi.job?.title,1),"")
                           ),
                           "\n            ",
@@ -629,7 +629,7 @@
                       "\n        ",
                       (Vi.job?.hasPrior ? h(F,{key:7},
                         "\n          ",
-                        h("p", { key: "1|15.19ggbnu", style: {"margin":"4px 0 0","paddingLeft":"22px","fontSize":"0.86em","color":"var(--color-neutral-600)"} },
+                        h("p", { key: "1|15.19ggbnu", style: {"margin":"4px 0 0","paddingLeft":"22px","fontSize":"0.9em","color":"var(--color-neutral-600)"} },
                           h(F,{key:0},"",I(Vi.job?.prior,1),"")
                         ),
                         "\n        ") : null),
@@ -638,7 +638,7 @@
                         var Vii = Object.assign({}, Vi, {"hl": item, $index: i});
                         return h(F,{key:i},
                           "\n          ",
-                          h("p", { key: "1|8.ll1c7d", style: {"margin":"6px 0 0","paddingLeft":"22px","fontSize":"0.92em","color":"var(--color-neutral-700)"} },
+                          h("p", { key: "1|8.ll1c7d", style: {"margin":"6px 0 0","paddingLeft":"22px","fontSize":"0.95em","color":"var(--color-neutral-600)"} },
                             h(F,{key:0},"",I(Vii.hl,1),"")
                           ),
                           "\n        ");
@@ -660,7 +660,7 @@
                             h("div", { key: "1", className: "cv-row" },
                               "\n              ",
                               h("p", { key: "1|57.655oo3", style: {"margin":"0"} },
-                                h("span", { key: "0|17.4kap1o", style: {"fontSize":"0.85em","fontWeight":"600","letterSpacing":"0.09em","textTransform":"uppercase","color":"var(--color-accent-700)"} },
+                                h("span", { key: "0|17.4kap1o", style: {"fontSize":"0.85em","fontWeight":"700","letterSpacing":"0.09em","textTransform":"uppercase","color":"var(--color-accent-700)"} },
                                   h(F,{key:0},"",I(Vii.blk?.heading,1),"")
                                 ),
                                 h("span", { key: "1|14.1yajgni", style: {"marginLeft":"9px","fontSize":"0.92em","fontStyle":"italic","color":"var(--color-neutral-700)"} },
@@ -676,7 +676,7 @@
                             "\n            ",
                             (Vii.blk?.hasIntro ? h(F,{key:3},
                               "\n              ",
-                              h("p", { key: "1|15.92a2dk", style: {"margin":"6px 0 0","paddingLeft":"22px","fontSize":"0.92em","color":"var(--color-neutral-700)"} },
+                              h("p", { key: "1|15.92a2dk", className: "cv-desc", style: {"margin":"6px 0 0","paddingLeft":"22px"} },
                                 h(F,{key:0},"",I(Vii.blk?.intro,1),"")
                               ),
                               "\n            ") : null),
@@ -687,17 +687,19 @@
                               return h(F,{key:i},
                                 "\n              ",
                                 h("p", { key: "1", style: {"margin":"9px 0 0","paddingLeft":"22px"} },
-                                  h("span", { key: "0|15.114akih", style: {"fontWeight":"600"} },
+                                  h("span", { key: "0|15.114akih", style: {"fontWeight":"700"} },
                                     h(F,{key:0},"",I(Viii.ent?.name,1),".")
                                   ),
                                   " ",
-                                  h(F,{key:2},L(Viii.ent?.parts).map(function(item,i){
-                                    var Viiii = Object.assign({}, Viii, {"run": item, $index: i});
-                                    return h(F,{key:i},
-                                      h("span", { key: "0|11.1s71c3w", style: S(`font-weight:${Viiii.run?.w ?? ""};`) },
-                                        h(F,{key:0},"",I(Viiii.run?.t,1),"")
-                                      ));
-                                  }))
+                                  h("span", { key: "2", className: "cv-desc" },
+                                    h(F,{key:0},L(Viii.ent?.parts).map(function(item,i){
+                                      var Viiii = Object.assign({}, Viii, {"run": item, $index: i});
+                                      return h(F,{key:i},
+                                        h("span", { key: "0|11.1s71c3w", style: S(`font-weight:${Viiii.run?.w ?? ""}; color:${Viiii.run?.c ?? ""};`) },
+                                          h(F,{key:0},"",I(Viiii.run?.t,1),"")
+                                        ));
+                                    }))
+                                  )
                                 ),
                                 "\n            ");
                             })),
@@ -712,17 +714,19 @@
                         return h(F,{key:i},
                           "\n          ",
                           h("p", { key: "1", style: {"margin":"9px 0 0","paddingLeft":"22px"} },
-                            h("span", { key: "0|14.139ue44", style: {"fontWeight":"600"} },
+                            h("span", { key: "0|14.139ue44", style: {"fontWeight":"700"} },
                               h(F,{key:0},"",I(Vii.pr?.name,1),".")
                             ),
                             " ",
-                            h(F,{key:2},L(Vii.pr?.parts).map(function(item,i){
-                              var Viii = Object.assign({}, Vii, {"run": item, $index: i});
-                              return h(F,{key:i},
-                                h("span", { key: "0|11.1s71c3w", style: S(`font-weight:${Viii.run?.w ?? ""};`) },
-                                  h(F,{key:0},"",I(Viii.run?.t,1),"")
-                                ));
-                            }))
+                            h("span", { key: "2", className: "cv-desc" },
+                              h(F,{key:0},L(Vii.pr?.parts).map(function(item,i){
+                                var Viii = Object.assign({}, Vii, {"run": item, $index: i});
+                                return h(F,{key:i},
+                                  h("span", { key: "0|11.1s71c3w", style: S(`font-weight:${Viii.run?.w ?? ""}; color:${Viii.run?.c ?? ""};`) },
+                                    h(F,{key:0},"",I(Viii.run?.t,1),"")
+                                  ));
+                              }))
+                            )
                           ),
                           "\n        ");
                       })),
@@ -848,11 +852,14 @@
                   var Vi = Object.assign({}, V, {"os": item, $index: i});
                   return h(F,{key:i},
                     "\n        ",
-                    h("p", { key: "1|41.14fsm6y", style: {"margin":"0 0 9px"} },
-                      h("span", { key: "0|14.3e3e1g", style: {"fontWeight":"600"} },
+                    h("p", { key: "1|54.6bt6td", style: {"margin":"0 0 9px"} },
+                      h("span", { key: "0|14.3e3e1g", style: {"fontWeight":"700"} },
                         h(F,{key:0},"",I(Vi.os?.name,1),".")
                       ),
-                      h(F,{key:1}," ",I(Vi.os?.desc,1),"")
+                      " ",
+                      h("span", { key: "2|13.lorcis", className: "cv-desc" },
+                        h(F,{key:0},"",I(Vi.os?.desc,1),"")
+                      )
                     ),
                     "\n      ");
                 })),
@@ -876,11 +883,14 @@
                     "\n        ",
                     h("div", { key: "1", className: "cv-row", style: {"margin":"0 0 9px"} },
                       "\n          ",
-                      h("p", { key: "1|48.1grrn74", style: {"margin":"0"} },
-                        h("span", { key: "0|21.1dya3r8", style: {"fontWeight":"600"} },
+                      h("p", { key: "1|61.1nwcamv", style: {"margin":"0"} },
+                        h("span", { key: "0|21.1dya3r8", style: {"fontWeight":"700"} },
                           h(F,{key:0},"",I(Vi.ed?.institution,1),".")
                         ),
-                        h(F,{key:1}," ",I(Vi.ed?.rest,1),"")
+                        " ",
+                        h("span", { key: "2|13.11s9wwa", className: "cv-desc" },
+                          h(F,{key:0},"",I(Vi.ed?.rest,1),"")
+                        )
                       ),
                       "\n          ",
                       h("span", { key: "3|14.19ucjze", className: "cv-date" },
@@ -971,7 +981,7 @@
                   h("span", { key: "1", "aria-hidden": "true", className: "cvm-rule" })
                 ),
                 "\n      ",
-                h("p", { key: "3|19.1d3l3gj", style: {"margin":"0"} },
+                h("p", { key: "3|19.1d3l3gj", className: "cvm-body", style: {"margin":"0"} },
                   h(F,{key:0},"",I(V.cvDoc?.profile,1),"")
                 ),
                 "\n    ") : null),
@@ -1022,7 +1032,7 @@
                             h(F,{key:0},"",I(Vi.job?.titleDates,1),"")
                           ),
                           "\n            ",
-                          h("p", { key: "3|15.1fgppa8", style: {"margin":"0","fontWeight":"600","color":"var(--color-text)"} },
+                          h("p", { key: "3|15.1fgppa8", style: {"margin":"0","fontWeight":"700","color":"var(--color-text)"} },
                             h(F,{key:0},"",I(Vi.job?.title,1),"")
                           ),
                           "\n          "
@@ -1035,7 +1045,7 @@
                           "\n            ",
                           h("span", { key: "1", className: "cvm-date" }),
                           "\n            ",
-                          h("p", { key: "3|19.6jkler", style: {"margin":"0","fontSize":"0.92em","color":"var(--color-neutral-500)"} },
+                          h("p", { key: "3|19.6jkler", className: "cvm-qual", style: {"margin":"0"} },
                             h(F,{key:0},"",I(Vi.job?.priorMono,1),"")
                           ),
                           "\n          "
@@ -1048,7 +1058,7 @@
                           "\n          ",
                           h("div", { key: "1", className: "cvm-row", style: {"margin":"6px 0 0"} },
                             h("span", { key: "0", className: "cvm-date" }),
-                            h("p", { key: "1|8.ll1c7d", style: {"margin":"0","color":"var(--color-neutral-600)"} },
+                            h("p", { key: "1|8.ll1c7d", className: "cvm-qual", style: {"margin":"0"} },
                               h(F,{key:0},"",I(Vii.hl,1),"")
                             )
                           ),
@@ -1059,7 +1069,7 @@
                         "\n          ",
                         h("div", { key: "1", className: "cvm-row", style: {"margin":"6px 0 0"} },
                           h("span", { key: "0", className: "cvm-date" }),
-                          h("p", { key: "1|17.qdfuzt", style: {"margin":"0","color":"var(--color-neutral-600)"} },
+                          h("p", { key: "1|17.qdfuzt", className: "cvm-qual", style: {"margin":"0"} },
                             h(F,{key:0},"",I(Vi.job?.funding,1),"")
                           )
                         ),
@@ -1078,7 +1088,7 @@
                               ),
                               "\n              ",
                               h("p", { key: "3", style: {"margin":"0"} },
-                                h("span", { key: "0|21.1s7zsfp", style: {"fontWeight":"700","color":"var(--color-text)"} },
+                                h("span", { key: "0|21.1s7zsfp", style: {"fontSize":"1.05em","fontWeight":"700","color":"var(--color-text)"} },
                                   h(F,{key:0},"### ",I(Vii.blk?.heading,1),"")
                                 ),
                                 (Vii.blk?.hasRole ? h(F,{key:1},
@@ -1093,7 +1103,7 @@
                               "\n              ",
                               h("div", { key: "1", className: "cvm-row", style: {"margin":"6px 0 0"} },
                                 h("span", { key: "0", className: "cvm-date" }),
-                                h("p", { key: "1|15.92a2dk", style: {"margin":"0","color":"var(--color-neutral-600)"} },
+                                h("p", { key: "1|15.92a2dk", className: "cvm-desc", style: {"margin":"0"} },
                                   h(F,{key:0},"",I(Vii.blk?.intro,1),"")
                                 )
                               ),
@@ -1106,17 +1116,19 @@
                                 h("div", { key: "1", className: "cvm-row", style: {"margin":"8px 0 0"} },
                                   h("span", { key: "0", className: "cvm-date" }),
                                   h("p", { key: "1", style: {"margin":"0"} },
-                                    h("span", { key: "0|14.osv4jv", style: {"fontWeight":"600","color":"var(--color-text)"} },
+                                    h("span", { key: "0|14.osv4jv", style: {"fontWeight":"700","color":"var(--color-text)"} },
                                       h(F,{key:0},"",I(Viii.ent?.name,1),"")
                                     ),
-                                    ": ",
-                                    h(F,{key:2},L(Viii.ent?.parts).map(function(item,i){
-                                      var Viiii = Object.assign({}, Viii, {"run": item, $index: i});
-                                      return h(F,{key:i},
-                                        h("span", { key: "0|11.1s71c3w", style: S(`font-weight:${Viiii.run?.wm ?? ""}; color:${Viiii.run?.cm ?? ""};`) },
-                                          h(F,{key:0},"",I(Viiii.run?.t,1),"")
-                                        ));
-                                    }))
+                                    h("span", { key: "1", className: "cvm-desc" },
+                                      ": ",
+                                      h(F,{key:1},L(Viii.ent?.parts).map(function(item,i){
+                                        var Viiii = Object.assign({}, Viii, {"run": item, $index: i});
+                                        return h(F,{key:i},
+                                          h("span", { key: "0|11.1s71c3w", style: S(`font-weight:${Viiii.run?.wm ?? ""}; color:${Viiii.run?.cm ?? ""};`) },
+                                            h(F,{key:0},"",I(Viiii.run?.t,1),"")
+                                          ));
+                                      }))
+                                    )
                                   )
                                 ),
                                 "\n            ");
@@ -1133,17 +1145,19 @@
                           h("div", { key: "1", className: "cvm-row", style: {"margin":"8px 0 0"} },
                             h("span", { key: "0", className: "cvm-date" }),
                             h("p", { key: "1", style: {"margin":"0"} },
-                              h("span", { key: "0|13.1nb0yrq", style: {"fontWeight":"600","color":"var(--color-text)"} },
+                              h("span", { key: "0|13.1nb0yrq", style: {"fontWeight":"700","color":"var(--color-text)"} },
                                 h(F,{key:0},"",I(Vii.pr?.name,1),"")
                               ),
-                              ": ",
-                              h(F,{key:2},L(Vii.pr?.parts).map(function(item,i){
-                                var Viii = Object.assign({}, Vii, {"run": item, $index: i});
-                                return h(F,{key:i},
-                                  h("span", { key: "0|11.1s71c3w", style: S(`font-weight:${Viii.run?.wm ?? ""}; color:${Viii.run?.cm ?? ""};`) },
-                                    h(F,{key:0},"",I(Viii.run?.t,1),"")
-                                  ));
-                              }))
+                              h("span", { key: "1", className: "cvm-desc" },
+                                ": ",
+                                h(F,{key:1},L(Vii.pr?.parts).map(function(item,i){
+                                  var Viii = Object.assign({}, Vii, {"run": item, $index: i});
+                                  return h(F,{key:i},
+                                    h("span", { key: "0|11.1s71c3w", style: S(`font-weight:${Viii.run?.wm ?? ""}; color:${Viii.run?.cm ?? ""};`) },
+                                      h(F,{key:0},"",I(Viii.run?.t,1),"")
+                                    ));
+                                }))
+                              )
                             )
                           ),
                           "\n        ");
@@ -1175,7 +1189,7 @@
                           h(F,{key:0},"",I(Vi.rw?.rightMono,1),"")) : null)
                       ),
                       "\n          ",
-                      h("p", { key: "3", style: {"margin":"0"} },
+                      h("p", { key: "3", className: "cvm-pub", style: {"margin":"0"} },
                         h(F,{key:0},L(Vi.rw?.partsMono).map(function(item,i){
                           var Vii = Object.assign({}, Vi, {"run": item, $index: i});
                           return h(F,{key:i},
@@ -1207,7 +1221,7 @@
                       h("span", { key: "0|15.6rvxcr", className: "cvm-date" },
                         h(F,{key:0},"",I(Vi.rec?.right,1),"")
                       ),
-                      h("p", { key: "1|14.1euav39", style: {"margin":"0"} },
+                      h("p", { key: "1|14.1euav39", className: "cvm-body", style: {"margin":"0"} },
                         h(F,{key:0},"",I(Vi.rec?.line,1),"")
                       )
                     ),
@@ -1232,7 +1246,7 @@
                       h("span", { key: "0|14.14hrylc", className: "cvm-date" },
                         h(F,{key:0},"",I(Vi.tk?.right,1),"")
                       ),
-                      h("p", { key: "1|13.d4apoq", style: {"margin":"0"} },
+                      h("p", { key: "1|13.d4apoq", className: "cvm-body", style: {"margin":"0"} },
                         h(F,{key:0},"",I(Vi.tk?.line,1),"")
                       )
                     ),
@@ -1255,11 +1269,13 @@
                     "\n        ",
                     h("div", { key: "1", className: "cvm-row", style: {"margin":"0 0 9px"} },
                       h("span", { key: "0", className: "cvm-date" }),
-                      h("p", { key: "1|41.12uu07a", style: {"margin":"0"} },
-                        h("span", { key: "0|13.jh3e1y", style: {"fontWeight":"600","color":"var(--color-text)"} },
+                      h("p", { key: "1|54.1bez9pp", style: {"margin":"0"} },
+                        h("span", { key: "0|13.jh3e1y", style: {"fontWeight":"700","color":"var(--color-text)"} },
                           h(F,{key:0},"",I(Vi.os?.name,1),"")
                         ),
-                        h(F,{key:1},": ",I(Vi.os?.desc,1),"")
+                        h("span", { key: "1|15.1qautku", className: "cvm-desc" },
+                          h(F,{key:0},": ",I(Vi.os?.desc,1),"")
+                        )
                       )
                     ),
                     "\n      ");
@@ -1283,14 +1299,13 @@
                       h("span", { key: "0|14.19ucjze", className: "cvm-date" },
                         h(F,{key:0},"",I(Vi.ed?.right,1),"")
                       ),
-                      h("p", { key: "1|62.wby89s", style: {"margin":"0"} },
-                        h("span", { key: "0|20.18k9b4m", style: {"fontWeight":"600","color":"var(--color-text)"} },
+                      h("p", { key: "1|62.1tz9dy8", style: {"margin":"0"} },
+                        h("span", { key: "0|20.18k9b4m", style: {"fontWeight":"700","color":"var(--color-text)"} },
                           h(F,{key:0},"",I(Vi.ed?.institution,1),"")
                         ),
-                        h("span", { key: "1|3.375m7w", style: {"color":"var(--color-neutral-600)"} },
-                          " · "
-                        ),
-                        h(F,{key:2},"",I(Vi.ed?.rest,1),"")
+                        h("span", { key: "1|16.zftlnl", className: "cvm-desc" },
+                          h(F,{key:0}," · ",I(Vi.ed?.rest,1),"")
+                        )
                       )
                     ),
                     "\n      ");
@@ -2476,9 +2491,13 @@
     // says what it is with brackets instead.
     CV_KINDS = {
       plain:  { w: 'inherit', fs: 'inherit', c: 'inherit',                  wm: 'inherit', cm: 'inherit' },
-      strong: { w: '600',     fs: 'inherit', c: 'inherit',                  wm: '600',     cm: 'var(--color-text)' },
+      // a metric has to lift out of the description without reaching the title it sits under, so it
+      // takes a step of weight and a step of value, never the title's own full ink
+      strong: { w: '600',     fs: 'inherit', c: 'var(--color-text)',        wm: '600',     cm: 'var(--color-neutral-800)' },
       em:     { w: 'inherit', fs: 'italic',  c: 'inherit',                  wm: 'inherit', cm: 'inherit' },
-      tag:    { w: 'inherit', fs: 'italic',  c: 'var(--color-neutral-700)', wm: 'inherit', cm: 'var(--color-neutral-600)' },
+      tag:    { w: 'inherit', fs: 'italic',  c: 'var(--color-neutral-700)', wm: 'inherit', cm: 'var(--color-neutral-400)' },
+      // the head of a publication row, which is a title with a description running on after it
+      title:  { w: 'inherit', fs: 'inherit', c: 'inherit',                  wm: '700',     cm: 'var(--color-text)' },
     };
     cvRun(t, kind) { return { t, ...(this.CV_KINDS[kind] || this.CV_KINDS.plain) }; }
   
@@ -2532,7 +2551,7 @@
         if (p.application_no) facts.push('US patent application ' + String(p.application_no).replace('US ', ''));
         if (p.claims && p.claims.total != null) facts.push(p.claims.total + ' claims');
         const parts = [this.cvRun((p.title || '') + '. ')];
-        const partsMono = [this.cvRun(p.title || '')];
+        const partsMono = [this.cvRun(p.title || '', 'title')];
         if (p.role) {
           parts.push(this.cvRun(p.role + '. ', 'strong'));
           partsMono.push(this.cvRun(' · '), this.cvRun(p.role, 'strong'));
@@ -2558,7 +2577,7 @@
         const tag = p.venue_short ? (p.status || '') + ', ' + p.venue_short : (p.type || '') + ', ' + (p.status || '');
         const tagMono = p.venue_short ? (p.status || '') + ' · ' + p.venue_short : (p.type || '') + ' · ' + (p.status || '');
         const parts = [this.cvRun((p.title || '') + '. ')];
-        const partsMono = [this.cvRun(p.title || '')];
+        const partsMono = [this.cvRun(p.title || '', 'title')];
         if (p.position) {
           parts.push(this.cvRun(p.position + '. ', 'strong'));
           partsMono.push(this.cvRun(' · '), this.cvRun(p.position, 'strong'));

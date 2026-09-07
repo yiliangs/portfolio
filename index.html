@@ -75,6 +75,10 @@
     /* the rail holds a fixed width so every date in the document starts on the same line, however
        short the entry above it: a ragged right column reads as a mistake rather than as a rail */
     .cv-date { font-family: var(--mono); font-size: 0.8em; font-weight: 500; line-height: 1.6; min-width: 11ch; color: var(--color-neutral-600); text-align: right; white-space: nowrap; }
+    /* A title and the description running on after it have to separate on more than one axis, or the
+       line reads as one grey band. The title takes the ink and the weight, the description steps down
+       in all three at once: lighter, greyer, and a size smaller. */
+    .cv-desc { font-size: 0.95em; font-weight: 400; color: var(--color-neutral-700); }
     /* The section rule and the job are the two things that set the document's vertical rhythm, so
        both live here rather than inline: a media query cannot reach an inline margin, and the narrow
        page needs roughly half the air the wide one does. */
@@ -106,7 +110,15 @@
     .cvm-row { display: grid; grid-template-columns: 20ch minmax(0,1fr); column-gap: 18px; align-items: baseline; }
     /* a sub-line leaves the rail empty rather than repeating the date, which is what puts every body
        column on one edge; on the narrow page an empty rail has nothing to hold and goes away */
-    .cvm-date { font-weight: 500; color: var(--color-neutral-600); white-space: nowrap; }
+    .cvm-date { font-weight: 500; color: var(--color-neutral-500); white-space: nowrap; }
+    /* the same separation, further apart: on a dark sheet the two ends have more room to travel.
+       .cvm-desc is running text and stops at neutral-500, which clears 4.5:1 on this ground;
+       .cvm-qual is for the one-line qualifiers, which may go dimmer because nobody reads a paragraph
+       of them. .cvm-pub keeps full size because a publication row is a title with its own tail. */
+    .cvm-desc { font-size: 0.93em; font-weight: 400; color: var(--color-neutral-500); }
+    .cvm-qual { font-size: 0.93em; font-weight: 400; color: var(--color-neutral-400); }
+    .cvm-pub { font-weight: 400; color: var(--color-neutral-500); }
+    .cvm-body { color: var(--color-neutral-700); }
     .cvm-sec { margin: 44px 0 14px; }
     .cvm-sec-first { margin-top: 36px; }
     .cvm-sec-label { margin: 0 0 8px; font-weight: 500; color: var(--color-neutral-600); }

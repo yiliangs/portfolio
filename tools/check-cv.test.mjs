@@ -121,17 +121,24 @@ test('the mono document is the same model punctuated differently', () => {
   const c = logic();
   const doc = c.cvModel(JSON.parse(read('cv.json')));
 
-  // one decision about emphasis, drawn twice. Mono says it with weight and ink, not ink alone
+  // one decision about emphasis, drawn twice. Both registers say it with weight and ink together
   const runs = doc.jobs[0].blocks[0].entries[0].parts;
   const metric = runs.find((r) => r.w === '600');
   assert.ok(metric, 'no run carries emphasis in the serif document');
   assert.equal(metric.wm, '600', 'the same run carries no emphasis in the mono document');
-  assert.equal(metric.cm, 'var(--color-text)');
+  assert.equal(metric.c, 'var(--color-text)', 'a serif metric should lift out of the description ink');
+  // a metric lifts out of the description without reaching the title's own full ink
+  assert.equal(metric.cm, 'var(--color-neutral-800)', 'a mono metric is competing with the title');
   for (const r of runs) assert.equal(r.w === '600', r.wm === '600', 'the two registers disagree about which run is a metric');
-  // a muted run differs from the body by weight as well as by colour, never by colour alone
-  const muted = doc.research.map((r) => r.partsMono).flat().find((r) => r.cm === 'var(--color-neutral-600)');
-  assert.ok(muted, 'no mono status tag is muted');
-  assert.equal(muted.wm, 'inherit', 'a muted mono run should sit at the body weight, not above it');
+
+  // a publication row leads with a title, and the title outranks everything after it
+  const head = doc.research[1].partsMono[0];
+  assert.equal(head.wm, '700', 'a mono publication title is not set apart from its own row');
+  assert.equal(head.cm, 'var(--color-text)');
+  // a status tag is the dimmest thing on the row, and it gets there by colour at the body weight
+  const tag = doc.research.map((r) => r.partsMono).flat().find((r) => r.cm === 'var(--color-neutral-400)');
+  assert.ok(tag, 'no mono status tag is set below the description');
+  assert.equal(tag.wm, 'inherit', 'a status tag should sit at the body weight, not above it');
 
   // an unpublished paper is bracketed and rail-less in mono, parenthesised and year-less in serif
   const flat = (parts) => parts.map((p) => p.t).join('');
