@@ -1421,15 +1421,15 @@
                 h(F,{key:0},"← ",I(V.current?.backWord,1),"")
               ),
               "\n      ",
-              h("p", { key: "5|88.1oj3jfb", style: {"margin":"calc(2*28px) 0 14px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-accent-700)","fontFeatureSettings":"'tnum' 1"} },
+              h("p", { key: `kicker-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "serif", "data-fx": "ripple", style: {"margin":"calc(2*28px) 0 14px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-accent-700)","fontFeatureSettings":"'tnum' 1"} },
                 h(F,{key:0},"",I(V.current?.kickerWord,1)," ",I(V.current?.numeral,3)," · ",I(V.current?.kind,5)," · ",I(V.current?.year,7),"")
               ),
               "\n      ",
-              h("h1", { key: "7|19.6hqa14", "data-morph": `title-${V.current?.figNo ?? ""}`, style: {"margin":"0 0 0 -0.042em","fontFamily":"var(--font-heading)","fontWeight":"400","fontSize":"clamp(44px,6vw,88px)","lineHeight":"1.04","letterSpacing":"-0.01em","maxWidth":"16ch"} },
+              h("h1", { key: `title-${V.current?.figNo ?? ""}`, "data-morph": `title-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "serif", "data-fx": "ripple", style: {"margin":"0 0 0 -0.042em","fontFamily":"var(--font-heading)","fontWeight":"400","fontSize":"clamp(44px,6vw,88px)","lineHeight":"1.04","letterSpacing":"-0.01em","maxWidth":"16ch"} },
                 h(F,{key:0},"",I(V.current?.title,1),"")
               ),
               "\n      ",
-              h("p", { key: V.current?.numeral, "data-morph": `lede-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "serif", style: {"margin":"28px 0 0","fontFamily":"var(--font-heading)","fontSize":"30px","lineHeight":"36px","fontWeight":"400","maxWidth":"30ch"} },
+              h("p", { key: `lede-${V.current?.figNo ?? ""}`, "data-morph": `lede-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "serif", "data-fx": "ripple", style: {"margin":"28px 0 0","fontFamily":"var(--font-heading)","fontSize":"30px","lineHeight":"36px","fontWeight":"400","maxWidth":"30ch"} },
                 h(F,{key:0},"",I(V.current?.subtitle,1),"")
               ),
               "\n    "
@@ -1441,7 +1441,7 @@
                 h("dt", { key: "0|4.yk2787", style: {"fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Role"
                 ),
-                h("dd", { key: "1|18.8jyyk8", style: {"margin":"0"} },
+                h("dd", { key: `spec-role-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "serif", "data-fx": "ripple", style: {"margin":"0"} },
                   h(F,{key:0},"",I(V.current?.role,1),"")
                 )
               ),
@@ -1450,7 +1450,7 @@
                 h("dt", { key: "0|4.yk5x1d", style: {"fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "With"
                 ),
-                h("dd", { key: "1|18.14lax7m", style: {"margin":"0"} },
+                h("dd", { key: `spec-with-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "serif", "data-fx": "ripple", style: {"margin":"0"} },
                   h(F,{key:0},"",I(V.current?.with,1),"")
                 )
               ),
@@ -1459,7 +1459,7 @@
                 h("dt", { key: "0|6.1m8lgyx", style: {"fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Status"
                 ),
-                h("dd", { key: "1|20.5iwyyy", style: {"margin":"0"} },
+                h("dd", { key: `spec-status-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "serif", "data-fx": "ripple", style: {"margin":"0"} },
                   h(F,{key:0},"",I(V.current?.status,1),"")
                 )
               ),
@@ -1468,7 +1468,7 @@
                 h("dt", { key: "0|5.3ui0gl", style: {"fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Pages"
                 ),
-                h("dd", { key: "1|19.1q33b6e", style: {"margin":"0","fontFeatureSettings":"'tnum' 1"} },
+                h("dd", { key: `spec-pages-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "serif", "data-fx": "ripple", style: {"margin":"0","fontFeatureSettings":"'tnum' 1"} },
                   h(F,{key:0},"",I(V.current?.pages,1),"")
                 )
               ),
@@ -1486,15 +1486,19 @@
               "\n    "
             ),
             "\n    ",
-            h("p", { key: "8|79.l667xt", style: {"margin":"14px 0 0","fontSize":"13px","lineHeight":"20px","color":"var(--color-neutral-700)","fontFeatureSettings":"'tnum' 1"} },
+            "\n    ",
+            h("p", { key: "9|92.1o5q0e0", style: {"margin":"14px 0 0","fontSize":"13px","lineHeight":"20px","color":"var(--color-neutral-700)","fontFeatureSettings":"'tnum' 1"} },
               h("span", { key: "0|44.1e4j9ob", style: {"fontFamily":"var(--font-heading)","fontSize":"17px","color":"var(--color-accent)"} },
                 h(F,{key:0},"",I(V.current?.figWord,1)," ",I(V.current?.numeral,3),".")
               ),
-              h(F,{key:1}," ",I(V.current?.caption,1),"")
+              " ",
+              h("span", { key: `cap-hero-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "serif", "data-fx": "ripple" },
+                h(F,{key:0},"",I(V.current?.caption,1),"")
+              )
             ),
             "\n\n    ",
             "\n    ",
-            (V.isPaper ? h(F,{key:11},
+            (V.isPaper ? h(F,{key:12},
               "\n    ",
               h("section", { key: "1", "data-paper-body": "", "data-enter": "", style: {"display":"grid","gridTemplateColumns":"minmax(0,8fr) minmax(0,4fr)","gap":"0 clamp(28px,5vw,80px)","padding":"calc(2.5*28px) 0","alignItems":"start"} },
                 h(F,{key:0},"\n      ",I(V.paperBlocks,1),"\n      ",I(V.paperCaptions,3),"\n      ",I(V.paperTail,5),"\n      "),
@@ -1502,7 +1506,7 @@
                   "\n        ",
                   (V.marginalia ? h(F,{key:1},
                     "\n          ",
-                    h("p", { key: "1|20.1l14w78", style: {"margin":"0","paddingLeft":"var(--space-3)","borderLeft":"1px solid var(--color-accent)","fontFamily":"var(--font-heading)","fontStyle":"italic","fontSize":"19px","lineHeight":"26px"} },
+                    h("p", { key: `margin-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "serif", "data-fx": "ripple", style: {"margin":"0","paddingLeft":"var(--space-3)","borderLeft":"1px solid var(--color-accent)","fontFamily":"var(--font-heading)","fontStyle":"italic","fontSize":"19px","lineHeight":"26px"} },
                       h(F,{key:0},"",I(V.current?.margin,1),"")
                     ),
                     "\n        ") : null),
@@ -1513,7 +1517,7 @@
                       "Made with"
                     ),
                     "\n          ",
-                    h("p", { key: "3|19.lcn33w", style: {"margin":"0"} },
+                    h("p", { key: `stack-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "serif", "data-fx": "ripple", style: {"margin":"0"} },
                       h(F,{key:0},"",I(V.current?.stack,1),"")
                     ),
                     "\n        "
@@ -1526,7 +1530,7 @@
                     ),
                     "\n          ",
                     h("p", { key: "3|25.1gl75yx", style: {"margin":"0"} },
-                      h("a", { key: "0|18.imhu9g", href: V.current?.href, target: V.current?.linkTarget, rel: V.current?.linkRel, onClick: V.current?.linkClick },
+                      h("a", { key: `link-${V.current?.figNo ?? ""}`, href: V.current?.href, target: V.current?.linkTarget, rel: V.current?.linkRel, onClick: V.current?.linkClick, "data-tr": "wake", "data-reg": "serif", "data-fx": "ripple" },
                         h(F,{key:0},"",I(V.current?.link,1),"")
                       )
                     ),
@@ -1538,7 +1542,7 @@
               ),
               "\n    ") : null),
             "\n\n    ",
-            (V.isEssay ? h(F,{key:13},
+            (V.isEssay ? h(F,{key:14},
               "\n    ",
               h("section", { key: "1", "data-enter": "", style: {"display":"grid","gridTemplateColumns":"minmax(0,8fr) minmax(0,4fr)","gap":"28px clamp(28px,5vw,80px)","padding":"calc(2.5*28px) 0","alignItems":"start"} },
                 "\n      ",
@@ -1565,7 +1569,7 @@
                   "\n        ",
                   (V.marginalia ? h(F,{key:1},
                     "\n          ",
-                    h("p", { key: "1|20.1l14w78", style: {"margin":"0","paddingLeft":"var(--space-3)","borderLeft":"1px solid var(--color-accent)","fontFamily":"var(--font-heading)","fontStyle":"italic","fontSize":"19px","lineHeight":"26px"} },
+                    h("p", { key: `margin-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "serif", "data-fx": "ripple", style: {"margin":"0","paddingLeft":"var(--space-3)","borderLeft":"1px solid var(--color-accent)","fontFamily":"var(--font-heading)","fontStyle":"italic","fontSize":"19px","lineHeight":"26px"} },
                       h(F,{key:0},"",I(V.current?.margin,1),"")
                     ),
                     "\n        ") : null),
@@ -1576,7 +1580,7 @@
                       "Made with"
                     ),
                     "\n          ",
-                    h("p", { key: "3|19.lcn33w", style: {"margin":"0"} },
+                    h("p", { key: `stack-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "serif", "data-fx": "ripple", style: {"margin":"0"} },
                       h(F,{key:0},"",I(V.current?.stack,1),"")
                     ),
                     "\n        "
@@ -1589,7 +1593,7 @@
                     ),
                     "\n          ",
                     h("p", { key: "3|25.1gl75yx", style: {"margin":"0"} },
-                      h("a", { key: "0|18.imhu9g", href: V.current?.href, target: V.current?.linkTarget, rel: V.current?.linkRel, onClick: V.current?.linkClick },
+                      h("a", { key: `link-${V.current?.figNo ?? ""}`, href: V.current?.href, target: V.current?.linkTarget, rel: V.current?.linkRel, onClick: V.current?.linkClick, "data-tr": "wake", "data-reg": "serif", "data-fx": "ripple" },
                         h(F,{key:0},"",I(V.current?.link,1),"")
                       )
                     ),
@@ -1602,7 +1606,7 @@
               "\n    ") : null),
             "\n\n    ",
             "\n    ",
-            (V.isEssay ? h(F,{key:16},
+            (V.isEssay ? h(F,{key:17},
               "\n    ",
               h("div", { key: "1", style: {"display":"grid","gridTemplateColumns":"minmax(0,1fr) minmax(0,1fr)","gap":"clamp(20px,4vw,56px)"} },
                 "\n      ",
@@ -1624,9 +1628,9 @@
               ),
               "\n    ") : null),
             "\n\n    ",
-            h("hr", { key: "18", style: {"height":"1px","border":"0","margin":"calc(3*28px) 0 0","background":"var(--color-divider)"} }),
+            h("hr", { key: "19", style: {"height":"1px","border":"0","margin":"calc(3*28px) 0 0","background":"var(--color-divider)"} }),
             "\n    ",
-            h("nav", { key: "20", style: {"display":"flex","justifyContent":"space-between","alignItems":"baseline","gap":"var(--space-4)","padding":"28px 0 calc(3*28px)","flexWrap":"wrap"} },
+            h("nav", { key: "21", style: {"display":"flex","justifyContent":"space-between","alignItems":"baseline","gap":"var(--space-4)","padding":"28px 0 calc(3*28px)","flexWrap":"wrap"} },
               "\n      ",
               h("button", { key: "1|24.1chn43n", className: "btn btn-ghost", onClick: V.goPageCurrent, style: {"whiteSpace":"nowrap","fontFamily":"var(--r-body)"} },
                 h(F,{key:0},"← ",I(V.current?.backWord,1),"")
@@ -1638,7 +1642,7 @@
                   h(F,{key:0},"Next · ",I(V.next?.kickerWord,1)," ",I(V.next?.numeral,3),"")
                 ),
                 "\n        ",
-                h("span", { key: "3|18.1kqmn3q", style: {"fontFamily":"var(--font-heading)","fontSize":"30px","lineHeight":"32px","fontWeight":"400","letterSpacing":"-0.01em"} },
+                h("span", { key: `next-${V.next?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "serif", "data-fx": "ripple", style: {"fontFamily":"var(--font-heading)","fontSize":"30px","lineHeight":"32px","fontWeight":"400","letterSpacing":"-0.01em"} },
                   h(F,{key:0},"",I(V.next?.title,1)," →")
                 ),
                 "\n      "
@@ -2778,6 +2782,12 @@
       if (mod.__els) return mod.__els;
       const e = React.createElement;
       const ink = 'color-mix(in srgb, var(--color-text) 84%, transparent)';
+      // The panes this body can carry: a heading, the keywords line and an author's name are each one
+      // run in one colour. The abstract, paragraphs, lists, tables, listings and displayed equations
+      // are not, and are set justified and hyphenated besides, so the effect would cost them their
+      // markup and their setting; they stay plain, as do the captions, which retype every frame while
+      // a plate is hovered. mountTextEffects looks the pair up in TEXT_FX.
+      const PANE = { 'data-tr': 'wake', 'data-reg': 'serif', 'data-fx': 'ripple' };
       const rule = { borderTop: '1px solid var(--color-divider)', paddingTop: '14px' };
       const label = { margin: '0 0 6px', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-neutral-600)' };
       const body = { fontSize: '17px', lineHeight: '28px', textAlign: 'justify', hyphens: 'auto', color: ink, maxWidth: '68ch' };
@@ -2808,10 +2818,12 @@
         const key = 'pb' + i, cell = plan.cells[i];
         if (b.k === 'byline') {
           // one name over its affiliation per author, set in a row that wraps; an equal-contribution
-          // mark sits after the name and its note closes the block
+          // mark sits after the name and its note closes the block. The name stands in its own span so
+          // the pane holds one run in one colour: the mark and the affiliation are a second colour.
           els.push(e('div', { key, style: { ...cell, margin: '0 0 28px', display: 'flex', flexWrap: 'wrap', gap: '10px 32px', fontFamily: 'var(--font-heading)', fontSize: '19px', lineHeight: '26px' } },
             b.authors.map((a, j) => e('p', { key: j, style: { margin: 0 } },
-              a.t, a.eq ? e('sup', { key: 'e', style: { fontSize: '12px', color: 'var(--color-neutral-600)' } }, '*') : null,
+              e('span', { key: 't', ...PANE }, a.t),
+              a.eq ? e('sup', { key: 'e', style: { fontSize: '12px', color: 'var(--color-neutral-600)' } }, '*') : null,
               e('span', { key: 'a', style: { display: 'block', fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-600)' } }, a.aff))),
             b.note ? e('p', { key: 'n', style: { margin: 0, flexBasis: '100%', fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-600)' } }, b.note) : null));
         } else if (b.k === 'abstract') {
@@ -2819,12 +2831,12 @@
             e('p', { key: 'l', style: label }, 'Abstract'),
             e('p', { key: 'p', style: { margin: 0, fontFamily: 'var(--font-heading)', fontSize: '18px', lineHeight: '30px', textAlign: 'justify', hyphens: 'auto', color: ink, maxWidth: '68ch' } }, this.paperRuns(b.r))));
         } else if (b.k === 'keywords') {
-          els.push(e('p', { key, style: { ...cell, margin: '0 0 28px', fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-600)', maxWidth: '68ch' } }, b.t));
+          els.push(e('p', { key, ...PANE, style: { ...cell, margin: '0 0 28px', fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-600)', maxWidth: '68ch' } }, b.t));
         } else if (b.k === 'h2') {
           dropNext = /^Introduction$/i.test(b.t);
-          els.push(e('h2', { key, style: { ...cell, ...rule, margin: '56px 0 20px', fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: '30px', lineHeight: '1.2', letterSpacing: '-0.01em' } }, b.t));
+          els.push(e('h2', { key, ...PANE, style: { ...cell, ...rule, margin: '56px 0 20px', fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: '30px', lineHeight: '1.2', letterSpacing: '-0.01em' } }, b.t));
         } else if (b.k === 'h3') {
-          els.push(e('h3', { key, style: { ...cell, margin: '34px 0 14px', fontFamily: 'var(--font-heading)', fontStyle: 'italic', fontWeight: 400, fontSize: '22px', lineHeight: '1.25' } }, b.t));
+          els.push(e('h3', { key, ...PANE, style: { ...cell, margin: '34px 0 14px', fontFamily: 'var(--font-heading)', fontStyle: 'italic', fontWeight: 400, fontSize: '22px', lineHeight: '1.25' } }, b.t));
         } else if (b.k === 'p') {
           const kids = this.paperRuns(b.r);
           if (dropNext) {
@@ -3051,6 +3063,20 @@
       cancelAnimationFrame(this.cellRaf); this.cellRaf = 0; this.pendingCell = null;
       if (this.state.cell) this.setState({ cell: null });
     }
+    // The serif register never scrambles: this picker hands back the glyph it was given, so the
+    // wavefront carries brightness and nothing on the line moves. resolve() in the library takes a
+    // function as the picker itself, so no entry in its GlyphPickers registry is needed.
+    KEEP_GLYPH = (ch) => ch;
+    // Which effect a text pane runs, in one table. The row is named by the pane's register (data-reg)
+    // and the effect family it asks for (data-fx); a pane naming no family takes its register's
+    // default below. `wake` names the colour the wake is drawn in, resolved per element because the
+    // accent is a custom property and the mono sheet's wake is a fixed white.
+    TEXT_FX = {
+      'mono/ripple': { effect: 'ripple', swapMode: 'caseFlip', rippleEdge: 18, wake: 'white' },
+      'serif/glow': { effect: 'glow', radius: 200, wake: 'accent' },
+      'serif/ripple': { effect: 'ripple', swapMode: this.KEEP_GLYPH, rippleEdge: 18, wake: 'accent' },
+    };
+    TEXT_FX_DEFAULT = { mono: 'ripple', serif: 'glow' };
     mountTextEffects() {
       if (!window.TextRippling || (this.props.textEffects ?? true) === false || this.morph) return;
       this.trInstances = this.trInstances || [];
@@ -3063,12 +3089,13 @@
         if (el.__tr) return;
         const css = getComputedStyle(el);
         const accent = css.getPropertyValue('--color-accent').trim() || '#b68235';
-        const ink = css.getPropertyValue('--color-text').trim() || '#201f1d';
-        const mono = el.dataset.reg === 'mono';
-        // mono: the wavefront flips glyphs (case + symbols); serif: brightness-only wake, letters never scramble
-        const fx = mono ? { effect: 'ripple', swapMode: 'caseFlip', rippleEdge: 18 } : { effect: 'glow', radius: 200 };
-        const opts = { ...fx, wakeColor: mono ? '#ffffff' : accent };
-        el.__tr = new window.TextRippling(el, opts); el.__tr.__el = el; el.__tr.__breathes = !mono;
+        const reg = el.dataset.reg === 'mono' ? 'mono' : 'serif';
+        // the pane names its own effect; a pane that names none, or one the table has no row for,
+        // falls back to its register's default rather than mounting nothing
+        const { wake, ...fx } = this.TEXT_FX[reg + '/' + (el.dataset.fx || this.TEXT_FX_DEFAULT[reg])] ||
+          this.TEXT_FX[reg + '/' + this.TEXT_FX_DEFAULT[reg]];
+        const opts = { ...fx, wakeColor: wake === 'accent' ? accent : '#ffffff' };
+        el.__tr = new window.TextRippling(el, opts); el.__tr.__el = el; el.__tr.__breathes = reg === 'serif';
         this.startBreath();
         setTimeout(() => { if (!el.__tr._destroyed) el.__tr.remeasure(); }, 700);
         this.trInstances.push(el.__tr);

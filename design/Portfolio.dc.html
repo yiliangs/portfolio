@@ -709,23 +709,33 @@
   </main>
   </sc-if>
 
-  <!-- ============ CHAPTER — the Research register: a bound page, prose in two columns ============ -->
+  <!-- ============ CHAPTER — the Research register: a bound page, prose in two columns.
+       Every pane that is one run in one colour carries data-tr, keyed to the chapter so the effect is
+       rebuilt when the chapter changes, the same way the sheet keys its panes. data-fx names the ripple
+       rather than the register's own glow: the wavefront is the instrument both registers share, and the
+       serif row swaps no glyph, because a case flip in a proportional face moves the line.
+       What stays plain, and why: the chapter's justified two-column body, and the paper's abstract,
+       paragraphs, lists, tables, listings and displayed equations, carry inline math, italics, citation
+       superscripts and a drop cap, and are set justified and hyphenated. TextRippling flattens the element
+       it is given to its text and sets every word inline-block, so a pane there would lose both the markup
+       and the setting. The figure captions in the margin type themselves out on hover and re-render every
+       frame while typing, so they are not a stable run. ============ -->
   <sc-if value="{{ isSerif }}" hint-placeholder-val="{{ true }}">
   <main key="{{ chapterKey }}" data-screen-label="Chapter" style="max-width:1200px; margin:0 auto; padding:0 clamp(20px,5vw,72px); background-image:radial-gradient(color-mix(in srgb, var(--color-text) 16%, transparent) 1px, transparent 1.1px); background-size:28px 28px;">
 
     <section style="position:relative; padding:calc(3*28px) 0 calc(2*28px);">
       <span aria-hidden="true" style="position:absolute; right:0; top:28px; font-family:var(--deco); font-weight:400; font-size:clamp(160px,22vw,320px); line-height:1; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; pointer-events:none; user-select:none; font-feature-settings:'tnum' 1; letter-spacing:0; transform:translateY({{ parallax }}); will-change:transform;">{{ current.ghost }}</span>
       <button class="btn btn-ghost" onClick="{{ goPageCurrent }}" style="white-space:nowrap; margin-left:calc(-1*var(--space-1)); font-family:var(--r-body);">← {{ current.backWord }}</button>
-      <p style="margin:calc(2*28px) 0 14px; font-size:12px; line-height:14px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-accent-700); font-feature-settings:'tnum' 1;">{{ current.kickerWord }} {{ current.numeral }} · {{ current.kind }} · {{ current.year }}</p>
-      <h1 data-morph="title-{{ current.figNo }}" style="margin:0 0 0 -0.042em; font-family:var(--font-heading); font-weight:400; font-size:clamp(44px,6vw,88px); line-height:1.04; letter-spacing:-0.01em; max-width:16ch;">{{ current.title }}</h1>
-      <p key="{{ current.numeral }}" data-morph="lede-{{ current.figNo }}" data-tr="wake" data-reg="serif" style="margin:28px 0 0; font-family:var(--font-heading); font-size:30px; line-height:36px; font-weight:400; max-width:30ch;">{{ current.subtitle }}</p>
+      <p key="kicker-{{ current.figNo }}" data-tr="wake" data-reg="serif" data-fx="ripple" style="margin:calc(2*28px) 0 14px; font-size:12px; line-height:14px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-accent-700); font-feature-settings:'tnum' 1;">{{ current.kickerWord }} {{ current.numeral }} · {{ current.kind }} · {{ current.year }}</p>
+      <h1 key="title-{{ current.figNo }}" data-morph="title-{{ current.figNo }}" data-tr="wake" data-reg="serif" data-fx="ripple" style="margin:0 0 0 -0.042em; font-family:var(--font-heading); font-weight:400; font-size:clamp(44px,6vw,88px); line-height:1.04; letter-spacing:-0.01em; max-width:16ch;">{{ current.title }}</h1>
+      <p key="lede-{{ current.figNo }}" data-morph="lede-{{ current.figNo }}" data-tr="wake" data-reg="serif" data-fx="ripple" style="margin:28px 0 0; font-family:var(--font-heading); font-size:30px; line-height:36px; font-weight:400; max-width:30ch;">{{ current.subtitle }}</p>
     </section>
 
     <dl style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px,1fr)); gap:var(--space-4); margin:0 0 calc(2*28px); padding-top:14px; border-top:1px solid var(--color-divider); font-size:14px; line-height:22px;">
-      <div><dt style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-neutral-600);">Role</dt><dd style="margin:0;">{{ current.role }}</dd></div>
-      <div><dt style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-neutral-600);">With</dt><dd style="margin:0;">{{ current.with }}</dd></div>
-      <div><dt style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-neutral-600);">Status</dt><dd style="margin:0;">{{ current.status }}</dd></div>
-      <div><dt style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-neutral-600);">Pages</dt><dd style="margin:0; font-feature-settings:'tnum' 1;">{{ current.pages }}</dd></div>
+      <div><dt style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-neutral-600);">Role</dt><dd key="spec-role-{{ current.figNo }}" data-tr="wake" data-reg="serif" data-fx="ripple" style="margin:0;">{{ current.role }}</dd></div>
+      <div><dt style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-neutral-600);">With</dt><dd key="spec-with-{{ current.figNo }}" data-tr="wake" data-reg="serif" data-fx="ripple" style="margin:0;">{{ current.with }}</dd></div>
+      <div><dt style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-neutral-600);">Status</dt><dd key="spec-status-{{ current.figNo }}" data-tr="wake" data-reg="serif" data-fx="ripple" style="margin:0;">{{ current.status }}</dd></div>
+      <div><dt style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-neutral-600);">Pages</dt><dd key="spec-pages-{{ current.figNo }}" data-tr="wake" data-reg="serif" data-fx="ripple" style="margin:0; font-feature-settings:'tnum' 1;">{{ current.pages }}</dd></div>
     </dl>
 
     <!-- the plate takes the hero image's own ratio when the entry declares one, so a drawing that is
@@ -735,7 +745,9 @@
       <sc-if value="{{ heroSlot }}" hint-placeholder-val="{{ true }}"><image-slot id="{{ current.heroSlotId }}" shape="rect" placeholder="{{ current.placeholder }}" style="width:100%; height:100%;"></image-slot></sc-if>
       <sc-if value="{{ heroImg }}" hint-placeholder-val="{{ false }}"><img src="{{ current.hero }}" alt="{{ current.caption }}" style="width:100%; height:100%; display:block; object-fit:contain;"></sc-if>
     </figure>
-    <p style="margin:14px 0 0; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="font-family:var(--font-heading); font-size:17px; color:var(--color-accent);">{{ current.figWord }} {{ current.numeral }}.</span> {{ current.caption }}</p>
+    <!-- the plate's caption: the "Fig. N." kicker is accent and the caption is neutral ink, so the
+         pane stands on the caption's own span rather than the paragraph that holds both colours -->
+    <p style="margin:14px 0 0; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="font-family:var(--font-heading); font-size:17px; color:var(--color-accent);">{{ current.figWord }} {{ current.numeral }}.</span> <span key="cap-hero-{{ current.figNo }}" data-tr="wake" data-reg="serif" data-fx="ripple">{{ current.caption }}</span></p>
 
     <!-- the paper chapter: the manuscript's own blocks, on the same grid the essay uses. Wide plates
          take a full row across both columns; every block sits on an explicit row so column 2 can
@@ -750,15 +762,15 @@
       {{ paperTail }}
       <aside style="grid-column:2; grid-row:{{ paperAsideRow }}; align-self:start; display:flex; flex-direction:column; gap:28px; font-size:13px; line-height:20px; color:var(--color-neutral-700);">
         <sc-if value="{{ marginalia }}" hint-placeholder-val="{{ true }}">
-          <p style="margin:0; padding-left:var(--space-3); border-left:1px solid var(--color-accent); font-family:var(--font-heading); font-style:italic; font-size:19px; line-height:26px;">{{ current.margin }}</p>
+          <p key="margin-{{ current.figNo }}" data-tr="wake" data-reg="serif" data-fx="ripple" style="margin:0; padding-left:var(--space-3); border-left:1px solid var(--color-accent); font-family:var(--font-heading); font-style:italic; font-size:19px; line-height:26px;">{{ current.margin }}</p>
         </sc-if>
         <div style="border-top:1px solid var(--color-divider); padding-top:14px;">
           <p style="margin:0 0 6px; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-neutral-600);">Made with</p>
-          <p style="margin:0;">{{ current.stack }}</p>
+          <p key="stack-{{ current.figNo }}" data-tr="wake" data-reg="serif" data-fx="ripple" style="margin:0;">{{ current.stack }}</p>
         </div>
         <div style="border-top:1px solid var(--color-divider); padding-top:14px;">
           <p style="margin:0 0 6px; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-neutral-600);">Further</p>
-          <p style="margin:0;"><a href="{{ current.href }}" target="{{ current.linkTarget }}" rel="{{ current.linkRel }}" onClick="{{ current.linkClick }}">{{ current.link }}</a></p>
+          <p style="margin:0;"><a href="{{ current.href }}" target="{{ current.linkTarget }}" rel="{{ current.linkRel }}" onClick="{{ current.linkClick }}" key="link-{{ current.figNo }}" data-tr="wake" data-reg="serif" data-fx="ripple">{{ current.link }}</a></p>
         </div>
       </aside>
     </section>
@@ -773,15 +785,15 @@
       </div>
       <aside style="display:flex; flex-direction:column; gap:28px; font-size:13px; line-height:20px; color:var(--color-neutral-700);">
         <sc-if value="{{ marginalia }}" hint-placeholder-val="{{ true }}">
-          <p style="margin:0; padding-left:var(--space-3); border-left:1px solid var(--color-accent); font-family:var(--font-heading); font-style:italic; font-size:19px; line-height:26px;">{{ current.margin }}</p>
+          <p key="margin-{{ current.figNo }}" data-tr="wake" data-reg="serif" data-fx="ripple" style="margin:0; padding-left:var(--space-3); border-left:1px solid var(--color-accent); font-family:var(--font-heading); font-style:italic; font-size:19px; line-height:26px;">{{ current.margin }}</p>
         </sc-if>
         <div style="border-top:1px solid var(--color-divider); padding-top:14px;">
           <p style="margin:0 0 6px; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-neutral-600);">Made with</p>
-          <p style="margin:0;">{{ current.stack }}</p>
+          <p key="stack-{{ current.figNo }}" data-tr="wake" data-reg="serif" data-fx="ripple" style="margin:0;">{{ current.stack }}</p>
         </div>
         <div style="border-top:1px solid var(--color-divider); padding-top:14px;">
           <p style="margin:0 0 6px; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-neutral-600);">Further</p>
-          <p style="margin:0;"><a href="{{ current.href }}" target="{{ current.linkTarget }}" rel="{{ current.linkRel }}" onClick="{{ current.linkClick }}">{{ current.link }}</a></p>
+          <p style="margin:0;"><a href="{{ current.href }}" target="{{ current.linkTarget }}" rel="{{ current.linkRel }}" onClick="{{ current.linkClick }}" key="link-{{ current.figNo }}" data-tr="wake" data-reg="serif" data-fx="ripple">{{ current.link }}</a></p>
         </div>
       </aside>
     </section>
@@ -801,7 +813,7 @@
       <button class="btn btn-ghost" onClick="{{ goPageCurrent }}" style="white-space:nowrap; font-family:var(--r-body);">← {{ current.backWord }}</button>
       <button onClick="{{ openNext }}" style="all:unset; cursor:pointer; text-align:right; display:flex; flex-direction:column; align-items:flex-end; gap:4px;" style-hover="color:var(--color-accent-700)">
         <span style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-neutral-600);">Next · {{ next.kickerWord }} {{ next.numeral }}</span>
-        <span style="font-family:var(--font-heading); font-size:30px; line-height:32px; font-weight:400; letter-spacing:-0.01em;">{{ next.title }} →</span>
+        <span key="next-{{ next.figNo }}" data-tr="wake" data-reg="serif" data-fx="ripple" style="font-family:var(--font-heading); font-size:30px; line-height:32px; font-weight:400; letter-spacing:-0.01em;">{{ next.title }} →</span>
       </button>
     </nav>
   </main>
@@ -1755,6 +1767,12 @@ class Component extends DCLogic {
     if (mod.__els) return mod.__els;
     const e = React.createElement;
     const ink = 'color-mix(in srgb, var(--color-text) 84%, transparent)';
+    // The panes this body can carry: a heading, the keywords line and an author's name are each one
+    // run in one colour. The abstract, paragraphs, lists, tables, listings and displayed equations
+    // are not, and are set justified and hyphenated besides, so the effect would cost them their
+    // markup and their setting; they stay plain, as do the captions, which retype every frame while
+    // a plate is hovered. mountTextEffects looks the pair up in TEXT_FX.
+    const PANE = { 'data-tr': 'wake', 'data-reg': 'serif', 'data-fx': 'ripple' };
     const rule = { borderTop: '1px solid var(--color-divider)', paddingTop: '14px' };
     const label = { margin: '0 0 6px', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-neutral-600)' };
     const body = { fontSize: '17px', lineHeight: '28px', textAlign: 'justify', hyphens: 'auto', color: ink, maxWidth: '68ch' };
@@ -1785,10 +1803,12 @@ class Component extends DCLogic {
       const key = 'pb' + i, cell = plan.cells[i];
       if (b.k === 'byline') {
         // one name over its affiliation per author, set in a row that wraps; an equal-contribution
-        // mark sits after the name and its note closes the block
+        // mark sits after the name and its note closes the block. The name stands in its own span so
+        // the pane holds one run in one colour: the mark and the affiliation are a second colour.
         els.push(e('div', { key, style: { ...cell, margin: '0 0 28px', display: 'flex', flexWrap: 'wrap', gap: '10px 32px', fontFamily: 'var(--font-heading)', fontSize: '19px', lineHeight: '26px' } },
           b.authors.map((a, j) => e('p', { key: j, style: { margin: 0 } },
-            a.t, a.eq ? e('sup', { key: 'e', style: { fontSize: '12px', color: 'var(--color-neutral-600)' } }, '*') : null,
+            e('span', { key: 't', ...PANE }, a.t),
+            a.eq ? e('sup', { key: 'e', style: { fontSize: '12px', color: 'var(--color-neutral-600)' } }, '*') : null,
             e('span', { key: 'a', style: { display: 'block', fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-600)' } }, a.aff))),
           b.note ? e('p', { key: 'n', style: { margin: 0, flexBasis: '100%', fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-600)' } }, b.note) : null));
       } else if (b.k === 'abstract') {
@@ -1796,12 +1816,12 @@ class Component extends DCLogic {
           e('p', { key: 'l', style: label }, 'Abstract'),
           e('p', { key: 'p', style: { margin: 0, fontFamily: 'var(--font-heading)', fontSize: '18px', lineHeight: '30px', textAlign: 'justify', hyphens: 'auto', color: ink, maxWidth: '68ch' } }, this.paperRuns(b.r))));
       } else if (b.k === 'keywords') {
-        els.push(e('p', { key, style: { ...cell, margin: '0 0 28px', fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-600)', maxWidth: '68ch' } }, b.t));
+        els.push(e('p', { key, ...PANE, style: { ...cell, margin: '0 0 28px', fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-600)', maxWidth: '68ch' } }, b.t));
       } else if (b.k === 'h2') {
         dropNext = /^Introduction$/i.test(b.t);
-        els.push(e('h2', { key, style: { ...cell, ...rule, margin: '56px 0 20px', fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: '30px', lineHeight: '1.2', letterSpacing: '-0.01em' } }, b.t));
+        els.push(e('h2', { key, ...PANE, style: { ...cell, ...rule, margin: '56px 0 20px', fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: '30px', lineHeight: '1.2', letterSpacing: '-0.01em' } }, b.t));
       } else if (b.k === 'h3') {
-        els.push(e('h3', { key, style: { ...cell, margin: '34px 0 14px', fontFamily: 'var(--font-heading)', fontStyle: 'italic', fontWeight: 400, fontSize: '22px', lineHeight: '1.25' } }, b.t));
+        els.push(e('h3', { key, ...PANE, style: { ...cell, margin: '34px 0 14px', fontFamily: 'var(--font-heading)', fontStyle: 'italic', fontWeight: 400, fontSize: '22px', lineHeight: '1.25' } }, b.t));
       } else if (b.k === 'p') {
         const kids = this.paperRuns(b.r);
         if (dropNext) {
@@ -2028,6 +2048,20 @@ class Component extends DCLogic {
     cancelAnimationFrame(this.cellRaf); this.cellRaf = 0; this.pendingCell = null;
     if (this.state.cell) this.setState({ cell: null });
   }
+  // The serif register never scrambles: this picker hands back the glyph it was given, so the
+  // wavefront carries brightness and nothing on the line moves. resolve() in the library takes a
+  // function as the picker itself, so no entry in its GlyphPickers registry is needed.
+  KEEP_GLYPH = (ch) => ch;
+  // Which effect a text pane runs, in one table. The row is named by the pane's register (data-reg)
+  // and the effect family it asks for (data-fx); a pane naming no family takes its register's
+  // default below. `wake` names the colour the wake is drawn in, resolved per element because the
+  // accent is a custom property and the mono sheet's wake is a fixed white.
+  TEXT_FX = {
+    'mono/ripple': { effect: 'ripple', swapMode: 'caseFlip', rippleEdge: 18, wake: 'white' },
+    'serif/glow': { effect: 'glow', radius: 200, wake: 'accent' },
+    'serif/ripple': { effect: 'ripple', swapMode: this.KEEP_GLYPH, rippleEdge: 18, wake: 'accent' },
+  };
+  TEXT_FX_DEFAULT = { mono: 'ripple', serif: 'glow' };
   mountTextEffects() {
     if (!window.TextRippling || (this.props.textEffects ?? true) === false || this.morph) return;
     this.trInstances = this.trInstances || [];
@@ -2040,12 +2074,13 @@ class Component extends DCLogic {
       if (el.__tr) return;
       const css = getComputedStyle(el);
       const accent = css.getPropertyValue('--color-accent').trim() || '#b68235';
-      const ink = css.getPropertyValue('--color-text').trim() || '#201f1d';
-      const mono = el.dataset.reg === 'mono';
-      // mono: the wavefront flips glyphs (case + symbols); serif: brightness-only wake, letters never scramble
-      const fx = mono ? { effect: 'ripple', swapMode: 'caseFlip', rippleEdge: 18 } : { effect: 'glow', radius: 200 };
-      const opts = { ...fx, wakeColor: mono ? '#ffffff' : accent };
-      el.__tr = new window.TextRippling(el, opts); el.__tr.__el = el; el.__tr.__breathes = !mono;
+      const reg = el.dataset.reg === 'mono' ? 'mono' : 'serif';
+      // the pane names its own effect; a pane that names none, or one the table has no row for,
+      // falls back to its register's default rather than mounting nothing
+      const { wake, ...fx } = this.TEXT_FX[reg + '/' + (el.dataset.fx || this.TEXT_FX_DEFAULT[reg])] ||
+        this.TEXT_FX[reg + '/' + this.TEXT_FX_DEFAULT[reg]];
+      const opts = { ...fx, wakeColor: wake === 'accent' ? accent : '#ffffff' };
+      el.__tr = new window.TextRippling(el, opts); el.__tr.__el = el; el.__tr.__breathes = reg === 'serif';
       this.startBreath();
       setTimeout(() => { if (!el.__tr._destroyed) el.__tr.remeasure(); }, 700);
       this.trInstances.push(el.__tr);
