@@ -482,15 +482,15 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("a", { key: "22|5.49kwkt", href: V.cvMailto, style: S(`grid-column:1 / 8; grid-row:${V.gridContactRow ?? ""}; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:13px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp6" },
+              h("a", { key: "22|5.49kwkt", href: V.cvMailto, style: S(`grid-column:1 / 3; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp6" },
                 "email"
               ),
               "\n    ",
-              h("a", { key: "24|6.1yz8dag", href: V.cvGithub, style: S(`grid-column:8 / 16; grid-row:${V.gridContactRow ?? ""}; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:13px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp6" },
+              h("a", { key: "24|6.1yz8dag", href: V.cvGithub, style: S(`grid-column:3 / 5; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp6" },
                 "github"
               ),
               "\n    ",
-              h("button", { key: "26|2.3ho5a", onClick: V.goCvMono, style: S(`all:unset; position:relative; grid-column:16 / 23; grid-row:${V.gridContactRow ?? ""}; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:13px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;`), className: "scp6" },
+              h("button", { key: "26|2.3ho5a", onClick: V.goCvMono, style: S(`all:unset; grid-column:5 / 7; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;`), className: "scp6" },
                 "cv"
               ),
               "\n    "
@@ -2694,8 +2694,8 @@
       page.dropCap = introChars[0]; page.introRest = introChars.slice(1).join('');
       // the Development page is placed on a 44px module: cards are 7 rows with two blank rows between
       const lastCardEnd = 23 + 9 * Math.max(0, pageProjects.length - 1);
-      // the contact band closes the sheet: two rows for air, after the same two-row gap the colophon takes
-      const gridRows = { plates: lastCardEnd + ' / ' + (lastCardEnd + 1), author: (lastCardEnd + 2) + ' / ' + (lastCardEnd + 18), colophon: (lastCardEnd + 20) + ' / ' + (lastCardEnd + 23), contact: (lastCardEnd + 25) + ' / ' + (lastCardEnd + 27) };
+      // the contact band closes the sheet: one row, after the same two-row gap the colophon takes
+      const gridRows = { plates: lastCardEnd + ' / ' + (lastCardEnd + 1), author: (lastCardEnd + 2) + ' / ' + (lastCardEnd + 18), colophon: (lastCardEnd + 20) + ' / ' + (lastCardEnd + 23), contact: (lastCardEnd + 25) + ' / ' + (lastCardEnd + 26) };
       const pad = (n) => String(n).padStart(2, '0');
       const featured = this.featuredFor[pageKey].map((i, k) => ({ ...projects[i], plateNumeral: this.num(k) }));
       const current = projects[idx];
