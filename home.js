@@ -216,7 +216,12 @@ export function mount(container) {
     destroy() {
       alive = false; cancelAnimationFrame(raf); ro.disconnect();
       window.removeEventListener('pointermove', onMove);
-      renderer.dispose();
+      // give back everything mount built: the shell's box and its edge lines, and the word outline once the
+      // typeface has landed. voxMat never reaches an object, so the walk cannot find it
+      scene.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
+      voxMat.dispose();
+      // dispose only frees the renderer's own caches; the GL context lives on until forceContextLoss drops it
+      renderer.dispose(); renderer.forceContextLoss();
       if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);
     },
   };
