@@ -1413,7 +1413,7 @@
             "\n\n    ",
             h("section", { key: "1", style: {"position":"relative","padding":"calc(3*28px) 0 calc(2*28px)"} },
               "\n      ",
-              h("span", { key: "1|19.1h99e0b", "aria-hidden": "true", style: S(`position:absolute; right:0; top:28px; font-family:var(--deco); font-weight:400; font-size:clamp(160px,22vw,320px); line-height:1; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; pointer-events:none; user-select:none; font-feature-settings:'tnum' 1; letter-spacing:0; transform:translateY(${V.parallax ?? ""}); will-change:transform;`) },
+              h("span", { key: "1|19.1h99e0b", "aria-hidden": "true", style: S(`position:absolute; right:0; top:28px; font-family:var(--font-heading); font-weight:300; font-size:clamp(160px,22vw,320px); line-height:1; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; pointer-events:none; user-select:none; font-feature-settings:'tnum' 1; letter-spacing:0; transform:translateY(${V.parallax ?? ""}); will-change:transform;`) },
                 h(F,{key:0},"",I(V.current?.ghost,1),"")
               ),
               "\n      ",
