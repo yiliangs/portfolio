@@ -4,9 +4,12 @@
   "type": "module",
   "scripts": {
     "build": "node tools/build-dc.mjs",
-    "check": "node tools/check-sheet-grid.mjs"
+    "check": "node tools/check-sheet-grid.mjs",
+    "cv": "node tools/export-cv.mjs",
+    "test": "node --test tools/"
   },
   "devDependencies": {
-    "jsdom": "^25.0.1"
+    "jsdom": "^25.0.1",
+    "yaml": "^2.8.1"
   }
 }

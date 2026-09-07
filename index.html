@@ -11,7 +11,7 @@
   <script src="./image-slot.js"></script>
   <script src="./src/text-rippling.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;family=Lora:ital,wght@0,400;0,500;1,400&amp;family=DM+Mono:wght@400&amp;family=Cinzel:wght@400&amp;family=Cinzel+Decorative:wght@400&amp;family=Geist+Mono:wght@400;500&amp;family=Libre+Baskerville:ital,wght@0,400;1,400&amp;family=Google+Sans:wght@400&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;family=Lora:ital,wght@0,400;0,500;1,400&amp;family=DM+Mono:wght@400&amp;family=Cinzel:wght@400&amp;family=Cinzel+Decorative:wght@400&amp;family=Geist+Mono:wght@400;500;600;700&amp;family=Libre+Baskerville:ital,wght@0,400;1,400&amp;family=Google+Sans:wght@400&amp;display=swap" rel="stylesheet">
   <style>
     body { margin: 0; background: var(--color-bg); color: var(--color-text); font-family: var(--font-body); text-wrap: pretty; }
     a { color: var(--color-accent-700); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: var(--color-accent); }
@@ -66,6 +66,84 @@
     .sheet-mod[data-enter]::after { opacity: 0; }
     .sheet-mod[data-enter="in"]::after { opacity: 1; transition: box-shadow 240ms ease, opacity 260ms ease var(--d, 0ms); }
     .sheet-mod[data-enter="in"]::before { opacity: 0; transition: opacity 420ms ease calc(var(--d, 0ms) + 220ms); }
+    /* The CV: the same document templates/resume.typ sets as a PDF in the private curriculum-vitae
+       repository, typeset for a screen. Every entry is a two-column row, body left and date right on a
+       mono rail. Under 700px the rail has nowhere to go, so the date drops beneath the body rather than
+       squeezing the line. Printing keeps only the column: the running head and the three fixed canvas
+       layers carry data-print="hide" and go away, and the measure opens to the page. */
+    .cv-row { display: grid; grid-template-columns: minmax(0,1fr) auto; column-gap: 14px; align-items: baseline; }
+    /* the rail holds a fixed width so every date in the document starts on the same line, however
+       short the entry above it: a ragged right column reads as a mistake rather than as a rail */
+    .cv-date { font-family: var(--mono); font-size: 0.8em; font-weight: 500; line-height: 1.6; min-width: 11ch; color: var(--color-neutral-600); text-align: right; white-space: nowrap; }
+    /* A title and the description running on after it have to separate on more than one axis, or the
+       line reads as one grey band. The title takes the ink and the weight, the description steps down
+       in all three at once: lighter, greyer, and a size smaller. */
+    .cv-desc { font-size: 0.95em; font-weight: 400; color: var(--color-neutral-700); }
+    /* The section rule and the job are the two things that set the document's vertical rhythm, so
+       both live here rather than inline: a media query cannot reach an inline margin, and the narrow
+       page needs roughly half the air the wide one does. */
+    .cv-sec { display: flex; align-items: center; gap: 10px; margin: 48px 0 16px; }
+    .cv-sec-first { margin-top: 40px; }
+    .cv-sec-label { font-family: var(--deco); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-accent-700); white-space: nowrap; }
+    .cv-rule { flex: 1 1 auto; height: 1px; background: var(--color-accent); }
+    .cv-job { margin: 0 0 36px; }
+    @media (max-width: 700px) {
+      .cv-row { grid-template-columns: minmax(0,1fr); }
+      .cv-date { text-align: left; margin-top: 2px; min-width: 0; }
+      .cv-sec { margin-top: 32px; }
+      .cv-job { margin-bottom: 26px; }
+    }
+    /* The same document in the Development register: typed rather than set. The rail changes sides,
+       because the landing's dated index reads left to right from its date and this is the same
+       drawing; sections are commented rather than titled; and the sheet carries the landing's own
+       column hairlines. Only the vertical rules are drawn: nothing in a flowing document sits on a
+       44px module, so the horizontal ones would cut the text rather than measure it. */
+    /* the grid is a ground, not a rule: a quarter of the ink the landing draws its own with, because
+       here it sits under running text rather than between placed modules */
+    .cvm { font-family: var(--mono); font-size: 14px; line-height: 1.7; font-weight: 400; color: var(--color-neutral-800);
+      background-image: linear-gradient(to right, color-mix(in srgb, var(--color-text) 4%, transparent) 0 1px, transparent 1px);
+      background-size: calc(100% / 22) 100%;
+      border-left: 1px solid color-mix(in srgb, var(--color-text) 4%, transparent);
+      border-right: 1px solid color-mix(in srgb, var(--color-text) 4%, transparent); }
+    /* 20ch, not 13: the longest thing the rail carries is a job's range, "Jul 2021 – Sep 2023", and a
+       column too narrow for it does not wrap, it overprints the entry beside it */
+    .cvm-row { display: grid; grid-template-columns: 20ch minmax(0,1fr); column-gap: 18px; align-items: baseline; }
+    /* a sub-line leaves the rail empty rather than repeating the date, which is what puts every body
+       column on one edge; on the narrow page an empty rail has nothing to hold and goes away */
+    .cvm-date { font-weight: 500; color: var(--color-neutral-500); white-space: nowrap; }
+    /* the same separation, further apart: on a dark sheet the two ends have more room to travel.
+       .cvm-desc is running text and stops at neutral-500, which clears 4.5:1 on this ground;
+       .cvm-qual is for the one-line qualifiers, which may go dimmer because nobody reads a paragraph
+       of them. .cvm-pub keeps full size because a publication row is a title with its own tail. */
+    .cvm-desc { font-size: 0.93em; font-weight: 400; color: var(--color-neutral-500); }
+    .cvm-qual { font-size: 0.93em; font-weight: 400; color: var(--color-neutral-400); }
+    .cvm-pub { font-weight: 400; color: var(--color-neutral-500); }
+    .cvm-body { color: var(--color-neutral-700); }
+    .cvm-sec { margin: 44px 0 14px; }
+    .cvm-sec-first { margin-top: 36px; }
+    .cvm-sec-label { margin: 0 0 8px; font-weight: 500; color: var(--color-neutral-600); }
+    .cvm-rule { display: block; height: 1px; background: color-mix(in srgb, var(--color-text) 16%, transparent); }
+    @media (max-width: 700px) {
+      .cvm-row { grid-template-columns: minmax(0,1fr); }
+      .cvm-date { margin-bottom: 2px; }
+      .cvm-date:empty { display: none; }
+      .cvm-sec { margin-top: 30px; }
+    }
+    @media print {
+      [data-print="hide"] { display: none !important; }
+      .sc-host > div { background: #ffffff !important; }
+      main[data-screen-label="CV"] { max-width: none; padding: 0; font-size: 10pt; }
+      main[data-screen-label="CV"] a { color: inherit; text-decoration: none; }
+      /* the mono CV is set on a dark sheet. Print re-tunes its tokens rather than flattening every
+         colour to black, so the rail, the section labels and the emphasis keep their hierarchy */
+      main[data-screen-label="CV mono"].cvm {
+        max-width: none; padding: 0; font-size: 10pt; border: 0;
+        background: #ffffff; background-image: none; color: #1a1a1a;
+        --color-text: #000000; --color-neutral-800: #1a1a1a; --color-neutral-700: #3a3a3a;
+        --color-neutral-600: #5a5a5a; --color-neutral-500: #767676; --color-divider: #cccccc;
+      }
+      main[data-screen-label="CV mono"] a { color: inherit; text-decoration: none; }
+    }
   </style>
 <style>
 .scp0:hover{color:var(--color-accent-700) !important}
@@ -75,6 +153,8 @@
 .scp4:hover{transform:scale(1.12) !important}
 .scp5:hover{text-transform:uppercase !important;color:var(--color-accent-700) !important;letter-spacing:0.1em !important}
 .scp6:hover{box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text) !important}
+.scp7:hover{z-index:3 !important;font-weight:700 !important;text-transform:uppercase !important;letter-spacing:0.08em !important;box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text) !important}
+.scp8:hover{color:var(--color-text) !important}
 </style>
 </head>
 <body>

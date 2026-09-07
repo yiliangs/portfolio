@@ -1,0 +1,261 @@
+{
+  "source_commit": "4a8f781",
+  "source_date": "2026-07-07",
+  "basics": {
+    "name": "Yiliang Shao",
+    "email": "yiliangsh@gmail.com",
+    "links": {
+      "github": "https://github.com/yiliangs"
+    }
+  },
+  "profile": "Researcher and developer working on machine learning for architectural design. Current research applies graph neural networks and deep metric learning to correspondence between building representations at different scales, and extends to LLM agents for parametric modeling; the part-to-whole modeling method underlying this research is the subject of a pending US patent. A parallel line of work develops exact solvers for residential layout. Earlier research in Polyhedral Graphic Statics at the University of Pennsylvania produced a glass bridge exhibited at the Corning Museum of Glass.",
+  "work": [
+    {
+      "org": "Skidmore, Owings & Merrill (SOM)",
+      "location": "Chicago, IL",
+      "start": "2022-02",
+      "end": "present",
+      "role": "Senior Computational Design Specialist",
+      "title_progression": [
+        {
+          "title": "Senior Computational Design Specialist",
+          "start": "2025-10",
+          "end": "present"
+        },
+        {
+          "title": "Designer",
+          "start": "2024-10",
+          "end": "2025-09"
+        },
+        {
+          "title": "Intermediate Designer",
+          "start": "2023-10",
+          "end": "2024-09"
+        },
+        {
+          "title": "Junior Designer",
+          "start": "2022-02",
+          "end": "2023-09"
+        }
+      ],
+      "blocks": [
+        {
+          "heading": "Natalie: Computational Design Platform",
+          "role": "Creator & Lead Developer",
+          "period": "2023 – present",
+          "intro": "Primary engineer across the stack: React front end, solver and ML core, Rhino and Revit integration, encrypted distribution, telemetry, and release. Funded by SOM IW, a firm subsidiary, after review by a committee of Partners; 25 production releases since 2023 (v0.5.0 to v1.3.2); in routine use on live projects across 8 offices worldwide. Proprietary to SOM; publications extract the generalizable methods.",
+          "entries": [
+            {
+              "name": "Facade propagation",
+              "desc": "Siamese heterogeneous graph attention network transferring facade systems from prototype to massing; TorchSharp inference in live Rhino sessions. 2.13M facade modules populated in one year."
+            },
+            {
+              "name": "Residential planner",
+              "desc": "Backtracking search over a slicing-tree representation; touch adjacencies gated in search, reach adjacencies discharged by routing hallways; every rule re-verified on final geometry."
+            },
+            {
+              "name": "Unit-mix planner",
+              "desc": "Exact MILP for unit stacking and mix across residential massings; certifies feasibility or diagnoses why none exists."
+            },
+            {
+              "name": "Rhino–Revit bridge",
+              "desc": "Context-based porting into live Revit via Rhino.Inside: blocks arrive as placed families, planar surfaces as levels and floors — semantics survive the port."
+            }
+          ]
+        },
+        {
+          "heading": "Applied Research (methods behind the platform)",
+          "period": "2023 – present",
+          "entries": [
+            {
+              "name": "Graph neural networks for cross-scale building correspondence",
+              "desc": "Pair-local label supervision for node correspondence across graphs of different scale, without a shared label vocabulary (under review at ACADIA 2026; workshop paper in preparation)."
+            },
+            {
+              "name": "Deep metric learning",
+              "desc": "Triplet objectives with semi-hard negative mining for retrieval-based correspondence; family-clean evaluation protocols."
+            },
+            {
+              "name": "Mixed-integer programming for architectural layout",
+              "desc": "Unit demising and stacking formulations balancing yield, code compliance, and design intent."
+            },
+            {
+              "name": "Constraint-based solvers",
+              "desc": "Constraint algebra for room programs: proximity classes, pairing quantifiers, prohibitions; satisfaction by search where checkable, by construction where not."
+            }
+          ]
+        },
+        {
+          "heading": "Research Initiatives",
+          "role": "Lead Researcher",
+          "period": "2026",
+          "intro": "Formal internal SOM research: three-month staffed sprints, presented to Partners and C-suite.",
+          "entries": [
+            {
+              "name": "Massing intelligence",
+              "desc": "Learned models for massing-level design reasoning."
+            },
+            {
+              "name": "Layout representation",
+              "desc": "Toward a pattern algebra for exemplar transfer in residential layout."
+            },
+            {
+              "name": "Agentic modeling",
+              "desc": "LLM-agent-driven parametric modeling workflows."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "org": "Polyhedral Structures Laboratory, University of Pennsylvania",
+      "org_units": [
+        "Polyhedral Structures Laboratory,",
+        "University of Pennsylvania"
+      ],
+      "location": "Philadelphia, PA",
+      "start": "2021-07",
+      "end": "2023-09",
+      "role": "Research Assistant",
+      "employment": "part-time",
+      "funding": "Research funded in part by NSF CAREER award CMMI-1944691.",
+      "highlights": [
+        "Geometry-based structural form-finding via Polyhedral Graphic Statics."
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Glass Bridge / Vitrum Leve",
+      "category": "UPenn / PSL",
+      "resume_desc": "Structural design team; a 10 m ultra-thin compression-dominant pedestrian bridge of hollow glass units, exhibited at the Corning Museum of Glass."
+    },
+    {
+      "name": "Dove Wave",
+      "category": "UPenn / PSL",
+      "resume_desc": "Design team; Judges' Choice winner, Eventscape Inventory Constrained Design Competition: algorithmic wood-stacking canopy reusing 1,450 ft of overstock black locust at ~96% material efficiency."
+    },
+    {
+      "name": "Floralis",
+      "category": "UPenn / PSL",
+      "resume_desc": "Conceptual design team; a National Park Service–funded preservation pavilion at Florissant Fossil Beds National Monument; ETFE-clad multilaminar timber, robotic fabrication."
+    },
+    {
+      "name": "Flywheel",
+      "category": "Personal",
+      "resume_desc": "Grasshopper plugin for one-click massing and building population; on Food4Rhino."
+    }
+  ],
+  "patents": [
+    {
+      "title": "Technologies for Part-to-Whole Digital Modeling",
+      "role": "First-named inventor",
+      "application_no": "US 19/305,030",
+      "status": "pending",
+      "filed": "2025-08-20",
+      "claims": {
+        "total": 22
+      }
+    }
+  ],
+  "publications": [
+    {
+      "title": "From Prototype to Massing: Learning Graph Correspondence for Scalable Facade Modeling",
+      "position": "Sole author",
+      "venue": "ACADIA",
+      "venue_short": "ACADIA 2026",
+      "year": "2026",
+      "status": "under review",
+      "type": "conference"
+    },
+    {
+      "title": "From Guess-and-Try to a Feasibility Certificate: Exact Unit-Mix Stacking and Infeasibility Diagnosis for Residential Towers",
+      "position": "Sole author",
+      "venue": "International Journal of Architectural Computing",
+      "venue_short": "IJAC",
+      "year": "2026",
+      "status": "under review",
+      "type": "journal"
+    },
+    {
+      "title": "Notra: A Kerf-Bent Polyhedral Timber Frame",
+      "position": "Co-first author",
+      "venue": "Proceedings of ACADIA",
+      "year": "2025",
+      "status": "published",
+      "type": "conference"
+    },
+    {
+      "title": "Application of Graphic Statics and Strut-and-Tie Models Optimization Algorithm in Innovative Timber Structure Design",
+      "position": "Co-author",
+      "venue": "Buildings",
+      "volume": "13(12), 2946",
+      "year": "2023",
+      "status": "published",
+      "type": "journal"
+    }
+  ],
+  "awards": [
+    {
+      "resume_line": "Selected, Metropolis Chicago Arch30, a nominated cohort of ~30 future architecture leaders in Greater Chicago.",
+      "year": "2026"
+    },
+    {
+      "resume_line": "Winner, SOM Computational Design Challenge (firmwide): a graphic-statics rethinking of Lever House.",
+      "year": "2025"
+    }
+  ],
+  "service": [
+    {
+      "role": "Paper reviewer",
+      "org": "ACADIA",
+      "detail": "(8 papers).",
+      "year": "2026"
+    }
+  ],
+  "talks": [
+    {
+      "resume_line": "Featured presenter, SOM AI Roundtable “The Bridge from Prompt to Product,” with speakers from Luma AI and Flora AI.",
+      "date": "2026-05-13"
+    },
+    {
+      "resume_line": "Panelist, course-end session of “AI for Architects” (ELVTR).",
+      "date": "2026-03-19"
+    },
+    {
+      "resume_line": "Conference presenter, ACADIA 2025 (Notra: A Kerf-Bent Polyhedral Timber Frame).",
+      "date": "2025-11-08"
+    },
+    {
+      "resume_line": "Firmwide presenter, SOM Winter Design Forum (selected design leads present to the firm).",
+      "date": "2024 – 2025"
+    },
+    {
+      "resume_line": "Guest critic, design-studio jury, Illinois Institute of Technology.",
+      "date": "2024-10-21"
+    },
+    {
+      "resume_line": "Recurring speaker, SOM Oktoberfest studio technology-sharing sessions.",
+      "date": "ongoing"
+    },
+    {
+      "resume_line": "Internal instructor, recurring SOM sessions on Python for designers, Natalie, and tooling.",
+      "date": "ongoing"
+    }
+  ],
+  "education": [
+    {
+      "institution": "University of Pennsylvania, Stuart Weitzman School of Design",
+      "degree": "Master of Science in Design",
+      "field": "Advanced Architectural Design (MSD-AAD)",
+      "start": "2020-08",
+      "end": "2021-12"
+    },
+    {
+      "institution": "Shandong Jianzhu University",
+      "degree": "Bachelor of Architecture (B.Arch)",
+      "start": "2014-09",
+      "end": "2019-06"
+    }
+  ]
+}
