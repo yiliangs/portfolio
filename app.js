@@ -678,22 +678,22 @@
             h("div", { key: "1", ref: V.sheetGridRef, style: {"--hair":"color-mix(in srgb, var(--color-text) 16%, transparent)","position":"relative","marginTop":"88px","display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","borderRight":"1px solid var(--hair)","borderBottom":"1px solid var(--hair)","backgroundImage":"linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
               "\n\n    ",
               "\n    ",
-              h("button", { key: "2|24.1chn43n", className: "sheet-mod", "data-enter": "", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.back?.col ?? ""}; grid-row:${V.sheet?.back?.row ?? ""}; --d:${V.sheet?.back?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
+              h("button", { key: "2|24.1chn43n", className: "sheet-mod sheet-ctl", "data-enter": "", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.back?.col ?? ""}; grid-row:${V.sheet?.back?.row ?? ""}; --d:${V.sheet?.back?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
                 h(F,{key:0},"← ",I(V.current?.backWord,1),"")
               ),
               "\n\n    ",
               "\n    ",
               h("section", { key: "5", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.header?.col ?? ""}; grid-row:${V.sheet?.header?.row ?? ""}; --d:${V.sheet?.header?.delay ?? ""}; padding:22px;`) },
                 "\n      ",
-                h("p", { key: "1|88.1oj3jfb", style: {"margin":"0 0 22px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-accent-700)","fontFeatureSettings":"'tnum' 1"} },
+                h("p", { key: `kicker-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0 0 22px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-accent-700)","fontFeatureSettings":"'tnum' 1"} },
                   h(F,{key:0},"",I(V.current?.kickerWord,1)," ",I(V.current?.numeral,3)," · ",I(V.current?.kind,5)," · ",I(V.current?.year,7),"")
                 ),
                 "\n      ",
-                h("h1", { key: "3|19.6hqa14", "data-morph": `title-${V.current?.figNo ?? ""}`, style: {"margin":"0","fontFamily":"var(--mono)","fontWeight":"400","fontSize":"clamp(36px,5vw,72px)","lineHeight":"1.04","letterSpacing":"-0.03em","maxWidth":"16ch"} },
+                h("h1", { key: `title-${V.current?.figNo ?? ""}`, "data-morph": `title-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0","fontFamily":"var(--mono)","fontWeight":"400","fontSize":"clamp(36px,5vw,72px)","lineHeight":"1.04","letterSpacing":"-0.03em","maxWidth":"16ch"} },
                   h(F,{key:0},"",I(V.current?.title,1),"")
                 ),
                 "\n      ",
-                h("p", { key: V.current?.numeral, "data-morph": `lede-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"22px 0 0","fontFamily":"var(--mono)","fontSize":"20px","lineHeight":"26px","fontWeight":"400","maxWidth":"52ch","color":"var(--color-neutral-700)"} },
+                h("p", { key: `lede-${V.current?.figNo ?? ""}`, "data-morph": `lede-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"22px 0 0","fontFamily":"var(--mono)","fontSize":"20px","lineHeight":"26px","fontWeight":"400","maxWidth":"52ch","color":"var(--color-neutral-700)"} },
                   h(F,{key:0},"",I(V.current?.subtitle,1),"")
                 ),
                 "\n    "
@@ -708,7 +708,7 @@
                 h("p", { key: "0|5.3wrm2m", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Sheet"
                 ),
-                h("p", { key: "1|19.1h99e0b", style: {"margin":"0","fontSize":"13px","lineHeight":"18px","color":"var(--color-accent-700)"} },
+                h("p", { key: `spec-sheet-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0","fontSize":"13px","lineHeight":"18px","color":"var(--color-accent-700)"} },
                   h(F,{key:0},"",I(V.current?.ghost,1),"")
                 )
               ),
@@ -717,7 +717,7 @@
                 h("p", { key: "0|4.yk2787", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Role"
                 ),
-                h("p", { key: "1|18.8jyyk8", style: {"margin":"0","fontSize":"13px","lineHeight":"18px"} },
+                h("p", { key: `spec-role-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0","fontSize":"13px","lineHeight":"18px"} },
                   h(F,{key:0},"",I(V.current?.role,1),"")
                 )
               ),
@@ -726,7 +726,7 @@
                 h("p", { key: "0|4.yk5x1d", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "With"
                 ),
-                h("p", { key: "1|18.14lax7m", style: {"margin":"0","fontSize":"13px","lineHeight":"18px"} },
+                h("p", { key: `spec-with-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0","fontSize":"13px","lineHeight":"18px"} },
                   h(F,{key:0},"",I(V.current?.with,1),"")
                 )
               ),
@@ -735,7 +735,7 @@
                 h("p", { key: "0|6.1m8lgyx", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Status"
                 ),
-                h("p", { key: "1|20.5iwyyy", style: {"margin":"0","fontSize":"13px","lineHeight":"18px"} },
+                h("p", { key: `spec-status-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0","fontSize":"13px","lineHeight":"18px"} },
                   h(F,{key:0},"",I(V.current?.status,1),"")
                 )
               ),
@@ -744,7 +744,7 @@
                 h("p", { key: "0|11.1s8ry21", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Rev / Scale"
                 ),
-                h("p", { key: "1|24.132gomi", style: {"margin":"0","fontSize":"13px","lineHeight":"18px","fontFeatureSettings":"'tnum' 1"} },
+                h("p", { key: `spec-rev-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0","fontSize":"13px","lineHeight":"18px","fontFeatureSettings":"'tnum' 1"} },
                   h(F,{key:0},"",I(V.current?.year,1)," · 1:1")
                 )
               ),
@@ -764,12 +764,15 @@
                 "\n    "
               ),
               "\n    ",
-              h("p", { key: "23|128.3ypuk8", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.heroCaption?.col ?? ""}; grid-row:${V.sheet?.heroCaption?.row ?? ""}; --d:${V.sheet?.heroCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
-                h("span", { key: "0|79.l667xt", style: {"minWidth":"0"} },
+              h("p", { key: "23|141.s2m5lr", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.heroCaption?.col ?? ""}; grid-row:${V.sheet?.heroCaption?.row ?? ""}; --d:${V.sheet?.heroCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
+                h("span", { key: "0|92.1o5q0e0", style: {"minWidth":"0"} },
                   h("span", { key: "0|44.1e4j9ob", style: {"color":"var(--color-accent)"} },
                     h(F,{key:0},"",I(V.current?.figWord,1)," ",I(V.current?.numeral,3),".")
                   ),
-                  h(F,{key:1}," ",I(V.current?.caption,1),"")
+                  " ",
+                  h("span", { key: `cap-hero-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono" },
+                    h(F,{key:0},"",I(V.current?.caption,1),"")
+                  )
                 ),
                 h("span", { key: "1|23.1l7l3dq", style: {"flex":"none","color":"var(--color-neutral-600)","whiteSpace":"nowrap"} },
                   h(F,{key:0},"",I(V.sheet?.heroReadout,1),"")
@@ -777,34 +780,34 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("div", { key: "26", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.body1?.col ?? ""}; grid-row:${V.sheet?.body1?.row ?? ""}; --d:${V.sheet?.body1?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:color-mix(in srgb, var(--color-text) 88%, transparent);`) },
+              h("div", { key: "26", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.body1?.col ?? ""}; grid-row:${V.sheet?.body1?.row ?? ""}; --d:${V.sheet?.body1?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
                 "\n      ",
                 h("span", { key: "1|5.36tydg", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
                   "01 //"
                 ),
-                h("p", { key: "2|23.wtivw8", style: {"margin":"0"} },
+                h("p", { key: `body1-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0"} },
                   h(F,{key:0},"",I(V.current?.body1Full,1),"")
                 ),
                 "\n    "
               ),
               "\n    ",
-              h("div", { key: "28", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.body2?.col ?? ""}; grid-row:${V.sheet?.body2?.row ?? ""}; --d:${V.sheet?.body2?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:color-mix(in srgb, var(--color-text) 88%, transparent);`) },
+              h("div", { key: "28", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.body2?.col ?? ""}; grid-row:${V.sheet?.body2?.row ?? ""}; --d:${V.sheet?.body2?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
                 "\n      ",
                 h("span", { key: "1|5.36uq3p", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
                   "02 //"
                 ),
-                h("p", { key: "2|19.a0tjja", style: {"margin":"0"} },
+                h("p", { key: `body2-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0"} },
                   h(F,{key:0},"",I(V.current?.body2,1),"")
                 ),
                 "\n    "
               ),
               "\n    ",
-              h("div", { key: "30", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.body3?.col ?? ""}; grid-row:${V.sheet?.body3?.row ?? ""}; --d:${V.sheet?.body3?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:color-mix(in srgb, var(--color-text) 88%, transparent);`) },
+              h("div", { key: "30", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.body3?.col ?? ""}; grid-row:${V.sheet?.body3?.row ?? ""}; --d:${V.sheet?.body3?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
                 "\n      ",
                 h("span", { key: "1|5.36vhty", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
                   "03 //"
                 ),
-                h("p", { key: "2|19.a0ub9j", style: {"margin":"0"} },
+                h("p", { key: `body3-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0"} },
                   h(F,{key:0},"",I(V.current?.body3,1),"")
                 ),
                 "\n    "
@@ -814,7 +817,7 @@
                 "\n      ",
                 (V.marginalia ? h(F,{key:1},
                   "\n        ",
-                  h("p", { key: "1|23.kkov7m", style: {"margin":"0","paddingLeft":"12px","borderLeft":"1px solid var(--color-accent)","color":"var(--color-text)"} },
+                  h("p", { key: `margin-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0","paddingLeft":"12px","borderLeft":"1px solid var(--color-accent)","color":"var(--color-text)"} },
                     h(F,{key:0},"// ",I(V.current?.margin,1),"")
                   ),
                   "\n      ") : null),
@@ -824,28 +827,28 @@
                   h("span", { key: "1|6.7x2uet", style: {"color":"var(--color-neutral-600)"} },
                     "stack:"
                   ),
-                  h("span", { key: "2|19.lcn33w" },
+                  h("span", { key: `stack-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono" },
                     h(F,{key:0},"",I(V.current?.stack,1),"")
                   ),
                   "\n        ",
                   h("span", { key: "4|7.1c8n2xv", style: {"color":"var(--color-neutral-600)"} },
                     "status:"
                   ),
-                  h("span", { key: "5|20.5iwyyy" },
+                  h("span", { key: `status-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono" },
                     h(F,{key:0},"",I(V.current?.status,1),"")
                   ),
                   "\n        ",
                   h("span", { key: "7|6.5lw5an", style: {"color":"var(--color-neutral-600)"} },
                     "pages:"
                   ),
-                  h("span", { key: "8|19.1q33b6e" },
+                  h("span", { key: `pages-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono" },
                     h(F,{key:0},"",I(V.current?.pages,1),"")
                   ),
                   "\n        ",
                   h("span", { key: "10|5.4eg219", style: {"color":"var(--color-neutral-600)"} },
                     "link:"
                   ),
-                  h("a", { key: "11|18.imhu9g", href: "#" },
+                  h("a", { key: `link-${V.current?.figNo ?? ""}`, href: "#", "data-tr": "wake", "data-reg": "mono" },
                     h(F,{key:0},"",I(V.current?.link,1),"")
                   ),
                   "\n      "
@@ -891,12 +894,15 @@
                 "\n    "
               ),
               "\n    ",
-              h("p", { key: "39|148.mwbgpl", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.detailCaption?.col ?? ""}; grid-row:${V.sheet?.detailCaption?.row ?? ""}; --d:${V.sheet?.detailCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
-                h("span", { key: "0|97.76h6dp", style: {"minWidth":"0"} },
+              h("p", { key: "39|161.w9e80", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.detailCaption?.col ?? ""}; grid-row:${V.sheet?.detailCaption?.row ?? ""}; --d:${V.sheet?.detailCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
+                h("span", { key: "0|110.1ln2gt0", style: {"minWidth":"0"} },
                   h("span", { key: "0|10.bamrr4", style: {"color":"var(--color-accent)"} },
                     "Figs. 1–2."
                   ),
-                  " Working states. Left, the drawing or interface; right, where it was made."
+                  " ",
+                  h("span", { key: `cap-detail-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono" },
+                    "Working states. Left, the drawing or interface; right, where it was made."
+                  )
                 ),
                 h("span", { key: "1|25.ibc6df", style: {"flex":"none","color":"var(--color-neutral-600)","whiteSpace":"nowrap"} },
                   h(F,{key:0},"",I(V.sheet?.detailReadout,1),"")
@@ -904,17 +910,17 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("button", { key: "42|24.1chn43n", className: "sheet-mod", "data-enter": "", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navBack?.col ?? ""}; grid-row:${V.sheet?.navBack?.row ?? ""}; --d:${V.sheet?.navBack?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
+              h("button", { key: "42|24.1chn43n", className: "sheet-mod sheet-ctl", "data-enter": "", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navBack?.col ?? ""}; grid-row:${V.sheet?.navBack?.row ?? ""}; --d:${V.sheet?.navBack?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
                 h(F,{key:0},"← ",I(V.current?.backWord,1),"")
               ),
               "\n    ",
-              h("button", { key: "44|110.pyry3", className: "sheet-mod", "data-enter": "", onClick: V.openNext, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navNext?.col ?? ""}; grid-row:${V.sheet?.navNext?.row ?? ""}; --d:${V.sheet?.navNext?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:11px 22px; text-align:right; color:var(--color-text); background:var(--color-bg);`) },
+              h("button", { key: "44|110.pyry3", className: "sheet-mod sheet-ctl", "data-enter": "", onClick: V.openNext, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navNext?.col ?? ""}; grid-row:${V.sheet?.navNext?.row ?? ""}; --d:${V.sheet?.navNext?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:11px 22px; text-align:right; color:var(--color-text); background:var(--color-bg);`) },
                 "\n      ",
                 h("span", { key: "1|47.13c0pry", style: {"fontSize":"11px","lineHeight":"14px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   h(F,{key:0},"Next · ",I(V.next?.kickerWord,1)," ",I(V.next?.numeral,3),"")
                 ),
                 "\n      ",
-                h("span", { key: "3|18.1kqmn3q", style: {"fontFamily":"var(--mono)","fontSize":"24px","lineHeight":"32px","fontWeight":"400","letterSpacing":"-0.03em"} },
+                h("span", { key: `next-${V.next?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"fontFamily":"var(--mono)","fontSize":"24px","lineHeight":"32px","fontWeight":"400","letterSpacing":"-0.03em"} },
                   h(F,{key:0},"",I(V.next?.title,1)," →")
                 ),
                 "\n    "
@@ -1562,7 +1568,12 @@
     mountTextEffects() {
       if (!window.TextRippling || (this.props.textEffects ?? true) === false || this.morph) return;
       this.trInstances = this.trInstances || [];
-      document.querySelectorAll('[data-tr]').forEach((el) => {
+      // Scoped to the app root, not the document. captureTexts leaves its snapshot of the outgoing
+      // screen in <body>, flattened on purpose so it carries no live effect; a document-wide query
+      // mounted fresh ones onto that snapshot in the window before this.morph is set, which put a
+      // second copy of every glyph on the animation loop for the length of the transition.
+      const root = this.rootRef.current; if (!root) return;
+      root.querySelectorAll('[data-tr]').forEach((el) => {
         if (el.__tr) return;
         const css = getComputedStyle(el);
         const accent = css.getPropertyValue('--color-accent').trim() || '#b68235';

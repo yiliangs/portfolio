@@ -49,7 +49,9 @@
     .sheet-mod::after { content: ''; position: absolute; inset: 0; pointer-events: none;
       box-shadow: inset 1px 0 0 0 var(--hair), inset 0 1px 0 0 var(--hair), 1px 0 0 0 var(--hair), 0 1px 0 0 var(--hair);
       transition: box-shadow 240ms ease; }
-    .sheet-mod:hover::after { box-shadow: inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text); }
+    /* only a control brings its frame up to full ink. A module that did the same read as a button
+       and invited a click that does nothing; the sheet's text answers the cursor instead */
+    .sheet-ctl:hover::after { box-shadow: inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text); }
     /* registration marks are real elements, not pseudos: the frame layer has the pseudos now, and a
        plate has to be able to brighten its own marks */
     .sheet-mark { position: absolute; line-height: 1; font-family: var(--mono); font-size: 14px; color: var(--color-accent); opacity: 0.6; pointer-events: none; transition: opacity 200ms ease; }
@@ -310,29 +312,36 @@
        as the Development landing. 44px rows, hairlines at 16% ink. No module names its own place: every span
        comes from the placement table in the logic class, so the wide sheet and the stacked narrow sheet are
        two readings of one drawing. Spacing is empty cells, never margins. Every module carries data-enter for
-       the plot-in and --d for its place in the stagger; the frame, the ground and the hover all live in
-       .sheet-mod in the root style block. ============ -->
+       the plot-in and --d for its place in the stagger; the frame, the ground and the reveal live in
+       .sheet-mod in the root style block, and only the three controls carry .sheet-ctl for the hover.
+       Every text pane carries data-tr so the cursor rakes the sheet's ink, keyed to the sheet so the effect
+       is rebuilt when the sheet changes. TextRippling flattens the markup it is given, so a pane is only
+       ever put on an element whose whole content is one colour. That colour has to be one the effect can
+       read back: it parses a computed colour with a regex, and Chrome serialises any color-mix as
+       "color(srgb 0.95 0.95 0.95)", whose leading zeroes it reads as black. Hence the three notes state
+       their ink as rgb, which is what 88% of --color-text over --color-bg composites to. ============ -->
   <sc-if value="{{ isMono }}" hint-placeholder-val="{{ false }}">
   <main key="{{ chapterKey }}" data-screen-label="Chapter" style="max-width:1160px; margin:0 auto; padding:0 clamp(20px,4vw,48px) 88px; font-family:var(--mono); font-size:14px; line-height:22px;">
     <div ref="{{ sheetGridRef }}" style="--hair:color-mix(in srgb, var(--color-text) 16%, transparent); position:relative; margin-top:88px; display:grid; grid-template-columns:repeat(22,1fr); grid-auto-rows:44px; gap:0; border-right:1px solid var(--hair); border-bottom:1px solid var(--hair); background-image:linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px); background-size:calc(100%/22) 44px;">
 
     <!-- back to the sheet register -->
-    <button class="sheet-mod" data-enter="" onClick="{{ goPageCurrent }}" style="all:unset; position:relative; grid-column:{{ sheet.back.col }}; grid-row:{{ sheet.back.row }}; --d:{{ sheet.back.delay }}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);">← {{ current.backWord }}</button>
+    <button class="sheet-mod sheet-ctl" data-enter="" onClick="{{ goPageCurrent }}" style="all:unset; position:relative; grid-column:{{ sheet.back.col }}; grid-row:{{ sheet.back.row }}; --d:{{ sheet.back.delay }}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);">← {{ current.backWord }}</button>
 
     <!-- title block: the sheet number stands outlined in its own module, beside the heading -->
     <section class="sheet-mod" data-enter="" style="grid-column:{{ sheet.header.col }}; grid-row:{{ sheet.header.row }}; --d:{{ sheet.header.delay }}; padding:22px;">
-      <p style="margin:0 0 22px; font-size:12px; line-height:14px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-accent-700); font-feature-settings:'tnum' 1;">{{ current.kickerWord }} {{ current.numeral }} · {{ current.kind }} · {{ current.year }}</p>
-      <h1 data-morph="title-{{ current.figNo }}" style="margin:0; font-family:var(--mono); font-weight:400; font-size:clamp(36px,5vw,72px); line-height:1.04; letter-spacing:-0.03em; max-width:16ch;">{{ current.title }}</h1>
-      <p key="{{ current.numeral }}" data-morph="lede-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:22px 0 0; font-family:var(--mono); font-size:20px; line-height:26px; font-weight:400; max-width:52ch; color:var(--color-neutral-700);">{{ current.subtitle }}</p>
+      <p key="kicker-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0 0 22px; font-size:12px; line-height:14px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-accent-700); font-feature-settings:'tnum' 1;">{{ current.kickerWord }} {{ current.numeral }} · {{ current.kind }} · {{ current.year }}</p>
+      <h1 key="title-{{ current.figNo }}" data-morph="title-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-family:var(--mono); font-weight:400; font-size:clamp(36px,5vw,72px); line-height:1.04; letter-spacing:-0.03em; max-width:16ch;">{{ current.title }}</h1>
+      <p key="lede-{{ current.figNo }}" data-morph="lede-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:22px 0 0; font-family:var(--mono); font-size:20px; line-height:26px; font-weight:400; max-width:52ch; color:var(--color-neutral-700);">{{ current.subtitle }}</p>
     </section>
     <span class="sheet-mod" data-enter="" aria-hidden="true" style="grid-column:{{ sheet.ghost.col }}; grid-row:{{ sheet.ghost.row }}; --d:{{ sheet.ghost.delay }}; display:flex; align-items:flex-end; justify-content:flex-end; padding:22px; font-family:'DM Mono', ui-monospace, monospace; font-weight:400; font-size:clamp(40px,5.5vw,84px); line-height:1; letter-spacing:-0.04em; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; user-select:none; font-feature-settings:'tnum' 1;">{{ current.ghost }}</span>
 
-    <!-- title-block strip: five fields across the sheet, three and two when it stacks -->
-    <div class="sheet-mod" data-enter="" style="grid-column:{{ sheet.specSheet.col }}; grid-row:{{ sheet.specSheet.row }}; --d:{{ sheet.specSheet.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Sheet</p><p style="margin:0; font-size:13px; line-height:18px; color:var(--color-accent-700);">{{ current.ghost }}</p></div>
-    <div class="sheet-mod" data-enter="" style="grid-column:{{ sheet.specRole.col }}; grid-row:{{ sheet.specRole.row }}; --d:{{ sheet.specRole.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Role</p><p style="margin:0; font-size:13px; line-height:18px;">{{ current.role }}</p></div>
-    <div class="sheet-mod" data-enter="" style="grid-column:{{ sheet.specWith.col }}; grid-row:{{ sheet.specWith.row }}; --d:{{ sheet.specWith.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">With</p><p style="margin:0; font-size:13px; line-height:18px;">{{ current.with }}</p></div>
-    <div class="sheet-mod" data-enter="" style="grid-column:{{ sheet.specStatus.col }}; grid-row:{{ sheet.specStatus.row }}; --d:{{ sheet.specStatus.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Status</p><p style="margin:0; font-size:13px; line-height:18px;">{{ current.status }}</p></div>
-    <div class="sheet-mod" data-enter="" style="grid-column:{{ sheet.specRev.col }}; grid-row:{{ sheet.specRev.row }}; --d:{{ sheet.specRev.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Rev / Scale</p><p style="margin:0; font-size:13px; line-height:18px; font-feature-settings:'tnum' 1;">{{ current.year }} · 1:1</p></div>
+    <!-- title-block strip: five fields across the sheet, three and two when it stacks. The labels are
+         chrome and stay still; the values are the sheet's own text and answer the cursor -->
+    <div class="sheet-mod" data-enter="" style="grid-column:{{ sheet.specSheet.col }}; grid-row:{{ sheet.specSheet.row }}; --d:{{ sheet.specSheet.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Sheet</p><p key="spec-sheet-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px; color:var(--color-accent-700);">{{ current.ghost }}</p></div>
+    <div class="sheet-mod" data-enter="" style="grid-column:{{ sheet.specRole.col }}; grid-row:{{ sheet.specRole.row }}; --d:{{ sheet.specRole.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Role</p><p key="spec-role-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px;">{{ current.role }}</p></div>
+    <div class="sheet-mod" data-enter="" style="grid-column:{{ sheet.specWith.col }}; grid-row:{{ sheet.specWith.row }}; --d:{{ sheet.specWith.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">With</p><p key="spec-with-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px;">{{ current.with }}</p></div>
+    <div class="sheet-mod" data-enter="" style="grid-column:{{ sheet.specStatus.col }}; grid-row:{{ sheet.specStatus.row }}; --d:{{ sheet.specStatus.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Status</p><p key="spec-status-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px;">{{ current.status }}</p></div>
+    <div class="sheet-mod" data-enter="" style="grid-column:{{ sheet.specRev.col }}; grid-row:{{ sheet.specRev.row }}; --d:{{ sheet.specRev.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Rev / Scale</p><p key="spec-rev-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px; font-feature-settings:'tnum' 1;">{{ current.year }} · 1:1</p></div>
 
     <!-- the figure's height is a row count, not a ratio. Under the cursor it throws its own edges
          across the sheet as guide lines and reads the cell back into its caption -->
@@ -341,27 +350,27 @@
       <image-slot id="{{ current.heroSlotId }}" shape="rect" placeholder="{{ current.placeholder }}" style="width:100%; height:100%;"></image-slot>
       <span class="sheet-mark" aria-hidden="true" style="right:8px; bottom:5px;">+</span>
     </figure>
-    <p class="sheet-mod" data-enter="" style="grid-column:{{ sheet.heroCaption.col }}; grid-row:{{ sheet.heroCaption.row }}; --d:{{ sheet.heroCaption.delay }}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="min-width:0;"><span style="color:var(--color-accent);">{{ current.figWord }} {{ current.numeral }}.</span> {{ current.caption }}</span><span style="flex:none; color:var(--color-neutral-600); white-space:nowrap;">{{ sheet.heroReadout }}</span></p>
+    <p class="sheet-mod" data-enter="" style="grid-column:{{ sheet.heroCaption.col }}; grid-row:{{ sheet.heroCaption.row }}; --d:{{ sheet.heroCaption.delay }}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="min-width:0;"><span style="color:var(--color-accent);">{{ current.figWord }} {{ current.numeral }}.</span> <span key="cap-hero-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.caption }}</span></span><span style="flex:none; color:var(--color-neutral-600); white-space:nowrap;">{{ sheet.heroReadout }}</span></p>
 
     <!-- the account: three numbered notes, each its own module, with the sheet's data beside them -->
-    <div class="sheet-mod" data-enter="" style="grid-column:{{ sheet.body1.col }}; grid-row:{{ sheet.body1.row }}; --d:{{ sheet.body1.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:color-mix(in srgb, var(--color-text) 88%, transparent);">
-      <span style="font-size:12px; line-height:26px; letter-spacing:0.08em; color:var(--color-accent-700);">01 //</span><p style="margin:0;">{{ current.body1Full }}</p>
+    <div class="sheet-mod" data-enter="" style="grid-column:{{ sheet.body1.col }}; grid-row:{{ sheet.body1.row }}; --d:{{ sheet.body1.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);">
+      <span style="font-size:12px; line-height:26px; letter-spacing:0.08em; color:var(--color-accent-700);">01 //</span><p key="body1-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0;">{{ current.body1Full }}</p>
     </div>
-    <div class="sheet-mod" data-enter="" style="grid-column:{{ sheet.body2.col }}; grid-row:{{ sheet.body2.row }}; --d:{{ sheet.body2.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:color-mix(in srgb, var(--color-text) 88%, transparent);">
-      <span style="font-size:12px; line-height:26px; letter-spacing:0.08em; color:var(--color-accent-700);">02 //</span><p style="margin:0;">{{ current.body2 }}</p>
+    <div class="sheet-mod" data-enter="" style="grid-column:{{ sheet.body2.col }}; grid-row:{{ sheet.body2.row }}; --d:{{ sheet.body2.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);">
+      <span style="font-size:12px; line-height:26px; letter-spacing:0.08em; color:var(--color-accent-700);">02 //</span><p key="body2-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0;">{{ current.body2 }}</p>
     </div>
-    <div class="sheet-mod" data-enter="" style="grid-column:{{ sheet.body3.col }}; grid-row:{{ sheet.body3.row }}; --d:{{ sheet.body3.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:color-mix(in srgb, var(--color-text) 88%, transparent);">
-      <span style="font-size:12px; line-height:26px; letter-spacing:0.08em; color:var(--color-accent-700);">03 //</span><p style="margin:0;">{{ current.body3 }}</p>
+    <div class="sheet-mod" data-enter="" style="grid-column:{{ sheet.body3.col }}; grid-row:{{ sheet.body3.row }}; --d:{{ sheet.body3.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);">
+      <span style="font-size:12px; line-height:26px; letter-spacing:0.08em; color:var(--color-accent-700);">03 //</span><p key="body3-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0;">{{ current.body3 }}</p>
     </div>
     <aside class="sheet-mod" data-enter="" style="grid-column:{{ sheet.aside.col }}; grid-row:{{ sheet.aside.row }}; --d:{{ sheet.aside.delay }}; display:flex; flex-direction:column; gap:20px; padding:22px; font-size:12.5px; line-height:20px; color:var(--color-neutral-700);">
       <sc-if value="{{ marginalia }}" hint-placeholder-val="{{ true }}">
-        <p style="margin:0; padding-left:12px; border-left:1px solid var(--color-accent); color:var(--color-text);">// {{ current.margin }}</p>
+        <p key="margin-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; padding-left:12px; border-left:1px solid var(--color-accent); color:var(--color-text);">// {{ current.margin }}</p>
       </sc-if>
       <div style="display:grid; grid-template-columns:auto minmax(0,1fr); gap:4px 14px;">
-        <span style="color:var(--color-neutral-600);">stack:</span><span>{{ current.stack }}</span>
-        <span style="color:var(--color-neutral-600);">status:</span><span>{{ current.status }}</span>
-        <span style="color:var(--color-neutral-600);">pages:</span><span>{{ current.pages }}</span>
-        <span style="color:var(--color-neutral-600);">link:</span><a href="#">{{ current.link }}</a>
+        <span style="color:var(--color-neutral-600);">stack:</span><span key="stack-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.stack }}</span>
+        <span style="color:var(--color-neutral-600);">status:</span><span key="status-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.status }}</span>
+        <span style="color:var(--color-neutral-600);">pages:</span><span key="pages-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.pages }}</span>
+        <span style="color:var(--color-neutral-600);">link:</span><a href="#" key="link-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.link }}</a>
       </div>
       <div style="display:flex; gap:6px; flex-wrap:wrap;"><span class="tag tag-outline" style="font-family:var(--mono);">{{ current.kind }}</span><span class="tag tag-neutral" style="font-family:var(--mono);">{{ current.year }}</span></div>
     </aside>
@@ -377,13 +386,13 @@
       <image-slot id="{{ current.detailSlotB }}" shape="rect" placeholder="Detail: process or site" style="width:100%; height:100%;"></image-slot>
       <span class="sheet-mark" aria-hidden="true" style="right:8px; bottom:5px;">+</span>
     </figure>
-    <p class="sheet-mod" data-enter="" style="grid-column:{{ sheet.detailCaption.col }}; grid-row:{{ sheet.detailCaption.row }}; --d:{{ sheet.detailCaption.delay }}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="min-width:0;"><span style="color:var(--color-accent);">Figs. 1–2.</span> Working states. Left, the drawing or interface; right, where it was made.</span><span style="flex:none; color:var(--color-neutral-600); white-space:nowrap;">{{ sheet.detailReadout }}</span></p>
+    <p class="sheet-mod" data-enter="" style="grid-column:{{ sheet.detailCaption.col }}; grid-row:{{ sheet.detailCaption.row }}; --d:{{ sheet.detailCaption.delay }}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="min-width:0;"><span style="color:var(--color-accent);">Figs. 1–2.</span> <span key="cap-detail-{{ current.figNo }}" data-tr="wake" data-reg="mono">Working states. Left, the drawing or interface; right, where it was made.</span></span><span style="flex:none; color:var(--color-neutral-600); white-space:nowrap;">{{ sheet.detailReadout }}</span></p>
 
     <!-- issue line -->
-    <button class="sheet-mod" data-enter="" onClick="{{ goPageCurrent }}" style="all:unset; position:relative; grid-column:{{ sheet.navBack.col }}; grid-row:{{ sheet.navBack.row }}; --d:{{ sheet.navBack.delay }}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);">← {{ current.backWord }}</button>
-    <button class="sheet-mod" data-enter="" onClick="{{ openNext }}" style="all:unset; position:relative; grid-column:{{ sheet.navNext.col }}; grid-row:{{ sheet.navNext.row }}; --d:{{ sheet.navNext.delay }}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:11px 22px; text-align:right; color:var(--color-text); background:var(--color-bg);">
+    <button class="sheet-mod sheet-ctl" data-enter="" onClick="{{ goPageCurrent }}" style="all:unset; position:relative; grid-column:{{ sheet.navBack.col }}; grid-row:{{ sheet.navBack.row }}; --d:{{ sheet.navBack.delay }}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);">← {{ current.backWord }}</button>
+    <button class="sheet-mod sheet-ctl" data-enter="" onClick="{{ openNext }}" style="all:unset; position:relative; grid-column:{{ sheet.navNext.col }}; grid-row:{{ sheet.navNext.row }}; --d:{{ sheet.navNext.delay }}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:11px 22px; text-align:right; color:var(--color-text); background:var(--color-bg);">
       <span style="font-size:11px; line-height:14px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-neutral-600);">Next · {{ next.kickerWord }} {{ next.numeral }}</span>
-      <span style="font-family:var(--mono); font-size:24px; line-height:32px; font-weight:400; letter-spacing:-0.03em;">{{ next.title }} →</span>
+      <span key="next-{{ next.figNo }}" data-tr="wake" data-reg="mono" style="font-family:var(--mono); font-size:24px; line-height:32px; font-weight:400; letter-spacing:-0.03em;">{{ next.title }} →</span>
     </button>
 
     <!-- plotting guides: the hovered plate's four edges carried across the whole sheet at full ink.
@@ -1021,7 +1030,12 @@ class Component extends DCLogic {
   mountTextEffects() {
     if (!window.TextRippling || (this.props.textEffects ?? true) === false || this.morph) return;
     this.trInstances = this.trInstances || [];
-    document.querySelectorAll('[data-tr]').forEach((el) => {
+    // Scoped to the app root, not the document. captureTexts leaves its snapshot of the outgoing
+    // screen in <body>, flattened on purpose so it carries no live effect; a document-wide query
+    // mounted fresh ones onto that snapshot in the window before this.morph is set, which put a
+    // second copy of every glyph on the animation loop for the length of the transition.
+    const root = this.rootRef.current; if (!root) return;
+    root.querySelectorAll('[data-tr]').forEach((el) => {
       if (el.__tr) return;
       const css = getComputedStyle(el);
       const accent = css.getPropertyValue('--color-accent').trim() || '#b68235';

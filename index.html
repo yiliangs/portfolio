@@ -47,7 +47,9 @@
     .sheet-mod::after { content: ''; position: absolute; inset: 0; pointer-events: none;
       box-shadow: inset 1px 0 0 0 var(--hair), inset 0 1px 0 0 var(--hair), 1px 0 0 0 var(--hair), 0 1px 0 0 var(--hair);
       transition: box-shadow 240ms ease; }
-    .sheet-mod:hover::after { box-shadow: inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text); }
+    /* only a control brings its frame up to full ink. A module that did the same read as a button
+       and invited a click that does nothing; the sheet's text answers the cursor instead */
+    .sheet-ctl:hover::after { box-shadow: inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text); }
     /* registration marks are real elements, not pseudos: the frame layer has the pseudos now, and a
        plate has to be able to brighten its own marks */
     .sheet-mark { position: absolute; line-height: 1; font-family: var(--mono); font-size: 14px; color: var(--color-accent); opacity: 0.6; pointer-events: none; transition: opacity 200ms ease; }

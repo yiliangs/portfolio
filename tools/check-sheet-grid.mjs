@@ -185,7 +185,14 @@ if (mono) {
       }
 
       const cls = (item.getAttribute('class') || '').split(/\s+/);
-      if (!cls.includes('sheet-mod')) fail('module is not a sheet-mod, so it draws no hairline frame and takes no hover: ' + where(item));
+      if (!cls.includes('sheet-mod')) fail('module is not a sheet-mod, so it draws no hairline frame: ' + where(item));
+      // a frame that lights up says "click me". Only the controls are allowed to say it
+      if (cls.includes('sheet-ctl') && item.tagName.toLowerCase() !== 'button') {
+        fail('sheet-ctl brings the frame to full ink on hover, so it belongs on a control, not on ' + where(item));
+      }
+      if (!cls.includes('sheet-ctl') && item.tagName.toLowerCase() === 'button') {
+        fail('control without sheet-ctl, so it gives no hover feedback: ' + where(item));
+      }
 
       // the plot-in: data-enter is what the IntersectionObserver watches, --d is the module's stagger
       if (item.getAttribute('data-enter') !== '') fail('module is not plotted in (needs data-enter=""): ' + where(item));
@@ -194,6 +201,45 @@ if (mono) {
       if (!d) fail('module has no --d, so it plots in with no stagger: ' + where(item));
       else if (!md || md[2] !== 'delay') fail('module sets --d to ' + JSON.stringify(d) + ' instead of {{ sheet.<name>.delay }} on ' + where(item));
       else if (name && md[1] !== name) fail('module places itself from sheet.' + name + ' but takes its stagger from sheet.' + md[1]);
+    }
+
+    // Every pane of the sheet's own text answers the cursor. TextRippling flattens the markup it is
+    // handed, so a pane must be an element whose whole content is one colour and one binding, and it
+    // must be keyed to the sheet or the effect would survive a change of sheet holding stale glyphs.
+    const PANES = [
+      ['kicker', '{{ current.kickerWord }}'], ['title', '{{ current.title }}'], ['lede', '{{ current.subtitle }}'],
+      ['spec sheet', '{{ current.ghost }}'], ['spec role', '{{ current.role }}'], ['spec with', '{{ current.with }}'],
+      ['spec status', '{{ current.status }}'], ['spec rev', '{{ current.year }} · 1:1'],
+      ['hero caption', '{{ current.caption }}'], ['detail caption', 'Working states.'],
+      ['note 01', '{{ current.body1Full }}'], ['note 02', '{{ current.body2 }}'], ['note 03', '{{ current.body3 }}'],
+      ['marginalia', '{{ current.margin }}'], ['stack', '{{ current.stack }}'], ['status', '{{ current.status }}'],
+      ['pages', '{{ current.pages }}'], ['link', '{{ current.link }}'], ['next title', '{{ next.title }}'],
+    ];
+    const KEYED = /\{\{\s*(current|next)\.(figNo|numeral)\s*\}\}/;
+    const trEls = [...grid.querySelectorAll('[data-tr]')];
+    for (const el of trEls) {
+      if (el.getAttribute('data-reg') !== 'mono') fail('a text pane asks for the serif effect on a mono sheet: data-reg is ' + JSON.stringify(el.getAttribute('data-reg')) + ' on ' + where(el));
+      const k = el.getAttribute('key');
+      if (!k || !KEYED.test(k)) fail('a text pane is not keyed to the sheet, so its glyphs would outlive it: key is ' + JSON.stringify(k) + ' on "' + el.textContent.trim().slice(0, 30) + '"');
+      if (el.children.length > 1) fail('a text pane holds more than one run, and the effect would flatten the rest away: "' + el.innerHTML.trim().slice(0, 60) + '"');
+      // the effect reads a pane's resting colour back off the computed style with a regex, and Chrome
+      // serialises any color-mix as "color(srgb 0.95 ...)", which that regex reads as black. A pane
+      // whose nearest colour is a color-mix renders its own text almost invisible away from the wave.
+      for (let n = el; n && n !== grid; n = n.parentElement) {
+        const c = declared(n, 'color');
+        if (c === null) continue;
+        if (/color-mix/.test(c)) fail('a text pane takes its colour from a color-mix (' + c + '), which the effect reads as black: "' + el.textContent.trim().slice(0, 30) + '"');
+        break;
+      }
+    }
+    for (const [label, needle] of PANES) {
+      if (!trEls.some((el) => el.textContent.includes(needle) || el.innerHTML.includes(needle))) {
+        fail('the ' + label + ' pane has no data-tr, so the cursor passes over it: expected a data-tr element holding ' + JSON.stringify(needle));
+      }
+    }
+    // the readout is live state, not the sheet's ink: rippling it would fight its own updates
+    for (const el of trEls) {
+      if (/sheet\.(hero|detail)Readout/.test(el.innerHTML)) fail('the coordinate readout carries data-tr; it changes per cell and the effect would rebuild under it');
     }
 
     // the guides are the only thing allowed out of the grid's flow, and there are four of them
