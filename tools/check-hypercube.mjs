@@ -32,7 +32,7 @@
 //
 // Run with `npm run check`. Exits non-zero and prints every failure it found.
 
-import { hypercube, edgeDashes } from '../home.js';
+import { hypercube } from '../home.js';
 
 const Q = Math.PI / 2;
 const POSES = [[0, 0], [0.7, 1.9], [2.4, 0.3], [5.1, 4.4]];
@@ -315,46 +315,6 @@ for (const pose of SETTLED) {
   }
 }
 
-// ---------------------------------------------------------------- the broken lines do not crawl
-
-// An edge on the far side of the figure is drawn broken. The pattern is measured along a distance written per edge,
-// and the only thing that keeps it still is that each edge is measured from its own first endpoint. three's own
-// computeLineDistances runs a total across the whole buffer instead, so every edge's phase rides on the summed
-// length of all the edges before it, and one edge changing length slides the dashes along all the rest. That is
-// invisible in a still and unmistakable in motion, so it is worth pinning here: every edge starts at zero, runs its
-// own length, and a change to one edge reaches no other.
-{
-  const dist = new Float32Array(EDGES * 2);
-  const { pos } = at(0.7, 1.9);
-  edgeDashes(pos, dist);
-  for (let e = 0; e < EDGES; e++) {
-    if (dist[e * 2] !== 0) {
-      fail('edge ' + e + ' starts its broken line at ' + dist[e * 2].toFixed(4) + ' rather than 0, so its dashes ' +
-        'are placed by what the edges before it happen to measure and slide along it as they change');
-      break;
-    }
-    const o = e * 6;
-    const len = Math.hypot(pos[o + 3] - pos[o], pos[o + 4] - pos[o + 1], pos[o + 5] - pos[o + 2]);
-    if (Math.abs(dist[e * 2 + 1] - len) > 1e-6) {
-      fail('edge ' + e + ' runs its broken line to ' + dist[e * 2 + 1].toFixed(4) + ' and is ' + len.toFixed(4) +
-        ' long, so the dashes are not laid along the edge itself');
-      break;
-    }
-  }
-  // move one edge and check the others' phases are untouched
-  const moved = pos.slice();
-  moved[3] += 0.1; moved[4] -= 0.05; // the first edge's far endpoint
-  const after = new Float32Array(EDGES * 2);
-  edgeDashes(moved, after);
-  let spread = 0;
-  for (let i = 2; i < after.length; i++) spread = Math.max(spread, Math.abs(after[i] - dist[i]));
-  if (spread > 1e-9) {
-    fail('changing one edge moved another edge\'s broken line by ' + spread.toExponential(2) + '. The phases are ' +
-      'chained, so every edge after the one that moved has its dashes slid along it, which reads as the whole ' +
-      'figure crawling');
-  }
-}
-
 // ---------------------------------------------------------------- report
 
 if (failures.length) {
@@ -366,5 +326,4 @@ console.log('check-hypercube: ' + EDGES + ' edges meeting four to a vertex insid
   (POSES.length + SETTLED.length) + ' poses, the near cell exactly on the box at both settled ones, and turning (up to ' +
   most.toFixed(4) + '); ' + WALLS + ' flat walls over ' + FACES + ' faces, each face owned by two cells, the box\'s ' +
   'own walls facing out, and every outward vector turning rather than flipping (a quarter of the step left ' +
-  shrink.toFixed(1) + ' times less of the worst move, against the ' + SHRINK + ' a turn has to manage); and every ' +
-  'edge measuring its own broken line from its own end, so one edge changing length moves no other edge\'s dashes');
+  shrink.toFixed(1) + ' times less of the worst move, against the ' + SHRINK + ' a turn has to manage)');

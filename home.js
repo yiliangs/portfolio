@@ -51,13 +51,6 @@ const WALL_LIGHT = new THREE.Vector3(-0.4, 0.75, 0.5).normalize();
 const WALL_BASE = 0.012;   // ink alpha on a wall turned right away from the light
 const WALL_RANGE = 0.17;   // and how much more the best-lit wall takes
 const WALL_AERIAL = 0.55;
-// Line type, the drafting convention: an edge on the far side of the figure is drawn broken and one at the front
-// unbroken. It is a different reading from the wash and from the edge weight, and that is the point of it. The wash
-// says which walls face away; the weight says which cell an edge belongs to in the fourth dimension, which is not a
-// direction the reader has; this says which edges lie behind. An edge crosses between the two by fading rather than
-// switching, so nothing changes between one frame and the next.
-const EDGE_BACK = 0.32;    // how far behind centre an edge's middle has to sit, in the box's own units, to be broken
-const DASH_PX = 9, GAP_PX = 6; // and the pattern, in screen pixels, so it does not stretch when the figure is resized
 // 16 vertices at (+/-0.5) in four coordinates, and an edge wherever two of them differ in exactly one coordinate
 const HC_V = [], HC_E = [], HC_F = [];
 for (let i = 0; i < 16; i++) HC_V.push([i & 1 ? 0.5 : -0.5, i & 2 ? 0.5 : -0.5, i & 4 ? 0.5 : -0.5, i & 8 ? 0.5 : -0.5]);
@@ -169,21 +162,6 @@ export function hypercube(a, b, fold, pos, wt, wpos, wnd) {
   return pos;
 }
 
-// Where each edge's broken line starts and how far it runs, which is what the dash pattern is measured along. Every
-// edge is measured from its own first endpoint, so the pattern is anchored to the edge and only the far end of it
-// gains or loses a dash as the edge lengthens or shortens, continuously, at the width the dash had shrunk to.
-// three's own computeLineDistances carries a running total across the whole buffer instead, which ties every edge's
-// phase to the summed length of all the edges before it: one edge changing length then slides the dashes along all
-// twenty-odd after it, every frame, and the figure crawls. That is the whole reason this is written out by hand.
-export function edgeDashes(pos, dist) {
-  for (let e = 0; e < HC_E.length; e++) {
-    const o = e * 6;
-    dist[e * 2] = 0;
-    dist[e * 2 + 1] = Math.hypot(pos[o + 3] - pos[o], pos[o + 4] - pos[o + 1], pos[o + 5] - pos[o + 2]);
-  }
-  return dist;
-}
-
 // Where the figure stands at rest: the three-quarter view, rocked by the roll and nudged by the cursor. Written as a
 // pure function because the word's counter-turn is only as good as what it is countering, so a check has to be able
 // to step the clock through both of them at once and watch what the reader would see.
@@ -244,38 +222,27 @@ export function mount(container) {
   const plateMat = new THREE.MeshBasicMaterial({ color: INK, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false });
   // per-vertex alpha on a stock material, the same hook parchment.js uses: the tesseract's cells have to be drawn at
   // different weights, and they are one LineSegments and one Mesh because they are one figure
-  const perVertexAlpha = (attr) => (sh) => {
-    sh.vertexShader = sh.vertexShader.replace('#include <common>', 'attribute float ' + attr + '; varying float vA;\n#include <common>').replace('#include <begin_vertex>', '#include <begin_vertex>\nvA = ' + attr + ';');
+  const perVertexAlpha = (sh) => {
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', 'attribute float aA; varying float vA;\n#include <common>').replace('#include <begin_vertex>', '#include <begin_vertex>\nvA = aA;');
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', 'varying float vA;\n#include <common>').replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.a *= vA;');
   };
   const edgeMat = new THREE.LineBasicMaterial({ color: INK, transparent: true, opacity: 0.5 });
-  edgeMat.onBeforeCompile = perVertexAlpha('aA');
-  // and the same edges again, broken. An edge is drawn by both, at weights that add to its own: unbroken at what is
-  // left of it as it goes back, broken at how far back it has gone. Where the dash is on, the two together come to
-  // the edge's full weight; where it is off, to the unbroken share alone. So the crossing shows as a line growing
-  // its own gaps rather than as one line being swapped for another, and there is no frame where it changes
-  const dashMat = new THREE.LineDashedMaterial({ color: INK, transparent: true, opacity: 0.5, dashSize: DASH_PX, gapSize: GAP_PX });
-  dashMat.onBeforeCompile = perVertexAlpha('aD');
+  edgeMat.onBeforeCompile = perVertexAlpha;
   // the tesseract's 32 edges are the cube's whole wireframe: there is no box drawn around it. It sits in the shell,
   // so the flatten presses it into the plate exactly as it pressed the box's edges before
   const hyperGeom = new THREE.BufferGeometry();
   hyperGeom.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(192), 3));
   hyperGeom.setAttribute('aA', new THREE.Float32BufferAttribute(new Float32Array(64), 1));
-  hyperGeom.setAttribute('aD', new THREE.Float32BufferAttribute(new Float32Array(64), 1));
-  hyperGeom.setAttribute('lineDistance', new THREE.Float32BufferAttribute(new Float32Array(64), 1));
   const hyperPos = hyperGeom.attributes.position.array, hyperA = hyperGeom.attributes.aA.array;
-  const hyperD = hyperGeom.attributes.aD.array, hyperDist = hyperGeom.attributes.lineDistance.array;
   const hyperW = new Float32Array(64); // the raw near-cell weight, before the dissolve thins the rest away
-  // one geometry, two passes over it: the endpoints are written once and each material reads its own weight
   const hyper = new THREE.LineSegments(hyperGeom, edgeMat);
-  const hyperBroken = new THREE.LineSegments(hyperGeom, dashMat);
-  hyper.frustumCulled = hyperBroken.frustumCulled = false; // the endpoints are rewritten every frame, so a once-computed bounding sphere lies
+  hyper.frustumCulled = false; // the endpoints are rewritten every frame, so a once-computed bounding sphere lies
   // and the same figure's 48 walls, washed. Only the ones turned away from the reader take any: the three at the
   // back of each cell, the way the far walls of a room are the ones you see into it against. That is what leaves the
   // middle of the figure open for the word, and puts a ground behind the wireframe rather than a veil in front of it.
   // A wall crosses from lit to nothing exactly as it turns edge on, where it has no area left to show the change
   const wallMat = new THREE.MeshBasicMaterial({ color: INK, transparent: true, opacity: 1, side: THREE.DoubleSide, depthWrite: false });
-  wallMat.onBeforeCompile = perVertexAlpha('aA');
+  wallMat.onBeforeCompile = perVertexAlpha;
   const wallGeom = new THREE.BufferGeometry();
   wallGeom.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(864), 3));
   wallGeom.setAttribute('aA', new THREE.Float32BufferAttribute(new Float32Array(288), 1));
@@ -285,7 +252,7 @@ export function mount(container) {
   walls.frustumCulled = false;
   walls.renderOrder = -1; // the wash is a ground: the wireframe and the word draw over it, never under it
   const plateMesh = new THREE.Mesh(plateGeom, plateMat);
-  shell.add(walls, plateMesh, hyper, hyperBroken);
+  shell.add(walls, plateMesh, hyper);
   // the word sits on a plane inside the cube, kept facing the viewer while the cube turns around it
   const inner = new THREE.Group(); cube.add(inner);
   // 3D lettering: the word is extruded type, paper faces under a fixed key light with ink sides, so the profile reads
@@ -385,7 +352,7 @@ export function mount(container) {
   const ro = new ResizeObserver(resize); ro.observe(container); resize();
 
   const inkCur = new THREE.Color(INK), inkTo = new THREE.Color(INK);
-  const qFree = new THREE.Quaternion(), qPose = new THREE.Quaternion(), eul = new THREE.Euler(), wallN = new THREE.Vector3(), edgeMid = new THREE.Vector3();
+  const qFree = new THREE.Quaternion(), qPose = new THREE.Quaternion(), eul = new THREE.Euler(), wallN = new THREE.Vector3();
   let px = 0, py = 0, tx = 0, ty = 0, alive = true, raf, last = performance.now(), t = 0;
   const onMove = (e) => {
     const cx = anchor.x + anchor.w / 2, cy = anchor.y + anchor.h / 2, r = Math.max(anchor.w, anchor.h);
@@ -431,21 +398,7 @@ export function mount(container) {
     // the near cell always draws at the full edge weight; the far cell and the connectors draw lighter, and go out
     // as the figure folds, so at fold = 1 the wireframe left standing is the box the plate is pressed from
     hypercube(ha, 0, fold, hyperPos, hyperW, wallPos, wallND);
-    edgeDashes(hyperPos, hyperDist);
-    // an edge's own weight, split between the unbroken pass and the broken one by how far back it lies. The break
-    // goes out with the fold for the same reason the wash does: the box the plate is pressed from is drawn whole
-    for (let e = 0; e < 32; e++) {
-      const o = e * 6;
-      edgeMid.set((hyperPos[o] + hyperPos[o + 3]) / 2, (hyperPos[o + 1] + hyperPos[o + 4]) / 2, (hyperPos[o + 2] + hyperPos[o + 5]) / 2);
-      edgeMid.applyQuaternion(cube.quaternion);
-      const back = smooth(clamp01(-edgeMid.z / EDGE_BACK)) * (1 - fold);
-      const w = hyperW[e * 2], weight = w + (1 - w) * HYPER_INNER * (1 - fold);
-      hyperA[e * 2] = hyperA[e * 2 + 1] = weight * (1 - back);
-      hyperD[e * 2] = hyperD[e * 2 + 1] = weight * back;
-    }
-    // the dash is measured in the figure's own units, so this carries it to screen pixels: how many of them one of
-    // those units covers, which is the cube's world scale over the world units a pixel is worth
-    dashMat.scale = as * (1 + hover * 0.06) / (visW / vw);
+    for (let i = 0; i < 64; i++) hyperA[i] = hyperW[i] + (1 - hyperW[i]) * HYPER_INNER * (1 - fold);
     // a wall takes a tone from where its own normal stands to the key light, thinned by how deep in the fourth
     // dimension it lies and cut away entirely once it turns back toward the reader. Both readings are products with
     // the outward vector, never with its sign, which is what keeps a folding cell from flashing. The wash goes out
@@ -460,16 +413,15 @@ export function mount(container) {
       for (let v = 0; v < 6; v++) wallA[w * 6 + v] = a;
     }
     hyperGeom.attributes.position.needsUpdate = true; hyperGeom.attributes.aA.needsUpdate = true;
-    hyperGeom.attributes.aD.needsUpdate = true; hyperGeom.attributes.lineDistance.needsUpdate = true;
     wallGeom.attributes.position.needsUpdate = true; wallGeom.attributes.aA.needsUpdate = true;
     // the landed plate takes the platform's stroke and sheet weights
-    edgeMat.opacity = dashMat.opacity = Math.max(0, ((0.5 + hover * 0.3) * (1 - flat) + 0.62 * flat) * alpha);
+    edgeMat.opacity = Math.max(0, ((0.5 + hover * 0.3) * (1 - flat) + 0.62 * flat) * alpha);
     plateMat.opacity = Math.max(0, 0.14 * flat * alpha);
     voxMat.opacity = Math.max(0, 0.06 * (1 - dis) * alpha); voxEdgeMat.opacity = Math.max(0, (0.5 + hover * 0.25) * (1 - dis) * alpha);
     inkCur.lerp(inkTo, 0.08);
     // block faces sit on the opposite side of the ground from the ink: paper blocks with ink edges on the light
     // home page, ink blocks with paper edges once the cube lands on the dark Development page
-    edgeMat.color.copy(inkCur); dashMat.color.copy(inkCur); wallMat.color.copy(inkCur); plateMat.color.copy(inkCur); voxEdgeMat.color.copy(inkCur); voxMat.color.copy(inkCur);
+    edgeMat.color.copy(inkCur); wallMat.color.copy(inkCur); plateMat.color.copy(inkCur); voxEdgeMat.color.copy(inkCur); voxMat.color.copy(inkCur);
     renderer.render(scene, camera);
   };
   raf = requestAnimationFrame(tick);
@@ -504,9 +456,8 @@ export function mount(container) {
     destroy() {
       alive = false; cancelAnimationFrame(raf); ro.disconnect();
       window.removeEventListener('pointermove', onMove);
-      // give back everything mount built: the plate's quad, the tesseract's washed walls and its edge lines both
-      // whole and broken, and the word outline once the typeface has landed. The two line passes share one geometry,
-      // and disposing it twice costs nothing. voxMat never reaches an object, so the walk cannot find it
+      // give back everything mount built: the plate's quad, the tesseract's washed faces and its edge lines, and
+      // the word outline once the typeface has landed. voxMat never reaches an object, so the walk cannot find it
       scene.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
       voxMat.dispose();
       // dispose only frees the renderer's own caches; the GL context lives on until forceContextLoss drops it
