@@ -384,15 +384,16 @@
           <p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.06em; color:var(--color-neutral-600); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ p.bandNo }} · {{ p.kindLower }} · {{ p.year }}</p>
           <p data-morph="{{ p.morphName }}" data-morph-alt="title-{{ p.figNo }}" style="margin:2px 0 0; font-size:12px; line-height:15px; letter-spacing:-0.02em;">{{ p.title }}</p>
         </div>
-        <!-- The reason the thing was built, held twice. The first copy lies over the plate whole and
-             invisible: it is what the sheet's lede morphs out of when the plate is opened, and it has to
-             carry the whole sentence for the morph to have something to fly. The second is as far as the
-             typewriter has got, which is what a reader sees. It unrolls out of the plate rather than
-             over it, the way a Research leaf types its detail below its plate, so the picture and the
-             title stay put under the cursor: the plate's own width, hung off its bottom edge on the top
-             half of the sheet and off its top edge on the bottom half, growing as it types over whatever
-             it covers, which is why the plate takes z-index 30 while it is talking. -->
-        <p data-morph="why-{{ p.figNo }}" data-morph-alt="lede-{{ p.figNo }}" aria-hidden="true" style="position:absolute; left:0; right:0; top:0; bottom:0; margin:0; padding:10px; box-sizing:border-box; opacity:0; pointer-events:none; color:var(--color-neutral-700); font-size:12px; line-height:17px;">{{ p.why }}</p>
+        <!-- The reason the thing was built, as far as the typewriter has got. It unrolls out of the
+             plate rather than over it, the way a Research leaf types its detail below its plate, so the
+             picture and the title stay put under the cursor: the plate's own width, hung off its bottom
+             edge on the top half of the sheet and off its top edge on the bottom half, growing as it
+             types over whatever it covers, which is why the plate takes z-index 30 while it is talking.
+             It carries no data-morph name. A plate here shows its title and nothing else at rest, so the
+             sheet's lede has no visible source to fly out of and enters on its own; a whole copy kept
+             invisible for the morph to read would be an unpaired data-morph element, and the transition
+             fades every one of those in for half a second, which on this landing meant every plate
+             reciting its paragraph over its own picture on the way in. -->
         <p aria-live="polite" style="position:absolute; left:0; right:0; top:{{ p.whyTop }}; bottom:{{ p.whyBottom }}; margin:0; padding:10px; box-sizing:border-box; pointer-events:none; background:var(--color-bg); color:var(--color-neutral-700); font-size:12px; line-height:17px; white-space:pre-wrap; box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text); opacity:{{ p.whyOpacity }}; transition:opacity 220ms ease;">{{ p.typed }}<span aria-hidden="true" style="display:inline-block; width:1px; height:0.9em; margin-left:2px; vertical-align:-0.1em; background:var(--color-text); opacity:{{ p.caretOpacity }};"></span></p>
       </div>
     </sc-for>

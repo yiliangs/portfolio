@@ -557,11 +557,7 @@
                       ),
                       "\n        ",
                       "\n        ",
-                      h("p", { key: "6|11.1lb77d7", "data-morph": `why-${Vi.p?.figNo ?? ""}`, "data-morph-alt": `lede-${Vi.p?.figNo ?? ""}`, "aria-hidden": "true", style: {"position":"absolute","left":"0","right":"0","top":"0","bottom":"0","margin":"0","padding":"10px","boxSizing":"border-box","opacity":"0","pointerEvents":"none","color":"var(--color-neutral-700)","fontSize":"12px","lineHeight":"17px"} },
-                        h(F,{key:0},"",I(Vi.p?.why,1),"")
-                      ),
-                      "\n        ",
-                      h("p", { key: "8|26.1pcf1c", "aria-live": "polite", style: S(`position:absolute; left:0; right:0; top:${Vi.p?.whyTop ?? ""}; bottom:${Vi.p?.whyBottom ?? ""}; margin:0; padding:10px; box-sizing:border-box; pointer-events:none; background:var(--color-bg); color:var(--color-neutral-700); font-size:12px; line-height:17px; white-space:pre-wrap; box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text); opacity:${Vi.p?.whyOpacity ?? ""}; transition:opacity 220ms ease;`) },
+                      h("p", { key: "6|26.1pcf1c", "aria-live": "polite", style: S(`position:absolute; left:0; right:0; top:${Vi.p?.whyTop ?? ""}; bottom:${Vi.p?.whyBottom ?? ""}; margin:0; padding:10px; box-sizing:border-box; pointer-events:none; background:var(--color-bg); color:var(--color-neutral-700); font-size:12px; line-height:17px; white-space:pre-wrap; box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text); opacity:${Vi.p?.whyOpacity ?? ""}; transition:opacity 220ms ease;`) },
                         h(F,{key:0},"",I(Vi.p?.typed,1),""),
                         h("span", { key: "1", "aria-hidden": "true", style: S(`display:inline-block; width:1px; height:0.9em; margin-left:2px; vertical-align:-0.1em; background:var(--color-text); opacity:${Vi.p?.caretOpacity ?? ""};`) })
                       ),

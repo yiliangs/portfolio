@@ -221,8 +221,6 @@ else {
         ['data-shape-alt="frame-{{ p.figNo }}"', 'frame shape alt'],
         ['data-morph="{{ p.morphName }}"', 'title morph'],
         ['data-morph-alt="title-{{ p.figNo }}"', 'title morph alt'],
-        ['data-morph="why-{{ p.figNo }}"', 'why morph'],
-        ['data-morph-alt="lede-{{ p.figNo }}"', 'why morph alt'],
         ['id="{{ p.plateSlotId }}"', 'plate image slot'],
         ['{{ p.open }}', 'open binding'],
         ['{{ p.type }}', 'typewriter on hover'],
@@ -239,6 +237,18 @@ else {
       }
       if (!/grid-column:\{\{p\.col\}\}/.test(tight(ph))) fail('the desktop plate writes its own grid-column instead of reading it back from the placement');
       if (!/grid-row:\{\{p\.row\}\}/.test(tight(ph))) fail('the desktop plate writes its own grid-row instead of reading it back from the placement');
+
+      // An element the transition finds no partner for is faded in from nothing for half a second, and
+      // an animation's keyframes outrank the inline style while they run. So a data-morph element left
+      // invisible on purpose does not stay invisible: it recites itself on the way in and snaps out
+      // when the animation ends. Nothing on a plate may be both.
+      for (const el of plate.querySelectorAll('[data-morph]')) {
+        const s = tight(el.getAttribute('style') || '');
+        if (/opacity:0[;:]?/.test(s) || /visibility:hidden/.test(s)) {
+          fail('a plate holds a data-morph element it also hides (' + el.tagName.toLowerCase() + ' [' + el.getAttribute('data-morph') +
+            ']): with no partner the transition fades it in anyway, so it would be read out over the plate on the way in');
+        }
+      }
     }
 
     for (const [needle, label] of [['{{ platformRef }}', 'platform box'], ['{{ contentsRef }}', 'contents anchor'], ['{{ platesRef }}', 'plates anchor'], ['{{ notesRef }}', 'notes anchor'], ['{{ landingStatementRef }}', 'statement measuring ref']]) {
