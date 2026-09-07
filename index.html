@@ -95,7 +95,9 @@
   <sc-if value="{{ isSerifPage }}" hint-placeholder-val="{{ true }}">
   <main key="writing" data-screen-label="Research" style="max-width:none; margin:0; padding:0 clamp(20px,3vw,56px); background-image:radial-gradient(color-mix(in srgb, var(--color-text) 16%, transparent) 1px, transparent 1.1px); background-size:44px 44px; background-position:22px 22px;">
 
-    <section ref="{{ heroRef }}" style="position:relative; text-align:center; padding:28px 0 96px; perspective:1200px; overflow:hidden; height:calc(100vh - 57px); box-sizing:border-box; display:grid; grid-template-columns:minmax(280px,1fr) minmax(0,900px) minmax(280px,1fr); gap:0 40px; align-items:center;">
+    <!-- full bleed: the hero pulls back out of main's side padding and gives it back as its own, so the grid keeps the
+         same measure while overflow:hidden clips at the page edges instead of eating the leaves' outward bleed -->
+    <section ref="{{ heroRef }}" style="position:relative; text-align:center; margin:0 calc(-1 * clamp(20px,3vw,56px)); padding:28px clamp(20px,3vw,56px) 96px; perspective:1200px; overflow:hidden; height:calc(100vh - 57px); box-sizing:border-box; display:grid; grid-template-columns:minmax(280px,1fr) minmax(0,900px) minmax(280px,1fr); gap:0 40px; align-items:center;">
       <!-- a manuscript page behind the headline; it tilts and drifts with the cursor as a shallow 3D layer -->
       <!-- loose pages: each chapter is a leaf adrift in the margins; it drifts on its own, follows the cursor a little, and lifts to show its colophon on hover -->
       <div style="position:relative; z-index:2; align-self:stretch; min-height:0; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); grid-template-rows:repeat(3, minmax(0,1fr)); gap:28px 24px; padding:28px 0;">
