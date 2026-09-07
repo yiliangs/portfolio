@@ -13,7 +13,7 @@
   <script src="./image-slot.js"></script>
   <script src="./src/text-rippling.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400&family=Cinzel:wght@400&family=Geist+Mono:wght@400;500&family=Libre+Baskerville:ital,wght@0,400;1,400&family=Google+Sans:wght@400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400&family=Cinzel:wght@400&family=Cinzel+Decorative:wght@400&family=Geist+Mono:wght@400;500&family=Libre+Baskerville:ital,wght@0,400;1,400&family=Google+Sans:wght@400&display=swap" rel="stylesheet">
   <style>
     body { margin: 0; background: var(--color-bg); color: var(--color-text); font-family: var(--font-body); text-wrap: pretty; }
     a { color: var(--color-accent-700); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: var(--color-accent); }
@@ -108,18 +108,20 @@
 
   <!-- ============ HOME — two objects in the void: the roll and the cube ============ -->
   <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
-  <main key="home" data-screen-label="Home" style="padding:0 clamp(20px,5vw,72px); min-height:calc(100vh - 57px); box-sizing:border-box; display:grid; grid-template-rows:auto minmax(0,1fr) auto;">
-    <div ref="{{ homeHeadRef }}" style="text-align:center; padding:clamp(28px,7vh,76px) 0 0;">
-      <h1 style="margin:0; font-family:var(--font-heading); font-weight:300; font-size:clamp(30px,4.4vw,58px); line-height:1.08; letter-spacing:-0.01em;">Yiliang Shao</h1>
-      <p style="margin:14px 0 0; font-family:var(--font-heading); font-style:italic; font-size:clamp(15px,1.5vw,21px); line-height:1.4; color:var(--color-neutral-700);">An architect who writes about drawing and builds the software that draws.</p>
-    </div>
-    <div style="display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,0.9fr); align-items:center; gap:clamp(16px,4vw,72px); min-height:min(60vh,600px);">
+  <!-- the objects sit on the page's exact vertical centre: the main is one full-height row and the footer
+       is pinned to its bottom edge rather than taking a row of its own -->
+  <main key="home" data-screen-label="Home" style="position:relative; padding:0 clamp(20px,5vw,72px); min-height:calc(100vh - 57px); box-sizing:border-box; display:grid; grid-template-rows:minmax(0,1fr);">
+    <div style="display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,0.9fr); align-items:center; gap:clamp(16px,4vw,72px);">
       <button ref="{{ homeRollRef }}" onClick="{{ goWriting }}" style="all:unset; cursor:pointer; position:relative; display:flex; align-items:center; justify-content:center; height:min(44vh,400px); font-family:var(--font-heading);">
         <span class="breathe" style="position:relative; z-index:3; font-weight:300; font-size:clamp(26px,3.4vw,50px); letter-spacing:0.01em;">Research</span>
       </button>
       <button ref="{{ homeCubeRef }}" onClick="{{ goToolingFromCube }}" onMouseEnter="{{ homeCubeOn }}" onMouseLeave="{{ homeCubeOff }}" onFocus="{{ homeCubeOn }}" onBlur="{{ homeCubeOff }}" aria-label="Development" style="all:unset; cursor:pointer; position:relative; height:min(40vh,360px);"></button>
     </div>
-    <p ref="{{ homeFootRef }}" style="margin:0; padding:0 0 clamp(18px,4vh,40px); display:flex; justify-content:center; gap:24px; font-family:var(--mono); font-size:11px; letter-spacing:0.08em; color:var(--color-neutral-600);"><span>Oslo</span><span>hello@example.com</span><span>MMXXVI</span></p>
+    <nav aria-label="Contact" style="position:absolute; left:0; right:0; bottom:clamp(18px,4vh,40px); display:flex; justify-content:center; gap:clamp(20px,3vw,44px); font-family:var(--deco); font-size:12px;">
+      <a href="mailto:hello@example.com" style="color:var(--color-accent); text-decoration:none; letter-spacing:0.06em; display:flex; align-items:center; line-height:1; transition:color 200ms ease, letter-spacing 200ms ease;" style-hover="font-family:Cinzel, var(--font-heading); color:var(--color-accent-700); letter-spacing:0.1em">Email</a>
+      <a href="#" style="color:var(--color-accent); text-decoration:none; letter-spacing:0.06em; display:flex; align-items:center; line-height:1; transition:color 200ms ease, letter-spacing 200ms ease;" style-hover="font-family:Cinzel, var(--font-heading); color:var(--color-accent-700); letter-spacing:0.1em">CV</a>
+      <a href="#" style="color:var(--color-accent); text-decoration:none; letter-spacing:0.06em; display:flex; align-items:center; line-height:1; transition:color 200ms ease, letter-spacing 200ms ease;" style-hover="font-family:Cinzel, var(--font-heading); color:var(--color-accent-700); letter-spacing:0.1em">GitHub</a>
+    </nav>
   </main>
   </sc-if>
 
@@ -168,9 +170,9 @@
         <span aria-hidden="true" style="position:absolute; left:0; right:0; top:7px; bottom:7px; border-width:1px; border-style:solid; border-color:var(--color-accent); box-sizing:border-box;"></span>
         <span aria-hidden="true" style="position:absolute; left:7px; right:7px; top:0; bottom:0; border-width:1px; border-style:solid; border-color:var(--color-accent); box-sizing:border-box;"></span>
         <span style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:clamp(20px, 3vw, 44px);">
-          <a href="mailto:hello@example.com" style="color:var(--color-accent); text-decoration:none; letter-spacing:0.06em; display:flex; align-items:center; line-height:1; transition:color 200ms ease, letter-spacing 200ms ease;" style-hover="font-family:Cinzel, var(--font-heading); color:var(--color-accent-700); letter-spacing:0.1em">Email</a>
-          <a href="#" style="color:var(--color-accent); text-decoration:none; letter-spacing:0.06em; display:flex; align-items:center; line-height:1; transition:color 200ms ease, letter-spacing 200ms ease;" style-hover="font-family:Cinzel, var(--font-heading); color:var(--color-accent-700); letter-spacing:0.1em">GitHub</a>
-          <a href="#" style="color:var(--color-accent); text-decoration:none; letter-spacing:0.06em; display:flex; align-items:center; line-height:1; transition:color 200ms ease, letter-spacing 200ms ease;" style-hover="font-family:Cinzel, var(--font-heading); color:var(--color-accent-700); letter-spacing:0.1em">CV</a>
+          <a href="mailto:hello@example.com" style="font-family:'Cinzel Decorative', var(--deco); text-transform:lowercase; color:var(--color-accent); text-decoration:none; letter-spacing:0.06em; display:flex; align-items:center; line-height:1; transition:color 200ms ease, letter-spacing 200ms ease;" style-hover="text-transform:uppercase; color:var(--color-accent-700); letter-spacing:0.1em">Email</a>
+          <a href="#" style="font-family:'Cinzel Decorative', var(--deco); text-transform:lowercase; color:var(--color-accent); text-decoration:none; letter-spacing:0.06em; display:flex; align-items:center; line-height:1; transition:color 200ms ease, letter-spacing 200ms ease;" style-hover="text-transform:uppercase; color:var(--color-accent-700); letter-spacing:0.1em">GitHub</a>
+          <a href="#" style="font-family:'Cinzel Decorative', var(--deco); text-transform:lowercase; color:var(--color-accent); text-decoration:none; letter-spacing:0.06em; display:flex; align-items:center; line-height:1; transition:color 200ms ease, letter-spacing 200ms ease;" style-hover="text-transform:uppercase; color:var(--color-accent-700); letter-spacing:0.1em">CV</a>
         </span>
       </nav>
       <div style="position:relative; z-index:2; align-self:stretch; min-height:0; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); grid-template-rows:repeat(3, minmax(0,1fr)); gap:28px 24px; padding:28px 0;">
@@ -441,7 +443,7 @@
 class Component extends DCLogic {
   state = { view: 'home', page: 'writing', idx: 2, hovered: 2, tab: { left: 0, width: 0 } };
   contentsRef = React.createRef(); platesRef = React.createRef(); notesRef = React.createRef();
-  homeLayerRef = React.createRef(); homeRollRef = React.createRef(); homeCubeRef = React.createRef(); fogLayerRef = React.createRef(); homeHeadRef = React.createRef(); homeFootRef = React.createRef();
+  homeLayerRef = React.createRef(); homeRollRef = React.createRef(); homeCubeRef = React.createRef(); fogLayerRef = React.createRef(); 
   // the home fog lives only on the home view; it fades out (and stops) elsewhere
   syncFog() {
     const layer = this.fogLayerRef.current; if (!layer) return;
@@ -452,9 +454,7 @@ class Component extends DCLogic {
       // the visible objects, not their layout cells: the roll stands about as wide as its word, the cube is a square
       const rb = box(roll), rs = roll.firstElementChild ? box(roll.firstElementChild) : rb, rw = Math.max(rs.w, rb.h * 0.5), cb = box(cube), cs = Math.min(cb.w, cb.h);
       this.fog.setSources([{ x: rb.x + rb.w / 2 - rw / 2, y: rb.y, w: rw, h: rb.h }, { x: cb.x + cb.w / 2 - cs / 2, y: cb.y + cb.h / 2 - cs / 2, w: cs, h: cs }]);
-      // the type stays clear: threads thin out under the headline block and the footer line
-      const tight = (el) => { if (!el) return null; const b = box(el), first = el.firstElementChild; const w = first ? Math.max(first.getBoundingClientRect().width, ...[...el.children].map((c) => c.getBoundingClientRect().width)) : b.w; return { x: b.x + (b.w - w) / 2 - 24, y: b.y, w: w + 48, h: b.h }; };
-      this.fog.setQuiet([tight(this.homeHeadRef.current), tight(this.homeFootRef.current)].filter(Boolean)); layer.style.opacity = '1';
+      layer.style.opacity = '1';
     } else {
       layer.style.opacity = '0';
       if (this.fog) { clearTimeout(this.fogKillTimer); this.fogKillTimer = setTimeout(() => { if (this.fog && this.state.view !== 'home') { this.fog.destroy(); this.fog = null; } }, 1000); }
@@ -1359,7 +1359,7 @@ class Component extends DCLogic {
     }
     return {
       isHome: view === 'home', showTabs: view !== 'home', goHome: () => this.goHome(),
-      homeLayerRef: this.homeLayerRef, homeRollRef: this.homeRollRef, homeCubeRef: this.homeCubeRef, fogLayerRef: this.fogLayerRef, homeHeadRef: this.homeHeadRef, homeFootRef: this.homeFootRef,
+      homeLayerRef: this.homeLayerRef, homeRollRef: this.homeRollRef, homeCubeRef: this.homeCubeRef, fogLayerRef: this.fogLayerRef,
       goToolingFromCube: () => { this.goPage('tooling'); this.cubeLead = true; },
       homeCubeOn: () => { if (this.home) this.home.setHover(true); }, homeCubeOff: () => { if (this.home) this.home.setHover(false); },
       isPage: view === 'page', marginalia, page, pageReg: page.reg, pageKey: pageKey, pageLabel: page.label,
