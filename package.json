@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "node tools/build-dc.mjs",
-    "check": "node tools/check-sheet-grid.mjs"
+    "check": "node tools/check-sheet-grid.mjs",
+    "check:paper": "node tools/check-paper.mjs"
   },
   "devDependencies": {
     "jsdom": "^25.0.1"
