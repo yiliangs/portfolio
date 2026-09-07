@@ -2641,9 +2641,10 @@
       const cv = path.match(/^\/cv(?:\/(serif|mono))?$/); if (cv) return { view: 'cv', cvReg: cv[1] || 'serif' };
       const i = this.data.findIndex((d, k) => '/' + this.slugOf(k) === path); return i >= 0 ? { view: 'chapter', idx: i } : null;
     }
-    // the state a parsed address stands for, filled out the way goPage, open and goCv fill it
+    // the state a parsed address stands for, filled out the way goPage, open and goCv fill it; an address
+    // that names nothing is the home, on arrival and when typed over a view alike
     routeState(r) {
-      if (!r) return {};
+      if (!r) return { view: 'home' };
       if (r.view === 'page') return { view: 'page', page: r.page, idx: this.featuredFor[r.page][0], hovered: this.featuredFor[r.page][0] };
       if (r.view === 'chapter') return { view: 'chapter', idx: r.idx, hovered: r.idx, page: this.pageOf(r.idx) };
       if (r.view === 'cv') return { view: 'cv', cvReg: r.cvReg };
@@ -2741,7 +2742,7 @@
       window.addEventListener('keydown', this.onKey);
       // the first entry gets the state behind its address, so a return to it restores the view as it was opened
       this.record({}, true);
-      this.onPop = (e) => { const entry = e.state && e.state.view ? e.state : this.routeState(this.parseRoute(location.hash)); if (entry.view) this.restore(entry); };
+      this.onPop = (e) => this.restore(e.state && e.state.view ? e.state : this.routeState(this.parseRoute(location.hash)));
       window.addEventListener('popstate', this.onPop);
       // One scroll brings a batch of modules in at once. The stagger is rebased to the first module of
       // each batch, so the sheet inks top to bottom wherever the reader joins it instead of making a
