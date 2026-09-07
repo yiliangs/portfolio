@@ -72,10 +72,22 @@
        squeezing the line. Printing keeps only the column: the running head and the three fixed canvas
        layers carry data-print="hide" and go away, and the measure opens to the page. */
     .cv-row { display: grid; grid-template-columns: minmax(0,1fr) auto; column-gap: 14px; align-items: baseline; }
-    .cv-date { font-family: var(--mono); font-size: 0.8em; line-height: 1.6; color: var(--color-neutral-600); text-align: right; white-space: nowrap; }
+    /* the rail holds a fixed width so every date in the document starts on the same line, however
+       short the entry above it: a ragged right column reads as a mistake rather than as a rail */
+    .cv-date { font-family: var(--mono); font-size: 0.8em; line-height: 1.6; min-width: 11ch; color: var(--color-neutral-600); text-align: right; white-space: nowrap; }
+    /* The section rule and the job are the two things that set the document's vertical rhythm, so
+       both live here rather than inline: a media query cannot reach an inline margin, and the narrow
+       page needs roughly half the air the wide one does. */
+    .cv-sec { display: flex; align-items: center; gap: 10px; margin: 48px 0 16px; }
+    .cv-sec-first { margin-top: 40px; }
+    .cv-sec-label { font-family: var(--deco); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-accent-700); white-space: nowrap; }
+    .cv-rule { flex: 1 1 auto; height: 1px; background: var(--color-accent); }
+    .cv-job { margin: 0 0 36px; }
     @media (max-width: 700px) {
       .cv-row { grid-template-columns: minmax(0,1fr); }
-      .cv-date { text-align: left; margin-top: 2px; }
+      .cv-date { text-align: left; margin-top: 2px; min-width: 0; }
+      .cv-sec { margin-top: 32px; }
+      .cv-job { margin-bottom: 26px; }
     }
     @media print {
       [data-print="hide"] { display: none !important; }

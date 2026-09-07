@@ -74,10 +74,22 @@
        squeezing the line. Printing keeps only the column: the running head and the three fixed canvas
        layers carry data-print="hide" and go away, and the measure opens to the page. */
     .cv-row { display: grid; grid-template-columns: minmax(0,1fr) auto; column-gap: 14px; align-items: baseline; }
-    .cv-date { font-family: var(--mono); font-size: 0.8em; line-height: 1.6; color: var(--color-neutral-600); text-align: right; white-space: nowrap; }
+    /* the rail holds a fixed width so every date in the document starts on the same line, however
+       short the entry above it: a ragged right column reads as a mistake rather than as a rail */
+    .cv-date { font-family: var(--mono); font-size: 0.8em; line-height: 1.6; min-width: 11ch; color: var(--color-neutral-600); text-align: right; white-space: nowrap; }
+    /* The section rule and the job are the two things that set the document's vertical rhythm, so
+       both live here rather than inline: a media query cannot reach an inline margin, and the narrow
+       page needs roughly half the air the wide one does. */
+    .cv-sec { display: flex; align-items: center; gap: 10px; margin: 48px 0 16px; }
+    .cv-sec-first { margin-top: 40px; }
+    .cv-sec-label { font-family: var(--deco); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-accent-700); white-space: nowrap; }
+    .cv-rule { flex: 1 1 auto; height: 1px; background: var(--color-accent); }
+    .cv-job { margin: 0 0 36px; }
     @media (max-width: 700px) {
       .cv-row { grid-template-columns: minmax(0,1fr); }
-      .cv-date { text-align: left; margin-top: 2px; }
+      .cv-date { text-align: left; margin-top: 2px; min-width: 0; }
+      .cv-sec { margin-top: 32px; }
+      .cv-job { margin-bottom: 26px; }
     }
     @media print {
       [data-print="hide"] { display: none !important; }
@@ -272,7 +284,7 @@
        either. Reached from the Research colophon and the Development who-block; left by the brand,
        by Escape, or by the back control. ============ -->
   <sc-if value="{{ isCv }}" hint-placeholder-val="{{ false }}">
-  <main key="cv" data-screen-label="CV" style="max-width:78ch; margin:0 auto; padding:clamp(24px,4vw,56px); font-family:var(--r-body); font-size:15.5px; line-height:1.55;">
+  <main key="cv" data-screen-label="CV" style="max-width:min(1040px, 100% - 2 * clamp(24px, 5vw, 72px)); margin:0 auto; padding:clamp(32px,5vw,72px) 0; font-family:var(--r-body); font-size:16.5px; line-height:1.7;">
 
     <button onClick="{{ goPageCurrent }}" style="all:unset; cursor:pointer; display:inline-flex; align-items:center; margin:0 0 28px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-neutral-600); transition:color 200ms ease;" style-hover="color:var(--color-accent-700)">← Back</button>
 
@@ -288,7 +300,7 @@
 
     <!-- identity line: the name left, the contact rail right, exactly as the PDF opens -->
     <header style="display:flex; align-items:baseline; justify-content:space-between; gap:20px; flex-wrap:wrap;">
-      <h1 style="margin:0; font-family:var(--font-heading); font-weight:400; font-size:clamp(30px,4.2vw,46px); line-height:1.05; letter-spacing:-0.015em;">{{ cvDoc.name }}</h1>
+      <h1 style="margin:0; font-family:var(--font-heading); font-weight:400; font-size:clamp(34px,4.6vw,52px); line-height:1.05; letter-spacing:-0.015em;">{{ cvDoc.name }}</h1>
       <div style="display:flex; flex-direction:column; align-items:flex-end; gap:3px; font-family:var(--mono); font-size:12px; line-height:16px;">
         <sc-for list="{{ cvDoc.contact }}" as="cc" hint-placeholder-count="2">
           <a href="{{ cc.href }}" style="color:var(--color-neutral-700); text-decoration-color:var(--color-divider);">{{ cc.t }}</a>
@@ -297,20 +309,20 @@
     </header>
 
     <sc-if value="{{ cvDoc.hasProfile }}" hint-placeholder-val="{{ true }}">
-      <div style="display:flex; align-items:center; gap:10px; margin:30px 0 12px;">
-        <span style="font-family:var(--deco); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--color-accent-700); white-space:nowrap;">Bio</span>
-        <span aria-hidden="true" style="flex:1 1 auto; height:1px; background:var(--color-accent);"></span>
+      <div class="cv-sec cv-sec-first">
+        <span class="cv-sec-label">Bio</span>
+        <span aria-hidden="true" class="cv-rule"></span>
       </div>
       <p style="margin:0; color:var(--color-text);">{{ cvDoc.profile }}</p>
     </sc-if>
 
     <sc-if value="{{ cvDoc.hasWork }}" hint-placeholder-val="{{ true }}">
-      <div style="display:flex; align-items:center; gap:10px; margin:30px 0 12px;">
-        <span style="font-family:var(--deco); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--color-accent-700); white-space:nowrap;">Experience</span>
-        <span aria-hidden="true" style="flex:1 1 auto; height:1px; background:var(--color-accent);"></span>
+      <div class="cv-sec">
+        <span class="cv-sec-label">Experience</span>
+        <span aria-hidden="true" class="cv-rule"></span>
       </div>
       <sc-for list="{{ cvDoc.jobs }}" as="job" hint-placeholder-count="2">
-      <section style="margin:0 0 22px;">
+      <section class="cv-job">
         <!-- tier 1: the employer heads the entry. Each org unit is one unbreakable run, so the name
              wraps between entities and never mid-name; the location glues to the last unit, muted -->
         <div class="cv-row">
@@ -319,54 +331,54 @@
         </div>
         <!-- tier 2: the current title with its own dates, then one faint line of the prior ones -->
         <sc-if value="{{ job.hasTitleRow }}" hint-placeholder-val="{{ true }}">
-          <div class="cv-row" style="margin:2px 0 0; padding-left:8px;">
+          <div class="cv-row" style="margin:4px 0 0; padding-left:11px;">
             <p style="margin:0; font-weight:600;">{{ job.title }}</p>
             <span class="cv-date">{{ job.titleDates }}</span>
           </div>
         </sc-if>
         <sc-if value="{{ job.hasPrior }}" hint-placeholder-val="{{ false }}">
-          <p style="margin:2px 0 0; padding-left:16px; font-size:0.86em; color:var(--color-neutral-600);">{{ job.prior }}</p>
+          <p style="margin:4px 0 0; padding-left:22px; font-size:0.86em; color:var(--color-neutral-600);">{{ job.prior }}</p>
         </sc-if>
         <sc-for list="{{ job.highlights }}" as="hl" hint-placeholder-count="1">
-          <p style="margin:4px 0 0; padding-left:16px; font-size:0.92em; color:var(--color-neutral-700);">{{ hl }}</p>
+          <p style="margin:6px 0 0; padding-left:22px; font-size:0.92em; color:var(--color-neutral-700);">{{ hl }}</p>
         </sc-for>
         <sc-if value="{{ job.hasFunding }}" hint-placeholder-val="{{ false }}">
-          <p style="margin:3px 0 0; padding-left:16px; font-size:0.9em; font-style:italic; color:var(--color-neutral-600);">{{ job.funding }}</p>
+          <p style="margin:6px 0 0; padding-left:22px; font-size:0.9em; font-style:italic; color:var(--color-neutral-600);">{{ job.funding }}</p>
         </sc-if>
         <sc-for list="{{ job.blocks }}" as="blk" hint-placeholder-count="1">
-          <div style="margin:13px 0 0;">
+          <div style="margin:22px 0 0;">
             <div class="cv-row">
               <p style="margin:0;"><span style="font-size:0.85em; font-weight:600; letter-spacing:0.09em; color:var(--color-accent-700);">{{ blk.heading }}</span><span style="margin-left:9px; font-size:0.92em; font-style:italic; color:var(--color-neutral-700);">{{ blk.role }}</span></p>
               <span class="cv-date">{{ blk.period }}</span>
             </div>
             <sc-if value="{{ blk.hasIntro }}" hint-placeholder-val="{{ true }}">
-              <p style="margin:3px 0 0; padding-left:16px; font-size:0.92em; color:var(--color-neutral-700);">{{ blk.intro }}</p>
+              <p style="margin:6px 0 0; padding-left:22px; font-size:0.92em; color:var(--color-neutral-700);">{{ blk.intro }}</p>
             </sc-if>
             <!-- tier 3: the entries. emphasizeMetrics has already split the description into runs, so
                  the numbers arrive as their own parts and only they are set semibold -->
             <sc-for list="{{ blk.entries }}" as="ent" hint-placeholder-count="2">
-              <p style="margin:5px 0 0; padding-left:16px;"><span style="font-weight:600;">{{ ent.name }}.</span> <sc-for list="{{ ent.parts }}" as="run" hint-placeholder-count="1"><span style="font-weight:{{ run.w }};">{{ run.t }}</span></sc-for></p>
+              <p style="margin:9px 0 0; padding-left:22px;"><span style="font-weight:600;">{{ ent.name }}.</span> <sc-for list="{{ ent.parts }}" as="run" hint-placeholder-count="1"><span style="font-weight:{{ run.w }};">{{ run.t }}</span></sc-for></p>
             </sc-for>
           </div>
         </sc-for>
         <!-- the lab's flagship projects read as entries of the job that scoped them, without dates of
              their own: the project lifespans outrun the tenure and a date column would overclaim it -->
         <sc-for list="{{ job.projects }}" as="pr" hint-placeholder-count="1">
-          <p style="margin:5px 0 0; padding-left:16px;"><span style="font-weight:600;">{{ pr.name }}.</span> <sc-for list="{{ pr.parts }}" as="run" hint-placeholder-count="1"><span style="font-weight:{{ run.w }};">{{ run.t }}</span></sc-for></p>
+          <p style="margin:9px 0 0; padding-left:22px;"><span style="font-weight:600;">{{ pr.name }}.</span> <sc-for list="{{ pr.parts }}" as="run" hint-placeholder-count="1"><span style="font-weight:{{ run.w }};">{{ run.t }}</span></sc-for></p>
         </sc-for>
       </section>
       </sc-for>
     </sc-if>
 
     <sc-if value="{{ cvDoc.hasResearch }}" hint-placeholder-val="{{ true }}">
-      <div style="display:flex; align-items:center; gap:10px; margin:30px 0 12px;">
-        <span style="font-family:var(--deco); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--color-accent-700); white-space:nowrap;">Patent &amp; Publications</span>
-        <span aria-hidden="true" style="flex:1 1 auto; height:1px; background:var(--color-accent);"></span>
+      <div class="cv-sec">
+        <span class="cv-sec-label">Patent &amp; Publications</span>
+        <span aria-hidden="true" class="cv-rule"></span>
       </div>
       <!-- the patent is set in the same grammar as a publication, and an unpublished paper carries a
            muted status tag and no year, so nothing here reads as already published -->
       <sc-for list="{{ cvDoc.research }}" as="rw" hint-placeholder-count="4">
-        <div class="cv-row" style="margin:0 0 6px;">
+        <div class="cv-row" style="margin:0 0 9px;">
           <p style="margin:0;"><sc-for list="{{ rw.parts }}" as="run" hint-placeholder-count="3"><span style="font-weight:{{ run.w }}; font-style:{{ run.fs }}; color:{{ run.c }};">{{ run.t }}</span></sc-for></p>
           <span class="cv-date">{{ rw.right }}</span>
         </div>
@@ -374,12 +386,12 @@
     </sc-if>
 
     <sc-if value="{{ cvDoc.hasRecognition }}" hint-placeholder-val="{{ true }}">
-      <div style="display:flex; align-items:center; gap:10px; margin:30px 0 12px;">
-        <span style="font-family:var(--deco); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--color-accent-700); white-space:nowrap;">Recognition &amp; Service</span>
-        <span aria-hidden="true" style="flex:1 1 auto; height:1px; background:var(--color-accent);"></span>
+      <div class="cv-sec">
+        <span class="cv-sec-label">Recognition &amp; Service</span>
+        <span aria-hidden="true" class="cv-rule"></span>
       </div>
       <sc-for list="{{ cvDoc.recognition }}" as="rec" hint-placeholder-count="3">
-        <div class="cv-row" style="margin:0 0 5px;">
+        <div class="cv-row" style="margin:0 0 9px;">
           <p style="margin:0;">{{ rec.line }}</p>
           <span class="cv-date">{{ rec.right }}</span>
         </div>
@@ -387,12 +399,12 @@
     </sc-if>
 
     <sc-if value="{{ cvDoc.hasTalks }}" hint-placeholder-val="{{ true }}">
-      <div style="display:flex; align-items:center; gap:10px; margin:30px 0 12px;">
-        <span style="font-family:var(--deco); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--color-accent-700); white-space:nowrap;">Talks &amp; Events</span>
-        <span aria-hidden="true" style="flex:1 1 auto; height:1px; background:var(--color-accent);"></span>
+      <div class="cv-sec">
+        <span class="cv-sec-label">Talks &amp; Events</span>
+        <span aria-hidden="true" class="cv-rule"></span>
       </div>
       <sc-for list="{{ cvDoc.talks }}" as="tk" hint-placeholder-count="4">
-        <div class="cv-row" style="margin:0 0 5px;">
+        <div class="cv-row" style="margin:0 0 9px;">
           <p style="margin:0;">{{ tk.line }}</p>
           <span class="cv-date">{{ tk.right }}</span>
         </div>
@@ -400,22 +412,22 @@
     </sc-if>
 
     <sc-if value="{{ cvDoc.hasOss }}" hint-placeholder-val="{{ true }}">
-      <div style="display:flex; align-items:center; gap:10px; margin:30px 0 12px;">
-        <span style="font-family:var(--deco); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--color-accent-700); white-space:nowrap;">Open Source</span>
-        <span aria-hidden="true" style="flex:1 1 auto; height:1px; background:var(--color-accent);"></span>
+      <div class="cv-sec">
+        <span class="cv-sec-label">Open Source</span>
+        <span aria-hidden="true" class="cv-rule"></span>
       </div>
       <sc-for list="{{ cvDoc.oss }}" as="os" hint-placeholder-count="1">
-        <p style="margin:0 0 5px;"><span style="font-weight:600;">{{ os.name }}.</span> {{ os.desc }}</p>
+        <p style="margin:0 0 9px;"><span style="font-weight:600;">{{ os.name }}.</span> {{ os.desc }}</p>
       </sc-for>
     </sc-if>
 
     <sc-if value="{{ cvDoc.hasEducation }}" hint-placeholder-val="{{ true }}">
-      <div style="display:flex; align-items:center; gap:10px; margin:30px 0 12px;">
-        <span style="font-family:var(--deco); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--color-accent-700); white-space:nowrap;">Education</span>
-        <span aria-hidden="true" style="flex:1 1 auto; height:1px; background:var(--color-accent);"></span>
+      <div class="cv-sec">
+        <span class="cv-sec-label">Education</span>
+        <span aria-hidden="true" class="cv-rule"></span>
       </div>
       <sc-for list="{{ cvDoc.education }}" as="ed" hint-placeholder-count="2">
-        <div class="cv-row" style="margin:0 0 5px;">
+        <div class="cv-row" style="margin:0 0 9px;">
           <p style="margin:0;"><span style="font-weight:600;">{{ ed.institution }}.</span> {{ ed.rest }}</p>
           <span class="cv-date">{{ ed.right }}</span>
         </div>
