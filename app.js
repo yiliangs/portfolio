@@ -2727,12 +2727,11 @@
     // down by its own height, while a spanning one lays that height over the whole run of blocks it
     // stands beside and lifts nothing until it is taller than all of them together.
     static planPaperRows(blocks) {
-      // every kind renderPaper draws takes a row of its own. A fold takes none: the tail carries its
-      // own open and closed state, so renderPaperTail places it on the row this leaves free.
-      const ROWED = ['byline', 'abstract', 'keywords', 'h2', 'h3', 'p', 'ul', 'table', 'alg', 'eq'];
       const cells = [], caps = [];
+      // the rows a wide block takes: it reaches across both columns, so column 2 is spoken for there
+      const wideRows = [];
       let row = 0, firstFigRow = 0;
-      const at = (wide) => { row++; return { gridRow: String(row), gridColumn: wide ? '1 / -1' : '1', minWidth: 0 }; };
+      const at = (wide) => { row++; if (wide) wideRows.push(row); return { gridRow: String(row), gridColumn: wide ? '1 / -1' : '1', minWidth: 0 }; };
       // two captions must never land in the same cell; the second one steps down a row
       const taken = new Set();
       const capRow = (r) => { while (taken.has(r)) r++; taken.add(r); return r; };
@@ -2749,16 +2748,24 @@
           if (!firstFigRow) firstFigRow = row;
           caps.push({ row: capRow(row), figs: b.figs });
         } else {
-          cells[i] = ROWED.includes(k) ? at(false) : null;
+          // every block renderPaper draws takes a row of its own. A fold takes none: the tail carries
+          // its own open and closed state, so renderPaperTail places it on the row this leaves free.
+          cells[i] = k === 'fold' ? null : at(false);
         }
       });
       const tailRow = row + 1;
-      // Every caption reaches down to the row the next one starts on, the last one past the tail, so
-      // that the spans are disjoint and together cover every body row from the first plate down. A
-      // caption already standing on or below where its span would end (a wide plate closing the body,
-      // whose caption has nowhere left to drop) keeps the one row it has.
+      // A caption reaches down to the earlier of the row the next caption starts on and the row of
+      // the next wide block, and past the tail when neither is left. It has to stop at a wide block
+      // because a wide block reaches across both columns and so owns column 2 on its row: a caption
+      // spanning through it shares that cell, and draws over the plate as soon as it is taller than
+      // the body between the two. The rows from a wide block down to the next caption stay uncovered,
+      // which is right, since nothing stands in column 2 there. A caption already standing on or
+      // below where its span would end (a wide plate closing the body, whose caption has nowhere left
+      // to drop) keeps the one row it has.
       caps.forEach((c, i) => {
-        const next = i + 1 < caps.length ? caps[i + 1].row : tailRow + 1;
+        const nextCap = i + 1 < caps.length ? caps[i + 1].row : tailRow + 1;
+        const nextWide = wideRows.find((w) => w > c.row);
+        const next = nextWide === undefined ? nextCap : Math.min(nextCap, nextWide);
         c.end = next > c.row ? next : c.row + 1;
       });
       return { cells, caps, tailRow, asideRow: '1 / ' + (firstFigRow || tailRow) };

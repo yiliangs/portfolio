@@ -66,8 +66,9 @@ function checkKindsInSync() {
 // kinds out of the template can lift the whole method and run it here against the real modules.
 // What it decides is geometry: which grid row each block stands on, and which run of rows each
 // caption spans. A caption that spans too little inflates the one row it sits on and leaves a
-// blank band down the body beside it; one that spans too far draws over the next caption. Neither
-// is an error in the browser, so this is the only place either can be caught.
+// blank band down the body beside it; one that spans too far shares a cell with the next caption,
+// or with a wide plate that already reaches across column 2 on its row, and draws over it. None of
+// that is an error in the browser, so this is the only place any of it can be caught.
 
 const PLANNER = 'static planPaperRows(blocks) {';
 
@@ -104,6 +105,17 @@ function checkPlannerKinds() {
       fail('tools/check-paper.mjs', 'planPaperRows gives block kind "' + k + '" no row, so renderPaper would place it nowhere');
     }
   });
+
+  // The shortest arrangement in which a caption meets a wide plate before it meets the next
+  // caption: a narrow plate, one paragraph, then a wide one. The first caption stands on row 1 and
+  // the wide plate takes row 3, so the caption has to stop at 3 and leave that row to the plate.
+  // Pinned on a made-up module rather than on a real one, so it survives the papers being edited.
+  const meets = planPaperRows([{ k: 'fig', n: 1, wide: false }, { k: 'p', r: [] }, { k: 'fig', n: 2, wide: true }]);
+  const first = meets.caps[0];
+  if (!first || first.row !== 1 || first.end !== 3) {
+    fail('tools/check-paper.mjs', 'over a narrow plate, a paragraph and a wide plate, planPaperRows spans the first caption '
+      + (first ? first.row + ' / ' + first.end : 'nowhere') + ' rather than 1 / 3, so it does not stop at the wide plate on row 3');
+  }
 }
 
 function checkRowPlan(rel, blocks) {
@@ -119,6 +131,13 @@ function checkRowPlan(rel, blocks) {
     if (!plan.cells[i]) fail(rel + ' block[' + i + '] ' + (b && b.k), 'planPaperRows gives it no grid cell, so it would fall outside the body');
   });
 
+  // read back off the placements rather than recomputed here, so this stays a check on what the
+  // planner decided and not a second copy of how it decides it
+  const wideRows = plan.cells
+    .filter((c) => c && c.gridColumn === '1 / -1')
+    .map((c) => Number(c.gridRow))
+    .sort((a, b) => a - b);
+
   const caps = plan.caps || [];
   let prevEnd = 0;
   caps.forEach((c, i) => {
@@ -127,14 +146,26 @@ function checkRowPlan(rel, blocks) {
     if (!Number.isInteger(c.end)) return fail(at, 'has no end line, so it spans one row and inflates it: end is ' + JSON.stringify(c.end));
     if (c.end <= c.row) return fail(at, 'spans rows ' + c.row + ' / ' + c.end + ', which is empty or reversed');
     if (c.row < prevEnd) fail(at, 'starts on row ' + c.row + ', inside the previous caption which runs to ' + prevEnd);
-    const next = i + 1 < caps.length ? caps[i + 1].row : null;
-    if (next !== null && c.end !== next) {
-      fail(at, 'ends at row ' + c.end + ' but the next caption starts on row ' + next + ', so the rows between them carry no caption');
-    }
-    if (next === null && c.end < plan.tailRow) {
-      fail(at, 'is the last caption and ends at row ' + c.end + ', short of the tail row ' + plan.tailRow);
-    }
     prevEnd = c.end;
+
+    // a wide block reaches across both columns, so it owns column 2 on its row; a caption spanning
+    // over that row shares the cell with the plate and draws on it once it outgrows the body between
+    const clash = wideRows.find((w) => w >= c.row && w < c.end);
+    if (clash !== undefined) {
+      return fail(at, 'spans rows ' + c.row + ' / ' + c.end + ', covering row ' + clash
+        + ' where a wide block already reaches across column 2, so the caption can draw over the plate');
+    }
+
+    // and it must not stop short either: a caption that gives up rows it could stand beside is the
+    // single-row caption again, inflating the one row it has
+    const nextCap = i + 1 < caps.length ? caps[i + 1].row : plan.tailRow + 1;
+    const nextWide = wideRows.find((w) => w > c.row);
+    const reach = nextWide === undefined ? nextCap : Math.min(nextCap, nextWide);
+    const want = reach > c.row ? reach : c.row + 1;
+    if (c.end !== want) {
+      fail(at, 'ends at row ' + c.end + ' but should reach row ' + want + ', the earlier of the next caption on row '
+        + nextCap + ' and the next wide block on row ' + (nextWide === undefined ? 'none' : nextWide));
+    }
   });
 
   const aside = /^\s*(\d+)\s*\/\s*(\d+)\s*$/.exec(String(plan.asideRow || ''));
