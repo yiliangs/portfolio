@@ -2,7 +2,7 @@
 // text-rippling's BurnReveal): cursor heats the cells under it; past the kindling point a cell self-sustains
 // and radiates to neighbours, so the front creeps on by itself. Burned cells are gone until the whole sheet
 // has gone, then it slowly re-forms. mount(container) -> { setTilt(nx, ny, over), destroy() }.
-import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+import * as THREE from './vendor/three-0.160.0.module.min.js';
 
 // ----- geometry -----
 // k = unroll 0..1: the rolled fraction a shrinks and the turns unwind, so the sheet genuinely unrolls rather than fading flat

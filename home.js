@@ -3,7 +3,7 @@
 // beats — the word dissolves, the cube travels and turns into the platform's axonometric pose, then presses down into a
 // sheet with the platform's exact proportions and projection — so the parchment platform can take over unseen.
 // mount(container) -> { setAnchor, collapse, reset, setPlatformFrame, setInk, setHover, setOpacity, destroy }
-import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+import * as THREE from './vendor/three-0.160.0.module.min.js';
 
 const INK = 0x1a1918;
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
@@ -82,7 +82,7 @@ export function mount(container) {
     }
     return shapes;
   };
-  fetch('https://unpkg.com/three@0.160.0/examples/fonts/helvetiker_regular.typeface.json').then((r) => r.json()).then((data) => {
+  fetch('./vendor/helvetiker_regular.typeface.json').then((r) => r.json()).then((data) => {
     if (!alive || textMesh) return;
     const shapes = glyphShapes(data, 'Development', 0.1);
     const g = new THREE.ExtrudeGeometry(shapes, { depth: DEPTH, curveSegments: 6, bevelEnabled: false });
