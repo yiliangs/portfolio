@@ -195,7 +195,10 @@ export function mount(api) {
   const NUDGE = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
   const onKey = (ev) => {
     if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
-    if (ev.key === 'd' && ev.target === document.body) { ev.stopPropagation(); root.hidden = !root.hidden; return; }
+    // d has to work wherever focus happens to be, or hiding the panel with its own button leaves
+    // focus on that button and the key that brings it back is dead. Only a text field keeps its d.
+    const t = ev.target, typing = t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+    if (ev.key === 'd' && !typing) { ev.stopPropagation(); root.hidden = !root.hidden; return; }
     if (!selected) return;
     if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); selected = null; refresh(); return; }
     const step = ev.shiftKey ? 10 : 1;
@@ -248,7 +251,7 @@ export function mount(api) {
       }
       out.textContent = ''; rerender(); refresh();
     }, 'back to the values this panel was mounted with'),
-    button('hide', () => { root.hidden = true; }, 'hide; press d to show again'),
+    button('hide', (ev) => { ev.currentTarget.blur(); root.hidden = true; }, 'hide; press d to show again'),
   );
   root.append(bar, out);
   document.body.appendChild(root);
@@ -264,8 +267,19 @@ export function mount(api) {
   observer.observe(document.body, { childList: true, subtree: true });
   rebuild();
 
+  // An escape hatch for the console, so a hidden panel or a stuck session is never a dead end:
+  // __leaves.show(), __leaves.dump() for the block as text, __leaves.tables for the live objects.
+  window.__leaves = {
+    show: () => { root.hidden = false; return 'panel back'; },
+    hide: () => { root.hidden = true; },
+    dump: () => serialize(spreads, pairs),
+    apply,
+    tables: { spreads, pairs },
+  };
+
   return {
     destroy() {
+      if (window.__leaves && window.__leaves.tables && window.__leaves.tables.spreads === spreads) delete window.__leaves;
       observer.disconnect();
       window.removeEventListener('pointerdown', onDown, true);
       window.removeEventListener('pointermove', onMove, true);
