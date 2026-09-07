@@ -194,7 +194,7 @@
                       "\n          ",
                       h("div", { key: "1", style: S(`animation:leaf-drift ${Vi.lf?.dur ?? ""} ease-in-out infinite alternate; animation-delay:${Vi.lf?.delay ?? ""}; display:flex; flex-direction:${Vi.lf?.dir ?? ""}; align-items:${Vi.lf?.alignItems ?? ""}; gap:12px 20px; width:100%;`) },
                         "\n            ",
-                        h("button", { key: "1", "data-shape": `leaf-${Vi.lf?.cardNo ?? ""}`, "data-shape-alt": `frame-${Vi.lf?.figNo ?? ""}`, onClick: Vi.lf?.open, onMouseEnter: Vi.lf?.hover, onMouseLeave: Vi.lf?.unhover, onFocus: Vi.lf?.hover, onBlur: Vi.lf?.unhover, style: S(`all:unset; cursor:${Vi.lf?.cursor ?? ""}; display:block; flex:none; height:${Vi.lf?.imgH ?? ""}; width:auto; max-width:none; aspect-ratio:${Vi.lf?.ratio ?? ""}; box-sizing:border-box; transform-origin:${Vi.lf?.origin ?? ""}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:${Vi.lf?.shadow ?? ""}; overflow:hidden; transform:translateX(${Vi.lf?.bleedX ?? ""}) translateY(${Vi.lf?.lift ?? ""}) scale(${Vi.lf?.scale ?? ""}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:${Vi.lf?.filter ?? ""};`), className: "scp3" },
+                        h("button", { key: "1", "data-shape": `leaf-${Vi.lf?.cardNo ?? ""}`, "data-shape-alt": `frame-${Vi.lf?.figNo ?? ""}`, onClick: Vi.lf?.open, onMouseEnter: Vi.lf?.hover, onMouseLeave: Vi.lf?.unhover, onFocus: Vi.lf?.hover, onBlur: Vi.lf?.unhover, style: S(`all:unset; cursor:${Vi.lf?.cursor ?? ""}; display:block; flex:none; height:${Vi.lf?.plateH ?? ""}; width:${Vi.lf?.plateW ?? ""}; max-width:${Vi.lf?.plateMaxW ?? ""}; aspect-ratio:${Vi.lf?.ratio ?? ""}; box-sizing:border-box; transform-origin:${Vi.lf?.origin ?? ""}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:${Vi.lf?.shadow ?? ""}; overflow:hidden; transform:translateX(${Vi.lf?.bleedX ?? ""}) translateY(${Vi.lf?.lift ?? ""}) scale(${Vi.lf?.scale ?? ""}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:${Vi.lf?.filter ?? ""};`), className: "scp3" },
                           "\n              ",
                           h("image-slot", { key: "1", id: Vi.lf?.coverSlotId, src: Vi.lf?.cover, shape: "rect", fit: "cover", placeholder: Vi.lf?.placeholder, style: {"width":"100%","height":"100%","display":"block","transform":"scale(1)","transition":"transform 620ms cubic-bezier(.2,.7,.2,1)"}, className: "scp4" }),
                           "\n            "
@@ -300,7 +300,7 @@
                       "\n          ",
                       h("div", { key: "1", style: S(`animation:leaf-drift ${Vi.lf?.dur ?? ""} ease-in-out infinite alternate; animation-delay:${Vi.lf?.delay ?? ""}; display:flex; flex-direction:${Vi.lf?.dir ?? ""}; align-items:${Vi.lf?.alignItems ?? ""}; gap:12px 20px; width:100%;`) },
                         "\n            ",
-                        h("button", { key: "1", "data-shape": `leaf-${Vi.lf?.cardNo ?? ""}`, "data-shape-alt": `frame-${Vi.lf?.figNo ?? ""}`, onClick: Vi.lf?.open, onMouseEnter: Vi.lf?.hover, onMouseLeave: Vi.lf?.unhover, onFocus: Vi.lf?.hover, onBlur: Vi.lf?.unhover, style: S(`all:unset; cursor:${Vi.lf?.cursor ?? ""}; display:block; flex:none; height:${Vi.lf?.imgH ?? ""}; width:auto; max-width:none; aspect-ratio:${Vi.lf?.ratio ?? ""}; box-sizing:border-box; transform-origin:${Vi.lf?.origin ?? ""}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:${Vi.lf?.shadow ?? ""}; overflow:hidden; transform:translateX(${Vi.lf?.bleedX ?? ""}) translateY(${Vi.lf?.lift ?? ""}) scale(${Vi.lf?.scale ?? ""}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:${Vi.lf?.filter ?? ""};`), className: "scp3" },
+                        h("button", { key: "1", "data-shape": `leaf-${Vi.lf?.cardNo ?? ""}`, "data-shape-alt": `frame-${Vi.lf?.figNo ?? ""}`, onClick: Vi.lf?.open, onMouseEnter: Vi.lf?.hover, onMouseLeave: Vi.lf?.unhover, onFocus: Vi.lf?.hover, onBlur: Vi.lf?.unhover, style: S(`all:unset; cursor:${Vi.lf?.cursor ?? ""}; display:block; flex:none; height:${Vi.lf?.plateH ?? ""}; width:${Vi.lf?.plateW ?? ""}; max-width:${Vi.lf?.plateMaxW ?? ""}; aspect-ratio:${Vi.lf?.ratio ?? ""}; box-sizing:border-box; transform-origin:${Vi.lf?.origin ?? ""}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:${Vi.lf?.shadow ?? ""}; overflow:hidden; transform:translateX(${Vi.lf?.bleedX ?? ""}) translateY(${Vi.lf?.lift ?? ""}) scale(${Vi.lf?.scale ?? ""}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:${Vi.lf?.filter ?? ""};`), className: "scp3" },
                           "\n              ",
                           h("image-slot", { key: "1", id: Vi.lf?.coverSlotId, src: Vi.lf?.cover, shape: "rect", fit: "cover", placeholder: Vi.lf?.placeholder, style: {"width":"100%","height":"100%","display":"block","transform":"scale(1)","transition":"transform 620ms cubic-bezier(.2,.7,.2,1)"}, className: "scp4" }),
                           "\n            "
@@ -1382,17 +1382,18 @@
               "\n    "
             ),
             "\n\n    ",
-            h("figure", { key: "5", className: "plate", "data-shape": `frame-${V.current?.figNo ?? ""}`, style: S(`margin:0; aspect-ratio:16/9; width:100%; position:relative; filter:${V.heroFilter ?? ""};`) },
+            "\n    ",
+            h("figure", { key: "6", className: "plate", "data-shape": `frame-${V.current?.figNo ?? ""}`, style: S(`margin:0; aspect-ratio:${V.heroRatio ?? ""}; width:100%; position:relative; filter:${V.heroFilter ?? ""};`) },
               "\n      ",
               (V.heroSlot ? h(F,{key:1},
                 h("image-slot", { key: "0", id: V.current?.heroSlotId, shape: "rect", placeholder: V.current?.placeholder, style: {"width":"100%","height":"100%"} })) : null),
               "\n      ",
               (V.heroImg ? h(F,{key:3},
-                h("img", { key: "0", src: V.current?.hero, alt: V.current?.caption, style: {"width":"100%","height":"100%","display":"block","objectFit":"cover"} })) : null),
+                h("img", { key: "0", src: V.current?.hero, alt: V.current?.caption, style: {"width":"100%","height":"100%","display":"block","objectFit":"contain"} })) : null),
               "\n    "
             ),
             "\n    ",
-            h("p", { key: "7|79.l667xt", style: {"margin":"14px 0 0","fontSize":"13px","lineHeight":"20px","color":"var(--color-neutral-700)","fontFeatureSettings":"'tnum' 1"} },
+            h("p", { key: "8|79.l667xt", style: {"margin":"14px 0 0","fontSize":"13px","lineHeight":"20px","color":"var(--color-neutral-700)","fontFeatureSettings":"'tnum' 1"} },
               h("span", { key: "0|44.1e4j9ob", style: {"fontFamily":"var(--font-heading)","fontSize":"17px","color":"var(--color-accent)"} },
                 h(F,{key:0},"",I(V.current?.figWord,1)," ",I(V.current?.numeral,3),".")
               ),
@@ -1400,7 +1401,7 @@
             ),
             "\n\n    ",
             "\n    ",
-            (V.isPaper ? h(F,{key:10},
+            (V.isPaper ? h(F,{key:11},
               "\n    ",
               h("section", { key: "1", "data-paper-body": "", "data-enter": "", style: {"display":"grid","gridTemplateColumns":"minmax(0,8fr) minmax(0,4fr)","gap":"0 clamp(28px,5vw,80px)","padding":"calc(2.5*28px) 0","alignItems":"start"} },
                 h(F,{key:0},"\n      ",I(V.paperBlocks,1),"\n      ",I(V.paperCaptions,3),"\n      ",I(V.paperTail,5),"\n      "),
@@ -1444,7 +1445,7 @@
               ),
               "\n    ") : null),
             "\n\n    ",
-            (V.isEssay ? h(F,{key:12},
+            (V.isEssay ? h(F,{key:13},
               "\n    ",
               h("section", { key: "1", "data-enter": "", style: {"display":"grid","gridTemplateColumns":"minmax(0,8fr) minmax(0,4fr)","gap":"28px clamp(28px,5vw,80px)","padding":"calc(2.5*28px) 0","alignItems":"start"} },
                 "\n      ",
@@ -1508,7 +1509,7 @@
               "\n    ") : null),
             "\n\n    ",
             "\n    ",
-            (V.isEssay ? h(F,{key:15},
+            (V.isEssay ? h(F,{key:16},
               "\n    ",
               h("div", { key: "1", style: {"display":"grid","gridTemplateColumns":"minmax(0,1fr) minmax(0,1fr)","gap":"clamp(20px,4vw,56px)"} },
                 "\n      ",
@@ -1530,9 +1531,9 @@
               ),
               "\n    ") : null),
             "\n\n    ",
-            h("hr", { key: "17", style: {"height":"1px","border":"0","margin":"calc(3*28px) 0 0","background":"var(--color-divider)"} }),
+            h("hr", { key: "18", style: {"height":"1px","border":"0","margin":"calc(3*28px) 0 0","background":"var(--color-divider)"} }),
             "\n    ",
-            h("nav", { key: "19", style: {"display":"flex","justifyContent":"space-between","alignItems":"baseline","gap":"var(--space-4)","padding":"28px 0 calc(3*28px)","flexWrap":"wrap"} },
+            h("nav", { key: "20", style: {"display":"flex","justifyContent":"space-between","alignItems":"baseline","gap":"var(--space-4)","padding":"28px 0 calc(3*28px)","flexWrap":"wrap"} },
               "\n      ",
               h("button", { key: "1|24.1chn43n", className: "btn btn-ghost", onClick: V.goPageCurrent, style: {"whiteSpace":"nowrap","fontFamily":"var(--r-body)"} },
                 h(F,{key:0},"← ",I(V.current?.backWord,1),"")
@@ -1868,13 +1869,22 @@
         body1: 'Every studio reviews drawings by printing them, marking them in red, and scanning them back in. Plot Room keeps the red pen and loses the printer. Comments attach to a coordinate on a sheet and follow that detail through revisions, so a note about a flashing on issue three still points at the flashing on issue nine.',
         body2: 'The interface is deliberately quiet: a sheet, a margin, a list. I wanted it to feel closer to a proofreader’s desk than to project-management software, because the people using it are proofreading, at scale, under deadline.',
         body3: 'Fourteen people in one studio have used it for a year. Their feedback is mostly about paper sizes and printer margins, which tells me the rest is working.' },
-      // The one entry backed by a real publication. It carries no body1..body3: its chapter body is
-      // the paper itself, loaded from `paper` on demand and rendered by renderPaper().
+      // The first of the two entries backed by a real publication. Neither carries body1..body3: the
+      // chapter body is the paper itself, loaded from `paper` on demand and rendered by renderPaper().
+      // `hero` with heroW/heroH is the one plate image such an entry carries: the Research leaf shows
+      // it, the leaf morphs into it on the way to the chapter, and the chapter opens on it.
       { title: 'From Prototype to Massing', subtitle: 'Learning graph correspondence for scalable facade modeling.', kind: 'Research', year: 2026, page: 29, pages: '29–46', role: 'Sole author', with: 'Thanks to Pablo Ruiz, Scott Duncan, An-Tai Lu, Wenxuan Xie, Yao Lu and Yuanben Gao', status: 'Accepted, ACADIA 2026', statusShort: 'accepted', stack: 'PyTorch, PyTorch Geometric, scikit-learn, NumPy and Matplotlib; a Rhino 8 demonstrator; a corpus of 6,505 prototype-massing pairs.', link: 'Camera-ready PDF', href: 'assets/prototype-to-massing/Shao_From-Prototype-to-Massing_ACADIA-2026_camera-ready.pdf', linkBlank: true, caption: 'Massing models from the corpus arrayed on a measuring grid, each solid form paired with the node-and-edge graph abstracted from its envelope.', placeholder: 'Plate: cover figure',
         margin: 'The contribution is not automated facade generation, but an authoring model in which resolved geometry serves as a computational specification for project-scale propagation.',
         summary: 'Facade articulation at building scale is usually resolved manually or through parametric systems that encode design intent as explicit rules. This paper investigates a complementary workflow in which a designer-authored prototype supplies transferable articulation logic. Prototype and target massing are represented as heterogeneous attributed graphs, and a Siamese graph attention network with instance-local triplet supervision embeds their segments in a shared metric space. Many-to-one nearest-neighbor retrieval then routes prototype Patterns to the larger target. On the original 85/15 within-corpus holdout, prototype-to-massing top-1 accuracy reached 96.5%, compared with a reported 76.5% raw-feature baseline. A Rhino demonstrator converts predicted correspondence into reusable facade Patterns, and qualitative applications on four built projects show the workflow across distinct massing organizations. The contribution is not automated facade generation, but an authoring model in which resolved geometry serves as a computational specification for project-scale propagation.',
-        cover: 'assets/prototype-to-massing/fig-01.jpg', hero: 'assets/prototype-to-massing/fig-01.jpg',
+        hero: 'assets/prototype-to-massing/fig-01.jpg', heroW: 2000, heroH: 1116,
         paper: './content/prototype-to-massing.js' },
+      // The second real publication, in submission. Its body carries tables and algorithm
+      // listings the first paper never needed, which is what renderPaper's table and alg kinds are for.
+      { title: 'Deciding How Many Floor Types a Tower Needs', subtitle: 'An exact feasibility method for residential unit programs.', kind: 'Research', year: 2026, page: 47, pages: '47–80', role: 'Sole author', with: 'Code and instances on Zenodo; De Piek, Rotterdam, as the real-building case', status: 'In submission, IJAC 2026', statusShort: 'in submission', stack: 'The count-vector MILP in Python, modelled with PuLP and solved by HiGHS, cross-checked on Gurobi 13.0.2 and SCIP against a pymoo genetic-algorithm baseline; solver, instances and experiment scripts at github.com/yiliangs/unit-mix-stacking.', link: 'Manuscript PDF', href: 'assets/floor-types/Shao_Deciding-How-Many-Floor-Types_IJAC-2026_manuscript.pdf', linkBlank: true, caption: 'The count-vector reformulation. V 1 carries the count-by-area coupling explicitly; V 2 pre-enumerates feasible count vectors and selects templates linearly.', placeholder: 'Plate: figure 4',
+        margin: 'The result is an exact instrument for testing whether a program is deliverable as a repeatable floor-product system.',
+        summary: 'Residential towers are delivered through repeated floor products: each additional floor template carries coordination, documentation, and procurement consequences, so a unit program must fit a limited, sufficiently repeated template kit. This paper decides exactly whether it does, separating optimal, infeasible, and not-solved outcomes and, for an infeasible program, isolating the requirement that binds. The model carries a building-wide template cap, a minimum production run per template, heterogeneous plates, and continuous unit-area bands, made tractable at whole-tower scale by a count-vector reformulation. A synthetic stress test proves three templates impossible and four sufficient, with template variety rather than plate tolerance binding; a bounded-count relaxation admits 9.3 to 13.5 percent more units. On De Piek, a documented Rotterdam tower, the method certifies a compact stacking at fully locked plates. The result is an exact instrument for testing whether a program is deliverable as a repeatable floor-product system.',
+        hero: 'assets/floor-types/hero.png', heroW: 2401, heroH: 1175,
+        paper: './content/floor-types.js' },
       { title: 'Timber Index', subtitle: 'A side project cataloguing mass-timber connections, one joint at a time.', kind: 'Side project', year: 2023, page: 37, pages: '37–44', role: 'Everything', with: 'Contributors, eventually', status: 'Live, growing slowly', statusShort: 'live', stack: 'A static site, hand-drawn axonometrics, a spreadsheet as the database.', link: 'The index, 212 joints and counting', caption: 'Joint 087: a CLT-to-glulam hanger, drawn at 1:5.', placeholder: 'Capture: axonometric of a timber joint',
         margin: 'It started because I could not find a picture of a joint I needed. It continues because other people could not either.',
         summary: 'A catalogue of mass-timber connection details, each redrawn to the same conventions. Started for myself; now used by people I have never met.',
@@ -1897,7 +1907,7 @@
     pages = {
       writing: { reg: 'serif', label: 'Research', kicker: 'Essays · Research', bio: 'I write about what happens when machines start drawing too, and I publish the research that keeps me honest. The tools live next door, in mono.', title: 'Drawings, tools, and other arguments.', byline: 'by Yiliang Shao', edition: 'Edition of one', stamp: 'MMXXVI',
         intro: 'I write about what happens when machines start drawing too, and I publish the research that keeps me honest. This is the bound half of the last seven years: the papers that survived review and a few essays I still agree with. The tools live next door, in mono.',
-        indexKicker: 'Contents', indexTitle: 'Two chapters, hover to preview.', indexNote: 'Page numbers follow the bound edition. Chapters marked Research link to the published paper; the rest are written here in full.',
+        indexKicker: 'Contents', indexTitle: 'Three chapters, hover to preview.', indexNote: 'Page numbers follow the bound edition. Chapters marked Research link to the published paper; the rest are written here in full.',
         platesKicker: 'Selected plates', platesTitle: 'Two pieces I would show first, if you only had ten minutes.', readWord: 'Read chapter', notesTitle: 'Trained as an architect. Stayed for the tooling.',
         colophon: 'Set in Newsreader and Lora on a near-white ground. Photographs are matted as plates. Nothing here is generated; everything here was drawn, built, or written by hand, sometimes slowly.',
         titleSize: 'clamp(48px,7vw,104px)', titleTracking: '-0.01em', bylineSize: '26px', bodySize: '17px', smallBodySize: '15.5px', stampSize: '40px', h2Size: '40px', h3Size: '34px', cvSize: '22px', capLeadSize: '18px', marginSize: '19px', marginStyle: 'italic', marginPrefix: '' },
@@ -1908,7 +1918,7 @@
         colophon: 'set in geist mono on a dark sheet. figures are screen captures at 1:1, unretouched. no gold on this side: the essays keep the leaf, the tools keep the ink.',
         titleSize: 'clamp(36px,5.2vw,76px)', titleTracking: '-0.03em', bylineSize: '15px', bodySize: '15px', smallBodySize: '14px', stampSize: '28px', h2Size: '32px', h3Size: '26px', cvSize: '18px', capLeadSize: '13px', marginSize: '13px', marginStyle: 'normal', marginPrefix: '// ' },
     };
-    featuredFor = { writing: [2, 4], tooling: [0, 5] };
+    featuredFor = { writing: [2, 3], tooling: [0, 6] };
   
     // Where every module of a Development sheet sits on the 22 column, 44px row drawing grid, as
     // "start / end" grid lines. The wide table is the desk-width sheet; the narrow table is the same
@@ -1968,6 +1978,7 @@
       'A consultant kept a workbook of mullion spacings by hand. I wanted the drawing to write the workbook, not the other way round.',
       'Studios review sets by printing, redlining and scanning. I wanted the red pen without the printer, and notes that survive revisions.',
       'A designer resolves one bay by hand and then has to rebuild it as a rule system. I wanted the resolved geometry itself to carry the logic.',
+      'Teams infer whether a unit mix is buildable from whatever a heuristic happens to surface. I wanted a verdict they could carry into the room where the brief is negotiated.',
       'I could not find a picture of a joint I needed that was not a manufacturer\u2019s render. So I drew it, then the next one.',
       'Every tool I use had started to propose things. I wanted to say what a proposing tool owes the person drawing.',
       'Scans were easy; models you could draw over were not. I wanted the boring part done by evening.',
@@ -2379,9 +2390,11 @@
       import(d.paper).then((m) => { this.paperLoading = null; this.papers[idx] = m.default || m; this.forceUpdate(); })
         .catch(() => { this.paperLoading = null; });
     }
-    // runs -> inline children. A run is a string, {i}/{b}/{sup} for emphasis, or {m} for MathML the
-    // manuscript carried as OMML. The markup is generated at build time from the docx and lives in the
-    // repo, so it is trusted; there is no other way to get MathML into a React tree.
+    // runs -> inline children. A run is a string, {i}/{b}/{sup} for emphasis, {c} for the literal
+    // spans a manuscript sets in typewriter (file names, solver flags, DOIs), or {m} for MathML.
+    // The markup is generated at build time, from the docx for the first paper and from LaTeX for the
+    // second, and lives in the repo, so it is trusted; there is no other way to get MathML into a
+    // React tree.
     paperRuns(runs) {
       const e = React.createElement;
       return (runs || []).map((r, i) => {
@@ -2389,9 +2402,48 @@
         if (r.m) return e('math', { key: i, style: { fontSize: '1.02em' }, dangerouslySetInnerHTML: { __html: r.m } });
         if (r.i) return e('em', { key: i }, r.i);
         if (r.b) return e('strong', { key: i }, r.b);
+        if (r.c) return e('code', { key: i, style: { fontFamily: 'var(--mono)', fontSize: '0.88em', wordBreak: 'break-word' } }, r.c);
         if (r.sup) return e('sup', { key: i }, r.sup);
         return null;
       });
+    }
+    // A booktabs table. The caption stands above the grid rather than in the figure column, because a
+    // table is read with the paragraph it belongs to. Two of the manuscript's four tables set a pair of
+    // tabulars side by side under one caption, so a table carries panels rather than a single grid, and
+    // each panel scrolls in its own box so a wide one never widens the page. `foot` is the band the
+    // second \midrule opens: the totals row.
+    paperTable(b, key, style) {
+      const e = React.createElement;
+      const ink = 'color-mix(in srgb, var(--color-text) 84%, transparent)';
+      const hair = '1px solid var(--color-divider)';
+      const cell = (al, head) => ({ padding: '7px 18px 7px 0', textAlign: al === 'r' ? 'right' : al === 'c' ? 'center' : 'left',
+        verticalAlign: 'baseline', whiteSpace: 'nowrap', fontWeight: head ? 500 : 400, fontFeatureSettings: "'tnum' 1" });
+      const band = (rows, cols, head, kind) => rows.map((row, j) => e('tr', { key: kind + j },
+        row.map((c, k) => e(head ? 'th' : 'td', { key: k, scope: head ? 'col' : null, style: cell(cols[k], head) }, this.paperRuns(c)))));
+      return e('div', { key, style: { ...style, margin: '10px 0 34px' } },
+        e('p', { key: 'c', style: { margin: '0 0 12px', fontFamily: 'var(--font-heading)', fontSize: '15px', lineHeight: '22px', color: 'var(--color-neutral-700)', maxWidth: '68ch' } },
+          e('span', { key: 'k', style: { fontFamily: 'var(--deco)', fontSize: '10px', letterSpacing: '0.1em', color: 'var(--color-accent-700)' } }, 'Table ' + b.n + '. '),
+          this.paperRuns(b.cap)),
+        b.panels.map((p, pi) => e('div', { key: pi, style: { overflowX: 'auto', margin: pi ? '20px 0 0' : 0 } },
+          e('table', { style: { borderCollapse: 'collapse', fontSize: '15px', lineHeight: '22px', color: ink, borderTop: hair, borderBottom: hair } },
+            e('thead', { key: 'h', style: { borderBottom: hair } }, band(p.head, p.cols, true, 'h')),
+            e('tbody', { key: 'b' }, band(p.rows, p.cols, false, 'b')),
+            p.foot ? e('tfoot', { key: 'f', style: { borderTop: hair } }, band(p.foot, p.cols, false, 'f')) : null))));
+    }
+    // An algpseudocode listing: numbered lines in mono, indented by the depth the source's
+    // Procedure/If/For nesting gives them, with the keywords bold and the comments italic.
+    paperAlg(b, key, style) {
+      const e = React.createElement;
+      const ink = 'color-mix(in srgb, var(--color-text) 84%, transparent)';
+      const hair = '1px solid var(--color-divider)';
+      return e('div', { key, style: { ...style, margin: '10px 0 34px', borderTop: hair, borderBottom: hair, padding: '14px 0' } },
+        e('p', { key: 'c', style: { margin: '0 0 12px', fontFamily: 'var(--font-heading)', fontSize: '15px', lineHeight: '22px', color: 'var(--color-neutral-700)', maxWidth: '68ch' } },
+          e('span', { key: 'k', style: { fontFamily: 'var(--deco)', fontSize: '10px', letterSpacing: '0.1em', color: 'var(--color-accent-700)' } }, 'Algorithm ' + b.n + '. '),
+          this.paperRuns(b.cap)),
+        e('div', { key: 'l', style: { overflowX: 'auto', fontFamily: 'var(--mono)', fontSize: '14px', lineHeight: '24px', color: ink } },
+          b.lines.map((l, j) => e('div', { key: j, style: { display: 'flex', alignItems: 'baseline', gap: '10px', whiteSpace: 'nowrap' } },
+            e('span', { key: 'n', style: { flex: 'none', width: '2.2em', textAlign: 'right', color: 'var(--color-neutral-600)', fontFeatureSettings: "'tnum' 1" } }, String(j + 1)),
+            e('span', { key: 't', style: { paddingLeft: (l.d * 1.6) + 'em' } }, this.paperRuns(l.r))))));
     }
     // The paper body, built once per loaded module and memoized on it. The app re-renders on every
     // scroll event and on the glitch timer; handing React the same element objects each time lets it
@@ -2474,6 +2526,11 @@
           caps.push({ row: capRow(row), figs: b.figs });
           els.push(e('div', { key, style: { ...cell, margin: '10px 0 34px', display: 'flex', gap: '20px', alignItems: 'flex-start', justifyContent: 'center' } },
             b.figs.map((f, j) => figEl(f, 'f' + j, { flexGrow: f.w / f.h, flexShrink: 1, flexBasis: 0, minWidth: 0, maxWidth: 'calc(' + CAP + ' * ' + (f.w / f.h).toFixed(4) + ')' }))));
+        } else if (b.k === 'table') {
+          // tables and listings sit in column 1 like paragraphs; they do not join the caption column
+          els.push(this.paperTable(b, key, at(false)));
+        } else if (b.k === 'alg') {
+          els.push(this.paperAlg(b, key, at(false)));
         } else if (b.k === 'fold') {
           // rendered by renderPaperTail: its open/closed state lives in component state, so it must
           // not be baked into this memoized array
@@ -2484,7 +2541,8 @@
             // pixel is enough to raise a vertical scrollbar; the padding keeps that pixel visible
             e('div', { key: 'm', style: { overflowX: 'auto', overflowY: 'hidden', padding: '6px 0', textAlign: 'center', fontSize: '19px' } },
               e('math', { display: 'block', dangerouslySetInnerHTML: { __html: b.m } })),
-            e('span', { key: 'n', style: { position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--color-neutral-600)' } }, '(' + b.n + ')')));
+            // an unnumbered display (the proposition's, which the manuscript sets with \[ \]) carries no tag
+            b.n ? e('span', { key: 'n', style: { position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--color-neutral-600)' } }, '(' + b.n + ')') : null));
         }
       });
       mod.__els = els;
@@ -2515,8 +2573,10 @@
                 : null));
         })));
     }
-    // Acknowledgments and References: folded away by default, each its own toggle. Their open and
-    // closed shapes are memoized separately, so opening one does not rebuild the other.
+    // Acknowledgments, References and Appendix: folded away by default, each its own toggle. Their
+    // open and closed shapes are memoized separately, so opening one does not rebuild the other.
+    // A fold item is normally a run array, but the appendix holds whole blocks, because the two
+    // algorithm listings the manuscript puts there cannot be said in runs alone.
     renderPaperTail(mod, open) {
       if (!mod || !mod.__folds || !mod.__folds.length) return null;
       const e = React.createElement;
@@ -2536,7 +2596,11 @@
                 ? e('ol', { key: 'c', id: 'fold-' + f.id, 'data-refs': '', style: { ...small, margin: '14px 0 0', padding: 0, listStyle: 'none', maxWidth: '78ch' } },
                     f.items.map((it, j) => e('li', { key: j, style: { margin: '0 0 10px', paddingLeft: '1.6em', textIndent: '-1.6em' } }, this.paperRuns(it))))
                 : e('div', { key: 'c', id: 'fold-' + f.id, style: { ...small, margin: '14px 0 0', maxWidth: '78ch' } },
-                    f.items.map((it, j) => e('p', { key: j, style: { margin: '0 0 12px' } }, this.paperRuns(it)))))
+                    f.items.map((it, j) => Array.isArray(it)
+                      ? e('p', { key: j, style: { margin: '0 0 12px' } }, this.paperRuns(it))
+                      : it.k === 'alg'
+                        ? this.paperAlg(it, j, { margin: '0 0 18px' })
+                        : e('p', { key: j, style: { margin: '0 0 12px' } }, this.paperRuns(it.r)))))
                 : null);
           }
           return e(React.Fragment, { key: f.id }, cache[ck]);
@@ -2912,12 +2976,12 @@
       // each gutter is a 2×3 grid. The anchor (a real chapter) spans a row with its caption beside it; the smaller leaves
       // take single cells with captions beneath, staggered across the two columns so the eye zigzags down the margin
       const leafPos = [
-        { side: 'left',  col: '1 / 3', row: '1', selfY: 'start',  selfX: 'start', imgH: 'min(22vh, 330px)', ratio: '4/3', dir: 'row',         alignItems: 'flex-end',   align: 'left',  titleSize: '26px', px: '-18px', py: '-10px', dur: '7.5s', delay: '0s',    bleedX: '-72px', cover: 'https://picsum.photos/seed/halvorsen-cuts/800/600' },
-        { side: 'right', col: '1 / 3', row: '2', selfY: 'center', selfX: 'end',   imgH: 'min(24vh, 360px)', ratio: '3/4', dir: 'row-reverse', alignItems: 'flex-end',   align: 'right', titleSize: '26px', px: '-26px', py: '-14px', dur: '9s',   delay: '-3s',   bleedX: '72px', cover: 'https://picsum.photos/seed/halvorsen-machines/600/800' },
-        { side: 'left',  col: '1',     row: '2', selfY: 'center', selfX: 'start', imgH: 'min(14vh, 220px)', ratio: '1/1', dir: 'column',      alignItems: 'flex-start', align: 'left',  titleSize: '17px', px: '-14px', py: '-8px',  dur: '8s',   delay: '-5s',   bleedX: '-40px', cover: 'https://picsum.photos/seed/halvorsen-3/700/700' },
-        { side: 'right', col: '1 / 3', row: '1', selfY: 'start',  selfX: 'end',   imgH: 'min(18vh, 260px)', ratio: '3/2', dir: 'row-reverse', alignItems: 'flex-start', align: 'right', titleSize: '17px', px: '-22px', py: '-12px', dur: '10s',  delay: '-1.5s', bleedX: '44px', cover: 'https://picsum.photos/seed/halvorsen-4/900/600' },
-        { side: 'left',  col: '2',     row: '3', selfY: 'end',    selfX: 'end',   imgH: 'min(12vh, 200px)', ratio: '5/4', dir: 'column',      alignItems: 'flex-start', align: 'left',  titleSize: '15px', px: '-20px', py: '-9px',  dur: '8.5s', delay: '-2s',   bleedX: '0px', cover: 'https://picsum.photos/seed/halvorsen-5/700/560' },
-        { side: 'right', col: '2',     row: '3', selfY: 'end',    selfX: 'end'  , imgH: 'min(15vh, 240px)', ratio: '2/3', dir: 'column',      alignItems: 'flex-end',   align: 'right', titleSize: '15px', px: '-16px', py: '-11px', dur: '9.5s', delay: '-4s',   bleedX: '30px', cover: 'https://picsum.photos/seed/halvorsen-6/600/900' },
+        { side: 'left',  col: '1 / 3', row: '1', selfY: 'start',  selfX: 'start', imgH: 'min(22vh, 330px)', ratio: '4/3', dir: 'row',         alignItems: 'flex-end',   align: 'left',  titleSize: '26px', px: '-18px', py: '-10px', dur: '7.5s', delay: '0s',    bleedX: '-72px', maxW: '280px', cover: 'https://picsum.photos/seed/halvorsen-cuts/800/600' },
+        { side: 'right', col: '1 / 3', row: '2', selfY: 'center', selfX: 'end',   imgH: 'min(24vh, 360px)', ratio: '3/4', dir: 'row-reverse', alignItems: 'flex-end',   align: 'right', titleSize: '26px', px: '-26px', py: '-14px', dur: '9s',   delay: '-3s',   bleedX: '72px', maxW: '280px', cover: 'https://picsum.photos/seed/halvorsen-machines/600/800' },
+        { side: 'left',  col: '1',     row: '2', selfY: 'center', selfX: 'start', imgH: 'min(14vh, 220px)', ratio: '1/1', dir: 'column',      alignItems: 'flex-start', align: 'left',  titleSize: '17px', px: '-14px', py: '-8px',  dur: '8s',   delay: '-5s',   bleedX: '-40px', maxW: '140px', cover: 'https://picsum.photos/seed/halvorsen-3/700/700' },
+        { side: 'right', col: '1 / 3', row: '1', selfY: 'start',  selfX: 'end',   imgH: 'min(18vh, 260px)', ratio: '3/2', dir: 'row-reverse', alignItems: 'flex-start', align: 'right', titleSize: '17px', px: '-22px', py: '-12px', dur: '10s',  delay: '-1.5s', bleedX: '44px', maxW: '270px', cover: 'https://picsum.photos/seed/halvorsen-4/900/600' },
+        { side: 'left',  col: '2',     row: '3', selfY: 'end',    selfX: 'end',   imgH: 'min(12vh, 200px)', ratio: '5/4', dir: 'column',      alignItems: 'flex-start', align: 'left',  titleSize: '15px', px: '-20px', py: '-9px',  dur: '8.5s', delay: '-2s',   bleedX: '0px', maxW: '150px', cover: 'https://picsum.photos/seed/halvorsen-5/700/560' },
+        { side: 'right', col: '2',     row: '3', selfY: 'end',    selfX: 'end'  , imgH: 'min(15vh, 240px)', ratio: '2/3', dir: 'column',      alignItems: 'flex-end',   align: 'right', titleSize: '15px', px: '-16px', py: '-11px', dur: '9.5s', delay: '-4s',   bleedX: '30px', maxW: '100px', cover: 'https://picsum.photos/seed/halvorsen-6/600/900' },
       ];
   
   
@@ -2936,10 +3000,26 @@
         const bleedY = ['0px', '0px', '52px', '0px', '0px', '0px'][k % 6];
         const detail = real ? p.subtitle + '\n' + p.role + ' · ' + p.status + ' · pp. ' + p.pages : '';
         const typed = on ? detail.slice(0, this.state.typed || 0) : '';
-        // a chapter with real imagery brings its own cover; the rest fall back to the position's stock plate.
+        // the plate is the chapter's hero, the same image the chapter opens on and the leaf morphs
+        // into; a chapter without one falls back to the position's stock photograph.
         // The sepia mat belongs to those stock photographs: a real render is shown as it is.
-        return { ...p, ...pos, cover: (real && p.cover) || pos.cover,
-          filter: (real && p.cover) ? 'none' : 'sepia(0.22) saturate(0.82) contrast(1.05)',
+        //
+        // A stock plate is sized from its height: the slot fixes the height and the slot's ratio
+        // decides the width, which is how the collage keeps its rhythm. That inverts for a chapter
+        // that states its hero's pixel size, because the picture, not the slot, owns the ratio then,
+        // and a wide drawing sized from a tall slot would be wider than the gutter. Such a plate is
+        // sized from its width instead, capped by the slot's maxW, with the height following the
+        // ratio; and since a wide plate leaves no room beside it, its title stacks underneath,
+        // aligned to whichever side of the page the leaf sits on.
+        const declared = !!(real && p.hero && p.heroW && p.heroH);
+        return { ...p, ...pos, cover: (real && p.hero) || pos.cover,
+          filter: (real && p.hero) ? 'none' : 'sepia(0.22) saturate(0.82) contrast(1.05)',
+          ratio: declared ? p.heroW + '/' + p.heroH : pos.ratio,
+          plateW: declared ? 'min(' + pos.maxW + ', calc(' + pos.imgH + ' * ' + p.heroW + ' / ' + p.heroH + '))' : 'auto',
+          plateH: declared ? 'auto' : pos.imgH,
+          plateMaxW: declared ? '100%' : 'none',
+          dir: declared ? 'column' : pos.dir,
+          alignItems: declared ? (pos.side === 'left' ? 'flex-start' : 'flex-end') : pos.alignItems,
           idx: pi, cardNo: k + 1, typed, kicker: real ? 'Chapter ' + p.numeral + ' · ' + p.year : 'Forthcoming', detailDisplay: on ? 'block' : 'none', detailOpacity: on ? '1' : '0', caretOpacity: on && typed.length < detail.length ? '1' : '0', morphName: real ? 'row-' + k : 'leaf-' + k, figNo: real ? p.figNo : 'x' + k, placeholder: real ? p.placeholder : 'Plate: forthcoming', coverSlotId: real ? 'cover-' + pi : 'cover-next-' + k, open: real ? p.open : () => {}, bleedX, bleedY, zIndex: on ? 30 : 12 - k, origin: (pos.selfX === 'start' ? 'left ' : 'right ') + (pos.selfY === 'start' ? 'top' : pos.selfY === 'end' ? 'bottom' : 'center'), cursor: real ? 'pointer' : 'default', lift: on ? '-10px' : '0px', scale: on ? '1.06' : '1', shadow: on ? '0 24px 48px -20px rgba(32,31,29,0.35), 0 2px 6px rgba(32,31,29,0.08)' : '0 8px 24px -16px rgba(32,31,29,0.25)',
           hover: () => { if (real) this.startTyping('leaf-' + pi, detail.length, { hovered: pi }); }, unhover: () => { this.stopTyping(); } }; });
       const pageProjects = projects.filter((p) => this.pageOf(projects.indexOf(p)) === pageKey).map((p, k) => ({ ...p, shapeIdx: k + 1, dir: k % 2 ? 'rtl' : 'ltr', textCol: k % 2 ? '13 / 23' : '1 / 11', plateCol: k % 2 ? '1 / 13' : '11 / 23', cardRow: (16 + 9 * k) + ' / ' + (23 + 9 * k), bandNo: String(k + 1).padStart(2, '0'), morphName: k < 2 ? 'row-' + k : 'feat-' + (k - 2) + '-title', frameShape: k < 2 ? 'plate-' + k : 'frame-' + k }));
@@ -3012,6 +3092,9 @@
           : { tBg: '#f3f2f2', tSurface: '#eae9e9', tText: '#201f1d', tAccent: '#b68235', tAccent600: '#a06f24', tAccent700: '#7d5411', tAccent800: '#5a3b0a', tAccent100: '#fff3e4', tDivider: 'color-mix(in srgb, #201f1d 16%, transparent)', tN100: '#f8f4f4', tN400: '#bab6b6', tN500: '#9b9797', tN600: '#7d7979', tN700: '#605d5d', tN800: '#444141' }),
         // the serif chapter shows a real render as it is; the sepia mat is for the placeholder photographs
         heroFilter: current.hero ? 'none' : 'sepia(0.22) saturate(0.82) contrast(1.05)',
+        // an entry that states its hero's pixel size gets a plate cut to that ratio, so every real
+        // image is shown whole; the 16:9 fallback is left for the entries still on a placeholder slot
+        heroRatio: current.heroW && current.heroH ? current.heroW + '/' + current.heroH : '16/9',
         rootRef: this.rootRef, heroRef: this.heroRef, scriptRef: this.scriptRef, parchLayerRef: this.parchLayerRef, platformRef: this.platformRef, heroTextRef: this.heroTextRef, sheetCount: pad(pageProjects.length),
         tabLeft: this.state.tab.left + 'px', tabWidth: this.state.tab.width + 'px',
         tabToolingColor: tabColor('mono'), tabWritingColor: tabColor('serif'),

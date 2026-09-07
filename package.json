@@ -5,6 +5,7 @@
   "scripts": {
     "build": "node tools/build-dc.mjs",
     "check": "node tools/check-sheet-grid.mjs",
+    "check:paper": "node tools/check-paper.mjs",
     "cv": "node tools/export-cv.mjs",
     "test": "node --test tools/"
   },
