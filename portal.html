@@ -130,7 +130,7 @@
   <div id="stage">
     <div class="card">
       <h1>Yiliang Shao</h1>
-      <p>Sample copy, sitting where real copy would sit. If the field competes with this, turn down FIELD_CONTRAST, CONTOUR_INK or WARP_STRENGTH.</p>
+      <p>Sample copy, sitting where real copy would sit. Move the pointer through the field to disturb it; hold still and the disturbance settles. The CPU-side flow constants (speed reference, attack, release) live in background-field.js and are not on this panel.</p>
     </div>
   </div>
 
@@ -188,11 +188,14 @@ const RANGES = {
   DUST_SCALE:     [0.2, 4, 0.05],
   DUST_HZ:        [0, 60, 1],
   HAZE_GAIN:      [0, 0.2, 0.001],
-  CURSOR_RADIUS:  [0.05, 1.2, 0.01],
-  CURSOR_FALLOFF: [0.5, 5, 0.05],
-  CURSOR_CORE:    [0, 0.6, 0.005],
-  CURSOR_PUSH:    [0, 1, 0.005],
-  CURSOR_LIFT:    [0, 1, 0.005],
+  FLOW_RADIUS:    [0.05, 1.2, 0.01],
+  FLOW_FALLOFF:   [0.5, 5, 0.05],
+  WAKE_STRETCH:   [1, 8, 0.05],
+  ADVECT:         [0, 0.8, 0.005],
+  SHEAR:          [0, 0.5, 0.005],
+  STIR_SCALE:     [0.5, 10, 0.05],
+  STIR_RATE:      [0, 3, 0.01],
+  STIR_AMOUNT:    [0, 0.8, 0.005],
   VIGNETTE_START: [0, 1.6, 0.01],
   VIGNETTE_END:   [0, 2.2, 0.01],
   VIGNETTE_DEPTH: [0, 1, 0.01],
