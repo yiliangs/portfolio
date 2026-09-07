@@ -96,32 +96,21 @@ const float DUST_SOFT      = 0.30;   // width of the threshold ramp, as a
                                      // large part of why a naive dissolve
                                      // reads as a noise filter
 
-// Grain motion --------------------------------------------------------------
-// The grain has no clock. It used to re-roll to a wholly new field a fixed
-// number of times a second, and a fixed rate is a pattern: given a few seconds
-// the eye finds the beat and the whole thing reads as an effect running on
-// top of the picture. Instead the grain is carried by the same drift and warp
-// that move the haze, wanders slowly on its own, and its two populations slide
-// against each other so grains form and dissolve. Nothing here shares a period
-// with anything else.
-const float GRAIN_CARRY    = 1.0;    // share of the haze's drift that carries
-                                     // the grain along with it. 1 travels with
-                                     // the form; 0 leaves it pinned to the
-                                     // screen while the form slides past
-const float GRAIN_SHEAR    = 0.12;   // share of the warp that also reaches the
-                                     // grain. The warp's gradient is steep
-                                     // enough that carrying it whole would
-                                     // stretch grains well past a pixel and
-                                     // turn them to mush; this is about the
-                                     // largest share that still resolves
-const float GRAIN_CREEP    = 0.055;  // rate of the grain's own slow wander,
-                                     // driven by noise rather than a constant
-                                     // so it never repeats or holds a heading
-const float GRAIN_CREEP_PX = 26.0;   // how far that wander reaches, device px
-const float GRAIN_SLIP     = 0.120;  // rate the two grain populations slide
-                                     // against each other. This is what makes
-                                     // grains appear and dissolve rather than
-                                     // merely translate
+// Grain life ----------------------------------------------------------------
+// The grain does not travel. It has no drift, no shear and no wander, because
+// any of those transports grains across the picture and a transported grain
+// can be followed: the eye locks onto one, tracks it, and reads the direction.
+// Grains form and dissolve where they are instead, by moving through a third
+// axis of the noise rather than across the two on screen. There is motion but
+// no heading. The grain stays coupled to the field through the threshold it is
+// compared against, so where ink lands still follows the haze; only the
+// carrying of it is gone.
+const float GRAIN_LIFE     = 0.55;   // cycles/sec through the noise's third
+                                     // axis for the fine population. Higher
+                                     // makes grains form and dissolve faster
+const float GRAIN_LIFE_2   = 0.37;   // and for the coarse one, deliberately
+                                     // not a ratio of the first, so the two
+                                     // never come back into step
 
 // Tooth ---------------------------------------------------------------------
 // The sheet's own texture: a slow variation in how readily each patch takes
@@ -164,6 +153,29 @@ float hash12(vec2 p) {
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
   p3 += dot(p3, p3.yzx + 33.33);
   return fract((p3.x + p3.y) * p3.z);
+}
+
+// The three-dimensional case, used only for the grain. The third axis is time,
+// which is what lets a grain fade up and fade out in place. A 2D field can only
+// be animated by sliding it, and sliding is the thing being avoided.
+float hash13(vec3 p3) {
+  p3 = fract(p3 * 0.1031);
+  p3 += dot(p3, p3.zyx + 31.32);
+  return fract((p3.x + p3.y) * p3.z);
+}
+
+float vnoise3(vec3 p) {
+  vec3 i = floor(p);
+  vec3 f = fract(p);
+  vec3 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(mix(hash13(i + vec3(0.0, 0.0, 0.0)),
+                     hash13(i + vec3(1.0, 0.0, 0.0)), u.x),
+                 mix(hash13(i + vec3(0.0, 1.0, 0.0)),
+                     hash13(i + vec3(1.0, 1.0, 0.0)), u.x), u.y),
+             mix(mix(hash13(i + vec3(0.0, 0.0, 1.0)),
+                     hash13(i + vec3(1.0, 0.0, 1.0)), u.x),
+                 mix(hash13(i + vec3(0.0, 1.0, 1.0)),
+                     hash13(i + vec3(1.0, 1.0, 1.0)), u.x), u.y), u.z);
 }
 
 float vnoise(vec2 p) {
@@ -226,24 +238,12 @@ void main() {
   //    range of sizes rather than one, which is what stops the eye reading the
   //    texture as an effect laid over the picture.
 
-  // Device pixels per domain unit, so the field's motion can be handed to the
-  // grain in the grain's own units.
-  float pxPerUnit = uResolution.y / MASS_SCALE;
-
-  // The grain rides the field: the same drift, and a safe share of the same
-  // warp. Added rather than subtracted, so it travels the way the form does.
-  vec2 gpx = gl_FragCoord.xy
-           + (driftUnits * GRAIN_CARRY + warpUnits * GRAIN_SHEAR) * pxPerUnit;
-
-  // Its own wander, steered by noise rather than by a constant, so it neither
-  // repeats nor keeps a heading long enough to be read as a direction.
-  gpx += (vec2(vnoise(vec2(t * GRAIN_CREEP, 11.3)),
-               vnoise(vec2(7.9, t * GRAIN_CREEP))) - 0.5) * GRAIN_CREEP_PX;
-
-  vec2  gp   = gpx / GRAIN_PX;
-  float slip = t * GRAIN_SLIP;
-  float draw = mix(vnoise(gp),
-                   vnoise(GRAIN_ROT * gp * GRAIN_COARSE + 53.17 + slip),
+  // A lattice fixed to the screen, the way grain sits in an emulsion while the
+  // image moves through it. Only the third coordinate advances.
+  vec2 gp = gl_FragCoord.xy / GRAIN_PX;
+  float draw = mix(vnoise3(vec3(gp, t * GRAIN_LIFE)),
+                   vnoise3(vec3(GRAIN_ROT * gp * GRAIN_COARSE + 53.17,
+                                t * GRAIN_LIFE_2 + 17.9)),
                    GRAIN_MIX);
   draw = clamp((draw - 0.5) / GRAIN_SPREAD + 0.5, 0.0, 1.0);
 

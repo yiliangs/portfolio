@@ -168,7 +168,124 @@ function clockSeries(t0, dt, steps) {
   return out;
 }
 
+// ── drift mode ──────────────────────────────────────────────────────────────
+// Cross-correlates two frames a fixed interval apart and reports where the
+// correlation peaks. A texture that is being carried across the screen peaks
+// at an offset equal to how far it travelled; one that forms and dissolves in
+// place peaks at zero however long the interval. This is the check that the
+// grain has no direction to read, which a spectrum cannot tell you.
+// Grab the full frame at a given uTime as one luminance plane.
+function plane(t) {
+  const buf = new Uint8Array(W * H * 4);
+  uniforms.uTime.value = t;
+  renderer.render(scene, camera);
+  gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+  const out = new Float32Array(W * H);
+  for (let i = 0; i < W * H; i++) out[i] = buf[i * 4];
+  return out;
+}
+
+// Split a frame into what moves and what does not. Grain is high frequency and
+// the haze is low, and they have different motions by design, so correlating
+// the raw frame measures a mixture: at short intervals the grain dominates and
+// at long ones the haze does, which makes the raw reading look like drift that
+// appears out of nowhere. Separating them first attributes each motion to its
+// own layer.
+function split(p, k) {
+  // Separable box blur, so the low pass can be wide enough to actually hold
+  // only the haze. A narrow kernel leaves grain in the low pass, and since the
+  // grain is fixed to the screen that drags the haze reading toward zero and
+  // reports the form as more still than it is.
+  const r = k >> 1, tmp = new Float32Array(W * H), lo = new Float32Array(W * H);
+  for (let y = 0; y < H; y++) {
+    let acc = 0;
+    for (let i = -r; i <= r; i++) acc += p[y * W + Math.min(W - 1, Math.max(0, i))];
+    for (let x = 0; x < W; x++) {
+      tmp[y * W + x] = acc / k;
+      acc -= p[y * W + Math.min(W - 1, Math.max(0, x - r))];
+      acc += p[y * W + Math.min(W - 1, Math.max(0, x + r + 1))];
+    }
+  }
+  for (let x = 0; x < W; x++) {
+    let acc = 0;
+    for (let j = -r; j <= r; j++) acc += tmp[Math.min(H - 1, Math.max(0, j)) * W + x];
+    for (let y = 0; y < H; y++) {
+      lo[y * W + x] = acc / k;
+      acc -= tmp[Math.min(H - 1, Math.max(0, y - r)) * W + x];
+      acc += tmp[Math.min(H - 1, Math.max(0, y + r + 1)) * W + x];
+    }
+  }
+  const hi = new Float32Array(W * H);
+  for (let i = 0; i < W * H; i++) hi[i] = p[i] - lo[i] + 128;
+  return { lo, hi };
+}
+
+// The most textured SxS window. Correlating a window of bare paper returns
+// zero for every offset, which reads as "no drift" no matter what is true.
+function pickWindow(p, S) {
+  let best = -1, bx = 0, by = 0;
+  for (let y = 0; y + S <= H; y += 32) {
+    for (let x = 0; x + S <= W; x += 32) {
+      let s1 = 0, s2 = 0;
+      for (let j = 0; j < S; j += 4) for (let i = 0; i < S; i += 4) {
+        const v = p[(y + j) * W + x + i]; s1 += v; s2 += v * v;
+      }
+      const n = (S / 4) * (S / 4), v = s2 / n - (s1 / n) ** 2;
+      if (v > best) { best = v; bx = x; by = y; }
+    }
+  }
+  return { x: bx, y: by, variance: +best.toFixed(2) };
+}
+
+// Normalised cross-correlation over an integer search window.
+function peakOffset(A, B, win, S, R) {
+  let best = -2, bx = 0, by = 0;
+  for (let oy = -R; oy <= R; oy++) {
+    for (let ox = -R; ox <= R; ox++) {
+      let sa = 0, sb = 0, saa = 0, sbb = 0, sab = 0, n = 0;
+      for (let y = R; y < S - R; y += 2) {
+        for (let x = R; x < S - R; x += 2) {
+          const a = A[(win.y + y) * W + win.x + x];
+          const b = B[(win.y + y + oy) * W + win.x + x + ox];
+          sa += a; sb += b; saa += a * a; sbb += b * b; sab += a * b; n++;
+        }
+      }
+      const ca = saa - sa * sa / n, cb = sbb - sb * sb / n;
+      if (ca < 1e-6 || cb < 1e-6) continue;
+      const r = (sab - sa * sb / n) / Math.sqrt(ca * cb);
+      if (r > best) { best = r; bx = ox; by = oy; }
+    }
+  }
+  return { dx: bx, dy: by, r: +best.toFixed(4) };
+}
+
 const qp = new URLSearchParams(location.search);
+if (qp.has('drift')) {
+  const R = 12, S = 256;
+  const A = plane(20);
+  const As = split(A, 25);
+  const win = pickWindow(As.hi, S);
+  const out = { window: win, grain: {}, haze: {} };
+  for (const dt of [0.25, 0.5, 1.0, 2.0]) {
+    const Bs = split(plane(20 + dt), 25);
+    out.grain['dt' + dt] = peakOffset(As.hi, Bs.hi, win, S, R);
+    out.haze['dt' + dt] = peakOffset(As.lo, Bs.lo, win, S, R);
+  }
+  // Sensitivity control: correlate a frame against itself shifted by a known
+  // offset. If this does not come back as that offset, the detector is blind
+  // and the zeros above mean nothing.
+  {
+    const B = new Float32Array(W * H);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      B[y * W + x] = A[Math.min(H - 1, Math.max(0, y - 2)) * W
+                       + Math.min(W - 1, Math.max(0, x - 3))];
+    }
+    out.control_shift_3_2 = peakOffset(As.hi, split(B, 25).hi, win, S, R);
+  }
+  document.getElementById('out').textContent = JSON.stringify(out, null, 1);
+  new Image().src = '/__drift?r=' + encodeURIComponent(JSON.stringify(out));
+}
+
 if (qp.has('clock')) {
   const series = clockSeries(20, 1 / 120, 240);
   document.getElementById('out').textContent = JSON.stringify(series);
