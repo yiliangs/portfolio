@@ -1,6 +1,8 @@
 // The home cube: a tesseract turning in four dimensions, with "Development" struck in ink voxels inside it, read
 // through the faces. Its 32 edges are the cube's only wireframe, so the object is the hypercube rather than a figure
-// hung inside a box: at a settled pose the near cell projects to exactly the box and the rest folds into it.
+// hung inside a box: at a settled pose the near cell projects to exactly the box and the rest folds into it. Each of
+// its eight cells is washed on the three walls it turns away from the reader, which is what makes the wireframe read
+// as an object rather than a tangle.
 // Anchored to a viewport box like the parchment roll. On click it collapses into the Development platform in three
 // beats — the word dissolves, the cube travels and turns into the platform's axonometric pose, then presses down into a
 // sheet with the platform's exact proportions and projection — so the parchment platform can take over unseen.
@@ -22,19 +24,52 @@ const HYPER_INNER = 0.55;  // weight of the far cell and the connectors against 
 // of that turn: the cube's yaw grows without bound, so any fraction of it walks the word right around and reads from
 // behind, and a shortest-arc slerp of the inverse flips side every time the yaw passes PI, which shows as a jump.
 const WORD_WOBBLE = 0.07;  // rad of free wobble, so the word shows its depth without ever leaving the reader
+const HYPER_SPAN = 1.2;    // the turned w runs to +-sqrt(0.75); this divides it back into a 0..1 depth
+// The wash the walls are drawn at. A fixed key light gives every wall a tone from the way it lies, so the figure
+// reads as planes meeting at angles instead of lines crossing at none: that difference between one wall and its
+// neighbour is the whole of the readability, which is why the range is wide against so small a base. WALL_AERIAL is
+// the share of the tone the fourth dimension takes back, thinning the far cell the way distance thins a wash.
+const WALL_LIGHT = new THREE.Vector3(-0.4, 0.75, 0.5).normalize();
+const WALL_BASE = 0.015;   // ink alpha on a wall turned right away from the light
+const WALL_RANGE = 0.22;   // and how much more the best-lit wall takes
+const WALL_AERIAL = 0.55;
 // 16 vertices at (+/-0.5) in four coordinates, and an edge wherever two of them differ in exactly one coordinate
-const HC_V = [], HC_E = [];
+const HC_V = [], HC_E = [], HC_F = [];
 for (let i = 0; i < 16; i++) HC_V.push([i & 1 ? 0.5 : -0.5, i & 2 ? 0.5 : -0.5, i & 4 ? 0.5 : -0.5, i & 8 ? 0.5 : -0.5]);
 for (let i = 0; i < 16; i++) for (let b = 0; b < 4; b++) { const j = i ^ (1 << b); if (j > i) HC_E.push([i, j]); }
+// and a square face wherever two coordinates run free and the other two are held: six pairs, four corners each, 24
+// faces, every edge in three of them
+for (let p = 0; p < 4; p++) for (let q = p + 1; q < 4; q++) {
+  const held = [0, 1, 2, 3].filter((k) => k !== p && k !== q);
+  for (let s = 0; s < 4; s++) {
+    const b = (s & 1 ? 1 << held[0] : 0) | (s & 2 ? 1 << held[1] : 0);
+    HC_F.push([b, b | (1 << p), b | (1 << p) | (1 << q), b | (1 << q)]);
+  }
+}
+// The eight cells: hold one coordinate, let the other three run, and what is left is a cube. Every face is a wall of
+// exactly two cells, which read it from opposite sides, so the figure has 48 walls and each is a wall of one solid.
+// That is the whole reason the cells are listed at all. A face on its own has no outside: nothing in the figure says
+// which of its two sides faces the reader, and a side picked by hand flips as the pose turns, which blinks the wash
+// on and off. A wall of a cell does have one, the way a wall of a room does, and the cell's own centre says which
+// way it points. Three walls of a cell face away from the reader at any pose, so the wash is always half the figure.
+const HC_C = [], HC_W = [];
+for (let c = 0; c < 4; c++) for (const on of [0, 1]) {
+  const cell = [];
+  for (let i = 0; i < 16; i++) if (((i >> c) & 1) === on) cell.push(i);
+  const ci = HC_C.push(cell) - 1;
+  for (const face of HC_F) if (face.every((i) => ((i >> c) & 1) === on)) HC_W.push([ci, face[0], face[1], face[2], face[3]]);
+}
+const hcC = new Float32Array(24); // the eight cells' centres, which orient their walls
 const hcP = new Float32Array(48), hcW = new Float32Array(16); // the 16 projected points and their turned w
 // Turns the figure by a in the xw plane and b in the yw plane, divides it down to three dimensions, and refits it so
 // it exactly fills the cube's box. pos takes the 32 edges' endpoints (192 floats), wt a per-endpoint weight (64):
-// 1 on an edge of the near cell, 0 on the far cell and the connectors.
+// 1 on an edge of the near cell, 0 on the far cell and the connectors. wpos takes the 48 walls as two triangles each
+// (864 floats) and wnd a per-wall outward normal and 4D depth (192), which is all the wash on a wall is decided from.
 // fold 0..1 takes the 4D perspective to orthographic. At fold = 1 both cells project onto the same cube and the eight
 // connectors shrink to nothing, so the figure visibly folds shut into a plain cube instead of merely going still. At a
 // pose that is a multiple of a quarter turn in both planes every turned w is +-0.5 exactly, so the weights come out a
 // clean 1 and 0 and the folded figure lands on the box. That pair is what the collapse steers onto before it flattens.
-export function hypercube(a, b, fold, pos, wt) {
+export function hypercube(a, b, fold, pos, wt, wpos, wnd) {
   const ca = Math.cos(a), sa = Math.sin(a), cb = Math.cos(b), sb = Math.sin(b);
   const invD = (1 - fold) / HYPER_D; // 1/D open, 0 folded shut: the divide goes orthographic
   let m = 0;
@@ -54,6 +89,41 @@ export function hypercube(a, b, fold, pos, wt) {
     // an edge counts as the near cell's only while both its ends are out at the near w, so the ring hands over
     // smoothly as the figure turns rather than flicking between cells
     wt[e * 2] = wt[e * 2 + 1] = smooth(clamp01((Math.min(hcW[i], hcW[j]) - 0.3) / 0.2));
+  }
+  for (let c = 0; c < HC_C.length; c++) {
+    const cell = HC_C[c], o = c * 3;
+    hcC[o] = hcC[o + 1] = hcC[o + 2] = 0;
+    for (let v = 0; v < 8; v++) { const i = cell[v] * 3; hcC[o] += hcP[i]; hcC[o + 1] += hcP[i + 1]; hcC[o + 2] += hcP[i + 2]; }
+    hcC[o] *= k / 8; hcC[o + 1] *= k / 8; hcC[o + 2] *= k / 8;
+  }
+  for (let w = 0; w < HC_W.length; w++) {
+    const wall = HC_W[w], o = w * 18, n = w * 4, c = wall[0] * 3;
+    // the corners in the square's own order, then the two triangles cut along one diagonal
+    for (let t = 0; t < 6; t++) {
+      const i = wall[1 + [0, 1, 2, 0, 2, 3][t]] * 3, d = o + t * 3;
+      wpos[d] = hcP[i] * k; wpos[d + 1] = hcP[i + 1] * k; wpos[d + 2] = hcP[i + 2] * k;
+    }
+    // The wall's normal, pointed out of its cell and scaled by how firmly the cell says which way out is: the
+    // normal against the wall's own step from the cell's centre, which is 1 for a wall of an honest cube. One
+    // triangle's normal is the whole wall's, exactly: the divide is projective on the wall's own plane, so a square
+    // still projects to a flat quadrilateral. The scaling is not decoration. A cell of this figure can fold through
+    // itself as the pose turns, and at the moment it does its centre lies in the plane of its own wall and there is
+    // no out. Taking the sign there would flip a whole wall's tone in one frame; the scale instead passes through
+    // zero, so the cell's wash thins away as it flattens and comes back as it opens. Everything downstream reads
+    // this vector twice over, so the raw normal's own sign, which is the arbitrary one, cancels.
+    const ux = wpos[o + 3] - wpos[o], uy = wpos[o + 4] - wpos[o + 1], uz = wpos[o + 5] - wpos[o + 2];
+    const vx = wpos[o + 6] - wpos[o + 3], vy = wpos[o + 7] - wpos[o + 4], vz = wpos[o + 8] - wpos[o + 5];
+    let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+    const l = Math.hypot(nx, ny, nz) || 1;
+    nx /= l; ny /= l; nz /= l;
+    const mx = (wpos[o] + wpos[o + 3] + wpos[o + 6] + wpos[o + 15]) / 4 - hcC[c];
+    const my = (wpos[o + 1] + wpos[o + 4] + wpos[o + 7] + wpos[o + 16]) / 4 - hcC[c + 1];
+    const mz = (wpos[o + 2] + wpos[o + 5] + wpos[o + 8] + wpos[o + 17]) / 4 - hcC[c + 2];
+    const out = (nx * mx + ny * my + nz * mz) / (Math.hypot(mx, my, mz) || 1);
+    wnd[n] = nx * out; wnd[n + 1] = ny * out; wnd[n + 2] = nz * out;
+    // and how deep in the fourth dimension the wall lies, so the far cell comes out lighter than the near one the
+    // way distance thins a wash
+    wnd[n + 3] = clamp01(0.5 + (hcW[wall[1]] + hcW[wall[2]] + hcW[wall[3]] + hcW[wall[4]]) / (4 * HYPER_SPAN));
   }
   return pos;
 }
@@ -105,15 +175,16 @@ export function mount(container) {
   // overlapped the bottom left a hard seam: an inset rectangle with diagonals at the corners, which read as stray
   // wireframe on the landed plate. One quad has nothing to overlap. It is also drawn at nothing until the flatten
   // brings it in, since a wash at rest would stand proud of the tesseract
-  const box = new THREE.PlaneGeometry(CS, CS);
-  const faceMat = new THREE.MeshBasicMaterial({ color: INK, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false });
+  const plateGeom = new THREE.PlaneGeometry(CS, CS);
+  const plateMat = new THREE.MeshBasicMaterial({ color: INK, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false });
   // per-vertex alpha on a stock material, the same hook parchment.js uses: the tesseract's cells have to be drawn at
-  // different weights, and they are one LineSegments because they are one figure
-  const edgeMat = new THREE.LineBasicMaterial({ color: INK, transparent: true, opacity: 0.5 });
-  edgeMat.onBeforeCompile = (sh) => {
+  // different weights, and they are one LineSegments and one Mesh because they are one figure
+  const perVertexAlpha = (sh) => {
     sh.vertexShader = sh.vertexShader.replace('#include <common>', 'attribute float aA; varying float vA;\n#include <common>').replace('#include <begin_vertex>', '#include <begin_vertex>\nvA = aA;');
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', 'varying float vA;\n#include <common>').replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.a *= vA;');
   };
+  const edgeMat = new THREE.LineBasicMaterial({ color: INK, transparent: true, opacity: 0.5 });
+  edgeMat.onBeforeCompile = perVertexAlpha;
   // the tesseract's 32 edges are the cube's whole wireframe: there is no box drawn around it. It sits in the shell,
   // so the flatten presses it into the plate exactly as it pressed the box's edges before
   const hyperGeom = new THREE.BufferGeometry();
@@ -123,8 +194,22 @@ export function mount(container) {
   const hyperW = new Float32Array(64); // the raw near-cell weight, before the dissolve thins the rest away
   const hyper = new THREE.LineSegments(hyperGeom, edgeMat);
   hyper.frustumCulled = false; // the endpoints are rewritten every frame, so a once-computed bounding sphere lies
-  const faceMesh = new THREE.Mesh(box, faceMat);
-  shell.add(faceMesh, hyper);
+  // and the same figure's 48 walls, washed. Only the ones turned away from the reader take any: the three at the
+  // back of each cell, the way the far walls of a room are the ones you see into it against. That is what leaves the
+  // middle of the figure open for the word, and puts a ground behind the wireframe rather than a veil in front of it.
+  // A wall crosses from lit to nothing exactly as it turns edge on, where it has no area left to show the change
+  const wallMat = new THREE.MeshBasicMaterial({ color: INK, transparent: true, opacity: 1, side: THREE.DoubleSide, depthWrite: false });
+  wallMat.onBeforeCompile = perVertexAlpha;
+  const wallGeom = new THREE.BufferGeometry();
+  wallGeom.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(864), 3));
+  wallGeom.setAttribute('aA', new THREE.Float32BufferAttribute(new Float32Array(288), 1));
+  const wallPos = wallGeom.attributes.position.array, wallA = wallGeom.attributes.aA.array;
+  const wallND = new Float32Array(192); // each wall's outward normal and its 4D depth, which the tone is read off
+  const walls = new THREE.Mesh(wallGeom, wallMat);
+  walls.frustumCulled = false;
+  walls.renderOrder = -1; // the wash is a ground: the wireframe and the word draw over it, never under it
+  const plateMesh = new THREE.Mesh(plateGeom, plateMat);
+  shell.add(walls, plateMesh, hyper);
   // the word sits on a plane inside the cube, kept facing the viewer while the cube turns around it
   const inner = new THREE.Group(); cube.add(inner);
   // 3D lettering: the word is extruded type, paper faces under a fixed key light with ink sides, so the profile reads
@@ -224,7 +309,7 @@ export function mount(container) {
   const ro = new ResizeObserver(resize); ro.observe(container); resize();
 
   const inkCur = new THREE.Color(INK), inkTo = new THREE.Color(INK);
-  const qFree = new THREE.Quaternion(), qPose = new THREE.Quaternion(), eul = new THREE.Euler();
+  const qFree = new THREE.Quaternion(), qPose = new THREE.Quaternion(), eul = new THREE.Euler(), wallN = new THREE.Vector3();
   let px = 0, py = 0, tx = 0, ty = 0, alive = true, raf, last = performance.now(), t = 0;
   const onMove = (e) => {
     const cx = anchor.x + anchor.w / 2, cy = anchor.y + anchor.h / 2, r = Math.max(anchor.w, anchor.h);
@@ -268,17 +353,31 @@ export function mount(container) {
     if (dis !== shownDis) { shownDis = dis; layoutVoxels(dis); }
     // the near cell always draws at the full edge weight; the far cell and the connectors draw lighter, and go out
     // as the figure folds, so at fold = 1 the wireframe left standing is the box the plate is pressed from
-    hypercube(ha, hb, fold, hyperPos, hyperW);
+    hypercube(ha, hb, fold, hyperPos, hyperW, wallPos, wallND);
     for (let i = 0; i < 64; i++) hyperA[i] = hyperW[i] + (1 - hyperW[i]) * HYPER_INNER * (1 - fold);
+    // a wall takes a tone from where its own normal stands to the key light, thinned by how deep in the fourth
+    // dimension it lies and cut away entirely once it turns back toward the reader. Both readings are products with
+    // the outward vector, never with its sign, which is what keeps a folding cell from flashing. The wash goes out
+    // with the fold for the same reason the connectors do: what the travel and the flatten act on has to be the bare
+    // box, and the plate brings its own wash in behind it
+    const wash = (1 - fold) * alpha;
+    for (let w = 0; w < 48; w++) {
+      wallN.fromArray(wallND, w * 4).applyQuaternion(cube.quaternion);
+      const away = smooth(clamp01(-wallN.z * 2));
+      const lit = clamp01(0.5 + 0.5 * wallN.dot(WALL_LIGHT));
+      const a = Math.max(0, away * (WALL_BASE + lit * WALL_RANGE) * (1 - WALL_AERIAL + WALL_AERIAL * wallND[w * 4 + 3]) * wash);
+      for (let v = 0; v < 6; v++) wallA[w * 6 + v] = a;
+    }
     hyperGeom.attributes.position.needsUpdate = true; hyperGeom.attributes.aA.needsUpdate = true;
+    wallGeom.attributes.position.needsUpdate = true; wallGeom.attributes.aA.needsUpdate = true;
     // the landed plate takes the platform's stroke and sheet weights
     edgeMat.opacity = Math.max(0, ((0.5 + hover * 0.3) * (1 - flat) + 0.62 * flat) * alpha);
-    faceMat.opacity = Math.max(0, 0.14 * flat * alpha);
+    plateMat.opacity = Math.max(0, 0.14 * flat * alpha);
     voxMat.opacity = Math.max(0, 0.06 * (1 - dis) * alpha); voxEdgeMat.opacity = Math.max(0, (0.5 + hover * 0.25) * (1 - dis) * alpha);
     inkCur.lerp(inkTo, 0.08);
     // block faces sit on the opposite side of the ground from the ink: paper blocks with ink edges on the light
     // home page, ink blocks with paper edges once the cube lands on the dark Development page
-    edgeMat.color.copy(inkCur); faceMat.color.copy(inkCur); voxEdgeMat.color.copy(inkCur); voxMat.color.copy(inkCur);
+    edgeMat.color.copy(inkCur); wallMat.color.copy(inkCur); plateMat.color.copy(inkCur); voxEdgeMat.color.copy(inkCur); voxMat.color.copy(inkCur);
     renderer.render(scene, camera);
   };
   raf = requestAnimationFrame(tick);
@@ -313,8 +412,8 @@ export function mount(container) {
     destroy() {
       alive = false; cancelAnimationFrame(raf); ro.disconnect();
       window.removeEventListener('pointermove', onMove);
-      // give back everything mount built: the shell's box and its edge lines, and the word outline once the
-      // typeface has landed. voxMat never reaches an object, so the walk cannot find it
+      // give back everything mount built: the plate's quad, the tesseract's washed faces and its edge lines, and
+      // the word outline once the typeface has landed. voxMat never reaches an object, so the walk cannot find it
       scene.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
       voxMat.dispose();
       // dispose only frees the renderer's own caches; the GL context lives on until forceContextLoss drops it
