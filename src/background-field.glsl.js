@@ -17,11 +17,7 @@
 // and most of the frame sits at exactly COL_GROUND. field-measure.html scores
 // a set of constants against those numbers.
 //
-// The pointer does not draw. It disturbs the medium, and only while it is
-// moving: the shader is handed a flow direction and an agitation level, both
-// carried on the CPU with inertia, and uses them to drag the field along the
-// stroke, shear it either side, and stir turbulence into it. Hold the pointer
-// still and the disturbance settles out on its own.
+// There is no pointer input. The field drifts on its own and is not steered.
 
 export const VERTEX_SHADER = /* glsl */ `
 varying vec2 vUv;
@@ -55,7 +51,7 @@ const float FBM_GAIN       = 0.50;   // amplitude step per octave
 const float MASS_SCALE     = 1.15;   // features across the short axis
 const float MASS_DRIFT     = 0.018;  // domain units/sec the mass slides
 const float MASS_WARP      = 0.55;   // domain warp; 0 gives plain round blobs
-const float MASS_LOW       = 0.460;  // fBm at or under this lights nothing
+const float MASS_LOW       = 0.445;  // fBm at or under this lights nothing
 const float MASS_HIGH      = 0.95;   // and at or over this is full mass
 const float MASS_GAMMA     = 0.80;   // <1 broadens the dim middle of the
                                      // range, which is where most of the
@@ -75,28 +71,6 @@ const float DUST_HZ        = 14.0;   // reseeds/sec; 0.0 freezes the dust
 // the dissolve is too sparse to carry it on its own.
 const float HAZE_GAIN      = 0.045;
 
-// Flow ----------------------------------------------------------------------
-// What the pointer does to the medium. All of it is gated by uStir, which is
-// zero when the pointer is not moving, so a parked cursor leaves no mark.
-const float FLOW_RADIUS    = 0.34;   // reach across the stroke
-const float FLOW_FALLOFF   = 1.60;   // >1 tightens the core, softens the edge
-const float WAKE_STRETCH   = 2.60;   // how much further the disturbance
-                                     // reaches behind the pointer than ahead;
-                                     // this is what makes it read as a wake
-                                     // rather than as a halo
-const float ADVECT         = 0.17;   // how far the medium is dragged along the
-                                     // stroke. The field is sampled from where
-                                     // the dust came from, not pushed outward,
-                                     // so it looks carried rather than bulged
-const float SHEAR          = 0.085;  // sideways drag, opposite either side of
-                                     // the stroke, so the edges roll
-const float STIR_SCALE     = 3.40;   // frequency of the turbulence stirred in
-const float STIR_RATE      = 0.55;   // how fast that turbulence churns
-const float STIR_AMOUNT    = 0.22;   // how hard it perturbs the mass. This is
-                                     // the disturbance proper: it moves the
-                                     // field, so dust reorganises instead of
-                                     // the picture simply getting brighter
-
 // Vignette ------------------------------------------------------------------
 // Taken out of the dust and haze, never out of the ground, so the floor stays
 // perfectly flat across the whole frame.
@@ -107,9 +81,6 @@ const float VIGNETTE_DEPTH = 0.55;
 // ───────────────────────────────────────────────────────────────────────────
 
 uniform float uTime;        // seconds; held constant under prefers-reduced-motion
-uniform vec2  uMouse;       // pointer in UV space, already lerped on the CPU
-uniform vec2  uFlow;        // unit direction the pointer is travelling, UV space
-uniform float uStir;        // 0..1 agitation; fast attack, slow release
 uniform vec2  uResolution;  // drawing buffer size, device pixels
 
 varying vec2 vUv;
@@ -153,39 +124,8 @@ float fbm(vec2 p) {
 void main() {
   float aspect = uResolution.x / max(uResolution.y, 1.0);
 
-  // Centered, aspect-corrected space so the falloff stays circular.
-  vec2 p = vec2((vUv.x - 0.5) * aspect, vUv.y - 0.5);
-  vec2 m = vec2((uMouse.x - 0.5) * aspect, uMouse.y - 0.5);
-
-  // ── the stroke frame: along the direction of travel, and across it.
-  vec2  flow = vec2(uFlow.x * aspect, uFlow.y);
-  float fl   = length(flow);
-  vec2  dirV = (fl > 1e-5) ? flow / fl : vec2(1.0, 0.0);
-  vec2  perp = vec2(-dirV.y, dirV.x);
-
-  vec2  toCursor = p - m;
-  float along    = dot(toCursor, dirV);
-  float across   = dot(toCursor, perp);
-
-  // Stretch the influence backwards along the stroke, so the disturbance
-  // trails the pointer instead of sitting on it as a disc.
-  float a  = (along < 0.0) ? along / WAKE_STRETCH : along;
-  float d2 = length(vec2(a, across));
-
-  // One smoothstep falloff on that distance, gated by how hard the pointer is
-  // actually stirring. Stationary pointer, uStir 0, no disturbance at all.
-  float pull = pow(1.0 - smoothstep(0.0, FLOW_RADIUS, d2), FLOW_FALLOFF);
-  float act  = pull * uStir;
-
-  // ── advection. What sits here now is what the stroke dragged here, so the
-  //    field is sampled from behind the direction of travel. Sideways drag
-  //    reverses either side of the centreline, which rolls the edges; it
-  //    passes smoothly through zero, so there is no seam down the middle.
-  float lateral = clamp(across / FLOW_RADIUS, -1.0, 1.0);
-  vec2  q = p - dirV * act * ADVECT
-              - perp * lateral * act * SHEAR;
-
-  vec2 sp = q * MASS_SCALE;
+  // Centered and aspect-corrected, so the form is not stretched by the window.
+  vec2 sp = vec2((vUv.x - 0.5) * aspect, vUv.y - 0.5) * MASS_SCALE;
 
   // ── the soft mass. Lightly domain-warped so the form is organic, drifting
   //    on two axes so it never reads as a pan.
@@ -196,11 +136,6 @@ void main() {
   );
   float n = fbm(sp + (warp - 0.5) * 2.0 * MASS_WARP
                    + vec2(t * MASS_DRIFT * 0.5, -t * MASS_DRIFT));
-
-  // Turbulence stirred into the field itself, not added to the output. The
-  // dust reorganises around the stroke rather than the area simply lighting.
-  float stir = fbm(q * STIR_SCALE + vec2(t * STIR_RATE, -t * STIR_RATE * 0.7)) - 0.5;
-  n += stir * act * STIR_AMOUNT;
 
   float mass = pow(smoothstep(MASS_LOW, MASS_HIGH, n), MASS_GAMMA);
 
