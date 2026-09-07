@@ -95,7 +95,33 @@ const float DUST_SOFT      = 0.30;   // width of the threshold ramp, as a
                                      // carries identical weight, which is a
                                      // large part of why a naive dissolve
                                      // reads as a noise filter
-const float DUST_HZ        = 14.0;   // reseeds/sec; 0.0 freezes the dust
+
+// Grain motion --------------------------------------------------------------
+// The grain has no clock. It used to re-roll to a wholly new field a fixed
+// number of times a second, and a fixed rate is a pattern: given a few seconds
+// the eye finds the beat and the whole thing reads as an effect running on
+// top of the picture. Instead the grain is carried by the same drift and warp
+// that move the haze, wanders slowly on its own, and its two populations slide
+// against each other so grains form and dissolve. Nothing here shares a period
+// with anything else.
+const float GRAIN_CARRY    = 1.0;    // share of the haze's drift that carries
+                                     // the grain along with it. 1 travels with
+                                     // the form; 0 leaves it pinned to the
+                                     // screen while the form slides past
+const float GRAIN_SHEAR    = 0.12;   // share of the warp that also reaches the
+                                     // grain. The warp's gradient is steep
+                                     // enough that carrying it whole would
+                                     // stretch grains well past a pixel and
+                                     // turn them to mush; this is about the
+                                     // largest share that still resolves
+const float GRAIN_CREEP    = 0.055;  // rate of the grain's own slow wander,
+                                     // driven by noise rather than a constant
+                                     // so it never repeats or holds a heading
+const float GRAIN_CREEP_PX = 26.0;   // how far that wander reaches, device px
+const float GRAIN_SLIP     = 0.120;  // rate the two grain populations slide
+                                     // against each other. This is what makes
+                                     // grains appear and dissolve rather than
+                                     // merely translate
 
 // Tooth ---------------------------------------------------------------------
 // The sheet's own texture: a slow variation in how readily each patch takes
@@ -125,6 +151,11 @@ varying vec2 vUv;
 
 // Rotation folded between octaves so features do not stack on the axes.
 const mat2 OCTAVE_ROT = mat2(0.80, 0.60, -0.60, 0.80);
+
+// A second, deliberately unrelated rotation between the two grain populations.
+// Value noise sits on an integer lattice; leaving both populations on the same
+// axes lets those lattices agree and a faint grid surfaces out of the stipple.
+const mat2 GRAIN_ROT = mat2(0.7373688, 0.6754904, -0.6754904, 0.7373688);
 
 // Hash by Dave Hoskins (hash12, MIT). Chosen over the usual fract(p * bigVec)
 // one-liner because that one stays correlated along columns on an integer
@@ -172,8 +203,13 @@ void main() {
     fbm(sp * 1.7 + vec2(0.0, t * MASS_DRIFT)),
     fbm(sp * 1.7 + vec2(4.7, 2.3) - vec2(t * MASS_DRIFT * 0.8, 0.0))
   );
-  float n = fbm(sp + (warp - 0.5) * 2.0 * MASS_WARP
-                   + vec2(t * MASS_DRIFT * 0.5, -t * MASS_DRIFT));
+
+  // Named because the grain rides them too, further down. These are the whole
+  // motion of the field: a slow translation, and a warp that bends it.
+  vec2 driftUnits = vec2(t * MASS_DRIFT * 0.5, -t * MASS_DRIFT);
+  vec2 warpUnits  = (warp - 0.5) * 2.0 * MASS_WARP;
+
+  float n = fbm(sp + warpUnits + driftUnits);
 
   float mass = pow(smoothstep(MASS_LOW, MASS_HIGH, n), MASS_GAMMA);
 
@@ -189,9 +225,26 @@ void main() {
   //    with irregular outlines. Two scales are blended so the grains come in a
   //    range of sizes rather than one, which is what stops the eye reading the
   //    texture as an effect laid over the picture.
-  float seed = floor(t * DUST_HZ);
-  vec2  gp   = gl_FragCoord.xy / GRAIN_PX + seed * 17.31;
-  float draw = mix(vnoise(gp), vnoise(gp * GRAIN_COARSE + 53.17), GRAIN_MIX);
+
+  // Device pixels per domain unit, so the field's motion can be handed to the
+  // grain in the grain's own units.
+  float pxPerUnit = uResolution.y / MASS_SCALE;
+
+  // The grain rides the field: the same drift, and a safe share of the same
+  // warp. Added rather than subtracted, so it travels the way the form does.
+  vec2 gpx = gl_FragCoord.xy
+           + (driftUnits * GRAIN_CARRY + warpUnits * GRAIN_SHEAR) * pxPerUnit;
+
+  // Its own wander, steered by noise rather than by a constant, so it neither
+  // repeats nor keeps a heading long enough to be read as a direction.
+  gpx += (vec2(vnoise(vec2(t * GRAIN_CREEP, 11.3)),
+               vnoise(vec2(7.9, t * GRAIN_CREEP))) - 0.5) * GRAIN_CREEP_PX;
+
+  vec2  gp   = gpx / GRAIN_PX;
+  float slip = t * GRAIN_SLIP;
+  float draw = mix(vnoise(gp),
+                   vnoise(GRAIN_ROT * gp * GRAIN_COARSE + 53.17 + slip),
+                   GRAIN_MIX);
   draw = clamp((draw - 0.5) / GRAIN_SPREAD + 0.5, 0.0, 1.0);
 
   // How readily this patch of sheet takes ink at all.

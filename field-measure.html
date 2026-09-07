@@ -135,7 +135,47 @@ function evaluate(subs) {
   return m;
 }
 
-const VARIANTS = JSON.parse(new URLSearchParams(location.search).get('v') || '[]');
+// ── clock mode ──────────────────────────────────────────────────────────────
+// Walks uTime in fine steps and reports how much the picture changes between
+// consecutive steps. A grain driven by a fixed reseed rate spends most steps
+// almost unchanged and then jumps; motion carried by the field changes by a
+// similar amount every step. This is the check that the grain has no beat for
+// a reader to find.
+//
+// Read the series by its COEFFICIENT OF VARIATION, not by the height of a
+// spectral peak. A hard reseed is an impulse train, so its energy spreads into
+// every harmonic and lifts the median with it; peak-over-median then scores a
+// clean clock LOWER than smooth motion, which is the wrong way round and cost
+// one wrong reading here. Measured against a synthetic 14 Hz reseed, cv
+// separates them by more than an order of magnitude: 2.43 for the clock,
+// 0.095 for motion carried by the field.
+function clockSeries(t0, dt, steps) {
+  const S = 256;
+  const cur = new Uint8Array(S * S * 4);
+  let prev = null;
+  const out = [];
+  for (let i = 0; i < steps; i++) {
+    uniforms.uTime.value = t0 + i * dt;
+    renderer.render(scene, camera);
+    gl.readPixels((W - S) >> 1, (H - S) >> 1, S, S, gl.RGBA, gl.UNSIGNED_BYTE, cur);
+    if (prev) {
+      let d = 0;
+      for (let k = 0; k < cur.length; k += 4) d += Math.abs(cur[k] - prev[k]);
+      out.push(+(d / (S * S)).toFixed(4));
+    }
+    prev = cur.slice();
+  }
+  return out;
+}
+
+const qp = new URLSearchParams(location.search);
+if (qp.has('clock')) {
+  const series = clockSeries(20, 1 / 120, 240);
+  document.getElementById('out').textContent = JSON.stringify(series);
+  new Image().src = '/__clock?r=' + encodeURIComponent(JSON.stringify(series));
+}
+
+const VARIANTS = JSON.parse(qp.get('v') || '[]');
 const rows = [];
 try {
   for (const [tag, subs] of VARIANTS) {
