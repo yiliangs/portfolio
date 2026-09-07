@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Background field</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0d0d0e; }
+  #Background { position: fixed; inset: 0; z-index: 0; }
+  .readout {
+    position: fixed; left: 24px; bottom: 20px; z-index: 1;
+    font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: rgba(255,255,255,0.62); letter-spacing: 0.04em;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.55);
+  }
+  .readout b { font-weight: 500; color: rgba(255,255,255,0.9); }
+</style>
+</head>
+<body>
+  <div id="Background"></div>
+  <p class="readout">
+    background field &middot; move the pointer<br>
+    reduced motion: <b id="rm">?</b> &middot; dpr: <b id="dpr">?</b>
+  </p>
+  <script type="module">
+    import { mount } from './src/background-field.js';
+    const q = window.matchMedia('(prefers-reduced-motion: reduce)');
+    document.getElementById('rm').textContent = q.matches ? 'on (uTime frozen)' : 'off';
+    document.getElementById('dpr').textContent =
+      `${window.devicePixelRatio} -> ${Math.min(window.devicePixelRatio || 1, 2)}`;
+    window.field = mount(document.getElementById('Background'));
+  </script>
+</body>
+</html>
