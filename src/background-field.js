@@ -47,9 +47,9 @@ export function mount(container) {
     fragmentShader: FRAGMENT_SHADER,
     depthTest: false,
     depthWrite: false,
-    // fwidth() antialiases the contour lines; on a WebGL1 context that needs
-    // the derivatives extension declared.
-    extensions: { derivatives: true },
+    // Nothing uses derivatives now that the contour pass is gone.
+    // (kept off deliberately: declaring an unused extension is noise.)
+
   });
 
   const geometry = new THREE.PlaneGeometry(2, 2);

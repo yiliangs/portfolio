@@ -3,6 +3,18 @@
 // runtime fetch, so it works from file:// as well as from Pages.
 // Every knob worth turning is a named const at the top of FRAGMENT_SHADER.
 // The `/* glsl */` tags are picked up by editor extensions for highlighting.
+//
+// The effect is a DISSOLVE, not a gradient. A very dark flat ground carries a
+// slow, soft, low-contrast mass of light; that mass is never drawn directly.
+// It is used as the probability that a given pixel of dust lights up. Where
+// the mass is near zero almost nothing flips on and the frame stays flat
+// black; where it rises, more grains light and the form arrives as sand
+// rather than as a smooth wash. Photoshop's Dissolve blend treats a layer's
+// alpha the same way.
+//
+// The measurable signature, and the thing to preserve if this is retuned: the
+// grain's variance grows with local brightness instead of holding constant,
+// and most of the frame sits at exactly COL_GROUND.
 
 export const VERTEX_SHADER = /* glsl */ `
 varying vec2 vUv;
@@ -21,66 +33,59 @@ precision highp float;
 //  TUNABLES
 // ───────────────────────────────────────────────────────────────────────────
 
-// Noise ---------------------------------------------------------------------
-const int   FBM_OCTAVES    = 4;      // more = finer detail, linearly more cost
-const float FBM_LACUNARITY = 2.03;   // frequency step per octave (off-integer
-                                     // on purpose: keeps octaves from aligning)
-const float FBM_GAIN       = 0.52;   // amplitude step per octave
+// Ground --------------------------------------------------------------------
+// The flat floor the whole frame sits on. Nothing is ever darkened below it,
+// so most of the picture is exactly this value and all light is additive.
+const vec3  COL_GROUND = vec3(0.051, 0.051, 0.051);
+const vec3  COL_DUST   = vec3(0.925, 0.930, 0.937);
 
-// Field ---------------------------------------------------------------------
-const float FIELD_SCALE    = 2.55;   // noise cells across the short axis
-const float FIELD_DRIFT    = 0.042;  // domain units/sec the whole field slides
-const float WARP_SCALE     = 1.30;   // frequency of the warp field vs the field
-const float WARP_STRENGTH  = 0.90;   // how far the warp drags samples; the
-                                     // difference between "clouds" and "smoke"
+// Mass ----------------------------------------------------------------------
+// The soft luminous form. Never drawn on its own; it only decides where dust
+// lights. Keep the scale low, one or two features across the viewport.
+const int   FBM_OCTAVES    = 3;      // few, so the form stays soft
+const float FBM_LACUNARITY = 2.03;   // frequency step per octave
+const float FBM_GAIN       = 0.50;   // amplitude step per octave
+const float MASS_SCALE     = 1.15;   // features across the short axis
+const float MASS_DRIFT     = 0.018;  // domain units/sec the mass slides
+const float MASS_WARP      = 0.55;   // domain warp; 0 gives plain round blobs
+const float MASS_LOW       = 0.460;   // fBm at or under this lights nothing
+const float MASS_HIGH      = 0.95;   // and at or over this is full mass
+const float MASS_GAMMA     = 0.80;   // <1 broadens the dim middle of the
+                                     // range, which is where most of the
+                                     // picture lives
+
+// Dust ----------------------------------------------------------------------
+// The dissolve. DENSITY is the odds a pixel lights at full mass, GAIN is how
+// bright a lit grain is. Both scale with mass, which is what makes the grain
+// grow noisier as the form brightens rather than merely lighter.
+const float DUST_DENSITY   = 1.30;   // >1 lets the brightest core go solid
+const float DUST_GAIN      = 0.40;  // peak added luminance of a lit grain
+const float DUST_SCALE     = 1.0;    // 1.0 = one grain per device pixel
+const float DUST_HZ        = 14.0;   // reseeds/sec; 0.0 freezes the dust
+
+// Haze ----------------------------------------------------------------------
+// A little mass added smoothly under the dust, so the form still reads where
+// the dissolve is too sparse to carry it on its own.
+const float HAZE_GAIN      = 0.045;
 
 // Cursor --------------------------------------------------------------------
-const float CURSOR_RADIUS  = 0.42;   // influence radius, aspect-corrected units
-const float CURSOR_FALLOFF = 1.60;   // >1 tightens the core, softens the edge
-const float CURSOR_CORE    = 0.19;   // displacement fades back to zero inside
+// The pointer lifts the mass, so more dust lights around it. The sand gathers
+// rather than the picture warping.
+const float CURSOR_RADIUS  = 0.38;   // influence radius, aspect-corrected units
+const float CURSOR_FALLOFF = 1.80;   // >1 tightens the core, softens the edge
+const float CURSOR_CORE    = 0.16;   // displacement fades back to zero inside
                                      // this radius. Without it the radial
                                      // direction is undefined at the pointer
                                      // and the field pinches to a hard point.
-const float CURSOR_PUSH    = 0.24;   // peak radial displacement
-const float CURSOR_SWIRL   = 0.80;   // peak twist, radians
-const float CURSOR_LIFT    = 0.14;   // tone added under the pointer
-
-// Tone ----------------------------------------------------------------------
-// fBm keeps most of its mass in the middle, so the palette's light stop never
-// gets reached on the raw value. The field is stretched toward the ends, then
-// blended back against the original: a full smoothstep alone clips the tails
-// into flat black and flat white plates and loses the mist entirely.
-const float FIELD_LOW      = 0.24;   // stretch window, low end
-const float FIELD_HIGH     = 0.80;   // stretch window, high end
-const float FIELD_CONTRAST = 0.50;   // 0 = raw fBm, 1 = fully stretched
-
-// Contours ------------------------------------------------------------------
-const float CONTOUR_COUNT  = 7.0;    // isolines across the field's 0..1 range
-const float CONTOUR_WIDTH  = 0.085;  // half-width, in normalized band units
-const float CONTOUR_INK    = 0.34;   // how far a line pulls toward COL_DEEP
-const float CONTOUR_AA     = 1.5;    // fwidth multiplier for line antialiasing
-
-// Palette -------------------------------------------------------------------
-const vec3  COL_DEEP  = vec3(0.082, 0.082, 0.090);
-const vec3  COL_MID   = vec3(0.355, 0.368, 0.392);
-const vec3  COL_PAPER = vec3(0.931, 0.922, 0.898);
-
-// The gap between RAMP_A1 and RAMP_B0 is what gives COL_MID real territory;
-// overlap the two windows and the palette collapses to a two-tone.
-const float RAMP_A0 = 0.00;          // deep -> mid, start
-const float RAMP_A1 = 0.50;          // deep -> mid, end
-const float RAMP_B0 = 0.62;          // mid -> paper, start
-const float RAMP_B1 = 1.00;          // mid -> paper, end
-
-// Grain ---------------------------------------------------------------------
-const float GRAIN_AMOUNT = 0.052;    // peak-to-peak is roughly this
-const float GRAIN_SCALE  = 1.0;      // 1.0 = one grain per device pixel
-const float GRAIN_HZ     = 12.0;     // reseeds/sec; 0.0 freezes the grain
+const float CURSOR_PUSH    = 0.13;   // peak radial displacement of the mass
+const float CURSOR_LIFT    = 0.26;   // mass added under the pointer
 
 // Vignette ------------------------------------------------------------------
-const float VIGNETTE_START = 0.58;
-const float VIGNETTE_END   = 1.18;
-const float VIGNETTE_DEPTH = 0.34;
+// Taken out of the dust and haze, never out of the ground, so the floor stays
+// perfectly flat across the whole frame.
+const float VIGNETTE_START = 0.55;
+const float VIGNETTE_END   = 1.30;
+const float VIGNETTE_DEPTH = 0.55;
 
 // ───────────────────────────────────────────────────────────────────────────
 
@@ -93,9 +98,9 @@ varying vec2 vUv;
 // Rotation folded between octaves so features do not stack on the axes.
 const mat2 OCTAVE_ROT = mat2(0.80, 0.60, -0.60, 0.80);
 
-// Hash by Dave Hoskins (hash12, MIT). Chosen over the usual
-// fract(p * bigVec) one-liner because that one stays correlated along columns
-// on an integer lattice, which shows up as vertical striping in the grain.
+// Hash by Dave Hoskins (hash12, MIT). Chosen over the usual fract(p * bigVec)
+// one-liner because that one stays correlated along columns on an integer
+// lattice, which shows up as vertical striping in the dust.
 float hash12(vec2 p) {
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
   p3 += dot(p3, p3.yzx + 33.33);
@@ -133,59 +138,45 @@ void main() {
   vec2 p = vec2((vUv.x - 0.5) * aspect, vUv.y - 0.5);
   vec2 m = vec2((uMouse.x - 0.5) * aspect, uMouse.y - 0.5);
 
-  // ── cursor influence: one smoothstep falloff, reused for both the
-  //    displacement and the tone lift. No second pass, no extra buffer.
+  // ── cursor influence: one smoothstep falloff, reused for the displacement
+  //    and for the lift. No second pass, no extra buffer.
   vec2  toCursor = p - m;
   float dist     = length(toCursor);
   float pull     = pow(1.0 - smoothstep(0.0, CURSOR_RADIUS, dist), CURSOR_FALLOFF);
 
-  // Displacement is tapered back to zero inside CURSOR_CORE, so the pointer
-  // reads as a lens with a calm eye instead of a singularity.
+  // Displacement tapers back to zero inside CURSOR_CORE, so the pointer
+  // gathers the dust instead of pinching it to a point.
   float lens = pull * smoothstep(0.0, CURSOR_CORE, dist);
+  vec2  q = p + (toCursor / max(dist, 1e-4)) * lens * CURSOR_PUSH;
 
-  // Twist the sample point around the pointer, then shove it radially out.
-  float ang = lens * CURSOR_SWIRL;
-  float cs  = cos(ang);
-  float sn  = sin(ang);
-  vec2  q   = mat2(cs, sn, -sn, cs) * toCursor + m;
-  q += (toCursor / max(dist, 1e-4)) * lens * CURSOR_PUSH;
+  vec2 sp = q * MASS_SCALE;
 
-  vec2 sp = q * FIELD_SCALE;
-
-  // ── domain-warped fBm. Two noise lookups steer a third; the drift terms
-  //    move along different axes so the field never reads as a pan.
+  // ── the soft mass. Lightly domain-warped so the form is organic, drifting
+  //    on two axes so it never reads as a pan.
   float t = uTime;
   vec2 warp = vec2(
-    fbm(sp * WARP_SCALE + vec2(0.0, t * FIELD_DRIFT)),
-    fbm(sp * WARP_SCALE + vec2(4.7, 2.3) - vec2(t * FIELD_DRIFT * 0.8, 0.0))
+    fbm(sp * 1.7 + vec2(0.0, t * MASS_DRIFT)),
+    fbm(sp * 1.7 + vec2(4.7, 2.3) - vec2(t * MASS_DRIFT * 0.8, 0.0))
   );
-  vec2 warped = sp + (warp - 0.5) * 2.0 * WARP_STRENGTH;
-  float field = fbm(warped + vec2(t * FIELD_DRIFT * 0.5, -t * FIELD_DRIFT));
+  float n = fbm(sp + (warp - 0.5) * 2.0 * MASS_WARP
+                   + vec2(t * MASS_DRIFT * 0.5, -t * MASS_DRIFT));
 
-  // Stretch the field across the palette, then lift what sits under the pointer.
-  float tone = mix(field, smoothstep(FIELD_LOW, FIELD_HIGH, field), FIELD_CONTRAST);
-  tone = clamp(tone + pull * CURSOR_LIFT, 0.0, 1.0);
+  float mass = pow(smoothstep(MASS_LOW, MASS_HIGH, n), MASS_GAMMA);
+  mass = clamp(mass + pull * CURSOR_LIFT, 0.0, 1.0);
 
-  // ── three-stop ramp
-  vec3 col = mix(COL_DEEP, COL_MID, smoothstep(RAMP_A0, RAMP_A1, tone));
-  col = mix(col, COL_PAPER, smoothstep(RAMP_B0, RAMP_B1, tone));
+  // Corners darken by losing mass, never by darkening the ground.
+  float r = length(vUv - 0.5) * 1.41421356;
+  mass *= 1.0 - smoothstep(VIGNETTE_START, VIGNETTE_END, r) * VIGNETTE_DEPTH;
 
-  // ── isolines of the field, antialiased against the screen-space gradient
-  float ridge = field * CONTOUR_COUNT;
-  float tri   = abs(fract(ridge) - 0.5) * 2.0;   // 0 on the line, 1 between
-  float aa    = fwidth(ridge) * CONTOUR_AA + 1e-4;
-  float line  = 1.0 - smoothstep(CONTOUR_WIDTH, CONTOUR_WIDTH + aa, tri);
-  col = mix(col, COL_DEEP, line * CONTOUR_INK);
+  // ── the dissolve. A pixel lights when its draw falls under the local mass,
+  //    so grain variance rises with brightness instead of holding flat.
+  float seed = floor(t * DUST_HZ);
+  float draw = hash12(gl_FragCoord.xy * DUST_SCALE + seed * 137.13);
+  float lit  = step(draw, clamp(mass * DUST_DENSITY, 0.0, 1.0));
 
-  // ── grain, quantized in time so it stutters like film rather than boiling
-  float seed  = floor(t * GRAIN_HZ);
-  float grain = hash12(gl_FragCoord.xy * GRAIN_SCALE + seed * 137.13) - 0.5;
-  col += grain * GRAIN_AMOUNT;
-
-  // ── vignette
-  float r   = length(vUv - 0.5) * 1.41421356;
-  float vig = smoothstep(VIGNETTE_START, VIGNETTE_END, r);
-  col *= 1.0 - vig * VIGNETTE_DEPTH;
+  vec3 col = COL_GROUND
+           + COL_DUST * mass * HAZE_GAIN
+           + COL_DUST * mass * DUST_GAIN * lit;
 
   gl_FragColor = vec4(col, 1.0);
 }

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>field measure</title></head><body>
+<pre id="out">pending</pre>
+<script type="module">
+import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+import { VERTEX_SHADER, FRAGMENT_SHADER } from './src/background-field.glsl.js';
+
+// Measurement rig for the dissolve. It exists because the effect is judged by
+// statistics, not by eye: a dissolve is distinguished from a gradient-plus-
+// noise by grain variance RISING with local brightness, and by most of the
+// frame sitting at exactly the ground value. TARGET below holds those numbers
+// as measured off the reference screenshot.
+//
+// It does its own three.js setup rather than going through mount(), so uTime
+// can be driven to chosen values instead of wall clock. That is the whole
+// point: statistics taken at one arbitrary moment of the drift describe where
+// the plume happened to be, not the effect. Every variant is scored over the
+// same eight points in the drift.
+//
+// Usage: /field-measure.html?v=[["name",{"DUST_GAIN":"0.40"}], ...]
+// Results land in the page and are beaconed to /__sweep for a driver to read.
+
+const W = 700, H = 440;
+const TIMES = [0, 6, 13, 21, 30, 40, 52, 65];   // spread across the drift
+const TARGET = { p90: 36.0, p99: 68.0, mx: 119.0, floor: 50.3,
+                 bands: [0.88, 6.13, 13.46, 19.31] };
+
+const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false });
+renderer.setPixelRatio(1);
+renderer.setSize(W, H, false);
+const scene = new THREE.Scene();
+const camera = new THREE.Camera();
+const uniforms = {
+  uTime: { value: 0 },
+  uMouse: { value: new THREE.Vector2(0.5, 0.5) },
+  uResolution: { value: new THREE.Vector2(W, H) },
+};
+const material = new THREE.ShaderMaterial({
+  uniforms, vertexShader: VERTEX_SHADER, fragmentShader: FRAGMENT_SHADER,
+  depthTest: false, depthWrite: false,
+});
+const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+quad.frustumCulled = false;
+scene.add(quad);
+const gl = renderer.getContext();
+const px = new Uint8Array(W * H * 4);
+
+function patch(src, subs) {
+  for (const [k, v] of Object.entries(subs)) {
+    const re = new RegExp('(const\\s+float\\s+' + k + '\\s*=\\s*)[\\d.]+');
+    if (!re.test(src)) throw new Error('no such constant: ' + k);
+    src = src.replace(re, '$1' + v);
+  }
+  return src;
+}
+
+// 9x9 box mean via two separable passes, so the band analysis matches the
+// offline measurement exactly.
+function boxBlur(a, w, h, k) {
+  const r = k >> 1, tmp = new Float32Array(w * h), out = new Float32Array(w * h);
+  for (let y = 0; y < h; y++) {
+    let acc = 0;
+    for (let x = -r; x <= r; x++) acc += a[y * w + Math.min(w - 1, Math.max(0, x))];
+    for (let x = 0; x < w; x++) {
+      tmp[y * w + x] = acc / k;
+      acc -= a[y * w + Math.min(w - 1, Math.max(0, x - r))];
+      acc += a[y * w + Math.min(w - 1, Math.max(0, x + r + 1))];
+    }
+  }
+  for (let x = 0; x < w; x++) {
+    let acc = 0;
+    for (let y = -r; y <= r; y++) acc += tmp[Math.min(h - 1, Math.max(0, y)) * w + x];
+    for (let y = 0; y < h; y++) {
+      out[y * w + x] = acc / k;
+      acc -= tmp[Math.min(h - 1, Math.max(0, y - r)) * w + x];
+      acc += tmp[Math.min(h - 1, Math.max(0, y + r + 1)) * w + x];
+    }
+  }
+  return out;
+}
+
+const BANDS = [[8, 14], [14, 22], [22, 40], [40, 255]];
+
+function frameStats() {
+  gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, px);
+  const n = W * H, lum = new Float32Array(n);
+  for (let i = 0; i < n; i++) lum[i] = (px[i * 4] + px[i * 4 + 1] + px[i * 4 + 2]) / 3;
+  const sorted = Float32Array.from(lum).sort();
+  const q = (f) => sorted[Math.min(n - 1, Math.floor(f * n))];
+  const p50 = q(0.50);
+  const box = boxBlur(lum, W, H, 9);
+  let floor = 0;
+  for (let i = 0; i < n; i++) if (Math.abs(lum[i] - p50) < 0.6) floor++;
+  const bands = BANDS.map(([lo, hi]) => {
+    let s = 0, s2 = 0, c = 0;
+    for (let i = 0; i < n; i++) {
+      if (box[i] >= lo && box[i] < hi) { const r = lum[i] - box[i]; s += r; s2 += r * r; c++; }
+    }
+    return c > 500 ? Math.sqrt(s2 / c - (s / c) ** 2) : NaN;
+  });
+  return { p50, p90: q(0.90), p99: q(0.99), mx: sorted[n - 1], floor: floor / n * 100, bands };
+}
+
+function err(m) {
+  const e = [];
+  for (const k of ['p90', 'p99', 'mx', 'floor']) e.push(Math.abs(m[k] - TARGET[k]) / TARGET[k]);
+  m.bands.forEach((g, i) => {
+    if (TARGET.bands[i] > 1 && isFinite(g)) e.push(Math.abs(g - TARGET.bands[i]) / TARGET.bands[i]);
+  });
+  return e.reduce((a, b) => a + b, 0) / e.length;
+}
+
+function evaluate(subs) {
+  material.fragmentShader = patch(FRAGMENT_SHADER, subs);
+  material.needsUpdate = true;
+  const acc = [];
+  for (const t of TIMES) {
+    uniforms.uTime.value = t;
+    renderer.render(scene, camera);
+    acc.push(frameStats());
+  }
+  const avg = (f) => acc.reduce((s, m) => s + f(m), 0) / acc.length;
+  const m = {
+    p50: avg((x) => x.p50), p90: avg((x) => x.p90), p99: avg((x) => x.p99),
+    mx: avg((x) => x.mx), floor: avg((x) => x.floor),
+    bands: [0, 1, 2, 3].map((i) => avg((x) => x.bands[i] || 0)),
+  };
+  m.err = err(m);
+  return m;
+}
+
+const VARIANTS = JSON.parse(new URLSearchParams(location.search).get('v') || '[]');
+const rows = [];
+try {
+  for (const [tag, subs] of VARIANTS) {
+    const m = evaluate(subs);
+    rows.push([tag, +m.p50.toFixed(1), +m.p90.toFixed(1), +m.p99.toFixed(1),
+               +m.mx.toFixed(1), +m.floor.toFixed(1),
+               m.bands.map((b) => +b.toFixed(2)), +m.err.toFixed(4)]);
+  }
+  document.getElementById('out').textContent = JSON.stringify(rows, null, 1);
+  new Image().src = '/__sweep?r=' + encodeURIComponent(JSON.stringify(rows));
+} catch (e) {
+  new Image().src = '/__sweep?e=' + encodeURIComponent(String(e && e.message || e));
+}
+</script></body></html>
