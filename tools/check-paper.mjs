@@ -60,6 +60,92 @@ function checkKindsInSync() {
 }
 
 // --------------------------------------------------------------------------------------------
+// the row plan
+//
+// planPaperRows() is a pure static method on the logic class, so the same slicing that reads the
+// kinds out of the template can lift the whole method and run it here against the real modules.
+// What it decides is geometry: which grid row each block stands on, and which run of rows each
+// caption spans. A caption that spans too little inflates the one row it sits on and leaves a
+// blank band down the body beside it; one that spans too far draws over the next caption. Neither
+// is an error in the browser, so this is the only place either can be caught.
+
+const PLANNER = 'static planPaperRows(blocks) {';
+
+function templatePlanner() {
+  const src = readFileSync(TEMPLATE, 'utf8');
+  const at = src.indexOf(PLANNER);
+  if (at < 0) {
+    fail('tools/check-paper.mjs', 'the template no longer has "' + PLANNER + '", so the row plan cannot be checked');
+    return null;
+  }
+  // every method of the logic class closes on a line of its own at two spaces of indent; the
+  // template is checked in with CRLF line endings, so the line break is matched either way
+  const rest = src.slice(at + PLANNER.length);
+  const close = /\r?\n {2}\}\r?\n/.exec(rest);
+  if (!close) {
+    fail('tools/check-paper.mjs', 'planPaperRows is not closed with "  }" so this script cannot slice it out');
+    return null;
+  }
+  return new Function('blocks', rest.slice(0, close.index));
+}
+
+const planPaperRows = templatePlanner();
+
+// A block kind the planner does not place gets no grid cell, and a paper carrying one would spill
+// out of the body grid. Run the planner over one block of every kind so that a kind added to
+// renderPaper without a row is caught here rather than on the first module that uses it.
+function checkPlannerKinds() {
+  if (!planPaperRows) return;
+  const plan = planPaperRows(KINDS.map((k) => ({ k, wide: false, figs: [] })));
+  KINDS.forEach((k, i) => {
+    if (k === 'fold') {
+      if (plan.cells[i]) fail('tools/check-paper.mjs', 'planPaperRows gives a fold block a row of its own; renderPaperTail places the tail');
+    } else if (!plan.cells[i]) {
+      fail('tools/check-paper.mjs', 'planPaperRows gives block kind "' + k + '" no row, so renderPaper would place it nowhere');
+    }
+  });
+}
+
+function checkRowPlan(rel, blocks) {
+  if (!planPaperRows) return;
+  let plan;
+  try {
+    plan = planPaperRows(blocks);
+  } catch (err) {
+    return fail(rel, 'planPaperRows threw on this module: ' + err.message);
+  }
+  blocks.forEach((b, i) => {
+    if (b && b.k === 'fold') return;
+    if (!plan.cells[i]) fail(rel + ' block[' + i + '] ' + (b && b.k), 'planPaperRows gives it no grid cell, so it would fall outside the body');
+  });
+
+  const caps = plan.caps || [];
+  let prevEnd = 0;
+  caps.forEach((c, i) => {
+    const at = rel + ' caption for Fig. ' + (c.figs || []).map((f) => f && f.n).join(' and ');
+    if (!Number.isInteger(c.row) || c.row < 1) return fail(at, 'stands on no row: ' + JSON.stringify(c.row));
+    if (!Number.isInteger(c.end)) return fail(at, 'has no end line, so it spans one row and inflates it: end is ' + JSON.stringify(c.end));
+    if (c.end <= c.row) return fail(at, 'spans rows ' + c.row + ' / ' + c.end + ', which is empty or reversed');
+    if (c.row < prevEnd) fail(at, 'starts on row ' + c.row + ', inside the previous caption which runs to ' + prevEnd);
+    const next = i + 1 < caps.length ? caps[i + 1].row : null;
+    if (next !== null && c.end !== next) {
+      fail(at, 'ends at row ' + c.end + ' but the next caption starts on row ' + next + ', so the rows between them carry no caption');
+    }
+    if (next === null && c.end < plan.tailRow) {
+      fail(at, 'is the last caption and ends at row ' + c.end + ', short of the tail row ' + plan.tailRow);
+    }
+    prevEnd = c.end;
+  });
+
+  const aside = /^\s*(\d+)\s*\/\s*(\d+)\s*$/.exec(String(plan.asideRow || ''));
+  if (!aside) return fail(rel, 'the aside row span is not a pair of grid lines: ' + JSON.stringify(plan.asideRow));
+  if (caps.length && Number(aside[2]) > caps[0].row) {
+    fail(rel, 'the aside runs to row ' + aside[2] + ', past the first caption on row ' + caps[0].row);
+  }
+  return { rows: plan.tailRow, caps: caps.length };
+}
+
+// --------------------------------------------------------------------------------------------
 // runs
 
 const CITATION = /^\d+([,–-]\d+)*$/;
@@ -205,7 +291,9 @@ async function checkModule(rel) {
   checkSequence(rel, 'equation', seq.eq);
   checkSequence(rel, 'table', seq.table);
   checkSequence(rel, 'algorithm', seq.alg);
-  return { rel, blocks: mod.blocks.length, figs: seq.fig.length, eqs: seq.eq.length, tables: seq.table.length, algs: seq.alg.length, refs };
+  const plan = checkRowPlan(rel, mod.blocks);
+  return { rel, blocks: mod.blocks.length, figs: seq.fig.length, eqs: seq.eq.length, tables: seq.table.length, algs: seq.alg.length, refs,
+    rows: plan ? plan.rows : 0 };
 }
 
 const args = process.argv.slice(2);
@@ -214,6 +302,7 @@ const targets = args.length
   : readdirSync(path.join(ROOT, 'content')).filter((f) => f.endsWith('.js')).sort().map((f) => 'content/' + f);
 
 checkKindsInSync();
+checkPlannerKinds();
 const summaries = [];
 for (const t of targets) {
   const s = await checkModule(t);
@@ -227,6 +316,6 @@ if (errors.length) {
 }
 for (const s of summaries) {
   console.log('check-paper: ' + s.rel + ': ' + s.blocks + ' blocks, ' + s.figs + ' figures, ' + s.eqs + ' numbered equations, '
-    + s.tables + ' tables, ' + s.algs + ' listings, ' + s.refs + ' references');
+    + s.tables + ' tables, ' + s.algs + ' listings, ' + s.refs + ' references, ' + s.rows + ' grid rows');
 }
 console.log('check-paper: ' + summaries.length + ' module' + (summaries.length === 1 ? '' : 's') + ' clean');
