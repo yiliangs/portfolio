@@ -675,15 +675,15 @@
           "\n  ",
           h("main", { key: V.chapterKey, "data-screen-label": "Chapter", style: {"maxWidth":"1160px","margin":"0 auto","padding":"0 clamp(20px,4vw,48px) 88px","fontFamily":"var(--mono)","fontSize":"14px","lineHeight":"22px"} },
             "\n    ",
-            h("div", { key: "1", style: {"marginTop":"88px","display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","borderRight":"1px solid color-mix(in srgb, var(--color-text) 16%, transparent)","borderBottom":"1px solid color-mix(in srgb, var(--color-text) 16%, transparent)","backgroundImage":"linear-gradient(to right, color-mix(in srgb, var(--color-text) 16%, transparent) 0 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--color-text) 16%, transparent) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
+            h("div", { key: "1", ref: V.sheetGridRef, style: {"--hair":"color-mix(in srgb, var(--color-text) 16%, transparent)","position":"relative","marginTop":"88px","display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","borderRight":"1px solid var(--hair)","borderBottom":"1px solid var(--hair)","backgroundImage":"linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
               "\n\n    ",
               "\n    ",
-              h("button", { key: "2|24.1chn43n", onClick: V.goPageCurrent, style: {"all":"unset","gridColumn":"1 / 7","gridRow":"1 / 2","boxSizing":"border-box","cursor":"pointer","display":"flex","alignItems":"center","whiteSpace":"nowrap","padding":"0 22px","fontFamily":"var(--mono)","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-text)","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)","transition":"box-shadow 240ms ease"}, className: "scp5" },
+              h("button", { key: "2|24.1chn43n", className: "sheet-mod", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.back?.col ?? ""}; grid-row:${V.sheet?.back?.row ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
                 h(F,{key:0},"← ",I(V.current?.backWord,1),"")
               ),
               "\n\n    ",
               "\n    ",
-              h("section", { key: "5", style: {"gridColumn":"1 / 15","gridRow":"3 / 11","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)","padding":"22px","boxSizing":"border-box"} },
+              h("section", { key: "5", className: "sheet-mod", style: S(`grid-column:${V.sheet?.header?.col ?? ""}; grid-row:${V.sheet?.header?.row ?? ""}; padding:22px;`) },
                 "\n      ",
                 h("p", { key: "1|88.1oj3jfb", style: {"margin":"0 0 22px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-accent-700)","fontFeatureSettings":"'tnum' 1"} },
                   h(F,{key:0},"",I(V.current?.kickerWord,1)," ",I(V.current?.numeral,3)," · ",I(V.current?.kind,5)," · ",I(V.current?.year,7),"")
@@ -699,12 +699,12 @@
                 "\n    "
               ),
               "\n    ",
-              h("span", { key: "7|19.1h99e0b", "aria-hidden": "true", style: {"gridColumn":"15 / 23","gridRow":"3 / 11","display":"flex","alignItems":"flex-end","justifyContent":"flex-end","padding":"22px","boxSizing":"border-box","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)","fontFamily":"'DM Mono', ui-monospace, monospace","fontWeight":"400","fontSize":"clamp(40px,5.5vw,84px)","lineHeight":"1","letterSpacing":"-0.04em","color":"transparent","WebkitTextStroke":"1px var(--color-accent)","opacity":"0.55","pointerEvents":"none","userSelect":"none","fontFeatureSettings":"'tnum' 1"} },
+              h("span", { key: "7|19.1h99e0b", className: "sheet-mod", "aria-hidden": "true", style: S(`grid-column:${V.sheet?.ghost?.col ?? ""}; grid-row:${V.sheet?.ghost?.row ?? ""}; display:flex; align-items:flex-end; justify-content:flex-end; padding:22px; font-family:'DM Mono', ui-monospace, monospace; font-weight:400; font-size:clamp(40px,5.5vw,84px); line-height:1; letter-spacing:-0.04em; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; user-select:none; font-feature-settings:'tnum' 1;`) },
                 h(F,{key:0},"",I(V.current?.ghost,1),"")
               ),
               "\n\n    ",
               "\n    ",
-              h("div", { key: "10", style: {"gridColumn":"1 / 5","gridRow":"12 / 14","padding":"11px 22px","boxSizing":"border-box","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)"} },
+              h("div", { key: "10", className: "sheet-mod", style: S(`grid-column:${V.sheet?.specSheet?.col ?? ""}; grid-row:${V.sheet?.specSheet?.row ?? ""}; padding:11px 22px;`) },
                 h("p", { key: "0|5.3wrm2m", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Sheet"
                 ),
@@ -713,7 +713,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "12", style: {"gridColumn":"5 / 9","gridRow":"12 / 14","padding":"11px 22px","boxSizing":"border-box","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)"} },
+              h("div", { key: "12", className: "sheet-mod", style: S(`grid-column:${V.sheet?.specRole?.col ?? ""}; grid-row:${V.sheet?.specRole?.row ?? ""}; padding:11px 22px;`) },
                 h("p", { key: "0|4.yk2787", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Role"
                 ),
@@ -722,7 +722,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "14", style: {"gridColumn":"9 / 14","gridRow":"12 / 14","padding":"11px 22px","boxSizing":"border-box","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)"} },
+              h("div", { key: "14", className: "sheet-mod", style: S(`grid-column:${V.sheet?.specWith?.col ?? ""}; grid-row:${V.sheet?.specWith?.row ?? ""}; padding:11px 22px;`) },
                 h("p", { key: "0|4.yk5x1d", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "With"
                 ),
@@ -731,7 +731,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "16", style: {"gridColumn":"14 / 18","gridRow":"12 / 14","padding":"11px 22px","boxSizing":"border-box","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)"} },
+              h("div", { key: "16", className: "sheet-mod", style: S(`grid-column:${V.sheet?.specStatus?.col ?? ""}; grid-row:${V.sheet?.specStatus?.row ?? ""}; padding:11px 22px;`) },
                 h("p", { key: "0|6.1m8lgyx", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Status"
                 ),
@@ -740,7 +740,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "18", style: {"gridColumn":"18 / 23","gridRow":"12 / 14","padding":"11px 22px","boxSizing":"border-box","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)"} },
+              h("div", { key: "18", className: "sheet-mod", style: S(`grid-column:${V.sheet?.specRev?.col ?? ""}; grid-row:${V.sheet?.specRev?.row ?? ""}; padding:11px 22px;`) },
                 h("p", { key: "0|11.1s8ry21", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Rev / Scale"
                 ),
@@ -750,13 +750,21 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("figure", { key: "21", className: C("plate","scp6 scp7"), "data-shape": `frame-${V.current?.figNo ?? ""}`, style: {"gridColumn":"1 / 23","gridRow":"15 / 29","margin":"0","border":"0","outline":"0","filter":"none","padding":"1px 0 0 1px","boxSizing":"border-box","position":"relative","overflow":"hidden","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)"} },
+              h("figure", { key: "21", className: "plate sheet-mod sheet-plate", "data-shape": `frame-${V.current?.figNo ?? ""}`, style: S(`grid-column:${V.sheet?.hero?.col ?? ""}; grid-row:${V.sheet?.hero?.row ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
                 "\n      ",
-                h("image-slot", { key: "1", id: V.current?.heroSlotId, shape: "rect", placeholder: V.current?.placeholder, style: {"width":"100%","height":"100%"} }),
+                h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
+                  "+"
+                ),
+                "\n      ",
+                h("image-slot", { key: "3", id: V.current?.heroSlotId, shape: "rect", placeholder: V.current?.placeholder, style: {"width":"100%","height":"100%"} }),
+                "\n      ",
+                h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
+                  "+"
+                ),
                 "\n    "
               ),
               "\n    ",
-              h("p", { key: "23|79.l667xt", style: {"gridColumn":"1 / 23","gridRow":"29 / 30","margin":"0","padding":"11px 22px","boxSizing":"border-box","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)","fontSize":"13px","lineHeight":"20px","color":"var(--color-neutral-700)","fontFeatureSettings":"'tnum' 1"} },
+              h("p", { key: "23|79.l667xt", className: "sheet-mod", style: S(`grid-column:${V.sheet?.heroCaption?.col ?? ""}; grid-row:${V.sheet?.heroCaption?.row ?? ""}; margin:0; padding:11px 22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
                 h("span", { key: "0|44.1e4j9ob", style: {"color":"var(--color-accent)"} },
                   h(F,{key:0},"",I(V.current?.figWord,1)," ",I(V.current?.numeral,3),".")
                 ),
@@ -764,7 +772,7 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("div", { key: "26", "data-enter": "", style: {"gridColumn":"1 / 15","gridRow":"31 / 36","display":"grid","gridTemplateColumns":"3.5em minmax(0,1fr)","gap":"0 var(--space-3)","alignContent":"start","padding":"22px","boxSizing":"border-box","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)","fontSize":"14.5px","lineHeight":"26px","color":"color-mix(in srgb, var(--color-text) 88%, transparent)"} },
+              h("div", { key: "26", className: "sheet-mod", style: S(`grid-column:${V.sheet?.body1?.col ?? ""}; grid-row:${V.sheet?.body1?.row ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:color-mix(in srgb, var(--color-text) 88%, transparent);`) },
                 "\n      ",
                 h("span", { key: "1|5.36tydg", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
                   "01 //"
@@ -775,7 +783,7 @@
                 "\n    "
               ),
               "\n    ",
-              h("div", { key: "28", "data-enter": "", style: {"gridColumn":"1 / 15","gridRow":"36 / 41","display":"grid","gridTemplateColumns":"3.5em minmax(0,1fr)","gap":"0 var(--space-3)","alignContent":"start","padding":"22px","boxSizing":"border-box","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)","fontSize":"14.5px","lineHeight":"26px","color":"color-mix(in srgb, var(--color-text) 88%, transparent)"} },
+              h("div", { key: "28", className: "sheet-mod", style: S(`grid-column:${V.sheet?.body2?.col ?? ""}; grid-row:${V.sheet?.body2?.row ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:color-mix(in srgb, var(--color-text) 88%, transparent);`) },
                 "\n      ",
                 h("span", { key: "1|5.36uq3p", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
                   "02 //"
@@ -786,7 +794,7 @@
                 "\n    "
               ),
               "\n    ",
-              h("div", { key: "30", "data-enter": "", style: {"gridColumn":"1 / 15","gridRow":"41 / 45","display":"grid","gridTemplateColumns":"3.5em minmax(0,1fr)","gap":"0 var(--space-3)","alignContent":"start","padding":"22px","boxSizing":"border-box","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)","fontSize":"14.5px","lineHeight":"26px","color":"color-mix(in srgb, var(--color-text) 88%, transparent)"} },
+              h("div", { key: "30", className: "sheet-mod", style: S(`grid-column:${V.sheet?.body3?.col ?? ""}; grid-row:${V.sheet?.body3?.row ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:color-mix(in srgb, var(--color-text) 88%, transparent);`) },
                 "\n      ",
                 h("span", { key: "1|5.36vhty", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
                   "03 //"
@@ -797,7 +805,7 @@
                 "\n    "
               ),
               "\n    ",
-              h("aside", { key: "32", "data-enter": "", style: {"gridColumn":"15 / 23","gridRow":"31 / 39","display":"flex","flexDirection":"column","gap":"20px","padding":"22px","boxSizing":"border-box","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)","fontSize":"12.5px","lineHeight":"20px","color":"var(--color-neutral-700)"} },
+              h("aside", { key: "32", className: "sheet-mod", style: S(`grid-column:${V.sheet?.aside?.col ?? ""}; grid-row:${V.sheet?.aside?.row ?? ""}; display:flex; flex-direction:column; gap:20px; padding:22px; font-size:12.5px; line-height:20px; color:var(--color-neutral-700);`) },
                 "\n      ",
                 (V.marginalia ? h(F,{key:1},
                   "\n        ",
@@ -850,15 +858,15 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("figure", { key: "35", className: "plate", style: {"gridColumn":"1 / 12","gridRow":"46 / 55","margin":"0","border":"0","outline":"0","filter":"none","padding":"1px 0 0 1px","boxSizing":"border-box","position":"relative","overflow":"hidden","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)"} },
+              h("figure", { key: "35", className: "plate sheet-mod sheet-plate", style: S(`grid-column:${V.sheet?.detailA?.col ?? ""}; grid-row:${V.sheet?.detailA?.row ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
                 h("image-slot", { key: "0", id: V.current?.detailSlotA, shape: "rect", placeholder: "Detail: drawing or interface", style: {"width":"100%","height":"100%"} })
               ),
               "\n    ",
-              h("figure", { key: "37", className: "plate", style: {"gridColumn":"12 / 23","gridRow":"46 / 55","margin":"0","border":"0","outline":"0","filter":"none","padding":"1px 0 0 1px","boxSizing":"border-box","position":"relative","overflow":"hidden","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)"} },
+              h("figure", { key: "37", className: "plate sheet-mod sheet-plate", style: S(`grid-column:${V.sheet?.detailB?.col ?? ""}; grid-row:${V.sheet?.detailB?.row ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
                 h("image-slot", { key: "0", id: V.current?.detailSlotB, shape: "rect", placeholder: "Detail: process or site", style: {"width":"100%","height":"100%"} })
               ),
               "\n    ",
-              h("p", { key: "39|97.76h6dp", style: {"gridColumn":"1 / 23","gridRow":"55 / 56","margin":"0","padding":"11px 22px","boxSizing":"border-box","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)","fontSize":"13px","lineHeight":"20px","color":"var(--color-neutral-700)"} },
+              h("p", { key: "39|97.76h6dp", className: "sheet-mod", style: S(`grid-column:${V.sheet?.detailCaption?.col ?? ""}; grid-row:${V.sheet?.detailCaption?.row ?? ""}; margin:0; padding:11px 22px; font-size:13px; line-height:20px; color:var(--color-neutral-700);`) },
                 h("span", { key: "0|10.bamrr4", style: {"color":"var(--color-accent)"} },
                   "Figs. 1–2."
                 ),
@@ -866,11 +874,11 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("button", { key: "42|24.1chn43n", onClick: V.goPageCurrent, style: {"all":"unset","gridColumn":"1 / 7","gridRow":"57 / 59","boxSizing":"border-box","cursor":"pointer","display":"flex","alignItems":"center","whiteSpace":"nowrap","padding":"0 22px","fontFamily":"var(--mono)","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-text)","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)","transition":"box-shadow 240ms ease"}, className: "scp5" },
+              h("button", { key: "42|24.1chn43n", className: "sheet-mod", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navBack?.col ?? ""}; grid-row:${V.sheet?.navBack?.row ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
                 h(F,{key:0},"← ",I(V.current?.backWord,1),"")
               ),
               "\n    ",
-              h("button", { key: "44|110.pyry3", onClick: V.openNext, style: {"all":"unset","gridColumn":"11 / 23","gridRow":"57 / 59","boxSizing":"border-box","cursor":"pointer","display":"flex","flexDirection":"column","alignItems":"flex-end","justifyContent":"center","gap":"4px","padding":"11px 22px","textAlign":"right","color":"var(--color-text)","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)","transition":"box-shadow 240ms ease"}, className: "scp5" },
+              h("button", { key: "44|110.pyry3", className: "sheet-mod", onClick: V.openNext, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navNext?.col ?? ""}; grid-row:${V.sheet?.navNext?.row ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:11px 22px; text-align:right; color:var(--color-text); background:var(--color-bg);`) },
                 "\n      ",
                 h("span", { key: "1|47.13c0pry", style: {"fontSize":"11px","lineHeight":"14px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   h(F,{key:0},"Next · ",I(V.next?.kickerWord,1)," ",I(V.next?.numeral,3),"")
@@ -914,7 +922,7 @@
         if (this.fog) { clearTimeout(this.fogKillTimer); this.fogKillTimer = setTimeout(() => { if (this.fog && this.state.view !== 'home') { this.fog.destroy(); this.fog = null; } }, 1000); }
       }
     }
-    headRef = React.createRef(); rootRef = React.createRef(); heroRef = React.createRef(); scriptRef = React.createRef(); parchLayerRef = React.createRef(); platformRef = React.createRef(); heroTextRef = React.createRef(); tabToolingRef = React.createRef(); tabWritingRef = React.createRef();
+    headRef = React.createRef(); rootRef = React.createRef(); heroRef = React.createRef(); scriptRef = React.createRef(); parchLayerRef = React.createRef(); platformRef = React.createRef(); heroTextRef = React.createRef(); tabToolingRef = React.createRef(); tabWritingRef = React.createRef(); sheetGridRef = React.createRef();
     MONO = "'Geist Mono', ui-monospace, monospace";
     CUBE_COLLAPSE_MS = 1500; // the cube's collapse into the platform: dissolve, travel, press flat
     romans = ['I','II','III','IV','V','VI','VII','VIII'];
@@ -979,6 +987,55 @@
         titleSize: 'clamp(36px,5.2vw,76px)', titleTracking: '-0.03em', bylineSize: '15px', bodySize: '15px', smallBodySize: '14px', stampSize: '28px', h2Size: '32px', h3Size: '26px', cvSize: '18px', capLeadSize: '13px', marginSize: '13px', marginStyle: 'normal', marginPrefix: '// ' },
     };
     featuredFor = { writing: [2, 4], tooling: [0, 5] };
+  
+    // Where every module of a Development sheet sits on the 22 column, 44px row drawing grid, as
+    // "start / end" grid lines. The wide table is the desk-width sheet; the narrow table is the same
+    // drawing stacked, chosen off state.narrow (window.innerWidth < 1000). Both are written as plain
+    // literals so tools/check-sheet-grid.mjs can read them without running this file, and the template
+    // binds sheet.<name>.col / .row rather than carrying any span of its own.
+    SHEET_WIDE = {
+      back:          { col: '1 / 7',   row: '1 / 2' },
+      header:        { col: '1 / 15',  row: '3 / 11' },
+      ghost:         { col: '15 / 23', row: '3 / 11' },
+      specSheet:     { col: '1 / 5',   row: '12 / 14' },
+      specRole:      { col: '5 / 9',   row: '12 / 14' },
+      specWith:      { col: '9 / 14',  row: '12 / 14' },
+      specStatus:    { col: '14 / 18', row: '12 / 14' },
+      specRev:       { col: '18 / 23', row: '12 / 14' },
+      hero:          { col: '1 / 23',  row: '15 / 29' },
+      heroCaption:   { col: '1 / 23',  row: '29 / 30' },
+      body1:         { col: '1 / 15',  row: '31 / 36' },
+      body2:         { col: '1 / 15',  row: '36 / 41' },
+      body3:         { col: '1 / 15',  row: '41 / 45' },
+      aside:         { col: '15 / 23', row: '31 / 39' },
+      detailA:       { col: '1 / 12',  row: '46 / 55' },
+      detailB:       { col: '12 / 23', row: '46 / 55' },
+      detailCaption: { col: '1 / 23',  row: '55 / 56' },
+      navBack:       { col: '1 / 7',   row: '57 / 59' },
+      navNext:       { col: '11 / 23', row: '57 / 59' },
+    };
+    SHEET_NARROW = {
+      back:          { col: '1 / 23',  row: '1 / 2' },
+      header:        { col: '1 / 23',  row: '3 / 9' },
+      ghost:         { col: '1 / 23',  row: '9 / 12' },
+      specSheet:     { col: '1 / 8',   row: '13 / 16' },
+      specRole:      { col: '8 / 15',  row: '13 / 16' },
+      specWith:      { col: '15 / 23', row: '13 / 16' },
+      specStatus:    { col: '1 / 12',  row: '16 / 19' },
+      specRev:       { col: '12 / 23', row: '16 / 19' },
+      hero:          { col: '1 / 23',  row: '20 / 30' },
+      heroCaption:   { col: '1 / 23',  row: '30 / 32' },
+      body1:         { col: '1 / 23',  row: '33 / 39' },
+      body2:         { col: '1 / 23',  row: '39 / 45' },
+      body3:         { col: '1 / 23',  row: '45 / 50' },
+      aside:         { col: '1 / 23',  row: '51 / 58' },
+      detailA:       { col: '1 / 23',  row: '59 / 71' },
+      detailB:       { col: '1 / 23',  row: '71 / 83' },
+      detailCaption: { col: '1 / 23',  row: '83 / 85' },
+      navBack:       { col: '1 / 23',  row: '86 / 88' },
+      navNext:       { col: '1 / 23',  row: '89 / 91' },
+    };
+  
     why = [
       'A consultant kept a workbook of mullion spacings by hand. I wanted the drawing to write the workbook, not the other way round.',
       'Studios review sets by printing, redlining and scanning. I wanted the red pen without the printer, and notes that survive revisions.',
@@ -1492,6 +1549,11 @@
       const current = projects[idx];
       const hov = projects[hovered] && this.pageOf(hovered) === pageKey ? projects[hovered] : pageProjects[0];
       const tabColor = (r) => brandReg === r ? 'var(--color-text)' : 'var(--color-neutral-600)';
+      // the sheet's modules, placed off whichever table the width calls for. The template names a module
+      // and reads its span back; nothing about where a module sits is written in the markup
+      const place = this.state.narrow ? this.SHEET_NARROW : this.SHEET_WIDE;
+      const sheet = {};
+      for (const name of Object.keys(place)) sheet[name] = { col: place[name].col, row: place[name].row };
       return {
         isHome: view === 'home', showTabs: view !== 'home', goHome: () => this.goHome(),
         homeLayerRef: this.homeLayerRef, homeRollRef: this.homeRollRef, homeCubeRef: this.homeCubeRef, fogLayerRef: this.fogLayerRef, homeHeadRef: this.homeHeadRef, homeFootRef: this.homeFootRef,
@@ -1517,6 +1579,7 @@
         hintOpacity: this.state.hintGone || this.state.usedKeys ? '0' : '1', bloomHintOpacity: this.state.bloomTouched ? '0' : '1',
         projects, pageProjects, leaves, leftLeaves: leaves.filter((l) => l.side === 'left'), rightLeaves: leaves.filter((l) => l.side === 'right'), featured, current, next: projects[(idx + 1) % projects.length], hovered: hov, cv: this.cv,
         gridPlatesRow: gridRows.plates, gridAuthorRow: gridRows.author, gridColophonRow: gridRows.colophon,
+        sheet, sheetGridRef: this.sheetGridRef,
         contentsRef: this.contentsRef, platesRef: this.platesRef, notesRef: this.notesRef, headRef: this.headRef, tabToolingRef: this.tabToolingRef, tabWritingRef: this.tabWritingRef,
         goTooling: () => this.goPage('tooling'), goWriting: () => this.goPage('writing'),
         goPageCurrent: () => this.goPage(view === 'chapter' ? this.pageOf(idx) : pageKey), goNotes: () => this.go(this.notesRef),

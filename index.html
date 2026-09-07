@@ -34,6 +34,25 @@
     .plate { transition: outline-color 300ms ease, filter 500ms ease; }
     .plate:hover { outline-color: var(--color-accent); }
     .tr-char-word, .tr-char { vertical-align: baseline; }
+    /* — the Development sheet: every module is a framed cell on the drawing grid.
+         Left and top lines are drawn inside the module, right and bottom outside, so two neighbours
+         put their shared line in the same place. Only one of the two is ever seen, because the module
+         further right or further down is later in the markup and its opaque ground covers its
+         neighbour's outer stroke: keep the modules in reading order or the seams double.
+         The frame is a layer of its own so it lands above whatever the module holds, which is how a
+         plate keeps its left and top lines over a photograph. No z-index anywhere in here: painting
+         order alone gives content, then ground, then frame, and leaves the guides free to sit above
+         the lot. — */
+    .sheet-mod { position: relative; box-sizing: border-box; background: var(--color-bg); }
+    .sheet-mod::after { content: ''; position: absolute; inset: 0; pointer-events: none;
+      box-shadow: inset 1px 0 0 0 var(--hair), inset 0 1px 0 0 var(--hair), 1px 0 0 0 var(--hair), 0 1px 0 0 var(--hair);
+      transition: box-shadow 240ms ease; }
+    .sheet-mod:hover::after { box-shadow: inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text); }
+    /* registration marks are real elements, not pseudos: the frame layer has the pseudos now, and a
+       plate has to be able to brighten its own marks */
+    .sheet-mark { position: absolute; line-height: 1; font-family: var(--mono); font-size: 14px; color: var(--color-accent); pointer-events: none; transition: opacity 200ms ease; }
+    /* the sheet's plates are drawings on a grid, not matted photographs: no zoom past the hairline */
+    .sheet-plate:hover image-slot { transform: none; }
   </style>
 <style>
 .scp0:hover{color:var(--color-accent-700) !important}
@@ -42,8 +61,6 @@
 .scp3:hover{transform:scale(1.12) !important}
 .scp4:hover{font-family:Cinzel, var(--font-heading) !important;color:var(--color-accent-700) !important;letter-spacing:0.1em !important}
 .scp5:hover{box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text) !important}
-.scp6::before{content:'+'; position:absolute; left:8px; top:5px; z-index:2; line-height:1; font-family:var(--mono); font-size:14px; color:var(--color-accent); opacity:1}
-.scp7::after{content:'+'; position:absolute; right:8px; bottom:5px; z-index:2; line-height:1; font-family:var(--mono); font-size:14px; color:var(--color-accent); opacity:1}
 </style>
 </head>
 <body>
