@@ -296,6 +296,25 @@ if (!/data-shape-alt="frame-\{\{ p\.figNo \}\}"/.test(src)) {
   fail('a landing plate no longer carries data-shape-alt="frame-{{ p.figNo }}", which is how it pairs with its own chapter');
 }
 
+// ---------------------------------------------------------------- the roll's arrival
+
+// The roll travels into the platform opening on the way to this landing, and two lines in
+// syncParchment keep that travel from stuttering. The clip to the opening must wait for a travel that
+// is pending as well as one in the air, or the frame between the two is one where the roll, still out
+// in the page, is clipped to a cell it has not reached and blinks out. And a travel must land on its
+// anchor exactly: bez() is a bisection that answers 0.99999 at t = 1, so a pose left a hair short read
+// as a different anchor on the next sync and started the whole travel over, a second time, every time.
+const clipLine = /layer\.style\.clipPath\s*=\s*(k === 1[\s\S]{0,240}?);/.exec(logicSrc);
+if (!clipLine) fail('syncParchment no longer clips the layer to the platform opening');
+else if (!/!this\.parchTravel/.test(clipLine[1])) {
+  fail('the platform clip does not wait for a pending travel (' + clipLine[1].trim() +
+    '): the roll would be clipped to the opening it is still flying towards');
+}
+if (!/place\(\{\s*\.\.\.dest\s*\}\)/.test(logicSrc)) {
+  fail("the roll's travel does not land on its anchor exactly (place({ ...dest })), so a pose short of " +
+    'the anchor reads as a register change and runs the travel again');
+}
+
 // ---------------------------------------------------------------- report
 
 if (failures.length) {

@@ -1865,11 +1865,19 @@ class Component extends DCLogic {
     if (!this.parchHold) layer.style.opacity = '0.8';
     const pr = ph.getBoundingClientRect(), k = ph === this.platformRef.current ? 1 : 0;
     const to = { x: pr.left, y: pr.top, w: pr.width, h: pr.height, k };
-    // the model lives in one grid opening on the Development page: clip the fixed layer to that cell
-    layer.style.clipPath = k === 1 && !this.parchTween
+    // the model lives in one grid opening on the Development page: clip the fixed layer to that cell.
+    // Only once the roll is actually in it: a travel still to start, or in the air, has the roll out in
+    // the page, and clipping to the opening it is heading for would blink it away where it stands
+    layer.style.clipPath = k === 1 && !this.parchTween && !this.parchTravel
       ? 'inset(' + pr.top + 'px ' + (window.innerWidth - pr.right) + 'px ' + (window.innerHeight - pr.bottom) + 'px ' + pr.left + 'px)'
       : 'none';
-    if (this.parchTween) { if (this.parchTween.k === k) this.parchTween.to = to; return; }
+    // A register change that arrives while a travel is still in the air supersedes it; the roll carries
+    // on from the pose that travel had reached. Queued behind it instead, as it was, the new travel sat
+    // out the rest of the old one holding parchTravel, and the frame the old tween ended on was one
+    // where nothing was tweening and nothing had started: the clip above went on over a roll still out
+    // in the page, and the travel then began 400ms late and jumped half way in one step.
+    if (this.parchTween && !this.parchTravel) { if (this.parchTween.k === k) this.parchTween.to = to; return; }
+    if (this.parchTween) { cancelAnimationFrame(this.parchRaf); this.parchTween = null; }
     const cur = this.parchPose;
     const place = (p) => { this.parch.setAnchor(p); this.parch.setUnroll(p.k); this.parchPose = p; };
     const travel = this.parchTravel; this.parchTravel = false;
@@ -1901,8 +1909,14 @@ class Component extends DCLogic {
     const tick = (now) => {
       const dest = tw.to, t = Math.min(1, (now - t0) / dur), p = this.bez(t);
       const L = (a, b) => a + (b - a) * p;
-      place({ x: L(from.x, dest.x), y: L(from.y, dest.y), w: L(from.w, dest.w), h: L(from.h, dest.h), k: L(from.k, dest.k) });
-      if (t < 1) { this.parchRaf = requestAnimationFrame(tick); return; }
+      if (t < 1) {
+        place({ x: L(from.x, dest.x), y: L(from.y, dest.y), w: L(from.w, dest.w), h: L(from.h, dest.h), k: L(from.k, dest.k) });
+        this.parchRaf = requestAnimationFrame(tick); return;
+      }
+      // land on the anchor exactly. bez() is a bisection, so it answers 0.99999 at t = 1, and a pose a
+      // hair short of its destination is not the destination when the next sync compares the two: the
+      // travel read as a register change again and ran a second time, every time
+      place({ ...dest });
       this.parchTween = null; root.insertBefore(layer, root.firstChild); layer.style.zIndex = '1'; layer.style.opacity = '0.8'; this.syncParchment();
     };
     this.parchRaf = requestAnimationFrame(tick);
