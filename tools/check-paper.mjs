@@ -213,7 +213,7 @@ if (errors.length) {
   process.exit(1);
 }
 for (const s of summaries) {
-  console.log('check-paper: ' + s.rel + ' — ' + s.blocks + ' blocks, ' + s.figs + ' figures, ' + s.eqs + ' numbered equations, '
+  console.log('check-paper: ' + s.rel + ': ' + s.blocks + ' blocks, ' + s.figs + ' figures, ' + s.eqs + ' numbered equations, '
     + s.tables + ' tables, ' + s.algs + ' listings, ' + s.refs + ' references');
 }
 console.log('check-paper: ' + summaries.length + ' module' + (summaries.length === 1 ? '' : 's') + ' clean');
