@@ -1,22 +1,48 @@
 // Parchment roll drawn as gold profile lines over a faint sheet, burned by a heat simulation (after
 // text-rippling's BurnReveal): cursor heats the cells under it; past the kindling point a cell self-sustains
 // and radiates to neighbours, so the front creeps on by itself. Burned cells are gone until the whole sheet
-// has gone, then it slowly re-forms. mount(container) -> { setTilt(nx, ny, over), destroy() }.
+// has gone, then it slowly re-forms. The standing roll is never still: its sheet carries iso curves of a slowly
+// morphing 3D noise field, its two curls breathe out of phase, and the open span between them carries a travelling
+// flutter and a slight twist, the way old paper moves in a draught. All of that scales away as the roll unrolls, so
+// the platform the Development page lands on is the sheet it always was.
+// mount(container) -> { setTilt(nx, ny, over), destroy() }.
 import * as THREE from './vendor/three-0.160.0.module.min.js';
 
 // ----- geometry -----
+// the resting motion. Every term below is multiplied by m = 1 - k, so at the platform pose (k = 1) the sheet is
+// exactly the still, flat one it was before this existed and the landing keeps its proportions whatever the clock says
+const BREATH_A = 0.07;  // fraction the rolled length winds and unwinds by
+const BREATH_T = 0.04;  // fraction the turn count follows it by
+const BREATH_R = 0.03;  // fraction the curl radius pulses by
+const BREATH_W = 0.45;  // rad/s of the breath; the ends run 1.9 rad apart, so the roll never reads as one pulse
+const FLUT_A = 0.02, FLUT_K = 6.5, FLUT_W = 1.1;  // flutter travelling down the open span: height, waves, rad/s
+const TWIST_A = 0.018, TWIST_W = 0.31;            // twist across the span: height at either edge, rad/s
+// the iso curves drawn on the sheet, contours of a 3D noise field the sheet is slid through
+const CONT_LEVELS = 6;                  // contour lines across the field's 0..1 range
+const CONT_FREQ = 1.6;                  // lattice cells per world unit; taken on the sheet's own size, so cells stay square
+const CONT_DRIFT = [0.11, 0.07, -0.05]; // units/s the field slides under the paper, so the curves morph rather than slide
+const CONT_HALF_W = 0.55;               // half a curve's width in px, so a line stays a hairline at any roll scale
+const CONT_A = 0.22;                    // ink weight of the curves on the standing roll, kept well under the word's
 // k = unroll 0..1: the rolled fraction a shrinks and the turns unwind, so the sheet genuinely unrolls rather than fading flat
-function profile(u, W, k = 0) {
-  const a = 0.17 * (1 - k), r0 = 0.085 * (1 - 0.35 * k), turns = 1.35 * (1 - k);
-  if (a < 0.003) return [-W / 2 + u * W, 0];
-  if (u < a) { const t = (a - u) / a, th = t * turns * Math.PI * 2, r = r0 * (1 - 0.32 * t); const x0 = -W / 2 + a * W; return [x0 - Math.sin(th) * r, r - Math.cos(th) * r]; }
-  if (u > 1 - a) { const t = (u - (1 - a)) / a, th = t * turns * Math.PI * 2, r = r0 * (1 - 0.32 * t); const x0 = W / 2 - a * W; return [x0 + Math.sin(th) * r, r - Math.cos(th) * r]; }
+// t = seconds: the two curls breathe out of phase, so one is winding while the other unwinds
+function profile(u, W, k = 0, t = 0) {
+  const m = 1 - k;
+  const aL = 0.17 * m * (1 + BREATH_A * m * Math.sin(t * BREATH_W)), aR = 0.17 * m * (1 + BREATH_A * m * Math.sin(t * BREATH_W + 1.9));
+  const r0 = 0.085 * (1 - 0.35 * k) * (1 + BREATH_R * m * Math.sin(t * BREATH_W * 0.83 + 0.6));
+  const turnsL = 1.35 * m * (1 + BREATH_T * m * Math.sin(t * BREATH_W + 0.4)), turnsR = 1.35 * m * (1 + BREATH_T * m * Math.sin(t * BREATH_W + 2.3));
+  if (aL >= 0.003 && u < aL) { const s = (aL - u) / aL, th = s * turnsL * Math.PI * 2, r = r0 * (1 - 0.32 * s); const x0 = -W / 2 + aL * W; return [x0 - Math.sin(th) * r, r - Math.cos(th) * r]; }
+  if (aR >= 0.003 && u > 1 - aR) { const s = (u - (1 - aR)) / aR, th = s * turnsR * Math.PI * 2, r = r0 * (1 - 0.32 * s); const x0 = W / 2 - aR * W; return [x0 + Math.sin(th) * r, r - Math.cos(th) * r]; }
   return [-W / 2 + u * W, 0];
 }
 const sag = (u, v) => Math.sin(u * Math.PI) * 0.03 * Math.cos((v - 0.5) * Math.PI);
-// k = unroll 0..1: 0 is the curled scroll, 1 a flat sheet (the curls straighten out, the sag settles)
-function point(u, v, W, H, k = 0) { const [x, z] = profile(u, W, k); return [x, (v - 0.5) * H, z + sag(u, v) * (1 - 0.75 * k)]; }
-function refill(geom, W, H, k) { const uv = geom.attributes.uv.array, p = geom.attributes.position.array; for (let i = 0, n = uv.length / 2; i < n; i++) { const q = point(uv[i * 2], uv[i * 2 + 1], W, H, k); p[i * 3] = q[0]; p[i * 3 + 1] = q[1]; p[i * 3 + 2] = q[2]; } geom.attributes.position.needsUpdate = true; geom.computeBoundingSphere(); }
+// the draught on the open span: a wave travelling down the length plus a twist across the width, both pinned back to
+// nothing at the curls by sin(u * PI) so the sheet stays continuous with them
+const draft = (u, v, t) => (FLUT_A * Math.sin(u * FLUT_K - t * FLUT_W) * Math.cos((v - 0.5) * Math.PI)
+  + TWIST_A * (v - 0.5) * Math.sin(t * TWIST_W + u * 2)) * Math.sin(u * Math.PI);
+// k = unroll 0..1: 0 is the curled scroll, 1 a flat sheet (the curls straighten out, the sag settles). t = seconds,
+// and the whole of what it drives is scaled by 1 - k, so the flat sheet is the same sheet at every t
+export function point(u, v, W, H, k = 0, t = 0) { const [x, z] = profile(u, W, k, t); return [x, (v - 0.5) * H, z + sag(u, v) * (1 - 0.75 * k) + draft(u, v, t) * (1 - k)]; }
+function refill(geom, W, H, k, t) { const uv = geom.attributes.uv.array, p = geom.attributes.position.array; for (let i = 0, n = uv.length / 2; i < n; i++) { const q = point(uv[i * 2], uv[i * 2 + 1], W, H, k, t); p[i * 3] = q[0]; p[i * 3 + 1] = q[1]; p[i * 3 + 2] = q[2]; } geom.attributes.position.needsUpdate = true; geom.computeBoundingSphere(); }
 
 function sheetGeometry(W, H, nu, nv) {
   const pos = [], uv = [], idx = [];
@@ -62,6 +88,24 @@ const FRAG_COMMON = `
   float vnoise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
     return mix(mix(hash(i), hash(i+vec2(1,0)), f.x), mix(hash(i+vec2(0,1)), hash(i+vec2(1,1)), f.x), f.y); }
   float fbm(vec2 p){ return vnoise(p) * 0.5 + vnoise(p * 2.3 + 17.0) * 0.3 + vnoise(p * 5.1 + 43.0) * 0.2; }
+  // a second, three-dimensional value noise, for the iso curves. The sheet's uv is taken in world units so the cells
+  // are square on the paper, and the third coordinate is the clock, so the field morphs instead of sliding across
+  uniform float uT; uniform vec2 uSize; uniform float uContour;
+  float hash3(vec3 p){ return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
+  float vnoise3(vec3 p){
+    vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+    float n00 = mix(hash3(i), hash3(i + vec3(1,0,0)), f.x), n10 = mix(hash3(i + vec3(0,1,0)), hash3(i + vec3(1,1,0)), f.x);
+    float n01 = mix(hash3(i + vec3(0,0,1)), hash3(i + vec3(1,0,1)), f.x), n11 = mix(hash3(i + vec3(0,1,1)), hash3(i + vec3(1,1,1)), f.x);
+    return mix(mix(n00, n10, f.y), mix(n01, n11, f.y), f.z);
+  }
+  // the curve's width is measured in pixels through fwidth, so it stays a hairline whatever the roll's scale on screen
+  float contour(vec2 uv){
+    vec3 p = vec3(uv * uSize * ${CONT_FREQ.toFixed(2)}, 0.0) + vec3(${CONT_DRIFT.map((d) => d.toFixed(3)).join(', ')}) * uT;
+    float f = (vnoise3(p) + vnoise3(p * 2.3 + 11.0) * 0.35) / 1.35;
+    float v = f * ${CONT_LEVELS.toFixed(1)};
+    float k = abs(fract(v + 0.5) - 0.5) / max(fwidth(v), 1e-5);
+    return 1.0 - smoothstep(${(CONT_HALF_W - 0.5).toFixed(2)}, ${(CONT_HALF_W + 0.5).toFixed(2)}, k);
+  }
   // bicubic-ish (smoothstep-weighted) interpolation of the coarse sim grid so the front is a continuous curve, not cells
   uniform vec2 uGrid;
   vec3 sampleSmooth(vec2 uv){
@@ -115,9 +159,11 @@ export function mount(container) {
   // per-cell flammability: paper is not uniform, so the front runs ahead in some grain and lags in others
   const flam = new Float32Array(GW * GH); for (let k = 0; k < flam.length; k++) flam[k] = 0.55 + Math.random() * 0.9;
   const tex = new THREE.DataTexture(new Uint8Array(GW * GH * 4), GW, GH, THREE.RGBAFormat); tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter; tex.needsUpdate = true;
-  const uniforms = { uHeat: { value: tex }, uGrid: { value: new THREE.Vector2(GW, GH) }, uGold: { value: new THREE.Color(0xb68235) }, uHeal: { value: 0 }, uSheetA: { value: 0.06 }, uIso: { value: 0 } };
+  const uniforms = { uHeat: { value: tex }, uGrid: { value: new THREE.Vector2(GW, GH) }, uGold: { value: new THREE.Color(0xb68235) }, uHeal: { value: 0 }, uSheetA: { value: 0.06 }, uIso: { value: 0 }, uT: { value: 0 }, uSize: { value: new THREE.Vector2(W, H) }, uContour: { value: CONT_A } };
   const common = { uniforms, transparent: true, depthWrite: false, side: THREE.DoubleSide, vertexShader: VERT };
-  const sheetMat = new THREE.ShaderMaterial({ ...common, fragmentShader: FRAG_COMMON + `varying vec2 vUv; uniform float uSheetA; void main(){ vec4 c = shade(vUv, uSheetA); if (c.a < 0.002) discard; gl_FragColor = c; }` });
+  // the curves go through shade() rather than over it, so they are gold ink in the paper: they scorch, char and go
+  // with the burn front instead of floating on top of a hole
+  const sheetMat = new THREE.ShaderMaterial({ ...common, fragmentShader: FRAG_COMMON + `varying vec2 vUv; uniform float uSheetA; void main(){ vec4 c = shade(vUv, uSheetA + contour(vUv) * uContour); if (c.a < 0.002) discard; gl_FragColor = c; }` });
   const lineMat = new THREE.ShaderMaterial({ ...common, vertexShader: VERT_W, fragmentShader: FRAG_COMMON + `varying vec2 vUv; varying float vW; uniform float uIso; void main(){ float w = vW > 0.99 ? 1.0 : vW * uIso; vec4 c = shade(vUv, 0.62 * w); if (c.a < 0.002) discard; gl_FragColor = c; }` });
   const sheet = new THREE.Mesh(sheetGeometry(W, H, 110, 12), sheetMat);
   const wire = new THREE.LineSegments(edgeGeometry(W, H, 240, vLines, uLines), lineMat);
@@ -340,7 +386,14 @@ export function mount(container) {
     if (reversing) { stepUnburn(dt); if (!reversing) { allGoneAt = -1; rewindMul = 1; } } else stepHeat(dt);
     uploadHeat();
     cx += (tx - cx) * 0.06; cy += (ty - cy) * 0.06;
-    if (unroll !== shownUnroll) { shownUnroll = unroll; refill(sheet.geometry, W, H, unroll); refill(wire.geometry, W, H, unroll); uniforms.uGold.value.lerpColors(GOLD, PAPER, unroll); uniforms.uSheetA.value = 0.06 + 0.08 * unroll; uniforms.uIso.value = Math.max(0, (unroll - 0.3) / 0.7); project(); }
+    uniforms.uT.value = t;
+    const moved = unroll !== shownUnroll;
+    // the curves belong to the standing roll: they are gone by the time it is the platform, so the Development page's
+    // ground is the plain sheet the landing cube is matched to
+    if (moved) { shownUnroll = unroll; uniforms.uGold.value.lerpColors(GOLD, PAPER, unroll); uniforms.uSheetA.value = 0.06 + 0.08 * unroll; uniforms.uIso.value = Math.max(0, (unroll - 0.3) / 0.7); uniforms.uContour.value = CONT_A * (1 - unroll); project(); }
+    // the sheet is the only record of the roll's shape, so the resting motion is rebuilt into it every frame. Past
+    // full unroll every motion term is already zero, and the sheet only needs rebuilding when unroll itself moved
+    if (moved || unroll < 1) { refill(sheet.geometry, W, H, unroll, t); refill(wire.geometry, W, H, unroll, t); }
     fit();
     const k = unroll, flat = 1 - k;
     group.scale.setScalar(as);

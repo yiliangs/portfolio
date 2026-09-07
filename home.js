@@ -1,4 +1,6 @@
-// The home cube: a wireframe cube with "Development" struck in ink voxels inside it, read through the faces.
+// The home cube: a tesseract turning in four dimensions, with "Development" struck in ink voxels inside it, read
+// through the faces. Its 32 edges are the cube's only wireframe, so the object is the hypercube rather than a figure
+// hung inside a box: at a settled pose the near cell projects to exactly the box and the rest folds into it.
 // Anchored to a viewport box like the parchment roll. On click it collapses into the Development platform in three
 // beats — the word dissolves, the cube travels and turns into the platform's axonometric pose, then presses down into a
 // sheet with the platform's exact proportions and projection — so the parchment platform can take over unseen.
@@ -9,6 +11,61 @@ const INK = 0x1a1918;
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const smooth = (x) => x * x * (3 - 2 * x);
 const cubicInOut = (x) => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+
+// ----- the cube is a tesseract -----
+const CS = 1;              // the cube's side, and the box the projection is refitted into
+const HYPER_XW = 0.35;     // rad/s the figure turns in the xw plane
+const HYPER_YW = 0.22;     // rad/s in the yw plane; the two rates are incommensurate, so the pose never repeats
+const HYPER_D = 2.0;       // eye distance for the 4D perspective divide: the far cell shrinks, the near one swells
+const HYPER_INNER = 0.55;  // weight of the far cell and the connectors against the near cell's, which reads as depth
+// The word counters the cube's turn completely and then wobbles by a bounded amount. It cannot instead keep a share
+// of that turn: the cube's yaw grows without bound, so any fraction of it walks the word right around and reads from
+// behind, and a shortest-arc slerp of the inverse flips side every time the yaw passes PI, which shows as a jump.
+const WORD_WOBBLE = 0.07;  // rad of free wobble, so the word shows its depth without ever leaving the reader
+// 16 vertices at (+/-0.5) in four coordinates, and an edge wherever two of them differ in exactly one coordinate
+const HC_V = [], HC_E = [];
+for (let i = 0; i < 16; i++) HC_V.push([i & 1 ? 0.5 : -0.5, i & 2 ? 0.5 : -0.5, i & 4 ? 0.5 : -0.5, i & 8 ? 0.5 : -0.5]);
+for (let i = 0; i < 16; i++) for (let b = 0; b < 4; b++) { const j = i ^ (1 << b); if (j > i) HC_E.push([i, j]); }
+const hcP = new Float32Array(48), hcW = new Float32Array(16); // the 16 projected points and their turned w
+// Turns the figure by a in the xw plane and b in the yw plane, divides it down to three dimensions, and refits it so
+// it exactly fills the cube's box. pos takes the 32 edges' endpoints (192 floats), wt a per-endpoint weight (64):
+// 1 on an edge of the near cell, 0 on the far cell and the connectors.
+// fold 0..1 takes the 4D perspective to orthographic. At fold = 1 both cells project onto the same cube and the eight
+// connectors shrink to nothing, so the figure visibly folds shut into a plain cube instead of merely going still. At a
+// pose that is a multiple of a quarter turn in both planes every turned w is +-0.5 exactly, so the weights come out a
+// clean 1 and 0 and the folded figure lands on the box. That pair is what the collapse steers onto before it flattens.
+export function hypercube(a, b, fold, pos, wt) {
+  const ca = Math.cos(a), sa = Math.sin(a), cb = Math.cos(b), sb = Math.sin(b);
+  const invD = (1 - fold) / HYPER_D; // 1/D open, 0 folded shut: the divide goes orthographic
+  let m = 0;
+  for (let i = 0; i < 16; i++) {
+    const v = HC_V[i];
+    const x = v[0] * ca - v[3] * sa, w1 = v[0] * sa + v[3] * ca;   // turn in xw
+    const y = v[1] * cb - w1 * sb, w = v[1] * sb + w1 * cb;        // then in yw
+    const s = 1 / (1 - w * invD);                                  // w * invD never reaches 1: |w| <= sqrt(0.75)
+    const o = i * 3; hcP[o] = x * s; hcP[o + 1] = y * s; hcP[o + 2] = v[2] * s; hcW[i] = w;
+    m = Math.max(m, Math.abs(hcP[o]), Math.abs(hcP[o + 1]), Math.abs(hcP[o + 2]));
+  }
+  const k = m > 0 ? 0.5 * CS / m : 0;
+  for (let e = 0; e < HC_E.length; e++) {
+    const i = HC_E[e][0], j = HC_E[e][1], p = i * 3, q = j * 3, o = e * 6;
+    pos[o] = hcP[p] * k; pos[o + 1] = hcP[p + 1] * k; pos[o + 2] = hcP[p + 2] * k;
+    pos[o + 3] = hcP[q] * k; pos[o + 4] = hcP[q + 1] * k; pos[o + 5] = hcP[q + 2] * k;
+    // an edge counts as the near cell's only while both its ends are out at the near w, so the ring hands over
+    // smoothly as the figure turns rather than flicking between cells
+    wt[e * 2] = wt[e * 2 + 1] = smooth(clamp01((Math.min(hcW[i], hcW[j]) - 0.3) / 0.2));
+  }
+  return pos;
+}
+
+// The word's own orientation: the cube's turn taken off completely, then a small bounded wobble put back. Writing it
+// as a pure function is what lets a check step the clock through a yaw of many turns and prove the word never walks.
+const wordEul = new THREE.Euler(), wordQ = new THREE.Quaternion();
+export function wordPose(t, px, py, cubeQuat, out) {
+  wordEul.set(Math.sin(t * 0.31) * WORD_WOBBLE + py * 0.05, Math.sin(t * 0.23) * WORD_WOBBLE * 1.4 + px * 0.08, 0);
+  wordQ.setFromEuler(wordEul);
+  return out.copy(cubeQuat).invert().multiply(wordQ);
+}
 
 // (unused now that the word is extruded type) letterforms sampled off a canvas into a voxel field
 function wordVoxels(text, font, cols, rows) {
@@ -41,13 +98,33 @@ export function mount(container) {
   };
   project(0);
 
-  const CS = 1;
   const cube = new THREE.Group(); scene.add(cube);
   const shell = new THREE.Group(); cube.add(shell); // takes the flattening, so the lettering keeps its own scale
-  const box = new THREE.BoxGeometry(CS, CS, CS);
-  const faceMat = new THREE.MeshBasicMaterial({ color: INK, transparent: true, opacity: 0.04, side: THREE.BackSide, depthWrite: false });
+  // the wash exists only for the plate, and a plate is a sheet, so this is one quad rather than a box. A box drew its
+  // three back faces blended with no depth write, and once the shell flattened, the extra layer where the side faces
+  // overlapped the bottom left a hard seam: an inset rectangle with diagonals at the corners, which read as stray
+  // wireframe on the landed plate. One quad has nothing to overlap. It is also drawn at nothing until the flatten
+  // brings it in, since a wash at rest would stand proud of the tesseract
+  const box = new THREE.PlaneGeometry(CS, CS);
+  const faceMat = new THREE.MeshBasicMaterial({ color: INK, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false });
+  // per-vertex alpha on a stock material, the same hook parchment.js uses: the tesseract's cells have to be drawn at
+  // different weights, and they are one LineSegments because they are one figure
   const edgeMat = new THREE.LineBasicMaterial({ color: INK, transparent: true, opacity: 0.5 });
-  shell.add(new THREE.Mesh(box, faceMat), new THREE.LineSegments(new THREE.EdgesGeometry(box), edgeMat));
+  edgeMat.onBeforeCompile = (sh) => {
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', 'attribute float aA; varying float vA;\n#include <common>').replace('#include <begin_vertex>', '#include <begin_vertex>\nvA = aA;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', 'varying float vA;\n#include <common>').replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.a *= vA;');
+  };
+  // the tesseract's 32 edges are the cube's whole wireframe: there is no box drawn around it. It sits in the shell,
+  // so the flatten presses it into the plate exactly as it pressed the box's edges before
+  const hyperGeom = new THREE.BufferGeometry();
+  hyperGeom.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(192), 3));
+  hyperGeom.setAttribute('aA', new THREE.Float32BufferAttribute(new Float32Array(64), 1));
+  const hyperPos = hyperGeom.attributes.position.array, hyperA = hyperGeom.attributes.aA.array;
+  const hyperW = new Float32Array(64); // the raw near-cell weight, before the dissolve thins the rest away
+  const hyper = new THREE.LineSegments(hyperGeom, edgeMat);
+  hyper.frustumCulled = false; // the endpoints are rewritten every frame, so a once-computed bounding sphere lies
+  const faceMesh = new THREE.Mesh(box, faceMat);
+  shell.add(faceMesh, hyper);
   // the word sits on a plane inside the cube, kept facing the viewer while the cube turns around it
   const inner = new THREE.Group(); cube.add(inner);
   // 3D lettering: the word is extruded type, paper faces under a fixed key light with ink sides, so the profile reads
@@ -117,7 +194,12 @@ export function mount(container) {
   let anchor = { x: 0, y: 0, w: 1, h: 1 }, ax = 0, ay = 0, as = 1;
   let vw = 1, vh = 1;
   let hover = 0, hoverTo = 0, alpha = 1, alphaTo = 1;
-  let col = null, dis = 0, trav = 0, flat = 0; // the collapse timeline and its three beats
+  let col = null, dis = 0, trav = 0, flat = 0, fold = 0; // the collapse timeline and its beats
+  // the 4D pose. It runs free while nothing is collapsing; a collapse records where it was and the quarter turn it is
+  // nearest, and the fold beat carries it there, so the figure is a plain cube before the travel starts
+  let ha = 0, hb = 0, ha0 = 0, hb0 = 0, haq = 0, hbq = 0;
+  const settle = (x) => Math.round(x / (Math.PI / 2)) * (Math.PI / 2);
+  const markPose = () => { ha0 = ha; hb0 = hb; haq = settle(ha); hbq = settle(hb); };
   const CORNERS = [];
   for (const sx of [-0.5, 0.5]) for (const sy of [-0.5, 0.5]) for (const sz of [-0.5, 0.5]) CORNERS.push(new THREE.Vector3(sx * CS, sy * CS, sz * CS));
   const cv = new THREE.Vector3();
@@ -142,7 +224,7 @@ export function mount(container) {
   const ro = new ResizeObserver(resize); ro.observe(container); resize();
 
   const inkCur = new THREE.Color(INK), inkTo = new THREE.Color(INK);
-  const qFree = new THREE.Quaternion(), qPose = new THREE.Quaternion(), qIdent = new THREE.Quaternion(), eul = new THREE.Euler();
+  const qFree = new THREE.Quaternion(), qPose = new THREE.Quaternion(), eul = new THREE.Euler();
   let px = 0, py = 0, tx = 0, ty = 0, alive = true, raf, last = performance.now(), t = 0;
   const onMove = (e) => {
     const cx = anchor.x + anchor.w / 2, cy = anchor.y + anchor.h / 2, r = Math.max(anchor.w, anchor.h);
@@ -155,14 +237,19 @@ export function mount(container) {
     if (!alive) return; raf = requestAnimationFrame(tick);
     const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
     px += (tx - px) * 0.06; py += (ty - py) * 0.06;
+    if (!col) { ha += HYPER_XW * dt; hb += HYPER_YW * dt; }
     if (col) {
       // beats: the word dissolves (0–0.4), the cube travels and turns into pose (0.22–0.72), then presses flat (0.6–1);
       // the expand runs the same film backwards, from the plate to the cube
       const u0 = clamp01((now - col.t0) / col.dur), u = col.reverse ? 1 - u0 : u0;
       dis = smooth(clamp01(u / 0.4)); trav = cubicInOut(clamp01((u - 0.22) / 0.5)); flat = cubicInOut(clamp01((u - 0.6) / 0.4));
+      // the fold is its own beat, finished before the flatten starts, so the figure is seen to shut into a cube
+      fold = cubicInOut(clamp01(u / 0.5));
       const L = (a, b) => a + (b - a) * trav;
       anchor = { x: L(col.cube.x, col.plate.x), y: L(col.cube.y, col.plate.y), w: L(col.cube.w, col.plate.w), h: L(col.cube.h, col.plate.h) };
-      if (u0 >= 1 && col.reverse) { anchor = { ...col.cube }; col = null; dis = trav = flat = 0; }
+      // the pose settles onto its nearest quarter turn on the same beat, so the turning and the folding finish together
+      ha = ha0 + (haq - ha0) * fold; hb = hb0 + (hbq - hb0) * fold;
+      if (u0 >= 1 && col.reverse) { anchor = { ...col.cube }; col = null; dis = trav = flat = fold = 0; }
     }
     hover += (hoverTo - hover) * 0.1;
     alpha += (alphaTo - alpha) * 0.09;
@@ -175,12 +262,18 @@ export function mount(container) {
     project(flat); fit();
     cube.position.set(ax, ay + Math.cos(t * 0.55) * visH * 0.012 * (1 - trav), 0);
     cube.scale.setScalar(as * (1 + hover * 0.06));
-    // the lettering only half-counters the cube's turn, so it stays legible yet shows its depth
-    inner.quaternion.copy(cube.quaternion).invert().slerp(qIdent, 0.12);
+    // the lettering counters the cube's turn and wobbles inside a few degrees of the reader, so it shows its depth
+    // without ever turning away
+    wordPose(t, px, py, cube.quaternion, inner.quaternion);
     if (dis !== shownDis) { shownDis = dis; layoutVoxels(dis); }
+    // the near cell always draws at the full edge weight; the far cell and the connectors draw lighter, and go out
+    // as the figure folds, so at fold = 1 the wireframe left standing is the box the plate is pressed from
+    hypercube(ha, hb, fold, hyperPos, hyperW);
+    for (let i = 0; i < 64; i++) hyperA[i] = hyperW[i] + (1 - hyperW[i]) * HYPER_INNER * (1 - fold);
+    hyperGeom.attributes.position.needsUpdate = true; hyperGeom.attributes.aA.needsUpdate = true;
     // the landed plate takes the platform's stroke and sheet weights
     edgeMat.opacity = Math.max(0, ((0.5 + hover * 0.3) * (1 - flat) + 0.62 * flat) * alpha);
-    faceMat.opacity = Math.max(0, (0.04 * (1 - flat) + 0.14 * flat) * alpha);
+    faceMat.opacity = Math.max(0, 0.14 * flat * alpha);
     voxMat.opacity = Math.max(0, 0.06 * (1 - dis) * alpha); voxEdgeMat.opacity = Math.max(0, (0.5 + hover * 0.25) * (1 - dis) * alpha);
     inkCur.lerp(inkTo, 0.08);
     // block faces sit on the opposite side of the ground from the ink: paper blocks with ink edges on the light
@@ -198,16 +291,20 @@ export function mount(container) {
       if (!r) return;
       const plate = { x: r.x, y: r.y, w: r.w, h: r.h };
       if (col) { col.plate = plate; return; }
+      markPose();
       col = { t0: performance.now(), dur: dur || 1500, reverse: false, cube: { ...anchor }, plate }; hoverTo = 0;
     },
     // the reverse: start as the platform's plate in its box, rise back into the cube and travel to the cube's cell
     expand(plate, cube, dur) {
       if (!plate || !cube) return;
+      // the plate was left on a settled pose, so this records ha0 = haq and the figure simply waits there until the
+      // expand clears col and the free turn picks up again
+      markPose();
       col = { t0: performance.now(), dur: dur || 1500, reverse: true, cube: { x: cube.x, y: cube.y, w: cube.w, h: cube.h }, plate: { x: plate.x, y: plate.y, w: plate.w, h: plate.h } };
-      dis = trav = flat = 1; anchor = { ...col.plate }; hoverTo = 0;
+      dis = trav = flat = fold = 1; anchor = { ...col.plate }; hoverTo = 0;
     },
     busy() { return !!col; },
-    reset() { col = null; dis = trav = flat = 0; },
+    reset() { col = null; dis = trav = flat = fold = 0; },
     setPlatformFrame(f) { if (f) frame = { ...frame, ...f }; },
     // the cube is drawn in ink on the light home ground and in paper once it lands on the dark Development page
     setInk(c, now) { inkTo.set(c); if (now) inkCur.copy(inkTo); },
