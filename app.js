@@ -1536,9 +1536,11 @@
       import(d.paper).then((m) => { this.paperLoading = null; this.papers[idx] = m.default || m; this.forceUpdate(); })
         .catch(() => { this.paperLoading = null; });
     }
-    // runs -> inline children. A run is a string, {i}/{b}/{sup} for emphasis, or {m} for MathML the
-    // manuscript carried as OMML. The markup is generated at build time from the docx and lives in the
-    // repo, so it is trusted; there is no other way to get MathML into a React tree.
+    // runs -> inline children. A run is a string, {i}/{b}/{sup} for emphasis, {c} for the literal
+    // spans a manuscript sets in typewriter (file names, solver flags, DOIs), or {m} for MathML.
+    // The markup is generated at build time, from the docx for the first paper and from LaTeX for the
+    // second, and lives in the repo, so it is trusted; there is no other way to get MathML into a
+    // React tree.
     paperRuns(runs) {
       const e = React.createElement;
       return (runs || []).map((r, i) => {
@@ -1546,9 +1548,48 @@
         if (r.m) return e('math', { key: i, style: { fontSize: '1.02em' }, dangerouslySetInnerHTML: { __html: r.m } });
         if (r.i) return e('em', { key: i }, r.i);
         if (r.b) return e('strong', { key: i }, r.b);
+        if (r.c) return e('code', { key: i, style: { fontFamily: 'var(--mono)', fontSize: '0.88em', wordBreak: 'break-word' } }, r.c);
         if (r.sup) return e('sup', { key: i }, r.sup);
         return null;
       });
+    }
+    // A booktabs table. The caption stands above the grid rather than in the figure column, because a
+    // table is read with the paragraph it belongs to. Two of the manuscript's four tables set a pair of
+    // tabulars side by side under one caption, so a table carries panels rather than a single grid, and
+    // each panel scrolls in its own box so a wide one never widens the page. `foot` is the band the
+    // second \midrule opens: the totals row.
+    paperTable(b, key, style) {
+      const e = React.createElement;
+      const ink = 'color-mix(in srgb, var(--color-text) 84%, transparent)';
+      const hair = '1px solid var(--color-divider)';
+      const cell = (al, head) => ({ padding: '7px 18px 7px 0', textAlign: al === 'r' ? 'right' : al === 'c' ? 'center' : 'left',
+        verticalAlign: 'baseline', whiteSpace: 'nowrap', fontWeight: head ? 500 : 400, fontFeatureSettings: "'tnum' 1" });
+      const band = (rows, cols, head, kind) => rows.map((row, j) => e('tr', { key: kind + j },
+        row.map((c, k) => e(head ? 'th' : 'td', { key: k, scope: head ? 'col' : null, style: cell(cols[k], head) }, this.paperRuns(c)))));
+      return e('div', { key, style: { ...style, margin: '10px 0 34px' } },
+        e('p', { key: 'c', style: { margin: '0 0 12px', fontFamily: 'var(--font-heading)', fontSize: '15px', lineHeight: '22px', color: 'var(--color-neutral-700)', maxWidth: '68ch' } },
+          e('span', { key: 'k', style: { fontFamily: 'var(--deco)', fontSize: '10px', letterSpacing: '0.1em', color: 'var(--color-accent-700)' } }, 'Table ' + b.n + '. '),
+          this.paperRuns(b.cap)),
+        b.panels.map((p, pi) => e('div', { key: pi, style: { overflowX: 'auto', margin: pi ? '20px 0 0' : 0 } },
+          e('table', { style: { borderCollapse: 'collapse', fontSize: '15px', lineHeight: '22px', color: ink, borderTop: hair, borderBottom: hair } },
+            e('thead', { key: 'h', style: { borderBottom: hair } }, band(p.head, p.cols, true, 'h')),
+            e('tbody', { key: 'b' }, band(p.rows, p.cols, false, 'b')),
+            p.foot ? e('tfoot', { key: 'f', style: { borderTop: hair } }, band(p.foot, p.cols, false, 'f')) : null))));
+    }
+    // An algpseudocode listing: numbered lines in mono, indented by the depth the source's
+    // Procedure/If/For nesting gives them, with the keywords bold and the comments italic.
+    paperAlg(b, key, style) {
+      const e = React.createElement;
+      const ink = 'color-mix(in srgb, var(--color-text) 84%, transparent)';
+      const hair = '1px solid var(--color-divider)';
+      return e('div', { key, style: { ...style, margin: '10px 0 34px', borderTop: hair, borderBottom: hair, padding: '14px 0' } },
+        e('p', { key: 'c', style: { margin: '0 0 12px', fontFamily: 'var(--font-heading)', fontSize: '15px', lineHeight: '22px', color: 'var(--color-neutral-700)', maxWidth: '68ch' } },
+          e('span', { key: 'k', style: { fontFamily: 'var(--deco)', fontSize: '10px', letterSpacing: '0.1em', color: 'var(--color-accent-700)' } }, 'Algorithm ' + b.n + '. '),
+          this.paperRuns(b.cap)),
+        e('div', { key: 'l', style: { overflowX: 'auto', fontFamily: 'var(--mono)', fontSize: '14px', lineHeight: '24px', color: ink } },
+          b.lines.map((l, j) => e('div', { key: j, style: { display: 'flex', alignItems: 'baseline', gap: '10px', whiteSpace: 'nowrap' } },
+            e('span', { key: 'n', style: { flex: 'none', width: '2.2em', textAlign: 'right', color: 'var(--color-neutral-600)', fontFeatureSettings: "'tnum' 1" } }, String(j + 1)),
+            e('span', { key: 't', style: { paddingLeft: (l.d * 1.6) + 'em' } }, this.paperRuns(l.r))))));
     }
     // The paper body, built once per loaded module and memoized on it. The app re-renders on every
     // scroll event and on the glitch timer; handing React the same element objects each time lets it
@@ -1631,6 +1672,11 @@
           caps.push({ row: capRow(row), figs: b.figs });
           els.push(e('div', { key, style: { ...cell, margin: '10px 0 34px', display: 'flex', gap: '20px', alignItems: 'flex-start', justifyContent: 'center' } },
             b.figs.map((f, j) => figEl(f, 'f' + j, { flexGrow: f.w / f.h, flexShrink: 1, flexBasis: 0, minWidth: 0, maxWidth: 'calc(' + CAP + ' * ' + (f.w / f.h).toFixed(4) + ')' }))));
+        } else if (b.k === 'table') {
+          // tables and listings sit in column 1 like paragraphs; they do not join the caption column
+          els.push(this.paperTable(b, key, at(false)));
+        } else if (b.k === 'alg') {
+          els.push(this.paperAlg(b, key, at(false)));
         } else if (b.k === 'fold') {
           // rendered by renderPaperTail: its open/closed state lives in component state, so it must
           // not be baked into this memoized array
@@ -1641,7 +1687,8 @@
             // pixel is enough to raise a vertical scrollbar; the padding keeps that pixel visible
             e('div', { key: 'm', style: { overflowX: 'auto', overflowY: 'hidden', padding: '6px 0', textAlign: 'center', fontSize: '19px' } },
               e('math', { display: 'block', dangerouslySetInnerHTML: { __html: b.m } })),
-            e('span', { key: 'n', style: { position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--color-neutral-600)' } }, '(' + b.n + ')')));
+            // an unnumbered display (the proposition's, which the manuscript sets with \[ \]) carries no tag
+            b.n ? e('span', { key: 'n', style: { position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--color-neutral-600)' } }, '(' + b.n + ')') : null));
         }
       });
       mod.__els = els;
@@ -1672,8 +1719,10 @@
                 : null));
         })));
     }
-    // Acknowledgments and References: folded away by default, each its own toggle. Their open and
-    // closed shapes are memoized separately, so opening one does not rebuild the other.
+    // Acknowledgments, References and Appendix: folded away by default, each its own toggle. Their
+    // open and closed shapes are memoized separately, so opening one does not rebuild the other.
+    // A fold item is normally a run array, but the appendix holds whole blocks, because the two
+    // algorithm listings the manuscript puts there cannot be said in runs alone.
     renderPaperTail(mod, open) {
       if (!mod || !mod.__folds || !mod.__folds.length) return null;
       const e = React.createElement;
@@ -1693,7 +1742,11 @@
                 ? e('ol', { key: 'c', id: 'fold-' + f.id, 'data-refs': '', style: { ...small, margin: '14px 0 0', padding: 0, listStyle: 'none', maxWidth: '78ch' } },
                     f.items.map((it, j) => e('li', { key: j, style: { margin: '0 0 10px', paddingLeft: '1.6em', textIndent: '-1.6em' } }, this.paperRuns(it))))
                 : e('div', { key: 'c', id: 'fold-' + f.id, style: { ...small, margin: '14px 0 0', maxWidth: '78ch' } },
-                    f.items.map((it, j) => e('p', { key: j, style: { margin: '0 0 12px' } }, this.paperRuns(it)))))
+                    f.items.map((it, j) => Array.isArray(it)
+                      ? e('p', { key: j, style: { margin: '0 0 12px' } }, this.paperRuns(it))
+                      : it.k === 'alg'
+                        ? this.paperAlg(it, j, { margin: '0 0 18px' })
+                        : e('p', { key: j, style: { margin: '0 0 12px' } }, this.paperRuns(it.r)))))
                 : null);
           }
           return e(React.Fragment, { key: f.id }, cache[ck]);
