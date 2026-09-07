@@ -13,3 +13,8 @@
   through verbatim, so the shipped page carries no template runtime. `tools/build-dc.mjs` documents
   which part of the original runtime each rule came from.
 - Everything under `vendor/` is a pinned third-party file. The site loads no code from a CDN.
+
+## Review
+- Every time a change is finished, serve the site on a local portal for the user to look at. If a
+  local server is already running from an earlier change, confirm it is still up and serving the
+  latest build instead of starting another one.
