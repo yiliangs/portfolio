@@ -2572,8 +2572,13 @@
       (mod.blocks || []).forEach((b, i) => {
         const key = 'pb' + i;
         if (b.k === 'byline') {
-          els.push(e('p', { key, style: { ...at(false), margin: '0 0 28px', fontFamily: 'var(--font-heading)', fontSize: '19px', lineHeight: '26px' } },
-            b.t, e('span', { key: 'a', style: { display: 'block', fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-600)' } }, b.aff)));
+          // one name over its affiliation per author, set in a row that wraps; an equal-contribution
+          // mark sits after the name and its note closes the block
+          els.push(e('div', { key, style: { ...at(false), margin: '0 0 28px', display: 'flex', flexWrap: 'wrap', gap: '10px 32px', fontFamily: 'var(--font-heading)', fontSize: '19px', lineHeight: '26px' } },
+            b.authors.map((a, j) => e('p', { key: j, style: { margin: 0 } },
+              a.t, a.eq ? e('sup', { key: 'e', style: { fontSize: '12px', color: 'var(--color-neutral-600)' } }, '*') : null,
+              e('span', { key: 'a', style: { display: 'block', fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-600)' } }, a.aff))),
+            b.note ? e('p', { key: 'n', style: { margin: 0, flexBasis: '100%', fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-600)' } }, b.note) : null));
         } else if (b.k === 'abstract') {
           els.push(e('div', { key, style: { ...at(false), ...rule, margin: '0 0 20px' } },
             e('p', { key: 'l', style: label }, 'Abstract'),
