@@ -11,7 +11,7 @@
   <script src="./image-slot.js"></script>
   <script src="./src/text-rippling.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;family=Lora:ital,wght@0,400;0,500;1,400&amp;family=DM+Mono:wght@400&amp;family=Cinzel:wght@400&amp;family=Geist+Mono:wght@400;500&amp;family=Libre+Baskerville:ital@1&amp;family=Google+Sans:wght@400&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;family=Lora:ital,wght@0,400;0,500;1,400&amp;family=DM+Mono:wght@400&amp;family=Cinzel:wght@400&amp;family=Geist+Mono:wght@400;500;600;700&amp;family=Libre+Baskerville:ital@1&amp;family=Google+Sans:wght@400&amp;display=swap" rel="stylesheet">
   <style>
     body { margin: 0; background: var(--color-bg); color: var(--color-text); font-family: var(--font-body); text-wrap: pretty; }
     a { color: var(--color-accent-700); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: var(--color-accent); }
@@ -74,7 +74,7 @@
     .cv-row { display: grid; grid-template-columns: minmax(0,1fr) auto; column-gap: 14px; align-items: baseline; }
     /* the rail holds a fixed width so every date in the document starts on the same line, however
        short the entry above it: a ragged right column reads as a mistake rather than as a rail */
-    .cv-date { font-family: var(--mono); font-size: 0.8em; line-height: 1.6; min-width: 11ch; color: var(--color-neutral-600); text-align: right; white-space: nowrap; }
+    .cv-date { font-family: var(--mono); font-size: 0.8em; font-weight: 500; line-height: 1.6; min-width: 11ch; color: var(--color-neutral-600); text-align: right; white-space: nowrap; }
     /* The section rule and the job are the two things that set the document's vertical rhythm, so
        both live here rather than inline: a media query cannot reach an inline margin, and the narrow
        page needs roughly half the air the wide one does. */
@@ -94,20 +94,22 @@
        drawing; sections are commented rather than titled; and the sheet carries the landing's own
        column hairlines. Only the vertical rules are drawn: nothing in a flowing document sits on a
        44px module, so the horizontal ones would cut the text rather than measure it. */
-    .cvm { font-family: var(--mono); font-size: 14px; line-height: 1.7; color: var(--color-neutral-800);
-      background-image: linear-gradient(to right, color-mix(in srgb, var(--color-text) 12%, transparent) 0 1px, transparent 1px);
+    /* the grid is a ground, not a rule: a quarter of the ink the landing draws its own with, because
+       here it sits under running text rather than between placed modules */
+    .cvm { font-family: var(--mono); font-size: 14px; line-height: 1.7; font-weight: 400; color: var(--color-neutral-800);
+      background-image: linear-gradient(to right, color-mix(in srgb, var(--color-text) 4%, transparent) 0 1px, transparent 1px);
       background-size: calc(100% / 22) 100%;
-      border-left: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent);
-      border-right: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent); }
+      border-left: 1px solid color-mix(in srgb, var(--color-text) 4%, transparent);
+      border-right: 1px solid color-mix(in srgb, var(--color-text) 4%, transparent); }
     /* 20ch, not 13: the longest thing the rail carries is a job's range, "Jul 2021 – Sep 2023", and a
        column too narrow for it does not wrap, it overprints the entry beside it */
     .cvm-row { display: grid; grid-template-columns: 20ch minmax(0,1fr); column-gap: 18px; align-items: baseline; }
     /* a sub-line leaves the rail empty rather than repeating the date, which is what puts every body
        column on one edge; on the narrow page an empty rail has nothing to hold and goes away */
-    .cvm-date { color: var(--color-neutral-600); white-space: nowrap; }
+    .cvm-date { font-weight: 500; color: var(--color-neutral-600); white-space: nowrap; }
     .cvm-sec { margin: 44px 0 14px; }
     .cvm-sec-first { margin-top: 36px; }
-    .cvm-sec-label { margin: 0 0 8px; color: var(--color-neutral-600); }
+    .cvm-sec-label { margin: 0 0 8px; font-weight: 500; color: var(--color-neutral-600); }
     .cvm-rule { display: block; height: 1px; background: color-mix(in srgb, var(--color-text) 16%, transparent); }
     @media (max-width: 700px) {
       .cvm-row { grid-template-columns: minmax(0,1fr); }

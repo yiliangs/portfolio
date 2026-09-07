@@ -77,6 +77,10 @@ test('the built site carries the CV stylesheet the page needs', () => {
   assert.ok(html.includes('.cv-row'), 'index.html lost the CV entry-row rule');
   assert.ok(html.includes('@media print'), 'index.html lost the print rules');
   assert.ok(html.includes('[data-print="hide"]'), 'index.html lost the print hook for the fixed layers');
+  // the mono CV asks for four Geist Mono weights; a weight the page never loads is a synthesised one
+  const link = /<link href="https:\/\/fonts\.googleapis\.com[^"]*"/.exec(html);
+  assert.ok(link, 'index.html lost the font link');
+  assert.match(link[0], /Geist\+Mono:wght@400;500;600;700/, 'Geist Mono is not loaded at every weight the ladder uses');
 });
 
 test('no placeholder contact and no dead CV download survive the build', () => {
@@ -117,13 +121,17 @@ test('the mono document is the same model punctuated differently', () => {
   const c = logic();
   const doc = c.cvModel(JSON.parse(read('cv.json')));
 
-  // one decision about emphasis, drawn twice
+  // one decision about emphasis, drawn twice. Mono says it with weight and ink, not ink alone
   const runs = doc.jobs[0].blocks[0].entries[0].parts;
   const metric = runs.find((r) => r.w === '600');
   assert.ok(metric, 'no run carries emphasis in the serif document');
-  assert.equal(metric.wm, '500', 'the same run carries no emphasis in the mono document');
+  assert.equal(metric.wm, '600', 'the same run carries no emphasis in the mono document');
   assert.equal(metric.cm, 'var(--color-text)');
-  for (const r of runs) assert.equal(r.w === '600', r.wm === '500', 'the two registers disagree about which run is a metric');
+  for (const r of runs) assert.equal(r.w === '600', r.wm === '600', 'the two registers disagree about which run is a metric');
+  // a muted run differs from the body by weight as well as by colour, never by colour alone
+  const muted = doc.research.map((r) => r.partsMono).flat().find((r) => r.cm === 'var(--color-neutral-600)');
+  assert.ok(muted, 'no mono status tag is muted');
+  assert.equal(muted.wm, 'inherit', 'a muted mono run should sit at the body weight, not above it');
 
   // an unpublished paper is bracketed and rail-less in mono, parenthesised and year-less in serif
   const flat = (parts) => parts.map((p) => p.t).join('');

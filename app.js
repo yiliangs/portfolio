@@ -936,7 +936,7 @@
                 "\n      ",
                 h("div", { key: "1", style: {"minWidth":"0"} },
                   "\n        ",
-                  h("h1", { key: "1|16.rlozbn", style: {"margin":"0","fontFamily":"var(--mono)","fontWeight":"500","fontSize":"clamp(26px,3.4vw,38px)","lineHeight":"1.1","letterSpacing":"-0.03em","color":"var(--color-text)"} },
+                  h("h1", { key: "1|16.rlozbn", style: {"margin":"0","fontFamily":"var(--mono)","fontWeight":"700","fontSize":"clamp(26px,3.4vw,38px)","lineHeight":"1.1","letterSpacing":"-0.03em","color":"var(--color-text)"} },
                     h(F,{key:0},"",I(V.cvDoc?.name,1),"")
                   ),
                   "\n        ",
@@ -997,7 +997,7 @@
                           h(F,{key:0},"",I(Vi.job?.dates,1),"")
                         ),
                         "\n          ",
-                        h("p", { key: "3", style: {"margin":"0","fontWeight":"500","color":"var(--color-text)"} },
+                        h("p", { key: "3", style: {"margin":"0","fontWeight":"700","color":"var(--color-text)"} },
                           h(F,{key:0},L(Vi.job?.units).map(function(item,i){
                             var Vii = Object.assign({}, Vi, {"u": item, $index: i});
                             return h(F,{key:i},
@@ -1022,7 +1022,7 @@
                             h(F,{key:0},"",I(Vi.job?.titleDates,1),"")
                           ),
                           "\n            ",
-                          h("p", { key: "3|15.1fgppa8", style: {"margin":"0","fontWeight":"500","color":"var(--color-text)"} },
+                          h("p", { key: "3|15.1fgppa8", style: {"margin":"0","fontWeight":"600","color":"var(--color-text)"} },
                             h(F,{key:0},"",I(Vi.job?.title,1),"")
                           ),
                           "\n          "
@@ -1048,7 +1048,7 @@
                           "\n          ",
                           h("div", { key: "1", className: "cvm-row", style: {"margin":"6px 0 0"} },
                             h("span", { key: "0", className: "cvm-date" }),
-                            h("p", { key: "1|8.ll1c7d", style: {"margin":"0","color":"var(--color-neutral-700)"} },
+                            h("p", { key: "1|8.ll1c7d", style: {"margin":"0","color":"var(--color-neutral-600)"} },
                               h(F,{key:0},"",I(Vii.hl,1),"")
                             )
                           ),
@@ -1078,7 +1078,7 @@
                               ),
                               "\n              ",
                               h("p", { key: "3", style: {"margin":"0"} },
-                                h("span", { key: "0|21.1s7zsfp", style: {"fontWeight":"500","color":"var(--color-text)"} },
+                                h("span", { key: "0|21.1s7zsfp", style: {"fontWeight":"700","color":"var(--color-text)"} },
                                   h(F,{key:0},"### ",I(Vii.blk?.heading,1),"")
                                 ),
                                 (Vii.blk?.hasRole ? h(F,{key:1},
@@ -1093,7 +1093,7 @@
                               "\n              ",
                               h("div", { key: "1", className: "cvm-row", style: {"margin":"6px 0 0"} },
                                 h("span", { key: "0", className: "cvm-date" }),
-                                h("p", { key: "1|15.92a2dk", style: {"margin":"0","color":"var(--color-neutral-700)"} },
+                                h("p", { key: "1|15.92a2dk", style: {"margin":"0","color":"var(--color-neutral-600)"} },
                                   h(F,{key:0},"",I(Vii.blk?.intro,1),"")
                                 )
                               ),
@@ -1106,7 +1106,7 @@
                                 h("div", { key: "1", className: "cvm-row", style: {"margin":"8px 0 0"} },
                                   h("span", { key: "0", className: "cvm-date" }),
                                   h("p", { key: "1", style: {"margin":"0"} },
-                                    h("span", { key: "0|14.osv4jv", style: {"fontWeight":"500","color":"var(--color-text)"} },
+                                    h("span", { key: "0|14.osv4jv", style: {"fontWeight":"600","color":"var(--color-text)"} },
                                       h(F,{key:0},"",I(Viii.ent?.name,1),"")
                                     ),
                                     ": ",
@@ -1133,7 +1133,7 @@
                           h("div", { key: "1", className: "cvm-row", style: {"margin":"8px 0 0"} },
                             h("span", { key: "0", className: "cvm-date" }),
                             h("p", { key: "1", style: {"margin":"0"} },
-                              h("span", { key: "0|13.1nb0yrq", style: {"fontWeight":"500","color":"var(--color-text)"} },
+                              h("span", { key: "0|13.1nb0yrq", style: {"fontWeight":"600","color":"var(--color-text)"} },
                                 h(F,{key:0},"",I(Vii.pr?.name,1),"")
                               ),
                               ": ",
@@ -1256,7 +1256,7 @@
                     h("div", { key: "1", className: "cvm-row", style: {"margin":"0 0 9px"} },
                       h("span", { key: "0", className: "cvm-date" }),
                       h("p", { key: "1|41.12uu07a", style: {"margin":"0"} },
-                        h("span", { key: "0|13.jh3e1y", style: {"fontWeight":"500","color":"var(--color-text)"} },
+                        h("span", { key: "0|13.jh3e1y", style: {"fontWeight":"600","color":"var(--color-text)"} },
                           h(F,{key:0},"",I(Vi.os?.name,1),"")
                         ),
                         h(F,{key:1},": ",I(Vi.os?.desc,1),"")
@@ -1284,7 +1284,7 @@
                         h(F,{key:0},"",I(Vi.ed?.right,1),"")
                       ),
                       h("p", { key: "1|62.wby89s", style: {"margin":"0"} },
-                        h("span", { key: "0|20.18k9b4m", style: {"fontWeight":"500","color":"var(--color-text)"} },
+                        h("span", { key: "0|20.18k9b4m", style: {"fontWeight":"600","color":"var(--color-text)"} },
                           h(F,{key:0},"",I(Vi.ed?.institution,1),"")
                         ),
                         h("span", { key: "1|3.375m7w", style: {"color":"var(--color-neutral-600)"} },
@@ -2476,7 +2476,7 @@
     // says what it is with brackets instead.
     CV_KINDS = {
       plain:  { w: 'inherit', fs: 'inherit', c: 'inherit',                  wm: 'inherit', cm: 'inherit' },
-      strong: { w: '600',     fs: 'inherit', c: 'inherit',                  wm: '500',     cm: 'var(--color-text)' },
+      strong: { w: '600',     fs: 'inherit', c: 'inherit',                  wm: '600',     cm: 'var(--color-text)' },
       em:     { w: 'inherit', fs: 'italic',  c: 'inherit',                  wm: 'inherit', cm: 'inherit' },
       tag:    { w: 'inherit', fs: 'italic',  c: 'var(--color-neutral-700)', wm: 'inherit', cm: 'var(--color-neutral-600)' },
     };
