@@ -82,8 +82,15 @@ const BANDS = [[8, 14], [14, 22], [22, 40], [40, 255]];
 
 function frameStats() {
   gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, px);
+  // Statistics are taken on INK DENSITY, 255 minus luminance, not on luminance
+  // itself. The reference numbers in TARGET were measured off a dark reference
+  // where the marks were light; the palette is now inverted, paper with ink on
+  // it. Measuring density makes the two directly comparable, so the same
+  // targets keep their meaning and a later re-inversion needs no new figures.
   const n = W * H, lum = new Float32Array(n);
-  for (let i = 0; i < n; i++) lum[i] = (px[i * 4] + px[i * 4 + 1] + px[i * 4 + 2]) / 3;
+  for (let i = 0; i < n; i++) {
+    lum[i] = 255 - (px[i * 4] + px[i * 4 + 1] + px[i * 4 + 2]) / 3;
+  }
   const sorted = Float32Array.from(lum).sort();
   const q = (f) => sorted[Math.min(n - 1, Math.floor(f * n))];
   const p50 = q(0.50);
