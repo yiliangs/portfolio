@@ -1057,6 +1057,13 @@
         body1: 'Scanning a building is easy now. Getting a model you can draw over is not. The pipeline takes a raw point cloud and does the boring work: finds the floors, finds the walls, guesses the openings, and hands you something honest enough to start from.',
         body2: 'It is not machine learning, mostly. It is plane fitting, a handful of heuristics, and a great deal of respect for the ways old buildings are not square. The heuristics were written on site, in a barn, in February.',
         body3: 'It has been used on around thirty existing-building projects. Surveyors like it because it makes their scans useful; architects like it because it does not pretend to be finished.' },
+      // The ACADIA 2025 project paper, co-first-authored. Like the entry above it carries no body1..body3:
+      // its chapter body is the paper itself, loaded from `paper` on demand and rendered by renderPaper().
+      { title: 'Notra', subtitle: 'A kerf-bent polyhedral timber frame, prototyped as a coffee table.', kind: 'Research', year: 2025, page: 61, pages: '61–67', role: 'Co-first author', with: 'Yulun Liu, Yicheng Zhang and Yao Lu', status: 'Published, ACADIA 2025', statusShort: 'published', stack: 'PolyFrame2 in Rhino for polyhedral graphic statics; 20 mm plywood strips cut on a three-axis CNC router and kerf-bent with hot water; 5 mm laser-cut acrylic anchors, six steel cables and a 6 mm glass top.', link: 'Camera-ready PDF', href: 'assets/notra/Liu-Shao-Zhang-Lu_Notra_ACADIA-2025_camera-ready.pdf', linkBlank: true, caption: 'Notra: a kerf-bent timber frame coffee table.', placeholder: 'Plate: cover photograph',
+        margin: 'Precisely calculated kerf cuts allow the elements to bend to their intended curvature without auxiliary tools.',
+        summary: 'Notra is a kerf-bent timber frame coffee table that serves as a small-scale prototype for a novel space frame system. It explores an integrated design and fabrication approach that blurs the boundary between nodes and bars in timber space frame structures. The system features curved nodal geometries fabricated from planar timber sheets using three-axis CNC milling and kerf-bending, eliminating the need for molds or custom components typically required for complex joints. Precisely calculated kerf cuts allow the elements to bend to their intended curvature without auxiliary tools. This approach reduces material waste, simplifies fabrication, and enhances accessibility for constructing geometrically intricate frames. Notra uses polyhedral graphic statics (PGS) as a form-finding method to generate a compression-dominant geometry. While demonstrated at the furniture scale, the workflow is applicable to larger structures, offering a material-efficient and cost-effective fabrication strategy.',
+        cover: 'assets/notra/fig-01.jpg', hero: 'assets/notra/fig-01.jpg',
+        paper: './content/notra.js' },
     ];
     cv = [
       { years: '2024 — now', role: 'Independent — tooling and research', place: 'Oslo', note: 'Lattice, Plot Room, essays, and consulting for studios who want their software to argue less.' },
@@ -1142,6 +1149,7 @@
       'I could not find a picture of a joint I needed that was not a manufacturer\u2019s render. So I drew it, then the next one.',
       'Every tool I use had started to propose things. I wanted to say what a proposing tool owes the person drawing.',
       'Scans were easy; models you could draw over were not. I wanted the boring part done by evening.',
+      'Curved timber joints usually mean molds or custom nodes. We wanted the kerf cuts themselves to do the bending, so that a flat sheet and a three-axis router were enough.',
     ];
   
     num(i) { return (this.props.numerals ?? 'roman') === 'roman' ? this.romans[i] : String(i + 1); }
@@ -1589,8 +1597,13 @@
       (mod.blocks || []).forEach((b, i) => {
         const key = 'pb' + i;
         if (b.k === 'byline') {
-          els.push(e('p', { key, style: { ...at(false), margin: '0 0 28px', fontFamily: 'var(--font-heading)', fontSize: '19px', lineHeight: '26px' } },
-            b.t, e('span', { key: 'a', style: { display: 'block', fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-600)' } }, b.aff)));
+          // one name over its affiliation per author, set in a row that wraps; an equal-contribution
+          // mark sits after the name and its note closes the block
+          els.push(e('div', { key, style: { ...at(false), margin: '0 0 28px', display: 'flex', flexWrap: 'wrap', gap: '10px 32px', fontFamily: 'var(--font-heading)', fontSize: '19px', lineHeight: '26px' } },
+            b.authors.map((a, j) => e('p', { key: j, style: { margin: 0 } },
+              a.t, a.eq ? e('sup', { key: 'e', style: { fontSize: '12px', color: 'var(--color-neutral-600)' } }, '*') : null,
+              e('span', { key: 'a', style: { display: 'block', fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-600)' } }, a.aff))),
+            b.note ? e('p', { key: 'n', style: { margin: 0, flexBasis: '100%', fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-600)' } }, b.note) : null));
         } else if (b.k === 'abstract') {
           els.push(e('div', { key, style: { ...at(false), ...rule, margin: '0 0 20px' } },
             e('p', { key: 'l', style: label }, 'Abstract'),
