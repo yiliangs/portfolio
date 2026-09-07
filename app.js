@@ -138,21 +138,10 @@
         "\n  ",
         (V.isHome ? h(F,{key:12},
           "\n  ",
-          h("main", { key: "home", "data-screen-label": "Home", style: {"padding":"0 clamp(20px,5vw,72px)","minHeight":"calc(100vh - 57px)","boxSizing":"border-box","display":"grid","gridTemplateRows":"auto minmax(0,1fr) auto"} },
+          "\n  ",
+          h("main", { key: "home", "data-screen-label": "Home", style: {"position":"relative","padding":"0 clamp(20px,5vw,72px)","minHeight":"calc(100vh - 57px)","boxSizing":"border-box","display":"grid","gridTemplateRows":"minmax(0,1fr)"} },
             "\n    ",
-            h("div", { key: "1", ref: V.homeHeadRef, style: {"textAlign":"center","padding":"clamp(28px,7vh,76px) 0 0"} },
-              "\n      ",
-              h("h1", { key: "1|12.6d6gil", style: {"margin":"0","fontFamily":"var(--font-heading)","fontWeight":"300","fontSize":"clamp(30px,4.4vw,58px)","lineHeight":"1.08","letterSpacing":"-0.01em"} },
-                "Yiliang Shao"
-              ),
-              "\n      ",
-              h("p", { key: "3|73.52suo0", style: {"margin":"14px 0 0","fontFamily":"var(--font-heading)","fontStyle":"italic","fontSize":"clamp(15px,1.5vw,21px)","lineHeight":"1.4","color":"var(--color-neutral-700)"} },
-                "An architect who writes about drawing and builds the software that draws."
-              ),
-              "\n    "
-            ),
-            "\n    ",
-            h("div", { key: "3", style: {"display":"grid","gridTemplateColumns":"minmax(0,1.1fr) minmax(0,0.9fr)","alignItems":"center","gap":"clamp(16px,4vw,72px)","minHeight":"min(60vh,600px)"} },
+            h("div", { key: "1", style: {"display":"grid","gridTemplateColumns":"minmax(0,1.1fr) minmax(0,0.9fr)","alignItems":"center","gap":"clamp(16px,4vw,72px)"} },
               "\n      ",
               h("button", { key: "1|37.1kxyw0d", ref: V.homeRollRef, onClick: V.goWriting, style: {"all":"unset","cursor":"pointer","position":"relative","display":"flex","alignItems":"center","justifyContent":"center","height":"min(44vh,400px)","fontFamily":"var(--font-heading)"} },
                 "\n        ",
@@ -166,18 +155,22 @@
               "\n    "
             ),
             "\n    ",
-            h("p", { key: "5|62.16epb5d", ref: V.homeFootRef, style: {"margin":"0","padding":"0 0 clamp(18px,4vh,40px)","display":"flex","justifyContent":"center","gap":"24px","fontFamily":"var(--mono)","fontSize":"11px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
-              h("span", { key: "0|4.yjzzeq" },
-                "Oslo"
+            h("nav", { key: "3", "aria-label": "Contact", style: {"position":"absolute","left":"0","right":"0","bottom":"clamp(18px,4vh,40px)","display":"flex","justifyContent":"center","gap":"clamp(20px,3vw,44px)","fontFamily":"var(--deco)","fontSize":"12px"} },
+              "\n      ",
+              h("a", { key: "1|5.3mzikt", href: V.cvMailto, style: {"color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp2" },
+                "Email"
               ),
-              h("span", { key: "1|13.ql4lti" },
-                h(F,{key:0},"",I(V.cvEmail,1),"")
+              "\n      ",
+              h("button", { key: "3|2.3hnb2", onClick: V.goCvSerif, style: {"all":"unset","cursor":"pointer","fontFamily":"var(--deco)","fontSize":"12px","color":"var(--color-accent)","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp2" },
+                "CV"
               ),
-              h("span", { key: "2|6.1hl1p8u" },
-                "MMXXVI"
-              )
+              "\n      ",
+              h("a", { key: "5|6.1e9lseg", href: V.cvGithub, style: {"color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp2" },
+                "GitHub"
+              ),
+              "\n    "
             ),
-            "\n  "
+            "\n>>>>>>> origin/master\n  "
           ),
           "\n  ") : null),
         "\n\n  ",
@@ -201,9 +194,9 @@
                       "\n          ",
                       h("div", { key: "1", style: S(`animation:leaf-drift ${Vi.lf?.dur ?? ""} ease-in-out infinite alternate; animation-delay:${Vi.lf?.delay ?? ""}; display:flex; flex-direction:${Vi.lf?.dir ?? ""}; align-items:${Vi.lf?.alignItems ?? ""}; gap:12px 20px; width:100%;`) },
                         "\n            ",
-                        h("button", { key: "1", "data-shape": `leaf-${Vi.lf?.cardNo ?? ""}`, "data-shape-alt": `frame-${Vi.lf?.figNo ?? ""}`, onClick: Vi.lf?.open, onMouseEnter: Vi.lf?.hover, onMouseLeave: Vi.lf?.unhover, onFocus: Vi.lf?.hover, onBlur: Vi.lf?.unhover, style: S(`all:unset; cursor:${Vi.lf?.cursor ?? ""}; display:block; flex:none; height:${Vi.lf?.imgH ?? ""}; width:auto; max-width:none; aspect-ratio:${Vi.lf?.ratio ?? ""}; box-sizing:border-box; transform-origin:${Vi.lf?.origin ?? ""}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:${Vi.lf?.shadow ?? ""}; overflow:hidden; transform:translateX(${Vi.lf?.bleedX ?? ""}) translateY(${Vi.lf?.lift ?? ""}) scale(${Vi.lf?.scale ?? ""}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:sepia(0.22) saturate(0.82) contrast(1.05);`), className: "scp2" },
+                        h("button", { key: "1", "data-shape": `leaf-${Vi.lf?.cardNo ?? ""}`, "data-shape-alt": `frame-${Vi.lf?.figNo ?? ""}`, onClick: Vi.lf?.open, onMouseEnter: Vi.lf?.hover, onMouseLeave: Vi.lf?.unhover, onFocus: Vi.lf?.hover, onBlur: Vi.lf?.unhover, style: S(`all:unset; cursor:${Vi.lf?.cursor ?? ""}; display:block; flex:none; height:${Vi.lf?.imgH ?? ""}; width:auto; max-width:none; aspect-ratio:${Vi.lf?.ratio ?? ""}; box-sizing:border-box; transform-origin:${Vi.lf?.origin ?? ""}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:${Vi.lf?.shadow ?? ""}; overflow:hidden; transform:translateX(${Vi.lf?.bleedX ?? ""}) translateY(${Vi.lf?.lift ?? ""}) scale(${Vi.lf?.scale ?? ""}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:${Vi.lf?.filter ?? ""};`), className: "scp3" },
                           "\n              ",
-                          h("image-slot", { key: "1", id: Vi.lf?.coverSlotId, src: Vi.lf?.cover, shape: "rect", fit: "cover", placeholder: Vi.lf?.placeholder, style: {"width":"100%","height":"100%","display":"block","transform":"scale(1)","transition":"transform 620ms cubic-bezier(.2,.7,.2,1)"}, className: "scp3" }),
+                          h("image-slot", { key: "1", id: Vi.lf?.coverSlotId, src: Vi.lf?.cover, shape: "rect", fit: "cover", placeholder: Vi.lf?.placeholder, style: {"width":"100%","height":"100%","display":"block","transform":"scale(1)","transition":"transform 620ms cubic-bezier(.2,.7,.2,1)"}, className: "scp4" }),
                           "\n            "
                         ),
                         "\n            ",
@@ -281,15 +274,15 @@
                 "\n        ",
                 h("span", { key: "5", style: {"position":"absolute","inset":"0","display":"flex","alignItems":"center","justifyContent":"center","gap":"clamp(20px, 3vw, 44px)"} },
                   "\n          ",
-                  h("a", { key: "1|5.3mzikt", href: V.cvMailto, style: {"color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp4" },
+                  h("a", { key: "1|5.3mzikt", href: V.cvMailto, style: {"fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp5" },
                     "Email"
                   ),
                   "\n          ",
-                  h("a", { key: "3|6.1e9lseg", href: V.cvGithub, style: {"color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp4" },
+                  h("a", { key: "3|6.1e9lseg", href: V.cvGithub, style: {"fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp5" },
                     "GitHub"
                   ),
                   "\n          ",
-                  h("button", { key: "5|2.3hnb2", onClick: V.goCvSerif, style: {"all":"unset","cursor":"pointer","fontFamily":"var(--font-heading)","fontSize":"14px","color":"var(--color-accent)","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp4" },
+                  h("button", { key: "5|2.3hnb2", onClick: V.goCvSerif, style: {"all":"unset","cursor":"pointer","fontSize":"14px","fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","color":"var(--color-accent)","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp5" },
                     "CV"
                   ),
                   "\n        "
@@ -307,9 +300,9 @@
                       "\n          ",
                       h("div", { key: "1", style: S(`animation:leaf-drift ${Vi.lf?.dur ?? ""} ease-in-out infinite alternate; animation-delay:${Vi.lf?.delay ?? ""}; display:flex; flex-direction:${Vi.lf?.dir ?? ""}; align-items:${Vi.lf?.alignItems ?? ""}; gap:12px 20px; width:100%;`) },
                         "\n            ",
-                        h("button", { key: "1", "data-shape": `leaf-${Vi.lf?.cardNo ?? ""}`, "data-shape-alt": `frame-${Vi.lf?.figNo ?? ""}`, onClick: Vi.lf?.open, onMouseEnter: Vi.lf?.hover, onMouseLeave: Vi.lf?.unhover, onFocus: Vi.lf?.hover, onBlur: Vi.lf?.unhover, style: S(`all:unset; cursor:${Vi.lf?.cursor ?? ""}; display:block; flex:none; height:${Vi.lf?.imgH ?? ""}; width:auto; max-width:none; aspect-ratio:${Vi.lf?.ratio ?? ""}; box-sizing:border-box; transform-origin:${Vi.lf?.origin ?? ""}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:${Vi.lf?.shadow ?? ""}; overflow:hidden; transform:translateX(${Vi.lf?.bleedX ?? ""}) translateY(${Vi.lf?.lift ?? ""}) scale(${Vi.lf?.scale ?? ""}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:sepia(0.22) saturate(0.82) contrast(1.05);`), className: "scp2" },
+                        h("button", { key: "1", "data-shape": `leaf-${Vi.lf?.cardNo ?? ""}`, "data-shape-alt": `frame-${Vi.lf?.figNo ?? ""}`, onClick: Vi.lf?.open, onMouseEnter: Vi.lf?.hover, onMouseLeave: Vi.lf?.unhover, onFocus: Vi.lf?.hover, onBlur: Vi.lf?.unhover, style: S(`all:unset; cursor:${Vi.lf?.cursor ?? ""}; display:block; flex:none; height:${Vi.lf?.imgH ?? ""}; width:auto; max-width:none; aspect-ratio:${Vi.lf?.ratio ?? ""}; box-sizing:border-box; transform-origin:${Vi.lf?.origin ?? ""}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:${Vi.lf?.shadow ?? ""}; overflow:hidden; transform:translateX(${Vi.lf?.bleedX ?? ""}) translateY(${Vi.lf?.lift ?? ""}) scale(${Vi.lf?.scale ?? ""}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:${Vi.lf?.filter ?? ""};`), className: "scp3" },
                           "\n              ",
-                          h("image-slot", { key: "1", id: Vi.lf?.coverSlotId, src: Vi.lf?.cover, shape: "rect", fit: "cover", placeholder: Vi.lf?.placeholder, style: {"width":"100%","height":"100%","display":"block","transform":"scale(1)","transition":"transform 620ms cubic-bezier(.2,.7,.2,1)"}, className: "scp3" }),
+                          h("image-slot", { key: "1", id: Vi.lf?.coverSlotId, src: Vi.lf?.cover, shape: "rect", fit: "cover", placeholder: Vi.lf?.placeholder, style: {"width":"100%","height":"100%","display":"block","transform":"scale(1)","transition":"transform 620ms cubic-bezier(.2,.7,.2,1)"}, className: "scp4" }),
                           "\n            "
                         ),
                         "\n            ",
@@ -391,7 +384,7 @@
                 var Vi = Object.assign({}, V, {"p": item, $index: i});
                 return h(F,{key:i},
                   "\n      ",
-                  h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, onClick: Vi.p?.open, onMouseEnter: Vi.p?.hover, style: S(`grid-column:1 / 23; grid-row:${Vi.p?.cardRow ?? ""}; display:grid; grid-template-columns:repeat(22,1fr); cursor:pointer; color:var(--color-text); background:var(--color-bg); border-width:0; border-style:solid; border-color:var(--color-neutral-400); box-shadow:inset 1px 0 0 0 var(--color-neutral-400), inset 0 1px 0 0 var(--color-neutral-400), 1px 0 0 0 var(--color-neutral-400), 0 1px 0 0 var(--color-neutral-400); transition:box-shadow 240ms ease;`), className: "scp5" },
+                  h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, onClick: Vi.p?.open, onMouseEnter: Vi.p?.hover, style: S(`grid-column:1 / 23; grid-row:${Vi.p?.cardRow ?? ""}; display:grid; grid-template-columns:repeat(22,1fr); cursor:pointer; color:var(--color-text); background:var(--color-bg); border-width:0; border-style:solid; border-color:var(--color-neutral-400); box-shadow:inset 1px 0 0 0 var(--color-neutral-400), inset 0 1px 0 0 var(--color-neutral-400), 1px 0 0 0 var(--color-neutral-400), 0 1px 0 0 var(--color-neutral-400); transition:box-shadow 240ms ease;`), className: "scp6" },
                     "\n        ",
                     h("div", { key: "1", style: S(`grid-column:${Vi.p?.textCol ?? ""}; grid-row:1; min-width:0; padding:22px; box-sizing:border-box; align-self:end;`) },
                       "\n          ",
@@ -482,15 +475,15 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("a", { key: "22|5.49kwkt", href: V.cvMailto, style: S(`grid-column:1 / 3; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp6" },
+              h("a", { key: "22|5.49kwkt", href: V.cvMailto, style: S(`grid-column:1 / 3; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
                 "email"
               ),
               "\n    ",
-              h("a", { key: "24|6.1yz8dag", href: V.cvGithub, style: S(`grid-column:3 / 5; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp6" },
+              h("a", { key: "24|6.1yz8dag", href: V.cvGithub, style: S(`grid-column:3 / 5; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
                 "github"
               ),
               "\n    ",
-              h("button", { key: "26|2.3ho5a", onClick: V.goCvMono, style: S(`all:unset; grid-column:5 / 7; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;`), className: "scp6" },
+              h("button", { key: "26|2.3ho5a", onClick: V.goCvMono, style: S(`all:unset; grid-column:5 / 7; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;`), className: "scp7" },
                 "cv"
               ),
               "\n    "
@@ -915,7 +908,7 @@
           "\n  ",
           h("main", { key: "cv-mono", "data-screen-label": "CV mono", className: "cvm", style: {"maxWidth":"min(1040px, 100% - 2 * clamp(24px, 5vw, 72px))","margin":"0 auto","boxSizing":"border-box","padding":"clamp(32px,5vw,72px) 22px"} },
             "\n\n    ",
-            h("button", { key: "1|10.buh750", onClick: V.goPageCurrent, style: {"all":"unset","cursor":"pointer","display":"inline-flex","alignItems":"center","margin":"0 0 28px","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)","transition":"color 200ms ease"}, className: "scp7" },
+            h("button", { key: "1|10.buh750", onClick: V.goPageCurrent, style: {"all":"unset","cursor":"pointer","display":"inline-flex","alignItems":"center","margin":"0 0 28px","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)","transition":"color 200ms ease"}, className: "scp8" },
               "<- back"
             ),
             "\n\n    ",
@@ -1389,9 +1382,13 @@
               "\n    "
             ),
             "\n\n    ",
-            h("figure", { key: "5", className: "plate", "data-shape": `frame-${V.current?.figNo ?? ""}`, style: {"margin":"0","aspectRatio":"16/9","width":"100%","position":"relative","filter":"sepia(0.22) saturate(0.82) contrast(1.05)"} },
+            h("figure", { key: "5", className: "plate", "data-shape": `frame-${V.current?.figNo ?? ""}`, style: S(`margin:0; aspect-ratio:16/9; width:100%; position:relative; filter:${V.heroFilter ?? ""};`) },
               "\n      ",
-              h("image-slot", { key: "1", id: V.current?.heroSlotId, shape: "rect", placeholder: V.current?.placeholder, style: {"width":"100%","height":"100%"} }),
+              (V.heroSlot ? h(F,{key:1},
+                h("image-slot", { key: "0", id: V.current?.heroSlotId, shape: "rect", placeholder: V.current?.placeholder, style: {"width":"100%","height":"100%"} })) : null),
+              "\n      ",
+              (V.heroImg ? h(F,{key:3},
+                h("img", { key: "0", src: V.current?.hero, alt: V.current?.caption, style: {"width":"100%","height":"100%","display":"block","objectFit":"cover"} })) : null),
               "\n    "
             ),
             "\n    ",
@@ -1402,88 +1399,140 @@
               h(F,{key:1}," ",I(V.current?.caption,1),"")
             ),
             "\n\n    ",
-            h("section", { key: "9", "data-enter": "", style: {"display":"grid","gridTemplateColumns":"minmax(0,8fr) minmax(0,4fr)","gap":"28px clamp(28px,5vw,80px)","padding":"calc(2.5*28px) 0","alignItems":"start"} },
-              "\n      ",
-              h("div", { key: "1", style: {"columns":"2","columnGap":"56px","columnRule":"1px solid var(--color-divider)","textAlign":"justify","hyphens":"auto","color":"color-mix(in srgb, var(--color-text) 84%, transparent)","fontSize":"16px","lineHeight":"28px"} },
-                "\n        ",
-                h("p", { key: "1|53.612egm", style: {"margin":"0 0 28px"} },
-                  h("span", { key: "0|21.1c59rnz", style: {"float":"left","fontFamily":"var(--deco)","fontWeight":"400","fontSize":"64px","lineHeight":"56px","padding":"6px 12px 0 0","color":"var(--color-text)"} },
-                    h(F,{key:0},"",I(V.current?.dropCap,1),"")
-                  ),
-                  h(F,{key:1},"",I(V.current?.body1,1),"")
-                ),
-                "\n        ",
-                h("p", { key: "3|19.a0tjja", style: {"margin":"0 0 28px"} },
-                  h(F,{key:0},"",I(V.current?.body2,1),"")
-                ),
-                "\n        ",
-                h("p", { key: "5|19.a0ub9j", style: {"margin":"0"} },
-                  h(F,{key:0},"",I(V.current?.body3,1),"")
-                ),
-                "\n      "
-              ),
-              "\n      ",
-              h("aside", { key: "3", style: {"display":"flex","flexDirection":"column","gap":"28px","fontSize":"13px","lineHeight":"20px","color":"var(--color-neutral-700)"} },
-                "\n        ",
-                (V.marginalia ? h(F,{key:1},
-                  "\n          ",
-                  h("p", { key: "1|20.1l14w78", style: {"margin":"0","paddingLeft":"var(--space-3)","borderLeft":"1px solid var(--color-accent)","fontFamily":"var(--font-heading)","fontStyle":"italic","fontSize":"19px","lineHeight":"26px"} },
-                    h(F,{key:0},"",I(V.current?.margin,1),"")
-                  ),
-                  "\n        ") : null),
-                "\n        ",
-                h("div", { key: "3", style: {"borderTop":"1px solid var(--color-divider)","paddingTop":"14px"} },
-                  "\n          ",
-                  h("p", { key: "1|9.zm3yhk", style: {"margin":"0 0 6px","fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
-                    "Made with"
-                  ),
-                  "\n          ",
-                  h("p", { key: "3|19.lcn33w", style: {"margin":"0"} },
-                    h(F,{key:0},"",I(V.current?.stack,1),"")
-                  ),
-                  "\n        "
-                ),
-                "\n        ",
-                h("div", { key: "5", style: {"borderTop":"1px solid var(--color-divider)","paddingTop":"14px"} },
-                  "\n          ",
-                  h("p", { key: "1|7.bhlkp1", style: {"margin":"0 0 6px","fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
-                    "Further"
-                  ),
-                  "\n          ",
-                  h("p", { key: "3|25.1gl75yx", style: {"margin":"0"} },
-                    h("a", { key: "0|18.imhu9g", href: "#" },
-                      h(F,{key:0},"",I(V.current?.link,1),"")
-                    )
-                  ),
-                  "\n        "
-                ),
-                "\n      "
-              ),
-              "\n    "
-            ),
-            "\n\n    ",
-            h("div", { key: "11", style: {"display":"grid","gridTemplateColumns":"minmax(0,1fr) minmax(0,1fr)","gap":"clamp(20px,4vw,56px)"} },
-              "\n      ",
-              h("figure", { key: "1", className: "plate", style: {"margin":"0","aspectRatio":"4/3","filter":"sepia(0.22) saturate(0.82) contrast(1.05)"} },
-                h("image-slot", { key: "0", id: V.current?.detailSlotA, shape: "rect", placeholder: "Detail: drawing or interface", style: {"width":"100%","height":"100%"} })
-              ),
-              "\n      ",
-              h("figure", { key: "3", className: "plate", style: {"margin":"0","aspectRatio":"4/3","filter":"sepia(0.22) saturate(0.82) contrast(1.05)"} },
-                h("image-slot", { key: "0", id: V.current?.detailSlotB, shape: "rect", placeholder: "Detail: process or site", style: {"width":"100%","height":"100%"} })
-              ),
-              "\n    "
-            ),
             "\n    ",
-            h("p", { key: "13|97.76h6dp", style: {"margin":"14px 0 0","fontSize":"13px","lineHeight":"20px","color":"var(--color-neutral-700)"} },
-              h("span", { key: "0|10.bamrr4", style: {"fontFamily":"var(--font-heading)","fontSize":"17px","color":"var(--color-accent)"} },
-                "Figs. 1–2."
+            (V.isPaper ? h(F,{key:10},
+              "\n    ",
+              h("section", { key: "1", "data-paper-body": "", "data-enter": "", style: {"display":"grid","gridTemplateColumns":"minmax(0,8fr) minmax(0,4fr)","gap":"0 clamp(28px,5vw,80px)","padding":"calc(2.5*28px) 0","alignItems":"start"} },
+                h(F,{key:0},"\n      ",I(V.paperBlocks,1),"\n      ",I(V.paperCaptions,3),"\n      ",I(V.paperTail,5),"\n      "),
+                h("aside", { key: "1", style: S(`grid-column:2; grid-row:${V.paperAsideRow ?? ""}; align-self:start; display:flex; flex-direction:column; gap:28px; font-size:13px; line-height:20px; color:var(--color-neutral-700);`) },
+                  "\n        ",
+                  (V.marginalia ? h(F,{key:1},
+                    "\n          ",
+                    h("p", { key: "1|20.1l14w78", style: {"margin":"0","paddingLeft":"var(--space-3)","borderLeft":"1px solid var(--color-accent)","fontFamily":"var(--font-heading)","fontStyle":"italic","fontSize":"19px","lineHeight":"26px"} },
+                      h(F,{key:0},"",I(V.current?.margin,1),"")
+                    ),
+                    "\n        ") : null),
+                  "\n        ",
+                  h("div", { key: "3", style: {"borderTop":"1px solid var(--color-divider)","paddingTop":"14px"} },
+                    "\n          ",
+                    h("p", { key: "1|9.zm3yhk", style: {"margin":"0 0 6px","fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
+                      "Made with"
+                    ),
+                    "\n          ",
+                    h("p", { key: "3|19.lcn33w", style: {"margin":"0"} },
+                      h(F,{key:0},"",I(V.current?.stack,1),"")
+                    ),
+                    "\n        "
+                  ),
+                  "\n        ",
+                  h("div", { key: "5", style: {"borderTop":"1px solid var(--color-divider)","paddingTop":"14px"} },
+                    "\n          ",
+                    h("p", { key: "1|7.bhlkp1", style: {"margin":"0 0 6px","fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
+                      "Further"
+                    ),
+                    "\n          ",
+                    h("p", { key: "3|25.1gl75yx", style: {"margin":"0"} },
+                      h("a", { key: "0|18.imhu9g", href: V.current?.href, target: V.current?.linkTarget, rel: V.current?.linkRel },
+                        h(F,{key:0},"",I(V.current?.link,1),"")
+                      )
+                    ),
+                    "\n        "
+                  ),
+                  "\n      "
+                ),
+                "\n    "
               ),
-              " Working states. Left, the drawing or interface; right, where it was made."
-            ),
+              "\n    ") : null),
             "\n\n    ",
-            h("hr", { key: "15", style: {"height":"1px","border":"0","margin":"calc(3*28px) 0 0","background":"var(--color-divider)"} }),
+            (V.isEssay ? h(F,{key:12},
+              "\n    ",
+              h("section", { key: "1", "data-enter": "", style: {"display":"grid","gridTemplateColumns":"minmax(0,8fr) minmax(0,4fr)","gap":"28px clamp(28px,5vw,80px)","padding":"calc(2.5*28px) 0","alignItems":"start"} },
+                "\n      ",
+                h("div", { key: "1", style: {"columns":"2","columnGap":"56px","columnRule":"1px solid var(--color-divider)","textAlign":"justify","hyphens":"auto","color":"color-mix(in srgb, var(--color-text) 84%, transparent)","fontSize":"16px","lineHeight":"28px"} },
+                  "\n        ",
+                  h("p", { key: "1|53.612egm", style: {"margin":"0 0 28px"} },
+                    h("span", { key: "0|21.1c59rnz", style: {"float":"left","fontFamily":"var(--deco)","fontWeight":"400","fontSize":"64px","lineHeight":"56px","padding":"6px 12px 0 0","color":"var(--color-text)"} },
+                      h(F,{key:0},"",I(V.current?.dropCap,1),"")
+                    ),
+                    h(F,{key:1},"",I(V.current?.body1,1),"")
+                  ),
+                  "\n        ",
+                  h("p", { key: "3|19.a0tjja", style: {"margin":"0 0 28px"} },
+                    h(F,{key:0},"",I(V.current?.body2,1),"")
+                  ),
+                  "\n        ",
+                  h("p", { key: "5|19.a0ub9j", style: {"margin":"0"} },
+                    h(F,{key:0},"",I(V.current?.body3,1),"")
+                  ),
+                  "\n      "
+                ),
+                "\n      ",
+                h("aside", { key: "3", style: {"display":"flex","flexDirection":"column","gap":"28px","fontSize":"13px","lineHeight":"20px","color":"var(--color-neutral-700)"} },
+                  "\n        ",
+                  (V.marginalia ? h(F,{key:1},
+                    "\n          ",
+                    h("p", { key: "1|20.1l14w78", style: {"margin":"0","paddingLeft":"var(--space-3)","borderLeft":"1px solid var(--color-accent)","fontFamily":"var(--font-heading)","fontStyle":"italic","fontSize":"19px","lineHeight":"26px"} },
+                      h(F,{key:0},"",I(V.current?.margin,1),"")
+                    ),
+                    "\n        ") : null),
+                  "\n        ",
+                  h("div", { key: "3", style: {"borderTop":"1px solid var(--color-divider)","paddingTop":"14px"} },
+                    "\n          ",
+                    h("p", { key: "1|9.zm3yhk", style: {"margin":"0 0 6px","fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
+                      "Made with"
+                    ),
+                    "\n          ",
+                    h("p", { key: "3|19.lcn33w", style: {"margin":"0"} },
+                      h(F,{key:0},"",I(V.current?.stack,1),"")
+                    ),
+                    "\n        "
+                  ),
+                  "\n        ",
+                  h("div", { key: "5", style: {"borderTop":"1px solid var(--color-divider)","paddingTop":"14px"} },
+                    "\n          ",
+                    h("p", { key: "1|7.bhlkp1", style: {"margin":"0 0 6px","fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
+                      "Further"
+                    ),
+                    "\n          ",
+                    h("p", { key: "3|25.1gl75yx", style: {"margin":"0"} },
+                      h("a", { key: "0|18.imhu9g", href: V.current?.href, target: V.current?.linkTarget, rel: V.current?.linkRel },
+                        h(F,{key:0},"",I(V.current?.link,1),"")
+                      )
+                    ),
+                    "\n        "
+                  ),
+                  "\n      "
+                ),
+                "\n    "
+              ),
+              "\n    ") : null),
+            "\n\n    ",
             "\n    ",
-            h("nav", { key: "17", style: {"display":"flex","justifyContent":"space-between","alignItems":"baseline","gap":"var(--space-4)","padding":"28px 0 calc(3*28px)","flexWrap":"wrap"} },
+            (V.isEssay ? h(F,{key:15},
+              "\n    ",
+              h("div", { key: "1", style: {"display":"grid","gridTemplateColumns":"minmax(0,1fr) minmax(0,1fr)","gap":"clamp(20px,4vw,56px)"} },
+                "\n      ",
+                h("figure", { key: "1", className: "plate", style: {"margin":"0","aspectRatio":"4/3","filter":"sepia(0.22) saturate(0.82) contrast(1.05)"} },
+                  h("image-slot", { key: "0", id: V.current?.detailSlotA, shape: "rect", placeholder: "Detail: drawing or interface", style: {"width":"100%","height":"100%"} })
+                ),
+                "\n      ",
+                h("figure", { key: "3", className: "plate", style: {"margin":"0","aspectRatio":"4/3","filter":"sepia(0.22) saturate(0.82) contrast(1.05)"} },
+                  h("image-slot", { key: "0", id: V.current?.detailSlotB, shape: "rect", placeholder: "Detail: process or site", style: {"width":"100%","height":"100%"} })
+                ),
+                "\n    "
+              ),
+              "\n    ",
+              h("p", { key: "3|97.76h6dp", style: {"margin":"14px 0 0","fontSize":"13px","lineHeight":"20px","color":"var(--color-neutral-700)"} },
+                h("span", { key: "0|10.bamrr4", style: {"fontFamily":"var(--font-heading)","fontSize":"17px","color":"var(--color-accent)"} },
+                  "Figs. 1–2."
+                ),
+                " Working states. Left, the drawing or interface; right, where it was made."
+              ),
+              "\n    ") : null),
+            "\n\n    ",
+            h("hr", { key: "17", style: {"height":"1px","border":"0","margin":"calc(3*28px) 0 0","background":"var(--color-divider)"} }),
+            "\n    ",
+            h("nav", { key: "19", style: {"display":"flex","justifyContent":"space-between","alignItems":"baseline","gap":"var(--space-4)","padding":"28px 0 calc(3*28px)","flexWrap":"wrap"} },
               "\n      ",
               h("button", { key: "1|24.1chn43n", className: "btn btn-ghost", onClick: V.goPageCurrent, style: {"whiteSpace":"nowrap","fontFamily":"var(--r-body)"} },
                 h(F,{key:0},"← ",I(V.current?.backWord,1),"")
@@ -1684,7 +1733,7 @@
                   h("span", { key: "10|5.4eg219", style: {"color":"var(--color-neutral-600)"} },
                     "link:"
                   ),
-                  h("a", { key: `link-${V.current?.figNo ?? ""}`, href: "#", "data-tr": "wake", "data-reg": "mono" },
+                  h("a", { key: `link-${V.current?.figNo ?? ""}`, href: V.current?.href, target: V.current?.linkTarget, rel: V.current?.linkRel, "data-tr": "wake", "data-reg": "mono" },
                     h(F,{key:0},"",I(V.current?.link,1),"")
                   ),
                   "\n      "
@@ -1784,7 +1833,7 @@
   class Component extends DCLogic {
     state = { view: 'home', page: 'writing', cvReg: 'serif', idx: 2, hovered: 2, tab: { left: 0, width: 0 } };
     contentsRef = React.createRef(); platesRef = React.createRef(); notesRef = React.createRef();
-    homeLayerRef = React.createRef(); homeRollRef = React.createRef(); homeCubeRef = React.createRef(); fogLayerRef = React.createRef(); homeHeadRef = React.createRef(); homeFootRef = React.createRef();
+    homeLayerRef = React.createRef(); homeRollRef = React.createRef(); homeCubeRef = React.createRef(); fogLayerRef = React.createRef(); 
     // the home fog lives only on the home view; it fades out (and stops) elsewhere
     syncFog() {
       const layer = this.fogLayerRef.current; if (!layer) return;
@@ -1795,9 +1844,7 @@
         // the visible objects, not their layout cells: the roll stands about as wide as its word, the cube is a square
         const rb = box(roll), rs = roll.firstElementChild ? box(roll.firstElementChild) : rb, rw = Math.max(rs.w, rb.h * 0.5), cb = box(cube), cs = Math.min(cb.w, cb.h);
         this.fog.setSources([{ x: rb.x + rb.w / 2 - rw / 2, y: rb.y, w: rw, h: rb.h }, { x: cb.x + cb.w / 2 - cs / 2, y: cb.y + cb.h / 2 - cs / 2, w: cs, h: cs }]);
-        // the type stays clear: threads thin out under the headline block and the footer line
-        const tight = (el) => { if (!el) return null; const b = box(el), first = el.firstElementChild; const w = first ? Math.max(first.getBoundingClientRect().width, ...[...el.children].map((c) => c.getBoundingClientRect().width)) : b.w; return { x: b.x + (b.w - w) / 2 - 24, y: b.y, w: w + 48, h: b.h }; };
-        this.fog.setQuiet([tight(this.homeHeadRef.current), tight(this.homeFootRef.current)].filter(Boolean)); layer.style.opacity = '1';
+        layer.style.opacity = '1';
       } else {
         layer.style.opacity = '0';
         if (this.fog) { clearTimeout(this.fogKillTimer); this.fogKillTimer = setTimeout(() => { if (this.fog && this.state.view !== 'home') { this.fog.destroy(); this.fog = null; } }, 1000); }
@@ -1821,12 +1868,13 @@
         body1: 'Every studio reviews drawings by printing them, marking them in red, and scanning them back in. Plot Room keeps the red pen and loses the printer. Comments attach to a coordinate on a sheet and follow that detail through revisions, so a note about a flashing on issue three still points at the flashing on issue nine.',
         body2: 'The interface is deliberately quiet: a sheet, a margin, a list. I wanted it to feel closer to a proofreader’s desk than to project-management software, because the people using it are proofreading, at scale, under deadline.',
         body3: 'Fourteen people in one studio have used it for a year. Their feedback is mostly about paper sizes and printer margins, which tells me the rest is working.' },
-      { title: 'Cuts', subtitle: 'Learning to draw building sections from plans alone.', kind: 'Research', year: 2024, page: 29, pages: '29–36', role: 'First author', with: 'Two co-authors at the institute', status: 'Published, peer reviewed', statusShort: 'published', stack: 'PyTorch, a dataset of 40,000 plan–section pairs, a lot of cleaning.', link: 'The paper, with code and dataset', caption: 'Predicted sections (grey) against the drawn ones (ink), from a held-out set.', placeholder: 'Plate: predicted vs. drawn sections',
-        margin: 'The model is wrong in interesting ways: it invents basements and forgets roofs. Both tell you something about what plans do not say.',
-        summary: 'A paper on whether a model can infer a building’s section from its plans. It mostly can, and the failures are more instructive than the successes.',
-        body1: 'The question was simple to state and awkward to answer: given a set of plans, can a model draw a plausible section? We assembled forty thousand plan–section pairs from public archives, cleaned them for a year, and trained something unremarkable on them.',
-        body2: 'The results were good enough to publish and bad enough to be interesting. The model understood floor-to-floor heights and stair positions. It invented basements where none existed, and it consistently forgot roofs, which are the one thing a plan says nothing about.',
-        body3: 'The paper argues that these failures map precisely onto the information a plan omits, and that this is a useful way to think about what drawings encode. The reviewers were kind. The dataset has been downloaded more often than the paper.' },
+      // The one entry backed by a real publication. It carries no body1..body3: its chapter body is
+      // the paper itself, loaded from `paper` on demand and rendered by renderPaper().
+      { title: 'From Prototype to Massing', subtitle: 'Learning graph correspondence for scalable facade modeling.', kind: 'Research', year: 2026, page: 29, pages: '29–46', role: 'Sole author', with: 'Thanks to Pablo Ruiz, Scott Duncan, An-Tai Lu, Wenxuan Xie, Yao Lu and Yuanben Gao', status: 'Accepted, ACADIA 2026', statusShort: 'accepted', stack: 'PyTorch, PyTorch Geometric, scikit-learn, NumPy and Matplotlib; a Rhino 8 demonstrator; a corpus of 6,505 prototype-massing pairs.', link: 'Camera-ready PDF', href: 'assets/prototype-to-massing/Shao_From-Prototype-to-Massing_ACADIA-2026_camera-ready.pdf', linkBlank: true, caption: 'Massing models from the corpus arrayed on a measuring grid, each solid form paired with the node-and-edge graph abstracted from its envelope.', placeholder: 'Plate: cover figure',
+        margin: 'The contribution is not automated facade generation, but an authoring model in which resolved geometry serves as a computational specification for project-scale propagation.',
+        summary: 'Facade articulation at building scale is usually resolved manually or through parametric systems that encode design intent as explicit rules. This paper investigates a complementary workflow in which a designer-authored prototype supplies transferable articulation logic. Prototype and target massing are represented as heterogeneous attributed graphs, and a Siamese graph attention network with instance-local triplet supervision embeds their segments in a shared metric space. Many-to-one nearest-neighbor retrieval then routes prototype Patterns to the larger target. On the original 85/15 within-corpus holdout, prototype-to-massing top-1 accuracy reached 96.5%, compared with a reported 76.5% raw-feature baseline. A Rhino demonstrator converts predicted correspondence into reusable facade Patterns, and qualitative applications on four built projects show the workflow across distinct massing organizations. The contribution is not automated facade generation, but an authoring model in which resolved geometry serves as a computational specification for project-scale propagation.',
+        cover: 'assets/prototype-to-massing/fig-01.jpg', hero: 'assets/prototype-to-massing/fig-01.jpg',
+        paper: './content/prototype-to-massing.js' },
       { title: 'Timber Index', subtitle: 'A side project cataloguing mass-timber connections, one joint at a time.', kind: 'Side project', year: 2023, page: 37, pages: '37–44', role: 'Everything', with: 'Contributors, eventually', status: 'Live, growing slowly', statusShort: 'live', stack: 'A static site, hand-drawn axonometrics, a spreadsheet as the database.', link: 'The index, 212 joints and counting', caption: 'Joint 087: a CLT-to-glulam hanger, drawn at 1:5.', placeholder: 'Capture: axonometric of a timber joint',
         margin: 'It started because I could not find a picture of a joint I needed. It continues because other people could not either.',
         summary: 'A catalogue of mass-timber connection details, each redrawn to the same conventions. Started for myself; now used by people I have never met.',
@@ -1919,7 +1967,7 @@
     why = [
       'A consultant kept a workbook of mullion spacings by hand. I wanted the drawing to write the workbook, not the other way round.',
       'Studios review sets by printing, redlining and scanning. I wanted the red pen without the printer, and notes that survive revisions.',
-      'The model was wrong in interesting ways; I wanted to know exactly which ways.',
+      'A designer resolves one bay by hand and then has to rebuild it as a rule system. I wanted the resolved geometry itself to carry the logic.',
       'I could not find a picture of a joint I needed that was not a manufacturer\u2019s render. So I drew it, then the next one.',
       'Every tool I use had started to propose things. I wanted to say what a proposing tool owes the person drawing.',
       'Scans were easy; models you could draw over were not. I wanted the boring part done by evening.',
@@ -1952,7 +2000,7 @@
       this.setState(nextState, () => { window.scrollTo({ top: 0 }); if (olds) requestAnimationFrame(() => this.morphTexts(olds)); });
       if (!olds) window.scrollTo({ top: 0 });
     }
-    signal(d) { return /shipped|live|published/i.test(d.status) ? 'var(--sig-ok)' : /beta/i.test(d.status) ? 'var(--sig-warn)' : 'var(--sig-info)'; }
+    signal(d) { return /shipped|live|published|accepted/i.test(d.status) ? 'var(--sig-ok)' : /beta/i.test(d.status) ? 'var(--sig-warn)' : 'var(--sig-info)'; }
     // Every named text slot is paired across the two registers; the old text travels to the new slot's position
     // while its glyphs are swapped one by one into the new text (a 3-glyph caseFlip band at the boundary — the repo's picker).
     // the photo a framed element is showing, as a URL (image-slot keeps its <img> in shadow DOM)
@@ -2138,8 +2186,12 @@
     }
     remeasureText() { (this.trInstances || []).forEach((t) => { try { t.remeasure(); } catch (e) {} }); }
     bez(t) { const c1 = .6, c2 = .2; let lo = 0, hi = 1; for (let i = 0; i < 24; i++) { const m = (lo + hi) / 2, x = 3*(1-m)*(1-m)*m*c1 + 3*(1-m)*m*m*c2 + m*m*m; if (x < t) lo = m; else hi = m; } const m = (lo + hi) / 2; return 3*(1-m)*m*m + m*m*m; }
-    startTyping(pi, len) { this.stopTyping(); this.setState({ hovered: pi, leafHover: true, typed: 0 }); this.typeTimer = setInterval(() => { this.setState((st) => { if (st.typed >= len) { clearInterval(this.typeTimer); return null; } return { typed: st.typed + 6 }; }); }, 22); }
-    stopTyping() { clearInterval(this.typeTimer); this.setState({ leafHover: false, typed: 0 }); }
+    // One typewriter serves whatever is being hovered: a Research leaf ('leaf-<idx>') or a figure in a
+    // paper chapter ('fig-<n>'). typingKey says whose text state.typed belongs to, so only that one
+    // element reads it. `patch` carries anything else the hover means, such as the leaves' `hovered`.
+    startTyping(key, len, patch) { this.stopTyping(); this.setState({ ...(patch || {}), typingKey: key, typed: 0 }); this.typeTimer = setInterval(() => { this.setState((st) => { if (st.typed >= len) { clearInterval(this.typeTimer); return null; } return { typed: st.typed + 6 }; }); }, 22); }
+    stopTyping() { clearInterval(this.typeTimer); this.setState({ typingKey: null, typed: 0 }); }
+    typedText(key, text) { return this.state.typingKey === key ? text.slice(0, this.state.typed || 0) : ''; }
     goHome() {
       // leaving the Development platform: remember its box so the cube can take over from it (see syncHome)
       const pf = this.state.view === 'page' ? this.platformRef.current : null;
@@ -2309,11 +2361,188 @@
           this.observer.unobserve(en.target);
         });
       }, { rootMargin: '100% 0px -8% 0px' });
-      this.observeReveals(); this.mountTextEffects(); this.syncParchment(); this.syncHome();
+      this.observeReveals(); this.mountTextEffects(); this.syncParchment(); this.syncHome(); this.syncPaper();
       this.hintTimer = setTimeout(() => this.setState({ hintGone: true }), 9000);
       setTimeout(() => this.measureTabs(), 400);
     }
-    componentDidUpdate() { this.observeReveals(); this.mountTextEffects(); this.measureTabs(); this.syncParchment(); this.syncHome(); }
+    componentDidUpdate() { this.observeReveals(); this.mountTextEffects(); this.measureTabs(); this.syncParchment(); this.syncHome(); this.syncPaper(); }
+  
+    // A chapter whose entry carries a `paper` gets its body from an ES module under content/, fetched
+    // the first time that chapter is opened and then kept on the instance. Nothing is imported for the
+    // chapters written inline, and the front page never pays for the paper.
+    syncPaper() {
+      const { view, idx } = this.state; if (view !== 'chapter') return;
+      const d = this.data[idx]; if (!d || !d.paper) return;
+      this.papers = this.papers || {};
+      if (this.papers[idx] || this.paperLoading === idx) return;
+      this.paperLoading = idx;
+      import(d.paper).then((m) => { this.paperLoading = null; this.papers[idx] = m.default || m; this.forceUpdate(); })
+        .catch(() => { this.paperLoading = null; });
+    }
+    // runs -> inline children. A run is a string, {i}/{b}/{sup} for emphasis, or {m} for MathML the
+    // manuscript carried as OMML. The markup is generated at build time from the docx and lives in the
+    // repo, so it is trusted; there is no other way to get MathML into a React tree.
+    paperRuns(runs) {
+      const e = React.createElement;
+      return (runs || []).map((r, i) => {
+        if (typeof r === 'string') return r;
+        if (r.m) return e('math', { key: i, style: { fontSize: '1.02em' }, dangerouslySetInnerHTML: { __html: r.m } });
+        if (r.i) return e('em', { key: i }, r.i);
+        if (r.b) return e('strong', { key: i }, r.b);
+        if (r.sup) return e('sup', { key: i }, r.sup);
+        return null;
+      });
+    }
+    // The paper body, built once per loaded module and memoized on it. The app re-renders on every
+    // scroll event and on the glitch timer; handing React the same element objects each time lets it
+    // bail out of the whole subtree instead of rebuilding several hundred nodes a frame.
+    renderPaper(mod) {
+      if (!mod) return null;
+      if (mod.__els) return mod.__els;
+      const e = React.createElement;
+      const ink = 'color-mix(in srgb, var(--color-text) 84%, transparent)';
+      const rule = { borderTop: '1px solid var(--color-divider)', paddingTop: '14px' };
+      const label = { margin: '0 0 6px', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-neutral-600)' };
+      const body = { fontSize: '17px', lineHeight: '28px', textAlign: 'justify', hyphens: 'auto', color: ink, maxWidth: '68ch' };
+      const els = []; let row = 0, firstFigRow = 0, dropNext = false;
+      const caps = [], folds = [];
+      // Explicit rows: the blocks fill column 1 in order and a wide figure takes a whole row across
+      // both. Column 2 holds the aside above the first figure, then one caption cell per figure row.
+      const at = (wide) => { row++; return { gridRow: String(row), gridColumn: wide ? '1 / -1' : '1', minWidth: 0 }; };
+      // two captions must never land in the same cell; the second one steps down a row
+      const taken = new Set();
+      const capRow = (r) => { while (taken.has(r)) r++; taken.add(r); return r; };
+      // The frame is the plate's own hairline, drawn on the image and nothing else. The design system's
+      // .plate is a 6px surface mat plus a 1px outline that goes accent on hover; the mat is dropped so
+      // the outline lands on the image edge, and its sepia (meant for placeholder photographs) with it.
+      // Capping the figure's width at (capped height x aspect) is what keeps a portrait plate short
+      // without letting the frame float away from the image the way a max-height on the image would.
+      const CAP = 'min(78vh, 760px)';
+      const figEl = (b, key, style) => {
+        const cap = 'Fig. ' + b.n + '. ' + b.capText;
+        const hit = { onMouseEnter: () => this.startTyping('fig-' + b.n, cap.length), onMouseLeave: () => this.stopTyping(),
+          onFocus: () => this.startTyping('fig-' + b.n, cap.length), onBlur: () => this.stopTyping() };
+        return e('figure', { key, className: 'plate', 'data-fig': String(b.n), 'data-wide': b.wide ? '1' : null,
+          tabIndex: 0, 'aria-label': cap, ...hit,
+          style: { margin: 0, filter: 'none', border: 0, ...style } },
+          e('img', { key: 'i', src: b.src, alt: b.alt, width: b.w, height: b.h, loading: 'lazy', decoding: 'async',
+            style: { display: 'block', width: '100%', height: 'auto' } }));
+      };
+      const figWidth = (b) => 'min(100%, calc(' + CAP + ' * ' + (b.w / b.h).toFixed(4) + '))';
+      (mod.blocks || []).forEach((b, i) => {
+        const key = 'pb' + i;
+        if (b.k === 'byline') {
+          els.push(e('p', { key, style: { ...at(false), margin: '0 0 28px', fontFamily: 'var(--font-heading)', fontSize: '19px', lineHeight: '26px' } },
+            b.t, e('span', { key: 'a', style: { display: 'block', fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-600)' } }, b.aff)));
+        } else if (b.k === 'abstract') {
+          els.push(e('div', { key, style: { ...at(false), ...rule, margin: '0 0 20px' } },
+            e('p', { key: 'l', style: label }, 'Abstract'),
+            e('p', { key: 'p', style: { margin: 0, fontFamily: 'var(--font-heading)', fontSize: '18px', lineHeight: '30px', textAlign: 'justify', hyphens: 'auto', color: ink, maxWidth: '68ch' } }, this.paperRuns(b.r))));
+        } else if (b.k === 'keywords') {
+          els.push(e('p', { key, style: { ...at(false), margin: '0 0 28px', fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-600)', maxWidth: '68ch' } }, b.t));
+        } else if (b.k === 'h2') {
+          dropNext = /^Introduction$/i.test(b.t);
+          els.push(e('h2', { key, style: { ...at(false), ...rule, margin: '56px 0 20px', fontFamily: 'var(--font-heading)', fontWeight: 400, fontSize: '30px', lineHeight: '1.2', letterSpacing: '-0.01em' } }, b.t));
+        } else if (b.k === 'h3') {
+          els.push(e('h3', { key, style: { ...at(false), margin: '34px 0 14px', fontFamily: 'var(--font-heading)', fontStyle: 'italic', fontWeight: 400, fontSize: '22px', lineHeight: '1.25' } }, b.t));
+        } else if (b.k === 'p') {
+          const kids = this.paperRuns(b.r);
+          if (dropNext) {
+            dropNext = false;
+            const first = kids[0];
+            if (typeof first === 'string') {
+              kids[0] = first.slice(1);
+              kids.unshift(e('span', { key: 'dc', style: { float: 'left', fontFamily: 'var(--deco)', fontWeight: 400, fontSize: '64px', lineHeight: '56px', padding: '6px 12px 0 0', color: 'var(--color-text)' } }, first[0]));
+            }
+          }
+          els.push(e('p', { key, style: { ...at(false), margin: '0 0 28px', ...body } }, kids));
+        } else if (b.k === 'ul') {
+          els.push(e('ul', { key, style: { ...at(false), margin: '0 0 28px', padding: '0 0 0 1.4em', ...body, textAlign: 'left' } },
+            b.items.map((it, j) => e('li', { key: j, style: { margin: '0 0 10px' } }, this.paperRuns(it)))));
+        } else if (b.k === 'fig') {
+          const cell = at(b.wide);
+          if (!firstFigRow) firstFigRow = row;
+          // a wide plate already owns column 2 on its own row, so its caption drops to the next one,
+          // where it sits beside the paragraph that follows the figure
+          caps.push({ row: capRow(b.wide ? row + 1 : row), figs: [b] });
+          els.push(figEl(b, key, { ...cell, margin: b.wide ? '10px 0 34px' : '10px auto 34px', width: b.wide ? '100%' : figWidth(b) }));
+        } else if (b.k === 'figrow') {
+          // two plates on one row, sized in proportion to their aspect ratios so they stand the same
+          // height whichever constraint binds, the row's width or the height cap
+          const cell = at(false);
+          if (!firstFigRow) firstFigRow = row;
+          caps.push({ row: capRow(row), figs: b.figs });
+          els.push(e('div', { key, style: { ...cell, margin: '10px 0 34px', display: 'flex', gap: '20px', alignItems: 'flex-start', justifyContent: 'center' } },
+            b.figs.map((f, j) => figEl(f, 'f' + j, { flexGrow: f.w / f.h, flexShrink: 1, flexBasis: 0, minWidth: 0, maxWidth: 'calc(' + CAP + ' * ' + (f.w / f.h).toFixed(4) + ')' }))));
+        } else if (b.k === 'fold') {
+          // rendered by renderPaperTail: its open/closed state lives in component state, so it must
+          // not be baked into this memoized array
+          folds.push(b);
+        } else if (b.k === 'eq') {
+          els.push(e('div', { key, style: { ...at(false), position: 'relative', margin: '28px 0', padding: '0 4em 0 0' } },
+            // overflow-x alone computes overflow-y to auto, and a stretchy fence overhanging by a
+            // pixel is enough to raise a vertical scrollbar; the padding keeps that pixel visible
+            e('div', { key: 'm', style: { overflowX: 'auto', overflowY: 'hidden', padding: '6px 0', textAlign: 'center', fontSize: '19px' } },
+              e('math', { display: 'block', dangerouslySetInnerHTML: { __html: b.m } })),
+            e('span', { key: 'n', style: { position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--color-neutral-600)' } }, '(' + b.n + ')')));
+        }
+      });
+      mod.__els = els;
+      mod.__caps = caps;
+      mod.__folds = folds;
+      mod.__tailRow = row + 1;
+      mod.__asideRow = '1 / ' + (firstFigRow || row + 1);
+      return els;
+    }
+    // The caption column. It reads state.typed, so it is rebuilt every render and never memoized.
+    // One cell per figure row, holding a standing "Fig. N" kicker and the caption that types itself
+    // out while its plate is hovered or focused, the same typewriter the Research leaves use.
+    renderPaperCaptions(mod) {
+      if (!mod || !mod.__caps) return null;
+      const e = React.createElement;
+      const kicker = { margin: '0 0 6px', fontFamily: 'var(--deco)', fontSize: '10px', letterSpacing: '0.1em', color: 'var(--color-accent-700)', whiteSpace: 'nowrap' };
+      const line = { margin: 0, fontFamily: "'Libre Baskerville', var(--font-heading), serif", fontStyle: 'italic', fontSize: '15px', lineHeight: '21px', color: 'var(--color-neutral-700)', whiteSpace: 'pre-wrap', maxWidth: '30ch' };
+      return mod.__caps.map((c) => e('div', { key: 'pc' + c.row, 'data-figcaps': '', style: { gridColumn: 2, gridRow: String(c.row), alignSelf: 'start', margin: '10px 0 0', display: 'flex', flexDirection: 'column', gap: '20px' } },
+        c.figs.map((f) => {
+          const full = 'Fig. ' + f.n + '. ' + f.capText, typed = this.typedText('fig-' + f.n, full);
+          return e('div', { key: f.n, 'data-figcap': String(f.n) },
+            e('p', { key: 'k', style: kicker }, 'Fig. ' + f.n),
+            // the caret is only there while the line is still arriving: the .caret blink animates
+            // opacity, so hiding it by opacity alone would lose to its own keyframes
+            e('p', { key: 't', 'aria-live': 'polite', style: line }, typed,
+              typed && typed.length < full.length
+                ? e('span', { key: 'c', className: 'caret', 'aria-hidden': 'true', style: { display: 'inline-block', width: '1px', height: '0.9em', marginLeft: '2px', verticalAlign: '-0.1em', background: 'var(--color-accent)' } })
+                : null));
+        })));
+    }
+    // Acknowledgments and References: folded away by default, each its own toggle. Their open and
+    // closed shapes are memoized separately, so opening one does not rebuild the other.
+    renderPaperTail(mod, open) {
+      if (!mod || !mod.__folds || !mod.__folds.length) return null;
+      const e = React.createElement;
+      const cache = mod.__tail || (mod.__tail = {});
+      const small = { fontSize: '13px', lineHeight: '20px', color: 'var(--color-neutral-700)' };
+      return e('div', { key: 'ptail', 'data-paper-tail': '', style: { gridColumn: '1', gridRow: String(mod.__tailRow), minWidth: 0, margin: '56px 0 0' } },
+        mod.__folds.map((f) => {
+          const on = !!open[f.id], ck = f.id + (on ? '-1' : '-0');
+          if (!cache[ck]) {
+            cache[ck] = e('div', { style: { borderTop: '1px solid var(--color-divider)', paddingTop: '14px', marginBottom: '20px' } },
+              e('button', { key: 'b', type: 'button', 'aria-expanded': on ? 'true' : 'false', 'aria-controls': 'fold-' + f.id,
+                onClick: () => this.togglePaperFold(f.id),
+                style: { all: 'unset', cursor: 'pointer', display: 'flex', width: '100%', alignItems: 'baseline', justifyContent: 'space-between', gap: '14px', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-neutral-600)' } },
+                e('span', { key: 't' }, f.t),
+                e('span', { key: 'm', 'aria-hidden': 'true', style: { fontFamily: 'var(--mono)', fontSize: '13px', color: 'var(--color-accent-700)' } }, on ? '−' : '+')),
+              on ? (f.id === 'refs'
+                ? e('ol', { key: 'c', id: 'fold-' + f.id, 'data-refs': '', style: { ...small, margin: '14px 0 0', padding: 0, listStyle: 'none', maxWidth: '78ch' } },
+                    f.items.map((it, j) => e('li', { key: j, style: { margin: '0 0 10px', paddingLeft: '1.6em', textIndent: '-1.6em' } }, this.paperRuns(it))))
+                : e('div', { key: 'c', id: 'fold-' + f.id, style: { ...small, margin: '14px 0 0', maxWidth: '78ch' } },
+                    f.items.map((it, j) => e('p', { key: j, style: { margin: '0 0 12px' } }, this.paperRuns(it)))))
+                : null);
+          }
+          return e(React.Fragment, { key: f.id }, cache[ck]);
+        }));
+    }
+    togglePaperFold(id) { this.setState((st) => { const o = st.paperOpen || {}; return { paperOpen: { ...o, [id]: !o[id] } }; }); }
     // the glowing glyphs of the hero title are the parchment's heat source: read each lit glyph span's inline glow
     // (the text effect writes a text-shadow whose alpha tracks brightness), project its centre into the roll's box
     feedParchment() {
@@ -2671,7 +2900,8 @@
       const projects = this.data.map((d, i) => {
         const m = this.reg(i) === 'mono';
         return { ...d, numeral: this.num(i), why: this.why[i], kindLower: d.kind.toLowerCase(), figNo: String(i + 1).padStart(2, '0'), slotId: 'toc-' + i, plateSlotId: 'plate-' + i, heroSlotId: 'cover-' + i, detailSlotA: 'detail-a-' + i, detailSlotB: 'detail-b-' + i,
-          dropCap: d.body1[0], body1: d.body1.slice(1), body1Full: d.body1, subtitleCover: this.cover(d.subtitle),
+          dropCap: (d.body1 || '')[0] || '', body1: (d.body1 || '').slice(1), body1Full: d.body1 || '', subtitleCover: this.cover(d.subtitle),
+          href: d.href || '#', linkTarget: d.linkBlank ? '_blank' : undefined, linkRel: d.linkBlank ? 'noopener' : undefined,
           previewOpacity: hovered === i ? '1' : '0',
           ghost: m ? 'SHT-' + String(i + 1).padStart(2, '0') : this.num(i),
           kickerWord: m ? 'Sheet' : 'Chapter', figWord: m ? 'Fig.' : 'Plate', backWord: m ? 'Sheet register' : 'Contents',
@@ -2699,15 +2929,19 @@
   
       // the margins only hold chapters that belong to this register; empty slots read as forthcoming
       const own = projects.filter((p) => this.pageOf(projects.indexOf(p)) === pageKey);
-      const leaves = [...own, ...forthcoming].slice(0, 6).map((p, k) => { const real = own.includes(p), pi = real ? projects.indexOf(p) : -1 - k; const on = real && hovered === pi && this.state.leafHover; const pos = leafPos[k % leafPos.length];
+      const leaves = [...own, ...forthcoming].slice(0, 6).map((p, k) => { const real = own.includes(p), pi = real ? projects.indexOf(p) : -1 - k; const on = real && this.state.typingKey === 'leaf-' + pi; const pos = leafPos[k % leafPos.length];
         // only the two large outer plates bleed, and they bleed outward far enough to cross the page edge
         const bleeds = ['-56px', '56px', '0px', '0px', '0px', '-60px'];
         const bleedX = bleeds[k % bleeds.length];
         const bleedY = ['0px', '0px', '52px', '0px', '0px', '0px'][k % 6];
         const detail = real ? p.subtitle + '\n' + p.role + ' · ' + p.status + ' · pp. ' + p.pages : '';
         const typed = on ? detail.slice(0, this.state.typed || 0) : '';
-        return { ...p, ...pos, idx: pi, cardNo: k + 1, typed, kicker: real ? 'Chapter ' + p.numeral + ' · ' + p.year : 'Forthcoming', detailDisplay: on ? 'block' : 'none', detailOpacity: on ? '1' : '0', caretOpacity: on && typed.length < detail.length ? '1' : '0', morphName: real ? 'row-' + k : 'leaf-' + k, figNo: real ? p.figNo : 'x' + k, placeholder: real ? p.placeholder : 'Plate: forthcoming', coverSlotId: real ? 'cover-' + pi : 'cover-next-' + k, open: real ? p.open : () => {}, bleedX, bleedY, zIndex: on ? 30 : 12 - k, origin: (pos.selfX === 'start' ? 'left ' : 'right ') + (pos.selfY === 'start' ? 'top' : pos.selfY === 'end' ? 'bottom' : 'center'), cursor: real ? 'pointer' : 'default', lift: on ? '-10px' : '0px', scale: on ? '1.06' : '1', shadow: on ? '0 24px 48px -20px rgba(32,31,29,0.35), 0 2px 6px rgba(32,31,29,0.08)' : '0 8px 24px -16px rgba(32,31,29,0.25)',
-          hover: () => { if (real) this.startTyping(pi, detail.length); }, unhover: () => { this.stopTyping(); } }; });
+        // a chapter with real imagery brings its own cover; the rest fall back to the position's stock plate.
+        // The sepia mat belongs to those stock photographs: a real render is shown as it is.
+        return { ...p, ...pos, cover: (real && p.cover) || pos.cover,
+          filter: (real && p.cover) ? 'none' : 'sepia(0.22) saturate(0.82) contrast(1.05)',
+          idx: pi, cardNo: k + 1, typed, kicker: real ? 'Chapter ' + p.numeral + ' · ' + p.year : 'Forthcoming', detailDisplay: on ? 'block' : 'none', detailOpacity: on ? '1' : '0', caretOpacity: on && typed.length < detail.length ? '1' : '0', morphName: real ? 'row-' + k : 'leaf-' + k, figNo: real ? p.figNo : 'x' + k, placeholder: real ? p.placeholder : 'Plate: forthcoming', coverSlotId: real ? 'cover-' + pi : 'cover-next-' + k, open: real ? p.open : () => {}, bleedX, bleedY, zIndex: on ? 30 : 12 - k, origin: (pos.selfX === 'start' ? 'left ' : 'right ') + (pos.selfY === 'start' ? 'top' : pos.selfY === 'end' ? 'bottom' : 'center'), cursor: real ? 'pointer' : 'default', lift: on ? '-10px' : '0px', scale: on ? '1.06' : '1', shadow: on ? '0 24px 48px -20px rgba(32,31,29,0.35), 0 2px 6px rgba(32,31,29,0.08)' : '0 8px 24px -16px rgba(32,31,29,0.25)',
+          hover: () => { if (real) this.startTyping('leaf-' + pi, detail.length, { hovered: pi }); }, unhover: () => { this.stopTyping(); } }; });
       const pageProjects = projects.filter((p) => this.pageOf(projects.indexOf(p)) === pageKey).map((p, k) => ({ ...p, shapeIdx: k + 1, dir: k % 2 ? 'rtl' : 'ltr', textCol: k % 2 ? '13 / 23' : '1 / 11', plateCol: k % 2 ? '1 / 13' : '11 / 23', cardRow: (16 + 9 * k) + ' / ' + (23 + 9 * k), bandNo: String(k + 1).padStart(2, '0'), morphName: k < 2 ? 'row-' + k : 'feat-' + (k - 2) + '-title', frameShape: k < 2 ? 'plate-' + k : 'frame-' + k }));
       const introChars = Array.from(page.intro);
       page.dropCap = introChars[0]; page.introRest = introChars.slice(1).join('');
@@ -2718,6 +2952,10 @@
       const pad = (n) => String(n).padStart(2, '0');
       const featured = this.featuredFor[pageKey].map((i, k) => ({ ...projects[i], plateNumeral: this.num(k) }));
       const current = projects[idx];
+      const paperMod = current.paper ? (this.papers || {})[idx] : null;
+      const paperBlocks = this.renderPaper(paperMod);
+      const paperCaptions = this.renderPaperCaptions(paperMod);
+      const paperTail = this.renderPaperTail(paperMod, this.state.paperOpen || {});
       const hov = projects[hovered] && this.pageOf(hovered) === pageKey ? projects[hovered] : pageProjects[0];
       const tabColor = (r) => brandReg === r ? 'var(--color-text)' : 'var(--color-neutral-600)';
       const cvData = this.state.cvData, cvViews = this.cvViews(cvData);
@@ -2752,7 +2990,7 @@
       }
       return {
         isHome: view === 'home', showTabs: view !== 'home', goHome: () => this.goHome(),
-        homeLayerRef: this.homeLayerRef, homeRollRef: this.homeRollRef, homeCubeRef: this.homeCubeRef, fogLayerRef: this.fogLayerRef, homeHeadRef: this.homeHeadRef, homeFootRef: this.homeFootRef,
+        homeLayerRef: this.homeLayerRef, homeRollRef: this.homeRollRef, homeCubeRef: this.homeCubeRef, fogLayerRef: this.fogLayerRef,
         goToolingFromCube: () => { this.goPage('tooling'); this.cubeLead = true; },
         homeCubeOn: () => { if (this.home) this.home.setHover(true); }, homeCubeOff: () => { if (this.home) this.home.setHover(false); },
         isPage: view === 'page', marginalia, page, pageReg: page.reg, pageKey: pageKey, pageLabel: page.label,
@@ -2762,6 +3000,9 @@
         cvEmail, cvMailto: 'mailto:' + cvEmail, cvGithub: cvLinks.github || this.CONTACT.github,
         isSerifPage: view === 'page' && page.reg === 'serif', isMonoPage: view === 'page' && page.reg === 'mono',
         isMono: view === 'chapter' && mono, isSerif: view === 'chapter' && !mono, chapterKey: R + '-' + idx,
+        isPaper: view === 'chapter' && !mono && !!current.paper, isEssay: view === 'chapter' && !mono && !current.paper,
+        paperBlocks, paperCaptions, paperTail, paperAsideRow: (paperMod && paperMod.__asideRow) || 'auto',
+        heroImg: view === 'chapter' && !!current.hero, heroSlot: view === 'chapter' && !current.hero,
         rBody: mono ? this.MONO : 'var(--font-body)', rAlign: mono ? 'left' : 'justify', rTracking: mono ? '-0.03em' : '0',
         brandChars: (this.state.brandAnim || Array.from(this.BRAND).map((ch) => ({ ch, reg: brandReg, swap: false }))).map((c) => ({
           ch: c.ch, font: c.reg === 'mono' ? this.MONO : 'var(--font-heading)', tracking: c.reg === 'mono' ? '-0.03em' : '0',
@@ -2769,6 +3010,8 @@
         ...(mono
           ? { tBg: '#1b1a19', tSurface: '#292625', tText: '#f3f2f2', tAccent: '#f3f2f2', tAccent600: '#ffffff', tAccent700: '#e2dfdf', tAccent800: '#f3f2f2', tAccent100: 'color-mix(in srgb, #f3f2f2 10%, transparent)', tDivider: 'color-mix(in srgb, #f3f2f2 10%, transparent)', tN100: 'color-mix(in srgb, #f3f2f2 8%, transparent)', tN400: '#605d5d', tN500: '#8a8686', tN600: '#a19d9d', tN700: '#c4c0c0', tN800: '#e2dfdf' }
           : { tBg: '#f3f2f2', tSurface: '#eae9e9', tText: '#201f1d', tAccent: '#b68235', tAccent600: '#a06f24', tAccent700: '#7d5411', tAccent800: '#5a3b0a', tAccent100: '#fff3e4', tDivider: 'color-mix(in srgb, #201f1d 16%, transparent)', tN100: '#f8f4f4', tN400: '#bab6b6', tN500: '#9b9797', tN600: '#7d7979', tN700: '#605d5d', tN800: '#444141' }),
+        // the serif chapter shows a real render as it is; the sepia mat is for the placeholder photographs
+        heroFilter: current.hero ? 'none' : 'sepia(0.22) saturate(0.82) contrast(1.05)',
         rootRef: this.rootRef, heroRef: this.heroRef, scriptRef: this.scriptRef, parchLayerRef: this.parchLayerRef, platformRef: this.platformRef, heroTextRef: this.heroTextRef, sheetCount: pad(pageProjects.length),
         tabLeft: this.state.tab.left + 'px', tabWidth: this.state.tab.width + 'px',
         tabToolingColor: tabColor('mono'), tabWritingColor: tabColor('serif'),
