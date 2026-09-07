@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.8">
+  <title>yiliang — archive in progress</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+    canvas { display: block; cursor: none; }
+    #label {
+      position: fixed;
+      bottom: 1.75rem;
+      left: 2rem;
+      font-family: 'Geist Mono', 'Courier New', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
+      text-transform: lowercase;
+      opacity: 0.4;
+      pointer-events: none;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <canvas id="c2" style="position:fixed;top:0;left:0;pointer-events:none;"></canvas>
+  <div id="label">archive in progress</div>
+
+  <script>
+    // ── Constants ─────────────────────────────────────────────────────────────
+    let CELL_W  = 10;
+    let CELL_H  = 16;
+    let FONT    = `13px "Geist Mono", "Courier New", monospace`;
+    let FONT_LG = `32px "Geist Mono", "Courier New", monospace`;
+
+    const CHARS = '  ·∙:-=+░▒▓█';
+    const NC    = CHARS.length;
+    const V_MAX = 0.40;
+
+    const DU     = 0.2097;   // base diffusion rates
+    const DV     = 0.105;
+    const STEPS  = 6;
+    const WARMUP = 80;
+    const SEED_R = 40;
+
+    const PARAM_SETS = [
+      { f: 0.029, k: 0.057 },
+      { f: 0.037, k: 0.060 },
+      { f: 0.060, k: 0.062 },
+      { f: 0.025, k: 0.060 },
+      { f: 0.039, k: 0.058 },
+    ];
+
+    const COLOR_DUR   = 8700;
+    const PARAM_DUR   = 18700;
+    const BOOST_R     = 70;
+    const BOOST_STEPS = 3;
+
+    // ── Text / box constants ──────────────────────────────────────────────────
+    const TITLE_TEXT    = "YILIANG SHAO's WORK";
+    const SUBTITLE_TEXT = "The algorithm is forming itself. So is this site.";
+
+    const TEXT_TARGET  = 0.36;
+    const TEXT_RESTORE = 0.030;
+    const TEXT_VISIBLE = 0.10;
+
+    const BOX_PAD_X  = 3;
+    const BOX_PAD_Y  = 1;
+    const TITLE_ROWS = 2;
+    const BOX_SPACER = 1;
+
+    const OVERLAY_DISSOLVE = 0.15;
+    const OVERLAY_RESTORE  = 0.022;
+
+    // ── Diffusion oscillation — drives spatial spacing of RD structures ────────
+    // Oscillating DU/DV changes the characteristic wavelength of the pattern:
+    // higher diffusion → wider arms / more spacing; lower → tighter / denser.
+    const DIFF_AMP  = 0.22;      // ±22 % around base values
+    const DIFF_FREQ = 0.000262;  // ~24 s period (out of phase with param morphing)
+    let curDU = DU, curDV = DV;
+
+    // ── Responsive cell sizing ────────────────────────────────────────────────
+    function computeCellSize() {
+      const minCols = Math.max(SUBTITLE_TEXT.length, 40) + BOX_PAD_X * 2 + 2; // box outer width
+      CELL_W  = Math.max(5, Math.min(10, Math.floor(window.innerWidth / minCols)));
+      CELL_H  = Math.round(CELL_W * 1.6);
+      const fs = Math.round(CELL_W * 1.3);
+      FONT    = `${fs}px "Geist Mono", "Courier New", monospace`;
+      FONT_LG = `${CELL_H * 2}px "Geist Mono", "Courier New", monospace`;
+    }
+
+    // ── Canvas ────────────────────────────────────────────────────────────────
+    const canvas  = document.getElementById('c');
+    const ctx     = canvas.getContext('2d');
+    const canvas2 = document.getElementById('c2');
+    const ctx2    = canvas2.getContext('2d');
+    const label   = document.getElementById('label');
+    const DPR     = window.devicePixelRatio || 1;
+
+    let cols, rows;
+    let U0, V0, U1, V1;
+    let textChars, textMask, interiorMask;
+    let boxGeo        = null;
+    let titleCells    = [];
+    let subtitleCells = [];
+
+    // ── Char sprite atlas ────────────────────────────────────────────────────
+    const BOX_CHARS   = ['╔','╗','╚','╝','═','║'];
+    const ALL_CHARS   = CHARS.split('').filter(c => c !== ' ')
+                        .concat(BOX_CHARS)
+                        .filter((c,i,a) => a.indexOf(c) === i);
+    const atlasCanvas = document.createElement('canvas');
+    const atlasCtx    = atlasCanvas.getContext('2d');
+    const spriteMap   = {};
+    let   atlasColor  = '';
+
+    function rebuildAtlas(fgStr) {
+      if (fgStr === atlasColor) return;
+      atlasColor = fgStr;
+      const w = Math.ceil(CELL_W * DPR);
+      const h = Math.ceil(CELL_H * DPR);
+      atlasCanvas.width  = w * ALL_CHARS.length;
+      atlasCanvas.height = h;
+      atlasCtx.scale(DPR, DPR);
+      atlasCtx.font         = FONT;
+      atlasCtx.textBaseline = 'top';
+      atlasCtx.fillStyle    = fgStr;
+      for (let i = 0; i < ALL_CHARS.length; i++) {
+        spriteMap[ALL_CHARS[i]] = i * w;
+        atlasCtx.fillText(ALL_CHARS[i], i * CELL_W, 0);
+      }
+    }
+
+    // ── Grid ──────────────────────────────────────────────────────────────────
+    function buildGrid() {
+      const n = cols * rows;
+      U0 = new Float32Array(n); V0 = new Float32Array(n);
+      U1 = new Float32Array(n); V1 = new Float32Array(n);
+    }
+
+    // ── Text mask (border only — subtitle on canvas2) ─────────────────────────
+    function buildTextMask() {
+      const n = cols * rows;
+      textChars    = new Array(n).fill(null);
+      textMask     = new Uint8Array(n);
+      interiorMask = new Uint8Array(n);
+
+      const boxInnerW = Math.max(SUBTITLE_TEXT.length, 40) + BOX_PAD_X * 2;
+      const boxOuterW = boxInnerW + 2;
+      const boxHeight = 1 + BOX_PAD_Y + TITLE_ROWS + BOX_SPACER + 1 + BOX_PAD_Y + 1;
+
+      const boxLeft   = Math.floor((cols - boxOuterW) / 2);
+      const boxRight  = boxLeft + boxOuterW - 1;
+      const boxTop    = Math.floor((rows - boxHeight) / 2);
+      const boxBottom = boxTop + boxHeight - 1;
+
+      const titleRowStart = boxTop + 1 + BOX_PAD_Y;
+      const subRow        = titleRowStart + TITLE_ROWS + BOX_SPACER;
+      const subLeft       = Math.floor((cols - SUBTITLE_TEXT.length) / 2);
+
+      function put(row, col, ch) {
+        if (row < 0 || row >= rows || col < 0 || col >= cols) return;
+        const i = row * cols + col;
+        textChars[i] = ch; textMask[i] = 1;
+      }
+
+      put(boxTop,    boxLeft,  '╔'); put(boxTop,    boxRight, '╗');
+      put(boxBottom, boxLeft,  '╚'); put(boxBottom, boxRight, '╝');
+      for (let c = boxLeft + 1; c < boxRight; c++) {
+        put(boxTop,    c, '═'); put(boxBottom, c, '═');
+      }
+      for (let r = boxTop + 1; r < boxBottom; r++) {
+        put(r, boxLeft, '║'); put(r, boxRight, '║');
+      }
+
+      for (let r = boxTop + 1; r < boxBottom; r++) {
+        for (let c = boxLeft + 1; c < boxRight; c++) {
+          const i = r * cols + c;
+          if (!textMask[i]) interiorMask[i] = 1;
+        }
+      }
+
+      boxGeo = {
+        titleBaseRow: titleRowStart + TITLE_ROWS / 2,
+        subBaseRow:   subRow + 0.5,
+        subLeft,
+      }
+    } 
+    
+
+    // ── Title cells (canvas2) ─────────────────────────────────────────────────
+    function buildTitleCells() {
+      if (!boxGeo) return;
+      ctx2.font = FONT_LG;
+      const totalW = ctx2.measureText(TITLE_TEXT).width;
+      const startX = (window.innerWidth - totalW) / 2;
+      titleCells = [];
+      let x = startX;
+      for (const ch of TITLE_TEXT) {
+        const w = ctx2.measureText(ch).width;
+        titleCells.push({ ch, x, cx: x + w / 2, cy: boxGeo.titleBaseRow * CELL_H, v: 1 });
+        x += w;
+      }
+    }
+
+    // ── Subtitle cells (canvas2) ──────────────────────────────────────────────
+    function buildSubtitleCells() {
+      if (!boxGeo) return;
+      const { subLeft, subBaseRow } = boxGeo;
+      subtitleCells = [];
+      for (let c = 0; c < SUBTITLE_TEXT.length; c++) {
+        const x = (subLeft + c) * CELL_W;
+        subtitleCells.push({
+          ch:  SUBTITLE_TEXT[c],
+          x,
+          cx:  x + CELL_W / 2,
+          cy:  subBaseRow * CELL_H,
+          v:   1,
+        });
+      }
+    }
+
+    // ── Resize ────────────────────────────────────────────────────────────────
+    function resize() {
+      computeCellSize();
+      const w = window.innerWidth, h = window.innerHeight;
+
+      canvas.width  = w * DPR; canvas.height  = h * DPR;
+      canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+      canvas2.width  = w * DPR; canvas2.height  = h * DPR;
+      canvas2.style.width = w + 'px'; canvas2.style.height = h + 'px';
+      ctx2.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+      cols = Math.ceil(w / CELL_W) + 1;
+      rows = Math.ceil(h / CELL_H) + 1;
+      buildGrid();
+      buildRowOffsets();
+      buildTextMask();
+      buildTitleCells();
+      buildSubtitleCells();
+    }
+
+    window.addEventListener('resize', () => { resize(); atlasColor = ''; initRD(curF, curK); });
+
+    // ── Text restoration ──────────────────────────────────────────────────────
+    function restoreText() {
+      for (let i = 0; i < textMask.length; i++) {
+        if (textMask[i]) {
+          V0[i] += TEXT_RESTORE * (TEXT_TARGET - V0[i]);
+          U0[i] += TEXT_RESTORE * ((1 - TEXT_TARGET) - U0[i]);
+        } else if (interiorMask[i]) {
+          V0[i] = 0; U0[i] = 1;
+        }
+      }
+    }
+
+    // ── RD init ───────────────────────────────────────────────────────────────
+    function initRD(f, k) {
+      U0.fill(1); V0.fill(0);
+      for (let i = 0; i < textMask.length; i++) {
+        if (textMask[i]) { V0[i] = TEXT_TARGET; U0[i] = 1 - TEXT_TARGET; }
+      }
+      const count = Math.max(20, Math.floor(cols * rows * 0.003));
+      for (let p = 0; p < count; p++) {
+        const r = 1 + Math.floor(Math.random() * (rows - 2));
+        const c = 1 + Math.floor(Math.random() * (cols - 2));
+        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+          const i = (r + dr) * cols + (c + dc);
+          if (!textMask[i] && !interiorMask[i]) { V0[i] = 1; U0[i] = 0; }
+        }
+      }
+      for (let s = 0; s < WARMUP; s++) { stepRD(f, k); restoreText(); }
+    }
+
+    // ── Pre-computed row offsets (rebuilt on resize) ────────────────────────
+    let rowPrev, rowNext;
+    function buildRowOffsets() {
+      rowPrev = new Int32Array(rows);
+      rowNext = new Int32Array(rows);
+      for (let r = 0; r < rows; r++) {
+        rowPrev[r] = (r === 0 ? rows - 1 : r - 1) * cols;
+        rowNext[r] = (r === rows - 1 ? 0 : r + 1) * cols;
+      }
+    }
+
+    // ── RD step ───────────────────────────────────────────────────────────────
+    function stepRD(f, k) {
+      const lastCol = cols - 1;
+      for (let r = 0; r < rows; r++) {
+        const rp = rowPrev[r];
+        const rc = r * cols;
+        const rn = rowNext[r];
+        for (let c = 0; c < cols; c++) {
+          const i = rc + c;
+          if (interiorMask[i]) { U1[i] = 1; V1[i] = 0; continue; }
+          const cp = c === 0        ? lastCol : c - 1;
+          const cn = c === lastCol  ? 0       : c + 1;
+          const u = U0[i], v = V0[i];
+          const Lu = 0.05*(U0[rp+cp]+U0[rp+cn]+U0[rn+cp]+U0[rn+cn])
+                   + 0.20*(U0[rp+c ]+U0[rc+cp]+U0[rc+cn]+U0[rn+c ]) - u;
+          const Lv = 0.05*(V0[rp+cp]+V0[rp+cn]+V0[rn+cp]+V0[rn+cn])
+                   + 0.20*(V0[rp+c ]+V0[rc+cp]+V0[rc+cn]+V0[rn+c ]) - v;
+          const uvv = u * v * v;
+          U1[i] = u + curDU*Lu - uvv + f*(1-u);
+          V1[i] = v + curDV*Lv + uvv - (f+k)*v;
+        }
+      }
+      let t = U0; U0 = U1; U1 = t;
+          t = V0; V0 = V1; V1 = t;
+    }
+
+    // ── Pointer ───────────────────────────────────────────────────────────────
+    const ptr = { x: -9999, y: -9999, active: false };
+
+    // ── Seed mouse ────────────────────────────────────────────────────────────
+    function seedMouse() {
+      if (!ptr.active) return;
+      const cx = ptr.x / CELL_W, cy = ptr.y / CELL_H;
+      const r0 = Math.max(0,        Math.floor(cy - SEED_R / CELL_H));
+      const r1 = Math.min(rows - 1, Math.ceil (cy + SEED_R / CELL_H));
+      const c0 = Math.max(0,        Math.floor(cx - SEED_R / CELL_W));
+      const c1 = Math.min(cols - 1, Math.ceil (cx + SEED_R / CELL_W));
+      const rr = SEED_R * SEED_R;
+
+      for (let r = r0; r <= r1; r++) {
+        for (let c = c0; c <= c1; c++) {
+          const dx = (c + 0.5 - cx) * CELL_W;
+          const dy = (r + 0.5 - cy) * CELL_H;
+          const d2 = dx * dx + dy * dy;
+          if (d2 >= rr) continue;
+          const t      = 1 - Math.sqrt(d2) / SEED_R;
+          const smooth = t * t * (3 - 2 * t);
+          const i      = r * cols + c;
+          if (textMask[i]) {
+            V0[i] *= (1 - 0.50 * smooth);
+          } else if (!interiorMask[i]) {
+            V0[i] = Math.min(0.25, V0[i] + 0.12 * smooth);
+            U0[i] = Math.max(0.75, U0[i] - 0.09 * smooth);
+          }
+        }
+      }
+    }
+
+    // ── Local RD boost ────────────────────────────────────────────────────────
+    function localBoostStep(f, k, radius) {
+      if (!ptr.active) return;
+      const cx = ptr.x / CELL_W, cy = ptr.y / CELL_H;
+      const r0 = Math.max(1,        Math.floor(cy - radius / CELL_H));
+      const r1 = Math.min(rows - 2, Math.ceil (cy + radius / CELL_H));
+      const c0 = Math.max(1,        Math.floor(cx - radius / CELL_W));
+      const c1 = Math.min(cols - 2, Math.ceil (cx + radius / CELL_W));
+      const rr = radius * radius;
+
+      for (let r = r0; r <= r1; r++) {
+        const rp = (r-1)*cols, rc = r*cols, rn = (r+1)*cols;
+        for (let c = c0; c <= c1; c++) {
+          const dx = (c+0.5-cx)*CELL_W, dy = (r+0.5-cy)*CELL_H;
+          if (dx*dx+dy*dy >= rr) continue;
+          const i = rc+c;
+          if (interiorMask[i]) continue;
+          const u = U0[i], v = V0[i];
+          const Lu = 0.05*(U0[rp+c-1]+U0[rp+c+1]+U0[rn+c-1]+U0[rn+c+1])
+                   + 0.20*(U0[rp+c  ]+U0[rc+c-1]+U0[rc+c+1]+U0[rn+c  ]) - u;
+          const Lv = 0.05*(V0[rp+c-1]+V0[rp+c+1]+V0[rn+c-1]+V0[rn+c+1])
+                   + 0.20*(V0[rp+c  ]+V0[rc+c-1]+V0[rc+c+1]+V0[rn+c  ]) - v;
+          const uvv = u*v*v;
+          U1[i] = u + curDU*Lu - uvv + f*(1-u);
+          V1[i] = v + curDV*Lv + uvv - (f+k)*v;
+        }
+      }
+      for (let r = r0; r <= r1; r++) {
+        const rc = r*cols;
+        for (let c = c0; c <= c1; c++) {
+          const dx = (c+0.5-cx)*CELL_W, dy = (r+0.5-cy)*CELL_H;
+          if (dx*dx+dy*dy >= rr) continue;
+          const i = rc+c;
+          if (interiorMask[i]) continue;
+          U0[i]=U1[i]; V0[i]=V1[i];
+        }
+      }
+    }
+
+    // ── Canvas2 overlay dissolve ──────────────────────────────────────────────
+    function updateOverlayV() {
+      const allCells = titleCells.concat(subtitleCells);
+      for (const cell of allCells) {
+        const dx = cell.cx - ptr.x, dy = cell.cy - ptr.y;
+        const d  = Math.sqrt(dx * dx + dy * dy);
+        if (ptr.active && d < SEED_R) {
+          const t = 1 - d / SEED_R;
+          cell.v = Math.max(0, cell.v - OVERLAY_DISSOLVE * t * t * (3 - 2 * t));
+        } else {
+          cell.v += OVERLAY_RESTORE * (1 - cell.v);
+        }
+      }
+    }
+
+    // ── Draw canvas1 ─────────────────────────────────────────────────────────
+    function draw(bg, fg) {
+      const fgStr = hsl(fg);
+      rebuildAtlas(fgStr);
+
+      ctx.fillStyle = hsl(bg);
+      ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+
+      const sw = Math.ceil(CELL_W * DPR);
+      const sh = Math.ceil(CELL_H * DPR);
+
+      let i = 0;
+      for (let r = 0; r < rows; r++) {
+        const y = r * CELL_H;
+        for (let c = 0; c < cols; c++, i++) {
+          const v   = V0[i];
+          const idx = Math.min(NC - 1, Math.floor(v / V_MAX * NC));
+          const ch  = (textChars[i] && v > TEXT_VISIBLE) ? textChars[i] : CHARS[idx];
+          if (ch === ' ') continue;
+          const sx = spriteMap[ch];
+          if (sx !== undefined) {
+            ctx.drawImage(atlasCanvas, sx, 0, sw, sh, c * CELL_W, y, CELL_W, CELL_H);
+          } else {
+            ctx.font = FONT; ctx.textBaseline = 'top'; ctx.fillStyle = fgStr;
+            ctx.fillText(ch, c * CELL_W, y);
+          }
+        }
+      }
+
+      if (ptr.active) {
+        ctx.beginPath();
+        ctx.arc(ptr.x, ptr.y, SEED_R, 0, Math.PI * 2);
+        ctx.strokeStyle = hsla(fg, 0.22); ctx.lineWidth = 1; ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(ptr.x, ptr.y, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = hsla(fg, 0.5); ctx.fill();
+      }
+    }
+
+    // ── Draw canvas2 (ASCII dissolve overlay) ────────────────────────────────
+    function drawOverlay(fg) {
+      ctx2.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      ctx2.fillStyle    = hsl(fg);
+      ctx2.textBaseline = 'middle';
+
+      function renderCell(cell) {
+        const v = cell.v;
+        let ch;
+        if      (v > 0.85) { ch = cell.ch; ctx2.globalAlpha = 1; }
+        else if (v > 0.65) { ch = '▓';     ctx2.globalAlpha = v; }
+        else if (v > 0.45) { ch = '▒';     ctx2.globalAlpha = v; }
+        else if (v > 0.25) { ch = '░';     ctx2.globalAlpha = v; }
+        else if (v > 0.08) { ch = '·';     ctx2.globalAlpha = v; }
+        else return;
+        ctx2.fillText(ch, cell.x, cell.cy);
+      }
+
+      ctx2.font = FONT_LG;
+      for (const cell of titleCells)    renderCell(cell);
+      ctx2.font = FONT;
+      for (const cell of subtitleCells) renderCell(cell);
+      ctx2.globalAlpha = 1;
+    }
+
+    // ── Color — Anthropic-inspired palette ────────────────────────────────────
+    const PALETTES = [
+      { bg:{h:28,  s:18, l:6},  fg:{h:35,  s:38, l:72} },
+      { bg:{h:22,  s:14, l:7},  fg:{h:20,  s:48, l:63} },
+      { bg:{h:215, s:12, l:7},  fg:{h:42,  s:40, l:68} },
+      { bg:{h:160, s:10, l:7},  fg:{h:148, s:28, l:62} },
+      { bg:{h:18,  s:12, l:8},  fg:{h:16,  s:44, l:60} },
+    ];
+
+    function randomPair() {
+      const p = PALETTES[Math.floor(Math.random() * PALETTES.length)];
+      return {
+        bg: { h: p.bg.h+(Math.random()-.5)*10, s: p.bg.s+(Math.random()-.5)*6,  l: p.bg.l+(Math.random()-.5)*2 },
+        fg: { h: p.fg.h+(Math.random()-.5)*14, s: p.fg.s+(Math.random()-.5)*8,  l: p.fg.l+(Math.random()-.5)*6 },
+      };
+    }
+
+    function lerpHSL(a, b, t) {
+      let dh = b.h - a.h;
+      if (dh >  180) dh -= 360;
+      if (dh < -180) dh += 360;
+      return { h:(a.h+dh*t+360)%360, s:a.s+(b.s-a.s)*t, l:a.l+(b.l-a.l)*t };
+    }
+
+    const hsl  = c => `hsl(${c.h.toFixed(1)},${c.s.toFixed(1)}%,${c.l.toFixed(1)}%)`;
+    const hsla = (c,a) => `hsla(${c.h.toFixed(1)},${c.s.toFixed(1)}%,${c.l.toFixed(1)}%,${a})`;
+
+    // ── Palette & param state ─────────────────────────────────────────────────
+    let palA = randomPair(), palB = randomPair(), palT = 0;
+
+    function randParamIdx(exclude) {
+      let i; do { i = Math.floor(Math.random() * PARAM_SETS.length); } while (i === exclude);
+      return i;
+    }
+
+    let piA  = randParamIdx(-1), piB = randParamIdx(piA), parT = 0;
+    let curF = PARAM_SETS[piA].f, curK = PARAM_SETS[piA].k;
+
+    // ── Main loop ─────────────────────────────────────────────────────────────
+    let lastTs = 0;
+    let adaptiveSteps = STEPS;
+
+    function loop(ts) {
+      const dt = Math.min(ts - lastTs, 100);
+      lastTs = ts;
+
+      if (dt > 20) adaptiveSteps = Math.max(2, adaptiveSteps - 1);
+      else if (dt < 14) adaptiveSteps = Math.min(STEPS, adaptiveSteps + 1);
+
+      // Diffusion oscillation — changes arm spacing of RD pattern
+      const diffScale = 1.0 + DIFF_AMP * Math.sin(ts * DIFF_FREQ);
+      curDU = DU * diffScale;
+      curDV = DV * diffScale;
+
+      palT += dt / COLOR_DUR;
+      if (palT >= 1) { palA = palB; palB = randomPair(); palT -= 1; }
+
+      parT += dt / PARAM_DUR;
+      if (parT >= 1) { piA = piB; piB = randParamIdx(piA); parT -= 1; }
+      curF = PARAM_SETS[piA].f + (PARAM_SETS[piB].f - PARAM_SETS[piA].f) * parT;
+      curK = PARAM_SETS[piA].k + (PARAM_SETS[piB].k - PARAM_SETS[piA].k) * parT;
+
+      const bg = lerpHSL(palA.bg, palB.bg, palT);
+      const fg = lerpHSL(palA.fg, palB.fg, palT);
+      label.style.color = hsl(fg);
+
+      updateOverlayV();
+      seedMouse();
+      for (let s = 0; s < BOOST_STEPS; s++) localBoostStep(curF, curK, BOOST_R * (s + 1));
+      for (let s = 0; s < adaptiveSteps; s++) stepRD(curF, curK);
+      restoreText();
+      draw(bg, fg);
+      drawOverlay(fg);
+
+      requestAnimationFrame(loop);
+    }
+
+    // ── Events ────────────────────────────────────────────────────────────────
+    document.addEventListener('wheel', e => {
+      if (!e.ctrlKey) return;
+      if (e.deltaY > 0) e.preventDefault();
+    }, { passive: false });
+
+    let isTouchDevice = false;
+    window.addEventListener('mousemove', e => {
+      if (isTouchDevice) return;
+      ptr.x = e.clientX; ptr.y = e.clientY; ptr.active = true;
+    });
+    document.addEventListener('mouseleave', () => { ptr.active = false; });
+    window.addEventListener('blur',        () => { ptr.active = false; });
+    window.addEventListener('touchstart', e => {
+      isTouchDevice = true;
+      const t = e.touches[0];
+      ptr.x = t.clientX; ptr.y = t.clientY; ptr.active = true;
+    });
+    window.addEventListener('touchmove', e => {
+      const t = e.touches[0];
+      ptr.x = t.clientX; ptr.y = t.clientY; ptr.active = true;
+      e.preventDefault();
+    }, { passive: false });
+    window.addEventListener('touchend',   () => { ptr.active = false; });
+    window.addEventListener('deviceorientation', e => {
+      if (!isTouchDevice) return;
+      const gx = Math.max(-45, Math.min(45,  e.gamma || 0));
+      const by = Math.max(-45, Math.min(45, (e.beta  || 0) - 30));
+      ptr.x = ((gx + 45) / 90) * window.innerWidth;
+      ptr.y = ((by + 45) / 90) * window.innerHeight;
+      ptr.active = true;
+    });
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    resize();
+    initRD(curF, curK);
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
