@@ -49,7 +49,7 @@
   // ---- template ----------------------------------------------------------
   function tpl(V) {
     return [
-      h("div", { key: "0", ref: V.rootRef, style: S(`position:relative; min-height:100vh; background:var(--color-bg); color:var(--color-text);  font-family:var(--r-body); font-size:17px; line-height:28px; --mono:'Geist Mono', ui-monospace, monospace; --sig-ok:#6cc48a; --sig-warn:#e0b04f; --sig-info:#79aed1; --font-heading:'Newsreader', 'Cormorant Garamond', Georgia, serif; --r-heading:${V.rHeading ?? ""}; --ghost-font:${V.ghostFont ?? ""}; --deco:'Cinzel', 'Cormorant Garamond', serif; --r-body:${V.rBody ?? ""}; --r-align:${V.rAlign ?? ""}; --r-tracking:${V.rTracking ?? ""}; --color-bg:${V.tBg ?? ""}; --color-surface:${V.tSurface ?? ""}; --color-text:${V.tText ?? ""}; --color-accent:${V.tAccent ?? ""}; --color-accent-600:${V.tAccent600 ?? ""}; --color-accent-700:${V.tAccent700 ?? ""}; --color-accent-800:${V.tAccent800 ?? ""}; --color-accent-100:${V.tAccent100 ?? ""}; --color-divider:${V.tDivider ?? ""}; --color-neutral-100:${V.tN100 ?? ""}; --color-neutral-400:${V.tN400 ?? ""}; --color-neutral-500:${V.tN500 ?? ""}; --color-neutral-600:${V.tN600 ?? ""}; --color-neutral-700:${V.tN700 ?? ""}; --color-neutral-800:${V.tN800 ?? ""};`) },
+      h("div", { key: "0", ref: V.rootRef, style: S(`position:relative; min-height:100vh; background:var(--color-bg); color:var(--color-text);  font-family:var(--r-body); font-size:17px; line-height:28px; --mono:'Geist Mono', ui-monospace, monospace; --sig-ok:#6cc48a; --sig-warn:#e0b04f; --sig-info:#79aed1; --font-heading:'Newsreader', 'Cormorant Garamond', Georgia, serif; --deco:'Cinzel', 'Cormorant Garamond', serif; --r-body:${V.rBody ?? ""}; --r-align:${V.rAlign ?? ""}; --r-tracking:${V.rTracking ?? ""}; --color-bg:${V.tBg ?? ""}; --color-surface:${V.tSurface ?? ""}; --color-text:${V.tText ?? ""}; --color-accent:${V.tAccent ?? ""}; --color-accent-600:${V.tAccent600 ?? ""}; --color-accent-700:${V.tAccent700 ?? ""}; --color-accent-800:${V.tAccent800 ?? ""}; --color-accent-100:${V.tAccent100 ?? ""}; --color-divider:${V.tDivider ?? ""}; --color-neutral-100:${V.tN100 ?? ""}; --color-neutral-400:${V.tN400 ?? ""}; --color-neutral-500:${V.tN500 ?? ""}; --color-neutral-600:${V.tN600 ?? ""}; --color-neutral-700:${V.tN700 ?? ""}; --color-neutral-800:${V.tN800 ?? ""};`) },
         "\n\n\n  ",
         "\n  ",
         "\n  ",
@@ -485,13 +485,13 @@
           "\n  ") : null),
         "\n  ",
         "\n  ",
-        (V.isChapter ? h(F,{key:21},
+        (V.isSerif ? h(F,{key:21},
           "\n  ",
-          h("main", { key: V.chapterKey, "data-screen-label": "Chapter", style: S(`max-width:1200px; margin:0 auto; padding:0 clamp(20px,5vw,72px); background-image:${V.gridBg ?? ""}; background-size:28px 28px;`) },
+          h("main", { key: V.chapterKey, "data-screen-label": "Chapter", style: {"maxWidth":"1200px","margin":"0 auto","padding":"0 clamp(20px,5vw,72px)","backgroundImage":"radial-gradient(color-mix(in srgb, var(--color-text) 16%, transparent) 1px, transparent 1.1px)","backgroundSize":"28px 28px"} },
             "\n\n    ",
             h("section", { key: "1", style: {"position":"relative","padding":"calc(3*28px) 0 calc(2*28px)"} },
               "\n      ",
-              h("span", { key: "1|19.1h99e0b", "aria-hidden": "true", style: S(`position:absolute; right:0; top:28px; font-family:var(--ghost-font); font-weight:400; font-size:${V.ghostSize ?? ""}; line-height:1; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; pointer-events:none; user-select:none; font-feature-settings:'tnum' 1; letter-spacing:${V.ghostTracking ?? ""}; transform:translateY(${V.parallax ?? ""}); will-change:transform;`) },
+              h("span", { key: "1|19.1h99e0b", "aria-hidden": "true", style: S(`position:absolute; right:0; top:28px; font-family:var(--deco); font-weight:400; font-size:clamp(160px,22vw,320px); line-height:1; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; pointer-events:none; user-select:none; font-feature-settings:'tnum' 1; letter-spacing:0; transform:translateY(${V.parallax ?? ""}); will-change:transform;`) },
                 h(F,{key:0},"",I(V.current?.ghost,1),"")
               ),
               "\n      ",
@@ -503,299 +503,151 @@
                 h(F,{key:0},"",I(V.current?.kickerWord,1)," ",I(V.current?.numeral,3)," · ",I(V.current?.kind,5)," · ",I(V.current?.year,7),"")
               ),
               "\n      ",
-              h("h1", { key: "7|19.6hqa14", "data-morph": `title-${V.current?.figNo ?? ""}`, style: S(`margin:0 0 0 -0.042em; font-family:var(--r-heading); font-weight:400; font-size:${V.titleSize ?? ""}; line-height:1.04; letter-spacing:${V.titleTracking ?? ""}; max-width:16ch;`) },
+              h("h1", { key: "7|19.6hqa14", "data-morph": `title-${V.current?.figNo ?? ""}`, style: {"margin":"0 0 0 -0.042em","fontFamily":"var(--font-heading)","fontWeight":"400","fontSize":"clamp(44px,6vw,88px)","lineHeight":"1.04","letterSpacing":"-0.01em","maxWidth":"16ch"} },
                 h(F,{key:0},"",I(V.current?.title,1),"")
               ),
               "\n      ",
-              h("p", { key: V.current?.numeral, "data-morph": `lede-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": V.current?.register, style: S(`margin:28px 0 0; font-family:var(--r-heading); font-size:${V.ledeSize ?? ""}; line-height:36px; font-weight:400; max-width:${V.ledeMeasure ?? ""};`) },
+              h("p", { key: V.current?.numeral, "data-morph": `lede-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "serif", style: {"margin":"28px 0 0","fontFamily":"var(--font-heading)","fontSize":"30px","lineHeight":"36px","fontWeight":"400","maxWidth":"30ch"} },
                 h(F,{key:0},"",I(V.current?.subtitle,1),"")
               ),
               "\n    "
             ),
             "\n\n    ",
-            (V.isSerif ? h(F,{key:3},
+            h("dl", { key: "3", style: {"display":"grid","gridTemplateColumns":"repeat(auto-fit, minmax(170px,1fr))","gap":"var(--space-4)","margin":"0 0 calc(2*28px)","paddingTop":"14px","borderTop":"1px solid var(--color-divider)","fontSize":"14px","lineHeight":"22px"} },
               "\n      ",
-              h("dl", { key: "1", style: {"display":"grid","gridTemplateColumns":"repeat(auto-fit, minmax(170px,1fr))","gap":"var(--space-4)","margin":"0 0 calc(2*28px)","paddingTop":"14px","borderTop":"1px solid var(--color-divider)","fontSize":"14px","lineHeight":"22px"} },
-                "\n        ",
-                h("div", { key: "1" },
-                  h("dt", { key: "0|4.yk2787", style: {"fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
-                    "Role"
-                  ),
-                  h("dd", { key: "1|18.8jyyk8", style: {"margin":"0"} },
-                    h(F,{key:0},"",I(V.current?.role,1),"")
-                  )
+              h("div", { key: "1" },
+                h("dt", { key: "0|4.yk2787", style: {"fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
+                  "Role"
                 ),
-                "\n        ",
-                h("div", { key: "3" },
-                  h("dt", { key: "0|4.yk5x1d", style: {"fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
-                    "With"
-                  ),
-                  h("dd", { key: "1|18.14lax7m", style: {"margin":"0"} },
-                    h(F,{key:0},"",I(V.current?.with,1),"")
-                  )
-                ),
-                "\n        ",
-                h("div", { key: "5" },
-                  h("dt", { key: "0|6.1m8lgyx", style: {"fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
-                    "Status"
-                  ),
-                  h("dd", { key: "1|20.5iwyyy", style: {"margin":"0"} },
-                    h(F,{key:0},"",I(V.current?.status,1),"")
-                  )
-                ),
-                "\n        ",
-                h("div", { key: "7" },
-                  h("dt", { key: "0|5.3ui0gl", style: {"fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
-                    "Pages"
-                  ),
-                  h("dd", { key: "1|19.1q33b6e", style: {"margin":"0","fontFeatureSettings":"'tnum' 1"} },
-                    h(F,{key:0},"",I(V.current?.pages,1),"")
-                  )
-                ),
-                "\n      "
+                h("dd", { key: "1|18.8jyyk8", style: {"margin":"0"} },
+                  h(F,{key:0},"",I(V.current?.role,1),"")
+                )
               ),
-              "\n    ") : null),
-            "\n\n    ",
-            (V.isMono ? h(F,{key:5},
               "\n      ",
-              h("div", { key: "1", style: {"display":"grid","gridTemplateColumns":"repeat(auto-fit, minmax(160px,1fr))","border":"1px solid var(--color-divider)","margin":"0 0 calc(2*28px)","fontSize":"13px","lineHeight":"20px","background":"var(--color-bg)"} },
-                "\n        ",
-                h("div", { key: "1", style: {"padding":"10px 12px","borderRight":"1px solid var(--color-divider)"} },
-                  h("p", { key: "0|5.3wrm2m", style: {"margin":"0","fontSize":"10px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
-                    "Sheet"
-                  ),
-                  h("p", { key: "1|19.1h99e0b", style: {"margin":"0","color":"var(--color-accent-700)"} },
-                    h(F,{key:0},"",I(V.current?.ghost,1),"")
-                  )
+              h("div", { key: "3" },
+                h("dt", { key: "0|4.yk5x1d", style: {"fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
+                  "With"
                 ),
-                "\n        ",
-                h("div", { key: "3", style: {"padding":"10px 12px","borderRight":"1px solid var(--color-divider)"} },
-                  h("p", { key: "0|4.yk2787", style: {"margin":"0","fontSize":"10px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
-                    "Role"
-                  ),
-                  h("p", { key: "1|18.8jyyk8", style: {"margin":"0"} },
-                    h(F,{key:0},"",I(V.current?.role,1),"")
-                  )
-                ),
-                "\n        ",
-                h("div", { key: "5", style: {"padding":"10px 12px","borderRight":"1px solid var(--color-divider)"} },
-                  h("p", { key: "0|4.yk5x1d", style: {"margin":"0","fontSize":"10px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
-                    "With"
-                  ),
-                  h("p", { key: "1|18.14lax7m", style: {"margin":"0"} },
-                    h(F,{key:0},"",I(V.current?.with,1),"")
-                  )
-                ),
-                "\n        ",
-                h("div", { key: "7", style: {"padding":"10px 12px","borderRight":"1px solid var(--color-divider)"} },
-                  h("p", { key: "0|6.1m8lgyx", style: {"margin":"0","fontSize":"10px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
-                    "Status"
-                  ),
-                  h("p", { key: "1|20.5iwyyy", style: {"margin":"0"} },
-                    h(F,{key:0},"",I(V.current?.status,1),"")
-                  )
-                ),
-                "\n        ",
-                h("div", { key: "9", style: {"padding":"10px 12px"} },
-                  h("p", { key: "0|11.1s8ry21", style: {"margin":"0","fontSize":"10px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
-                    "Rev / Scale"
-                  ),
-                  h("p", { key: "1|24.132gomi", style: {"margin":"0"} },
-                    h(F,{key:0},"",I(V.current?.year,1)," · 1:1")
-                  )
-                ),
-                "\n      "
+                h("dd", { key: "1|18.14lax7m", style: {"margin":"0"} },
+                  h(F,{key:0},"",I(V.current?.with,1),"")
+                )
               ),
-              "\n    ") : null),
+              "\n      ",
+              h("div", { key: "5" },
+                h("dt", { key: "0|6.1m8lgyx", style: {"fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
+                  "Status"
+                ),
+                h("dd", { key: "1|20.5iwyyy", style: {"margin":"0"} },
+                  h(F,{key:0},"",I(V.current?.status,1),"")
+                )
+              ),
+              "\n      ",
+              h("div", { key: "7" },
+                h("dt", { key: "0|5.3ui0gl", style: {"fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
+                  "Pages"
+                ),
+                h("dd", { key: "1|19.1q33b6e", style: {"margin":"0","fontFeatureSettings":"'tnum' 1"} },
+                  h(F,{key:0},"",I(V.current?.pages,1),"")
+                )
+              ),
+              "\n    "
+            ),
             "\n\n    ",
-            h("figure", { key: "7", className: C("plate","scp6 scp7"), "data-shape": `frame-${V.current?.figNo ?? ""}`, style: S(`margin:0; aspect-ratio:16/9; width:100%; position:relative; filter:${V.plateFilter ?? ""};`) },
+            h("figure", { key: "5", className: "plate", "data-shape": `frame-${V.current?.figNo ?? ""}`, style: {"margin":"0","aspectRatio":"16/9","width":"100%","position":"relative","filter":"sepia(0.22) saturate(0.82) contrast(1.05)"} },
               "\n      ",
               h("image-slot", { key: "1", id: V.current?.heroSlotId, shape: "rect", placeholder: V.current?.placeholder, style: {"width":"100%","height":"100%"} }),
               "\n    "
             ),
             "\n    ",
-            h("p", { key: "9|79.l667xt", style: {"margin":"14px 0 0","fontSize":"13px","lineHeight":"20px","color":"var(--color-neutral-700)","fontFeatureSettings":"'tnum' 1"} },
-              h("span", { key: "0|44.1e4j9ob", style: S(`font-family:var(--r-heading); font-size:${V.captionLeadSize ?? ""}; color:var(--color-accent);`) },
+            h("p", { key: "7|79.l667xt", style: {"margin":"14px 0 0","fontSize":"13px","lineHeight":"20px","color":"var(--color-neutral-700)","fontFeatureSettings":"'tnum' 1"} },
+              h("span", { key: "0|44.1e4j9ob", style: {"fontFamily":"var(--font-heading)","fontSize":"17px","color":"var(--color-accent)"} },
                 h(F,{key:0},"",I(V.current?.figWord,1)," ",I(V.current?.numeral,3),".")
               ),
               h(F,{key:1}," ",I(V.current?.caption,1),"")
             ),
             "\n\n    ",
-            (V.isSerif ? h(F,{key:11},
-              "\n    ",
-              h("section", { key: "1", "data-enter": "", style: {"display":"grid","gridTemplateColumns":"minmax(0,8fr) minmax(0,4fr)","gap":"28px clamp(28px,5vw,80px)","padding":"calc(2.5*28px) 0","alignItems":"start"} },
-                "\n      ",
-                h("div", { key: "1", style: {"columns":"2","columnGap":"56px","columnRule":"1px solid var(--color-divider)","textAlign":"justify","hyphens":"auto","color":"color-mix(in srgb, var(--color-text) 84%, transparent)","fontSize":"16px","lineHeight":"28px"} },
-                  "\n        ",
-                  h("p", { key: "1|53.612egm", style: {"margin":"0 0 28px"} },
-                    h("span", { key: "0|21.1c59rnz", style: {"float":"left","fontFamily":"var(--deco)","fontWeight":"400","fontSize":"64px","lineHeight":"56px","padding":"6px 12px 0 0","color":"var(--color-text)"} },
-                      h(F,{key:0},"",I(V.current?.dropCap,1),"")
-                    ),
-                    h(F,{key:1},"",I(V.current?.body1,1),"")
-                  ),
-                  "\n        ",
-                  h("p", { key: "3|19.a0tjja", style: {"margin":"0 0 28px"} },
-                    h(F,{key:0},"",I(V.current?.body2,1),"")
-                  ),
-                  "\n        ",
-                  h("p", { key: "5|19.a0ub9j", style: {"margin":"0"} },
-                    h(F,{key:0},"",I(V.current?.body3,1),"")
-                  ),
-                  "\n      "
-                ),
-                "\n      ",
-                h("aside", { key: "3", style: {"display":"flex","flexDirection":"column","gap":"28px","fontSize":"13px","lineHeight":"20px","color":"var(--color-neutral-700)"} },
-                  "\n        ",
-                  (V.marginalia ? h(F,{key:1},
-                    "\n          ",
-                    h("p", { key: "1|20.1l14w78", style: {"margin":"0","paddingLeft":"var(--space-3)","borderLeft":"1px solid var(--color-accent)","fontFamily":"var(--font-heading)","fontStyle":"italic","fontSize":"19px","lineHeight":"26px"} },
-                      h(F,{key:0},"",I(V.current?.margin,1),"")
-                    ),
-                    "\n        ") : null),
-                  "\n        ",
-                  h("div", { key: "3", style: {"borderTop":"1px solid var(--color-divider)","paddingTop":"14px"} },
-                    "\n          ",
-                    h("p", { key: "1|9.zm3yhk", style: {"margin":"0 0 6px","fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
-                      "Made with"
-                    ),
-                    "\n          ",
-                    h("p", { key: "3|19.lcn33w", style: {"margin":"0"} },
-                      h(F,{key:0},"",I(V.current?.stack,1),"")
-                    ),
-                    "\n        "
-                  ),
-                  "\n        ",
-                  h("div", { key: "5", style: {"borderTop":"1px solid var(--color-divider)","paddingTop":"14px"} },
-                    "\n          ",
-                    h("p", { key: "1|7.bhlkp1", style: {"margin":"0 0 6px","fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
-                      "Further"
-                    ),
-                    "\n          ",
-                    h("p", { key: "3|25.1gl75yx", style: {"margin":"0"} },
-                      h("a", { key: "0|18.imhu9g", href: "#" },
-                        h(F,{key:0},"",I(V.current?.link,1),"")
-                      )
-                    ),
-                    "\n        "
-                  ),
-                  "\n      "
-                ),
-                "\n    "
-              ),
-              "\n    ") : null),
-            "\n\n    ",
-            (V.isMono ? h(F,{key:13},
-              "\n    ",
-              h("section", { key: "1", "data-enter": "", style: {"display":"grid","gridTemplateColumns":"minmax(0,8fr) minmax(0,4fr)","gap":"28px clamp(28px,5vw,80px)","padding":"calc(2.5*28px) 0","alignItems":"start"} },
-                "\n      ",
-                h("ol", { key: "1", style: {"listStyle":"none","margin":"0","padding":"0","fontSize":"14.5px","lineHeight":"26px","color":"color-mix(in srgb, var(--color-text) 88%, transparent)"} },
-                  "\n        ",
-                  h("li", { key: "1", style: {"display":"grid","gridTemplateColumns":"3.5em minmax(0,1fr)","gap":"var(--space-3)","padding":"12px 0 26px","borderTop":"1px solid var(--color-divider)"} },
-                    h("span", { key: "0|5.36tydg", style: {"color":"var(--color-accent-700)","fontSize":"12px","letterSpacing":"0.08em"} },
-                      "01 //"
-                    ),
-                    h("p", { key: "1|23.wtivw8", style: {"margin":"0"} },
-                      h(F,{key:0},"",I(V.current?.body1Full,1),"")
-                    )
-                  ),
-                  "\n        ",
-                  h("li", { key: "3", style: {"display":"grid","gridTemplateColumns":"3.5em minmax(0,1fr)","gap":"var(--space-3)","padding":"12px 0 26px","borderTop":"1px solid var(--color-divider)"} },
-                    h("span", { key: "0|5.36uq3p", style: {"color":"var(--color-accent-700)","fontSize":"12px","letterSpacing":"0.08em"} },
-                      "02 //"
-                    ),
-                    h("p", { key: "1|19.a0tjja", style: {"margin":"0"} },
-                      h(F,{key:0},"",I(V.current?.body2,1),"")
-                    )
-                  ),
-                  "\n        ",
-                  h("li", { key: "5", style: {"display":"grid","gridTemplateColumns":"3.5em minmax(0,1fr)","gap":"var(--space-3)","padding":"12px 0 0","borderTop":"1px solid var(--color-divider)"} },
-                    h("span", { key: "0|5.36vhty", style: {"color":"var(--color-accent-700)","fontSize":"12px","letterSpacing":"0.08em"} },
-                      "03 //"
-                    ),
-                    h("p", { key: "1|19.a0ub9j", style: {"margin":"0"} },
-                      h(F,{key:0},"",I(V.current?.body3,1),"")
-                    )
-                  ),
-                  "\n      "
-                ),
-                "\n      ",
-                h("aside", { key: "3", style: {"display":"flex","flexDirection":"column","gap":"20px","fontSize":"12.5px","lineHeight":"20px","color":"var(--color-neutral-700)","border":"1px solid var(--color-divider)","padding":"14px 16px","background":"var(--color-bg)"} },
-                  "\n        ",
-                  (V.marginalia ? h(F,{key:1},
-                    "\n          ",
-                    h("p", { key: "1|23.kkov7m", style: {"margin":"0","paddingLeft":"12px","borderLeft":"1px solid var(--color-accent)","color":"var(--color-text)"} },
-                      h(F,{key:0},"// ",I(V.current?.margin,1),"")
-                    ),
-                    "\n        ") : null),
-                  "\n        ",
-                  h("div", { key: "3|251.v3z4g9", style: {"display":"grid","gridTemplateColumns":"auto minmax(0,1fr)","gap":"4px 14px"} },
-                    "\n          ",
-                    h("span", { key: "1|6.7x2uet", style: {"color":"var(--color-neutral-600)"} },
-                      "stack:"
-                    ),
-                    h("span", { key: "2|19.lcn33w" },
-                      h(F,{key:0},"",I(V.current?.stack,1),"")
-                    ),
-                    "\n          ",
-                    h("span", { key: "4|7.1c8n2xv", style: {"color":"var(--color-neutral-600)"} },
-                      "status:"
-                    ),
-                    h("span", { key: "5|20.5iwyyy" },
-                      h(F,{key:0},"",I(V.current?.status,1),"")
-                    ),
-                    "\n          ",
-                    h("span", { key: "7|6.5lw5an", style: {"color":"var(--color-neutral-600)"} },
-                      "pages:"
-                    ),
-                    h("span", { key: "8|19.1q33b6e" },
-                      h(F,{key:0},"",I(V.current?.pages,1),"")
-                    ),
-                    "\n          ",
-                    h("span", { key: "10|5.4eg219", style: {"color":"var(--color-neutral-600)"} },
-                      "link:"
-                    ),
-                    h("a", { key: "11|18.imhu9g", href: "#" },
-                      h(F,{key:0},"",I(V.current?.link,1),"")
-                    ),
-                    "\n        "
-                  ),
-                  "\n        ",
-                  h("div", { key: "5|62.1d56498", style: {"display":"flex","gap":"6px","flexWrap":"wrap"} },
-                    h("span", { key: "0|18.1wajv2k", className: "tag tag-outline", style: {"fontFamily":"var(--mono)"} },
-                      h(F,{key:0},"",I(V.current?.kind,1),"")
-                    ),
-                    h("span", { key: "1|18.9blo7r", className: "tag tag-neutral", style: {"fontFamily":"var(--mono)"} },
-                      h(F,{key:0},"",I(V.current?.year,1),"")
-                    )
-                  ),
-                  "\n      "
-                ),
-                "\n    "
-              ),
-              "\n    ") : null),
-            "\n\n    ",
-            h("div", { key: "15", style: {"display":"grid","gridTemplateColumns":"minmax(0,1fr) minmax(0,1fr)","gap":"clamp(20px,4vw,56px)"} },
+            h("section", { key: "9", "data-enter": "", style: {"display":"grid","gridTemplateColumns":"minmax(0,8fr) minmax(0,4fr)","gap":"28px clamp(28px,5vw,80px)","padding":"calc(2.5*28px) 0","alignItems":"start"} },
               "\n      ",
-              h("figure", { key: "1", className: "plate", style: S(`margin:0; aspect-ratio:4/3; filter:${V.plateFilter ?? ""};`) },
+              h("div", { key: "1", style: {"columns":"2","columnGap":"56px","columnRule":"1px solid var(--color-divider)","textAlign":"justify","hyphens":"auto","color":"color-mix(in srgb, var(--color-text) 84%, transparent)","fontSize":"16px","lineHeight":"28px"} },
+                "\n        ",
+                h("p", { key: "1|53.612egm", style: {"margin":"0 0 28px"} },
+                  h("span", { key: "0|21.1c59rnz", style: {"float":"left","fontFamily":"var(--deco)","fontWeight":"400","fontSize":"64px","lineHeight":"56px","padding":"6px 12px 0 0","color":"var(--color-text)"} },
+                    h(F,{key:0},"",I(V.current?.dropCap,1),"")
+                  ),
+                  h(F,{key:1},"",I(V.current?.body1,1),"")
+                ),
+                "\n        ",
+                h("p", { key: "3|19.a0tjja", style: {"margin":"0 0 28px"} },
+                  h(F,{key:0},"",I(V.current?.body2,1),"")
+                ),
+                "\n        ",
+                h("p", { key: "5|19.a0ub9j", style: {"margin":"0"} },
+                  h(F,{key:0},"",I(V.current?.body3,1),"")
+                ),
+                "\n      "
+              ),
+              "\n      ",
+              h("aside", { key: "3", style: {"display":"flex","flexDirection":"column","gap":"28px","fontSize":"13px","lineHeight":"20px","color":"var(--color-neutral-700)"} },
+                "\n        ",
+                (V.marginalia ? h(F,{key:1},
+                  "\n          ",
+                  h("p", { key: "1|20.1l14w78", style: {"margin":"0","paddingLeft":"var(--space-3)","borderLeft":"1px solid var(--color-accent)","fontFamily":"var(--font-heading)","fontStyle":"italic","fontSize":"19px","lineHeight":"26px"} },
+                    h(F,{key:0},"",I(V.current?.margin,1),"")
+                  ),
+                  "\n        ") : null),
+                "\n        ",
+                h("div", { key: "3", style: {"borderTop":"1px solid var(--color-divider)","paddingTop":"14px"} },
+                  "\n          ",
+                  h("p", { key: "1|9.zm3yhk", style: {"margin":"0 0 6px","fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
+                    "Made with"
+                  ),
+                  "\n          ",
+                  h("p", { key: "3|19.lcn33w", style: {"margin":"0"} },
+                    h(F,{key:0},"",I(V.current?.stack,1),"")
+                  ),
+                  "\n        "
+                ),
+                "\n        ",
+                h("div", { key: "5", style: {"borderTop":"1px solid var(--color-divider)","paddingTop":"14px"} },
+                  "\n          ",
+                  h("p", { key: "1|7.bhlkp1", style: {"margin":"0 0 6px","fontSize":"11px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
+                    "Further"
+                  ),
+                  "\n          ",
+                  h("p", { key: "3|25.1gl75yx", style: {"margin":"0"} },
+                    h("a", { key: "0|18.imhu9g", href: "#" },
+                      h(F,{key:0},"",I(V.current?.link,1),"")
+                    )
+                  ),
+                  "\n        "
+                ),
+                "\n      "
+              ),
+              "\n    "
+            ),
+            "\n\n    ",
+            h("div", { key: "11", style: {"display":"grid","gridTemplateColumns":"minmax(0,1fr) minmax(0,1fr)","gap":"clamp(20px,4vw,56px)"} },
+              "\n      ",
+              h("figure", { key: "1", className: "plate", style: {"margin":"0","aspectRatio":"4/3","filter":"sepia(0.22) saturate(0.82) contrast(1.05)"} },
                 h("image-slot", { key: "0", id: V.current?.detailSlotA, shape: "rect", placeholder: "Detail: drawing or interface", style: {"width":"100%","height":"100%"} })
               ),
               "\n      ",
-              h("figure", { key: "3", className: "plate", style: S(`margin:0; aspect-ratio:4/3; filter:${V.plateFilter ?? ""};`) },
+              h("figure", { key: "3", className: "plate", style: {"margin":"0","aspectRatio":"4/3","filter":"sepia(0.22) saturate(0.82) contrast(1.05)"} },
                 h("image-slot", { key: "0", id: V.current?.detailSlotB, shape: "rect", placeholder: "Detail: process or site", style: {"width":"100%","height":"100%"} })
               ),
               "\n    "
             ),
             "\n    ",
-            h("p", { key: "17|97.76h6dp", style: {"margin":"14px 0 0","fontSize":"13px","lineHeight":"20px","color":"var(--color-neutral-700)"} },
-              h("span", { key: "0|10.bamrr4", style: S(`font-family:var(--r-heading); font-size:${V.captionLeadSize ?? ""}; color:var(--color-accent);`) },
+            h("p", { key: "13|97.76h6dp", style: {"margin":"14px 0 0","fontSize":"13px","lineHeight":"20px","color":"var(--color-neutral-700)"} },
+              h("span", { key: "0|10.bamrr4", style: {"fontFamily":"var(--font-heading)","fontSize":"17px","color":"var(--color-accent)"} },
                 "Figs. 1–2."
               ),
               " Working states. Left, the drawing or interface; right, where it was made."
             ),
             "\n\n    ",
-            h("hr", { key: "19", style: {"height":"1px","border":"0","margin":"calc(3*28px) 0 0","background":"var(--color-divider)"} }),
+            h("hr", { key: "15", style: {"height":"1px","border":"0","margin":"calc(3*28px) 0 0","background":"var(--color-divider)"} }),
             "\n    ",
-            h("nav", { key: "21", style: {"display":"flex","justifyContent":"space-between","alignItems":"baseline","gap":"var(--space-4)","padding":"28px 0 calc(3*28px)","flexWrap":"wrap"} },
+            h("nav", { key: "17", style: {"display":"flex","justifyContent":"space-between","alignItems":"baseline","gap":"var(--space-4)","padding":"28px 0 calc(3*28px)","flexWrap":"wrap"} },
               "\n      ",
               h("button", { key: "1|24.1chn43n", className: "btn btn-ghost", onClick: V.goPageCurrent, style: {"whiteSpace":"nowrap","fontFamily":"var(--r-body)"} },
                 h(F,{key:0},"← ",I(V.current?.backWord,1),"")
@@ -807,11 +659,281 @@
                   h(F,{key:0},"Next · ",I(V.next?.kickerWord,1)," ",I(V.next?.numeral,3),"")
                 ),
                 "\n        ",
-                h("span", { key: "3|18.1kqmn3q", style: S(`font-family:var(--r-heading); font-size:${V.nextSize ?? ""}; line-height:32px; font-weight:400; letter-spacing:${V.titleTracking ?? ""};`) },
+                h("span", { key: "3|18.1kqmn3q", style: {"fontFamily":"var(--font-heading)","fontSize":"30px","lineHeight":"32px","fontWeight":"400","letterSpacing":"-0.01em"} },
                   h(F,{key:0},"",I(V.next?.title,1)," →")
                 ),
                 "\n      "
               ),
+              "\n    "
+            ),
+            "\n  "
+          ),
+          "\n  ") : null),
+        "\n\n  ",
+        "\n  ",
+        (V.isMono ? h(F,{key:24},
+          "\n  ",
+          h("main", { key: V.chapterKey, "data-screen-label": "Chapter", style: {"maxWidth":"1160px","margin":"0 auto","padding":"0 clamp(20px,4vw,48px) 88px","fontFamily":"var(--mono)","fontSize":"14px","lineHeight":"22px"} },
+            "\n    ",
+            h("div", { key: "1", ref: V.sheetGridRef, style: {"--hair":"color-mix(in srgb, var(--color-text) 16%, transparent)","position":"relative","marginTop":"88px","display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","borderRight":"1px solid var(--hair)","borderBottom":"1px solid var(--hair)","backgroundImage":"linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
+              "\n\n    ",
+              "\n    ",
+              h("button", { key: "2|24.1chn43n", className: "sheet-mod sheet-ctl", "data-enter": "", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.back?.col ?? ""}; grid-row:${V.sheet?.back?.row ?? ""}; --d:${V.sheet?.back?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
+                h(F,{key:0},"← ",I(V.current?.backWord,1),"")
+              ),
+              "\n\n    ",
+              "\n    ",
+              h("section", { key: "5", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.header?.col ?? ""}; grid-row:${V.sheet?.header?.row ?? ""}; --d:${V.sheet?.header?.delay ?? ""}; padding:22px;`) },
+                "\n      ",
+                h("p", { key: `kicker-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0 0 22px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-accent-700)","fontFeatureSettings":"'tnum' 1"} },
+                  h(F,{key:0},"",I(V.current?.kickerWord,1)," ",I(V.current?.numeral,3)," · ",I(V.current?.kind,5)," · ",I(V.current?.year,7),"")
+                ),
+                "\n      ",
+                h("h1", { key: `title-${V.current?.figNo ?? ""}`, "data-morph": `title-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0","fontFamily":"var(--mono)","fontWeight":"400","fontSize":"clamp(36px,5vw,72px)","lineHeight":"1.04","letterSpacing":"-0.03em","maxWidth":"16ch"} },
+                  h(F,{key:0},"",I(V.current?.title,1),"")
+                ),
+                "\n      ",
+                h("p", { key: `lede-${V.current?.figNo ?? ""}`, "data-morph": `lede-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"22px 0 0","fontFamily":"var(--mono)","fontSize":"20px","lineHeight":"26px","fontWeight":"400","maxWidth":"52ch","color":"var(--color-neutral-700)"} },
+                  h(F,{key:0},"",I(V.current?.subtitle,1),"")
+                ),
+                "\n    "
+              ),
+              "\n    ",
+              h("span", { key: "7|19.1h99e0b", className: "sheet-mod", "data-enter": "", "aria-hidden": "true", style: S(`grid-column:${V.sheet?.ghost?.col ?? ""}; grid-row:${V.sheet?.ghost?.row ?? ""}; --d:${V.sheet?.ghost?.delay ?? ""}; display:flex; align-items:flex-end; justify-content:flex-end; padding:22px; font-family:'DM Mono', ui-monospace, monospace; font-weight:400; font-size:clamp(40px,5.5vw,84px); line-height:1; letter-spacing:-0.04em; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; user-select:none; font-feature-settings:'tnum' 1;`) },
+                h(F,{key:0},"",I(V.current?.ghost,1),"")
+              ),
+              "\n\n    ",
+              "\n    ",
+              h("div", { key: "10", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.specSheet?.col ?? ""}; grid-row:${V.sheet?.specSheet?.row ?? ""}; --d:${V.sheet?.specSheet?.delay ?? ""}; padding:11px 22px;`) },
+                h("p", { key: "0|5.3wrm2m", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
+                  "Sheet"
+                ),
+                h("p", { key: `spec-sheet-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0","fontSize":"13px","lineHeight":"18px","color":"var(--color-accent-700)"} },
+                  h(F,{key:0},"",I(V.current?.ghost,1),"")
+                )
+              ),
+              "\n    ",
+              h("div", { key: "12", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.specRole?.col ?? ""}; grid-row:${V.sheet?.specRole?.row ?? ""}; --d:${V.sheet?.specRole?.delay ?? ""}; padding:11px 22px;`) },
+                h("p", { key: "0|4.yk2787", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
+                  "Role"
+                ),
+                h("p", { key: `spec-role-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0","fontSize":"13px","lineHeight":"18px"} },
+                  h(F,{key:0},"",I(V.current?.role,1),"")
+                )
+              ),
+              "\n    ",
+              h("div", { key: "14", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.specWith?.col ?? ""}; grid-row:${V.sheet?.specWith?.row ?? ""}; --d:${V.sheet?.specWith?.delay ?? ""}; padding:11px 22px;`) },
+                h("p", { key: "0|4.yk5x1d", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
+                  "With"
+                ),
+                h("p", { key: `spec-with-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0","fontSize":"13px","lineHeight":"18px"} },
+                  h(F,{key:0},"",I(V.current?.with,1),"")
+                )
+              ),
+              "\n    ",
+              h("div", { key: "16", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.specStatus?.col ?? ""}; grid-row:${V.sheet?.specStatus?.row ?? ""}; --d:${V.sheet?.specStatus?.delay ?? ""}; padding:11px 22px;`) },
+                h("p", { key: "0|6.1m8lgyx", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
+                  "Status"
+                ),
+                h("p", { key: `spec-status-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0","fontSize":"13px","lineHeight":"18px"} },
+                  h(F,{key:0},"",I(V.current?.status,1),"")
+                )
+              ),
+              "\n    ",
+              h("div", { key: "18", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.specRev?.col ?? ""}; grid-row:${V.sheet?.specRev?.row ?? ""}; --d:${V.sheet?.specRev?.delay ?? ""}; padding:11px 22px;`) },
+                h("p", { key: "0|11.1s8ry21", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
+                  "Rev / Scale"
+                ),
+                h("p", { key: `spec-rev-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0","fontSize":"13px","lineHeight":"18px","fontFeatureSettings":"'tnum' 1"} },
+                  h(F,{key:0},"",I(V.current?.year,1)," · 1:1")
+                )
+              ),
+              "\n\n    ",
+              "\n    ",
+              h("figure", { key: "21", className: "plate sheet-mod sheet-plate", "data-enter": "", "data-shape": `frame-${V.current?.figNo ?? ""}`, onMouseEnter: V.sheet?.hero?.move, onMouseMove: V.sheet?.hero?.move, onMouseLeave: V.sheet?.hero?.leave, style: S(`grid-column:${V.sheet?.hero?.col ?? ""}; grid-row:${V.sheet?.hero?.row ?? ""}; --d:${V.sheet?.hero?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
+                "\n      ",
+                h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
+                  "+"
+                ),
+                "\n      ",
+                h("image-slot", { key: "3", id: V.current?.heroSlotId, shape: "rect", placeholder: V.current?.placeholder, style: {"width":"100%","height":"100%"} }),
+                "\n      ",
+                h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
+                  "+"
+                ),
+                "\n    "
+              ),
+              "\n    ",
+              h("p", { key: "23|141.s2m5lr", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.heroCaption?.col ?? ""}; grid-row:${V.sheet?.heroCaption?.row ?? ""}; --d:${V.sheet?.heroCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
+                h("span", { key: "0|92.1o5q0e0", style: {"minWidth":"0"} },
+                  h("span", { key: "0|44.1e4j9ob", style: {"color":"var(--color-accent)"} },
+                    h(F,{key:0},"",I(V.current?.figWord,1)," ",I(V.current?.numeral,3),".")
+                  ),
+                  " ",
+                  h("span", { key: `cap-hero-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono" },
+                    h(F,{key:0},"",I(V.current?.caption,1),"")
+                  )
+                ),
+                h("span", { key: "1|23.1l7l3dq", style: {"flex":"none","color":"var(--color-neutral-600)","whiteSpace":"nowrap"} },
+                  h(F,{key:0},"",I(V.sheet?.heroReadout,1),"")
+                )
+              ),
+              "\n\n    ",
+              "\n    ",
+              h("div", { key: "26", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.body1?.col ?? ""}; grid-row:${V.sheet?.body1?.row ?? ""}; --d:${V.sheet?.body1?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
+                "\n      ",
+                h("span", { key: "1|5.36tydg", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
+                  "01 //"
+                ),
+                h("p", { key: `body1-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0"} },
+                  h(F,{key:0},"",I(V.current?.body1Full,1),"")
+                ),
+                "\n    "
+              ),
+              "\n    ",
+              h("div", { key: "28", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.body2?.col ?? ""}; grid-row:${V.sheet?.body2?.row ?? ""}; --d:${V.sheet?.body2?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
+                "\n      ",
+                h("span", { key: "1|5.36uq3p", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
+                  "02 //"
+                ),
+                h("p", { key: `body2-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0"} },
+                  h(F,{key:0},"",I(V.current?.body2,1),"")
+                ),
+                "\n    "
+              ),
+              "\n    ",
+              h("div", { key: "30", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.body3?.col ?? ""}; grid-row:${V.sheet?.body3?.row ?? ""}; --d:${V.sheet?.body3?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
+                "\n      ",
+                h("span", { key: "1|5.36vhty", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
+                  "03 //"
+                ),
+                h("p", { key: `body3-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0"} },
+                  h(F,{key:0},"",I(V.current?.body3,1),"")
+                ),
+                "\n    "
+              ),
+              "\n    ",
+              h("aside", { key: "32", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.aside?.col ?? ""}; grid-row:${V.sheet?.aside?.row ?? ""}; --d:${V.sheet?.aside?.delay ?? ""}; display:flex; flex-direction:column; gap:20px; padding:22px; font-size:12.5px; line-height:20px; color:var(--color-neutral-700);`) },
+                "\n      ",
+                (V.marginalia ? h(F,{key:1},
+                  "\n        ",
+                  h("p", { key: `margin-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0","paddingLeft":"12px","borderLeft":"1px solid var(--color-accent)","color":"var(--color-text)"} },
+                    h(F,{key:0},"// ",I(V.current?.margin,1),"")
+                  ),
+                  "\n      ") : null),
+                "\n      ",
+                h("div", { key: "3|241.q2ttft", style: {"display":"grid","gridTemplateColumns":"auto minmax(0,1fr)","gap":"4px 14px"} },
+                  "\n        ",
+                  h("span", { key: "1|6.7x2uet", style: {"color":"var(--color-neutral-600)"} },
+                    "stack:"
+                  ),
+                  h("span", { key: `stack-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono" },
+                    h(F,{key:0},"",I(V.current?.stack,1),"")
+                  ),
+                  "\n        ",
+                  h("span", { key: "4|7.1c8n2xv", style: {"color":"var(--color-neutral-600)"} },
+                    "status:"
+                  ),
+                  h("span", { key: `status-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono" },
+                    h(F,{key:0},"",I(V.current?.status,1),"")
+                  ),
+                  "\n        ",
+                  h("span", { key: "7|6.5lw5an", style: {"color":"var(--color-neutral-600)"} },
+                    "pages:"
+                  ),
+                  h("span", { key: `pages-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono" },
+                    h(F,{key:0},"",I(V.current?.pages,1),"")
+                  ),
+                  "\n        ",
+                  h("span", { key: "10|5.4eg219", style: {"color":"var(--color-neutral-600)"} },
+                    "link:"
+                  ),
+                  h("a", { key: `link-${V.current?.figNo ?? ""}`, href: "#", "data-tr": "wake", "data-reg": "mono" },
+                    h(F,{key:0},"",I(V.current?.link,1),"")
+                  ),
+                  "\n      "
+                ),
+                "\n      ",
+                h("div", { key: "5|62.1d56498", style: {"display":"flex","gap":"6px","flexWrap":"wrap"} },
+                  h("span", { key: "0|18.1wajv2k", className: "tag tag-outline", style: {"fontFamily":"var(--mono)"} },
+                    h(F,{key:0},"",I(V.current?.kind,1),"")
+                  ),
+                  h("span", { key: "1|18.9blo7r", className: "tag tag-neutral", style: {"fontFamily":"var(--mono)"} },
+                    h(F,{key:0},"",I(V.current?.year,1),"")
+                  )
+                ),
+                "\n    "
+              ),
+              "\n\n    ",
+              "\n    ",
+              h("figure", { key: "35", className: "plate sheet-mod sheet-plate", "data-enter": "", onMouseEnter: V.sheet?.detailA?.move, onMouseMove: V.sheet?.detailA?.move, onMouseLeave: V.sheet?.detailA?.leave, style: S(`grid-column:${V.sheet?.detailA?.col ?? ""}; grid-row:${V.sheet?.detailA?.row ?? ""}; --d:${V.sheet?.detailA?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
+                "\n      ",
+                h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
+                  "+"
+                ),
+                "\n      ",
+                h("image-slot", { key: "3", id: V.current?.detailSlotA, shape: "rect", placeholder: "Detail: drawing or interface", style: {"width":"100%","height":"100%"} }),
+                "\n      ",
+                h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
+                  "+"
+                ),
+                "\n    "
+              ),
+              "\n    ",
+              h("figure", { key: "37", className: "plate sheet-mod sheet-plate", "data-enter": "", onMouseEnter: V.sheet?.detailB?.move, onMouseMove: V.sheet?.detailB?.move, onMouseLeave: V.sheet?.detailB?.leave, style: S(`grid-column:${V.sheet?.detailB?.col ?? ""}; grid-row:${V.sheet?.detailB?.row ?? ""}; --d:${V.sheet?.detailB?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
+                "\n      ",
+                h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
+                  "+"
+                ),
+                "\n      ",
+                h("image-slot", { key: "3", id: V.current?.detailSlotB, shape: "rect", placeholder: "Detail: process or site", style: {"width":"100%","height":"100%"} }),
+                "\n      ",
+                h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
+                  "+"
+                ),
+                "\n    "
+              ),
+              "\n    ",
+              h("p", { key: "39|161.w9e80", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.detailCaption?.col ?? ""}; grid-row:${V.sheet?.detailCaption?.row ?? ""}; --d:${V.sheet?.detailCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
+                h("span", { key: "0|110.1ln2gt0", style: {"minWidth":"0"} },
+                  h("span", { key: "0|10.bamrr4", style: {"color":"var(--color-accent)"} },
+                    "Figs. 1–2."
+                  ),
+                  " ",
+                  h("span", { key: `cap-detail-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono" },
+                    "Working states. Left, the drawing or interface; right, where it was made."
+                  )
+                ),
+                h("span", { key: "1|25.ibc6df", style: {"flex":"none","color":"var(--color-neutral-600)","whiteSpace":"nowrap"} },
+                  h(F,{key:0},"",I(V.sheet?.detailReadout,1),"")
+                )
+              ),
+              "\n\n    ",
+              "\n    ",
+              h("button", { key: "42|24.1chn43n", className: "sheet-mod sheet-ctl", "data-enter": "", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navBack?.col ?? ""}; grid-row:${V.sheet?.navBack?.row ?? ""}; --d:${V.sheet?.navBack?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
+                h(F,{key:0},"← ",I(V.current?.backWord,1),"")
+              ),
+              "\n    ",
+              h("button", { key: "44|110.pyry3", className: "sheet-mod sheet-ctl", "data-enter": "", onClick: V.openNext, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navNext?.col ?? ""}; grid-row:${V.sheet?.navNext?.row ?? ""}; --d:${V.sheet?.navNext?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:11px 22px; text-align:right; color:var(--color-text); background:var(--color-bg);`) },
+                "\n      ",
+                h("span", { key: "1|47.13c0pry", style: {"fontSize":"11px","lineHeight":"14px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
+                  h(F,{key:0},"Next · ",I(V.next?.kickerWord,1)," ",I(V.next?.numeral,3),"")
+                ),
+                "\n      ",
+                h("span", { key: `next-${V.next?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"fontFamily":"var(--mono)","fontSize":"24px","lineHeight":"32px","fontWeight":"400","letterSpacing":"-0.03em"} },
+                  h(F,{key:0},"",I(V.next?.title,1)," →")
+                ),
+                "\n    "
+              ),
+              "\n\n    ",
+              "\n    ",
+              h("div", { key: "47", "aria-hidden": "true", style: S(`position:absolute; z-index:4; pointer-events:none; left:0; right:0; height:1px; background:var(--color-text); top:${V.sheet?.guides?.top ?? ""}; opacity:${V.sheet?.guides?.on ?? ""}; transition:opacity 200ms ease;`) }),
+              "\n    ",
+              h("div", { key: "49", "aria-hidden": "true", style: S(`position:absolute; z-index:4; pointer-events:none; left:0; right:0; height:1px; background:var(--color-text); top:${V.sheet?.guides?.bottom ?? ""}; opacity:${V.sheet?.guides?.on ?? ""}; transition:opacity 200ms ease;`) }),
+              "\n    ",
+              h("div", { key: "51", "aria-hidden": "true", style: S(`position:absolute; z-index:4; pointer-events:none; top:0; bottom:0; width:1px; background:var(--color-text); left:${V.sheet?.guides?.left ?? ""}; opacity:${V.sheet?.guides?.on ?? ""}; transition:opacity 200ms ease;`) }),
+              "\n    ",
+              h("div", { key: "53", "aria-hidden": "true", style: S(`position:absolute; z-index:4; pointer-events:none; top:0; bottom:0; width:1px; background:var(--color-text); left:${V.sheet?.guides?.right ?? ""}; opacity:${V.sheet?.guides?.on ?? ""}; transition:opacity 200ms ease;`) }),
               "\n    "
             ),
             "\n  "
@@ -822,644 +944,768 @@
   }
 
   // ---- logic (verbatim from design/Portfolio.dc.html) ---------------------------------------
-    
-  class Component extends DCLogic {  
-    state = { view: 'home', page: 'writing', idx: 2, hovered: 2, tab: { left: 0, width: 0 } };  
-    contentsRef = React.createRef(); platesRef = React.createRef(); notesRef = React.createRef();  
-    homeLayerRef = React.createRef(); homeRollRef = React.createRef(); homeCubeRef = React.createRef(); fogLayerRef = React.createRef(); homeHeadRef = React.createRef(); homeFootRef = React.createRef();  
-    // the home fog lives only on the home view; it fades out (and stops) elsewhere  
-    syncFog() {  
-      const layer = this.fogLayerRef.current; if (!layer) return;  
-      const home = this.state.view === 'home', roll = this.homeRollRef.current, cube = this.homeCubeRef.current;  
-      if (home && roll && cube) {  
-        if (!this.fog) { if (this.fogLoading) return; this.fogLoading = true; import('./field.js').then((m) => { this.fogLoading = false; if (!this.fogLayerRef.current || this.fog) return; this.fog = m.mount(this.fogLayerRef.current); this.syncFog(); }).catch(() => { this.fogLoading = false; }); return; }  
-        const box = (el) => { const r = el.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; };  
-        // the visible objects, not their layout cells: the roll stands about as wide as its word, the cube is a square  
-        const rb = box(roll), rs = roll.firstElementChild ? box(roll.firstElementChild) : rb, rw = Math.max(rs.w, rb.h * 0.5), cb = box(cube), cs = Math.min(cb.w, cb.h);  
-        this.fog.setSources([{ x: rb.x + rb.w / 2 - rw / 2, y: rb.y, w: rw, h: rb.h }, { x: cb.x + cb.w / 2 - cs / 2, y: cb.y + cb.h / 2 - cs / 2, w: cs, h: cs }]);  
-        // the type stays clear: threads thin out under the headline block and the footer line  
-        const tight = (el) => { if (!el) return null; const b = box(el), first = el.firstElementChild; const w = first ? Math.max(first.getBoundingClientRect().width, ...[...el.children].map((c) => c.getBoundingClientRect().width)) : b.w; return { x: b.x + (b.w - w) / 2 - 24, y: b.y, w: w + 48, h: b.h }; };  
-        this.fog.setQuiet([tight(this.homeHeadRef.current), tight(this.homeFootRef.current)].filter(Boolean)); layer.style.opacity = '1';  
-      } else {  
-        layer.style.opacity = '0';  
-        if (this.fog) { clearTimeout(this.fogKillTimer); this.fogKillTimer = setTimeout(() => { if (this.fog && this.state.view !== 'home') { this.fog.destroy(); this.fog = null; } }, 1000); }  
-      }  
-    }  
-    headRef = React.createRef(); rootRef = React.createRef(); heroRef = React.createRef(); scriptRef = React.createRef(); parchLayerRef = React.createRef(); platformRef = React.createRef(); heroTextRef = React.createRef(); tabToolingRef = React.createRef(); tabWritingRef = React.createRef();  
-    MONO = "'Geist Mono', ui-monospace, monospace";  
-    CUBE_COLLAPSE_MS = 1500; // the cube's collapse into the platform: dissolve, travel, press flat  
-    romans = ['I','II','III','IV','V','VI','VII','VIII'];  
-    
-    data = [  
-      { title: 'Lattice', subtitle: 'A parametric façade toolkit that thinks in mullions, not meshes.', kind: 'Tooling', year: 2025, page: 9, pages: '9–18', role: 'Design lead, core engineer', with: 'Two engineers, one façade consultant', status: 'Shipped, in daily use', statusShort: 'shipped', stack: 'Rhino / Grasshopper plugin, C#, a small Rust solver, IFC export.', link: 'Release notes and documentation', caption: 'A curtain-wall study with every mullion still editable.', placeholder: 'Capture: façade study, elevation + axon',  
-        margin: 'Most façade tools optimise the geometry and then hand you a mesh. Lattice keeps the grammar: bays, transoms, joints. You can still argue with it afterwards.',  
-        summary: 'A plugin for façade designers that keeps the architectural grammar intact while it optimises. Bays stay bays; joints stay joints; the export still opens in the fabricator’s software without a phone call.',  
-        body1: 'Lattice began as a spreadsheet. A façade consultant I worked with kept a workbook of mullion spacings, glass sizes and thermal breaks, and every design change meant re-typing half of it. The first version simply read that workbook and drew it. The second version let you draw and wrote the workbook back.',  
-        body2: 'The part I am proudest of is what it refuses to do. It will not turn a façade into a triangulated surface. Every element it produces is something a fabricator can name, price and bolt to a slab. That constraint made the solver harder to write and the tool much easier to trust.',  
-        body3: 'It shipped in the spring of 2025 and is now used on four projects I know of, and probably several I do not. The documentation is longer than the code, which I take as a good sign.' },  
-      { title: 'Plot Room', subtitle: 'Reviewing drawing sets the way editors review manuscripts.', kind: 'Tooling', year: 2024, page: 19, pages: '19–28', role: 'Designer and sole developer', with: 'A pilot studio of fourteen', status: 'Private beta', statusShort: 'beta', stack: 'Web app, PDF parsing, a redline layer, comments anchored to sheet coordinates.', link: 'A short film of a review session', caption: 'Sheet A-301 during a Tuesday review, redlines and all.', placeholder: 'Capture: drawing set under review',  
-        margin: 'A drawing set is a book with a hundred authors. Plot Room gives it an editor’s desk.',  
-        summary: 'A web tool for reviewing construction drawing sets. Comments anchor to sheet coordinates, survive revisions, and read like margin notes rather than tickets.',  
-        body1: 'Every studio reviews drawings by printing them, marking them in red, and scanning them back in. Plot Room keeps the red pen and loses the printer. Comments attach to a coordinate on a sheet and follow that detail through revisions, so a note about a flashing on issue three still points at the flashing on issue nine.',  
-        body2: 'The interface is deliberately quiet: a sheet, a margin, a list. I wanted it to feel closer to a proofreader’s desk than to project-management software, because the people using it are proofreading, at scale, under deadline.',  
-        body3: 'Fourteen people in one studio have used it for a year. Their feedback is mostly about paper sizes and printer margins, which tells me the rest is working.' },  
-      { title: 'Cuts', subtitle: 'Learning to draw building sections from plans alone.', kind: 'Research', year: 2024, page: 29, pages: '29–36', role: 'First author', with: 'Two co-authors at the institute', status: 'Published, peer reviewed', statusShort: 'published', stack: 'PyTorch, a dataset of 40,000 plan–section pairs, a lot of cleaning.', link: 'The paper, with code and dataset', caption: 'Predicted sections (grey) against the drawn ones (ink), from a held-out set.', placeholder: 'Plate: predicted vs. drawn sections',  
-        margin: 'The model is wrong in interesting ways: it invents basements and forgets roofs. Both tell you something about what plans do not say.',  
-        summary: 'A paper on whether a model can infer a building’s section from its plans. It mostly can, and the failures are more instructive than the successes.',  
-        body1: 'The question was simple to state and awkward to answer: given a set of plans, can a model draw a plausible section? We assembled forty thousand plan–section pairs from public archives, cleaned them for a year, and trained something unremarkable on them.',  
-        body2: 'The results were good enough to publish and bad enough to be interesting. The model understood floor-to-floor heights and stair positions. It invented basements where none existed, and it consistently forgot roofs, which are the one thing a plan says nothing about.',  
-        body3: 'The paper argues that these failures map precisely onto the information a plan omits, and that this is a useful way to think about what drawings encode. The reviewers were kind. The dataset has been downloaded more often than the paper.' },  
-      { title: 'Timber Index', subtitle: 'A side project cataloguing mass-timber connections, one joint at a time.', kind: 'Side project', year: 2023, page: 37, pages: '37–44', role: 'Everything', with: 'Contributors, eventually', status: 'Live, growing slowly', statusShort: 'live', stack: 'A static site, hand-drawn axonometrics, a spreadsheet as the database.', link: 'The index, 212 joints and counting', caption: 'Joint 087: a CLT-to-glulam hanger, drawn at 1:5.', placeholder: 'Capture: axonometric of a timber joint',  
-        margin: 'It started because I could not find a picture of a joint I needed. It continues because other people could not either.',  
-        summary: 'A catalogue of mass-timber connection details, each redrawn to the same conventions. Started for myself; now used by people I have never met.',  
-        body1: 'I needed a picture of a particular CLT hanger and could not find one that was not a manufacturer’s render. So I drew it, and then drew the next one, and by the fortieth joint it had become a project with a name.',  
-        body2: 'Every joint is redrawn to the same scale and the same conventions: an axonometric, a section, a short note on where it fails. The consistency is the point. You can compare two connections without first learning two drawing styles.',  
-        body3: 'There are two hundred and twelve joints now, and other people send me theirs. I redraw them anyway, which is slow, and which is why the index is trusted.' },  
-      { title: 'On drawing with machines', subtitle: 'An essay on what changes when software starts to propose, not just record.', kind: 'Writing', year: 2025, page: 45, pages: '45–52', role: 'Author', with: 'A patient editor', status: 'Published', statusShort: 'published', stack: 'A text editor, three drafts, a walk between each.', link: 'Read the essay', caption: 'A sketch from the essay: the same room, drawn by hand and by suggestion.', placeholder: 'Plate: hand sketch beside a machine proposal',  
-        margin: 'A tool that records is a pencil. A tool that proposes is a colleague, and colleagues need manners.',  
-        summary: 'A long essay on generative tools in architecture, written for practitioners rather than futurists. Its argument is about manners: what a proposing tool owes the person drawing.',  
-        body1: 'For most of its history, architectural software has been a very good pencil. It recorded what you decided. That is changing, and the essay tries to describe the change without either panic or advertising.',  
-        body2: 'The central idea is that a tool which proposes has entered a conversation, and conversations have etiquette. It should say when it is unsure. It should not interrupt. It should let you be wrong on purpose. Most current tools fail all three, and the essay says so plainly.',  
-        body3: 'It was published in the summer of 2025 and has been argued with at length, which was the intent. I still agree with most of it.' },  
-      { title: 'Survey Pipeline', subtitle: 'From a muddy site to a usable model in a single afternoon.', kind: 'R&D', year: 2022, page: 53, pages: '53–60', role: 'Research engineer', with: 'A surveying firm and a very cold intern', status: 'Internal, in use', statusShort: 'internal', stack: 'Point-cloud processing, a plane-fitting heuristic, exports to the studio’s BIM.', link: 'Technical note', caption: 'A scanned barn, its walls found, its clutter politely ignored.', placeholder: 'Capture: point cloud with fitted planes',  
-        margin: 'The hard part was never the scanning. It was deciding which of the six hundred million points were a wall.',  
-        summary: 'An internal pipeline that turns a morning’s laser scan into walls, floors and openings by evening. Less clever than it sounds and more useful than expected.',  
-        body1: 'Scanning a building is easy now. Getting a model you can draw over is not. The pipeline takes a raw point cloud and does the boring work: finds the floors, finds the walls, guesses the openings, and hands you something honest enough to start from.',  
-        body2: 'It is not machine learning, mostly. It is plane fitting, a handful of heuristics, and a great deal of respect for the ways old buildings are not square. The heuristics were written on site, in a barn, in February.',  
-        body3: 'It has been used on around thirty existing-building projects. Surveyors like it because it makes their scans useful; architects like it because it does not pretend to be finished.' },  
-    ];  
-    cv = [  
-      { years: '2024 — now', role: 'Independent — tooling and research', place: 'Oslo', note: 'Lattice, Plot Room, essays, and consulting for studios who want their software to argue less.' },  
-      { years: '2021 — 2024', role: 'Research engineer, Built Environment Lab', place: 'Copenhagen', note: 'Survey pipeline, the Cuts paper, and a dataset that outlived the grant.' },  
-      { years: '2019 — 2021', role: 'Computational designer', place: 'A mid-sized practice, Copenhagen', note: 'Façade scripting, drawing standards, and the workbook that became Lattice.' },  
-      { years: '2017 — 2019', role: 'Architectural assistant', place: 'Oslo', note: 'Stair details. Many stair details.' },  
-      { years: '2012 — 2017', role: 'MArch, Architecture', place: 'Oslo School of Architecture', note: 'Thesis on drawing conventions as a programming language.' },  
-    ];  
-    pages = {  
-      writing: { reg: 'serif', label: 'Research', kicker: 'Essays · Research', bio: 'I write about what happens when machines start drawing too, and I publish the research that keeps me honest. The tools live next door, in mono.', title: 'Drawings, tools, and other arguments.', byline: 'by Yiliang Shao', edition: 'Edition of one', stamp: 'MMXXVI',  
-        intro: 'I write about what happens when machines start drawing too, and I publish the research that keeps me honest. This is the bound half of the last seven years: the papers that survived review and a few essays I still agree with. The tools live next door, in mono.',  
-        indexKicker: 'Contents', indexTitle: 'Two chapters, hover to preview.', indexNote: 'Page numbers follow the bound edition. Chapters marked Research link to the published paper; the rest are written here in full.',  
-        platesKicker: 'Selected plates', platesTitle: 'Two pieces I would show first, if you only had ten minutes.', readWord: 'Read chapter', notesTitle: 'Trained as an architect. Stayed for the tooling.',  
-        colophon: 'Set in Newsreader and Lora on a near-white ground. Photographs are matted as plates. Nothing here is generated; everything here was drawn, built, or written by hand, sometimes slowly.',  
-        titleSize: 'clamp(48px,7vw,104px)', titleTracking: '-0.01em', bylineSize: '26px', bodySize: '17px', smallBodySize: '15.5px', stampSize: '40px', h2Size: '40px', h3Size: '34px', cvSize: '22px', capLeadSize: '18px', marginSize: '19px', marginStyle: 'italic', marginPrefix: '' },  
-      tooling: { reg: 'mono', label: 'Development', kicker: 'tooling · r+d · side projects', title: 'I build software for people who draw buildings, and I keep the drawings in charge.', byline: '>_ y.shao · oslo — this register is kept by hand and issued when something changes', edition: 'Rev 2026.09 · issued for review', stamp: 'SHT-00',  
-        intro: 'Four things I made because I needed them in practice: a façade toolkit, a drawing-set review desk, a catalogue of timber joints, and a pipeline that turns a morning\u2019s scan into walls by evening. Each is listed with the reason I built it, because the reason is usually the interesting part. The arguments about all this live next door, in serif.',  
-        indexKicker: 'four things I made because I needed them', indexTitle: '', indexNote: 'sheet numbers are stable across revisions; rev is the year of the last issue. click a row for the full sheet.',  
-        platesKicker: 'Selected sheets', platesTitle: '', readWord: 'Open sheet', notesTitle: 'Trained as an architect. Stayed for the tooling.',  
-        colophon: 'set in geist mono on a dark sheet. figures are screen captures at 1:1, unretouched. no gold on this side: the essays keep the leaf, the tools keep the ink.',  
-        titleSize: 'clamp(36px,5.2vw,76px)', titleTracking: '-0.03em', bylineSize: '15px', bodySize: '15px', smallBodySize: '14px', stampSize: '28px', h2Size: '32px', h3Size: '26px', cvSize: '18px', capLeadSize: '13px', marginSize: '13px', marginStyle: 'normal', marginPrefix: '// ' },  
-    };  
-    featuredFor = { writing: [2, 4], tooling: [0, 5] };  
-    why = [  
-      'A consultant kept a workbook of mullion spacings by hand. I wanted the drawing to write the workbook, not the other way round.',  
-      'Studios review sets by printing, redlining and scanning. I wanted the red pen without the printer, and notes that survive revisions.',  
-      'The model was wrong in interesting ways; I wanted to know exactly which ways.',  
-      'I could not find a picture of a joint I needed that was not a manufacturer\u2019s render. So I drew it, then the next one.',  
-      'Every tool I use had started to propose things. I wanted to say what a proposing tool owes the person drawing.',  
-      'Scans were easy; models you could draw over were not. I wanted the boring part done by evening.',  
-    ];  
-    
-    num(i) { return (this.props.numerals ?? 'roman') === 'roman' ? this.romans[i] : String(i + 1); }  
-    reg(i) { return /Research|Writing/.test(this.data[i].kind) ? 'serif' : 'mono'; }  
-    pageOf(i) { return this.reg(i) === 'mono' ? 'tooling' : 'writing'; }  
-    curReg() { const { view, idx, page } = this.state; return view === 'home' ? 'serif' : view === 'chapter' ? this.reg(idx) : this.pages[page].reg; }  
-    cover(s) { return s.replace(/\S/g, '·'); }  
-    
-    // dramatic register change: a gold hairline drops at the tab, a paper curtain sweeps out from it, the new page re-typesets underneath  
-    transition(nextState) {  
-      this.parchTravel = true; this.cubeLead = false; this.plateLead = false; this.plateFrom = null;  
-      const toReg = nextState.view === 'home' ? 'serif' : nextState.view === 'chapter' ? this.reg(nextState.idx) : this.pages[nextState.page].reg;  
-      const sameReg = toReg === this.curReg();  
-      this.finishMorph();  
-      this.slideLeaves = !sameReg;  
-      const olds = this.captureTexts();  
-      // every transition stamps its own start, so the roll's travel is anchored to the moment the page turned. A stamp  
-      // left behind by an earlier register change would already be spent, and the tween would land finished on frame one  
-      this.parchT0 = performance.now();  
-      if (!sameReg && this.parch) this.parch.quench();  
-      (this.trInstances || []).forEach((t) => t.destroy()); this.trInstances = [];  
-      if (!sameReg) this.retypeBrand(this.curReg(), toReg);  
-      this.setState(nextState, () => { window.scrollTo({ top: 0 }); if (olds) requestAnimationFrame(() => this.morphTexts(olds)); });  
-      if (!olds) window.scrollTo({ top: 0 });  
-    }  
-    signal(d) { return /shipped|live|published/i.test(d.status) ? 'var(--sig-ok)' : /beta/i.test(d.status) ? 'var(--sig-warn)' : 'var(--sig-info)'; }  
-    // Every named text slot is paired across the two registers; the old text travels to the new slot's position  
-    // while its glyphs are swapped one by one into the new text (a 3-glyph caseFlip band at the boundary — the repo's picker).  
-    // the photo a framed element is showing, as a URL (image-slot keeps its <img> in shadow DOM)  
-    slotSrc(el) { const s = el.matches('image-slot') ? el : el.querySelector('image-slot'); if (!s) return ''; const im = s.shadowRoot && s.shadowRoot.querySelector('img'); return (im && im.currentSrc) || s.getAttribute('src') || ''; }  
-    textStyle(el) { const c = getComputedStyle(el); return { fontFamily: c.fontFamily, fontSize: c.fontSize, fontWeight: c.fontWeight, fontStyle: c.fontStyle, letterSpacing: c.letterSpacing, lineHeight: c.lineHeight, textTransform: c.textTransform, textAlign: c.textAlign, textWrap: c.textWrap, color: c.color, hyphens: c.hyphens, WebkitTextStroke: c.webkitTextStroke }; }  
-    textRect(el, fallback) { try { const rg = document.createRange(); rg.selectNodeContents(el); const rc = rg.getBoundingClientRect(); return rc.width ? rc : fallback; } catch (e) { return fallback; } }  
-    captureTexts() {  
-      const root = this.rootRef.current, main = root && root.querySelector('main[data-screen-label]'); if (!main) return null;  
-      const vh = window.innerHeight, out = new Map();  
-      main.querySelectorAll('[data-morph]').forEach((el) => {  
-        const rc = el.getBoundingClientRect(); if (rc.bottom < -vh || rc.top > vh * 1.6 || !rc.width) return;  
-        const rec = { rect: this.textRect(el, rc), text: el.textContent, style: this.textStyle(el) };  
-        out.set(el.dataset.morph, rec); if (el.dataset.morphAlt) out.set(el.dataset.morphAlt, rec);  
-      });  
-      out.shapes = new Map();  
-      main.querySelectorAll('[data-shape]').forEach((el) => {  
-        const rc = el.getBoundingClientRect(); if (rc.bottom < -vh || rc.top > vh * 1.6 || !rc.width) return;  
-        const c = getComputedStyle(el); const isRule = el.tagName === 'HR';  
-        const thick = parseFloat(c.borderTopWidth) > 2, rec = { rect: rc, color: isRule ? c.backgroundColor : thick ? c.outlineColor : c.borderTopColor, isRule, outline: c.outlineColor, img: this.slotSrc(el), filter: c.filter };  
-        out.shapes.set(el.dataset.shape, rec); if (el.dataset.shapeAlt) out.shapes.set(el.dataset.shapeAlt, rec);  
-      });  
-      const rc = main.getBoundingClientRect(), wrap = document.createElement('div');  
-      wrap.setAttribute('style', root.getAttribute('style') + '; position:absolute; inset:0; min-height:0; background:var(--color-bg); background-image:none; transition:none; will-change:opacity;');  
-      const clone = main.cloneNode(true);  
-      clone.style.cssText += '; position:absolute; top:' + rc.top + 'px; left:' + rc.left + 'px; width:' + rc.width + 'px; margin:0; box-sizing:border-box;';  
-      clone.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));  
-      // the snapshot can't carry a live <image-slot> (its shadow DOM doesn't clone with the photo),  
-      // so bake each slot's current photo into a plain div as a background image  
-      const liveSlots = [...main.querySelectorAll('image-slot')];  
-      clone.querySelectorAll('image-slot').forEach((el, i) => {  
-        const src = (() => { const s = liveSlots[i]; const im = s && s.shadowRoot && s.shadowRoot.querySelector('img'); return im && im.currentSrc || (s && s.getAttribute('src')) || ''; })();  
-        const d = document.createElement('div');  
-        d.style.cssText = 'width:100%; height:100%; background:var(--color-surface);' + (src ? ' background-image:url("' + src + '"); background-size:cover; background-position:center;' : '');  
-        el.replaceWith(d);  
-      });  
-      clone.querySelectorAll('[data-enter]').forEach((el) => el.setAttribute('data-enter', 'in'));  
-      clone.querySelectorAll('[data-tr]').forEach((el) => { el.textContent = el.textContent; });  
-      clone.style.willChange = 'opacity'; clone.style.contain = 'paint';  
-      clone.querySelectorAll('[data-morph]').forEach((el) => { if (out.has(el.dataset.morph)) el.style.opacity = '0'; });  
-      if (this.slideLeaves) clone.querySelectorAll('[data-leaf]').forEach((el, i) => { const dir = el.dataset.leaf === 'left' ? -1 : 1; el.style.animation = 'none'; el.style.transition = 'none';  
-        el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(' + dir * 110 + 'vw)' }], { duration: 640, delay: (i % 3) * 60, easing: 'cubic-bezier(.5,0,.85,.2)', fill: 'forwards' }); });  
-      wrap.appendChild(clone); out.snapshot = wrap;  
-      const layer = document.createElement('div');  
-      layer.style.cssText = 'position:fixed; inset:0; z-index:3; pointer-events:none; overflow:hidden;';  
-      layer.setAttribute('data-morph-layer', ''); layer.appendChild(wrap); document.body.appendChild(layer); out.layer = layer;  
-      return out;  
-    }  
-    morphTexts(olds) {  
-      this.finishMorph(olds.layer);  
-      const root = this.rootRef.current, main = root && root.querySelector('main[data-screen-label]'); if (!main) return;  
-      const vh = window.innerHeight, dur = 780, easing = 'cubic-bezier(.65,0,.15,1)';  
-      const layer = olds.layer;  
-      if (olds.snapshot) { olds.snapshot.animate([{ opacity: 1 }, { opacity: 1, offset: this.slideLeaves ? 0.55 : 0 }, { opacity: 0 }], { duration: this.slideLeaves ? 820 : 560, easing: 'cubic-bezier(.4,0,.6,1)', fill: 'forwards' }); }  
-      main.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 520, delay: 160, easing: 'ease', fill: 'backwards' });  
-      if (this.slideLeaves) main.querySelectorAll('[data-leaf]').forEach((el, i) => { const dir = el.dataset.leaf === 'left' ? -1 : 1;  
-        el.animate([{ transform: 'translateX(' + dir * 110 + 'vw)' }, { transform: 'translateX(0)' }], { duration: 760, delay: 220 + (i % 3) * 70, easing: 'cubic-bezier(.15,.8,.2,1)', fill: 'backwards' }); });  
-      const jobs = [], hidden = [], seen = new Set();  
-      main.querySelectorAll('[data-morph]').forEach((el) => {  
-        const name = el.dataset.morph, rc0 = el.getBoundingClientRect(); if (!rc0.width) return;  
-        const rc = this.textRect(el, rc0);  
-        const old = olds.get(name) || (el.dataset.morphAlt && olds.get(el.dataset.morphAlt));  
-        const delay = Math.min(160, Math.max(0, rc.top) / vh * 160);  
-        if (!old) { el.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 520, delay: 300 + delay, easing, fill: 'backwards' }); return; }  
-        seen.add(name); if (el.dataset.morphAlt) seen.add(el.dataset.morphAlt);  
-        if (rc.top > vh * 1.6) return;  
-        const ns = this.textStyle(el);  
-        const mk = (st, rect) => { const g = document.createElement('div'); Object.assign(g.style, st, { position: 'absolute', margin: 0, whiteSpace: 'pre-wrap', boxSizing: 'border-box', hyphens: 'manual', textAlign: st.textAlign === 'center' ? 'center' : 'left', textWrap: st.textWrap || 'wrap', left: 0, top: 0, width: (rect.width + 2) + 'px', transformOrigin: '0 0', willChange: 'transform, opacity', contain: 'paint' }); g.textContent = old.text; layer.appendChild(g); return g; };  
-        const ga = mk(old.style, old.rect), gb = mk(ns, rc);  
-        const toText = el.textContent, ratio = Math.max(old.text.length, toText.length) / Math.max(1, Math.min(old.text.length, toText.length));  
-        const oneLine = old.rect.height < parseFloat(old.style.lineHeight || '0') * 1.6 && rc.height < parseFloat(ns.lineHeight || '0') * 1.6;  
-        const swap = oneLine && old.text.length <= 60 && toText.length <= 60 && ratio <= 1.4;  
-        gb.textContent = toText;  
-        if (swap) { [ga, gb].forEach((g) => { g.style.whiteSpace = 'nowrap'; g.style.width = 'auto'; }); }  
-        const sA = rc.width / Math.max(1, old.rect.width), sB = old.rect.width / Math.max(1, rc.width);  
-        const tr = (x, y, s) => 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';  
-        ga.animate([{ transform: tr(old.rect.left, old.rect.top, 1) }, { transform: tr(rc.left, rc.top, sA) }], { duration: dur, delay, easing, fill: 'both' });  
-        gb.animate([{ transform: tr(old.rect.left, old.rect.top, sB) }, { transform: tr(rc.left, rc.top, 1) }], { duration: dur, delay, easing, fill: 'both' });  
-        ga.animate([{ opacity: 1 }, { opacity: 1, offset: 0.3 }, { opacity: 0, offset: 0.7 }, { opacity: 0 }], { duration: dur, delay, fill: 'both' });  
-        gb.animate([{ opacity: 0 }, { opacity: 0, offset: 0.3 }, { opacity: 1, offset: 0.7 }, { opacity: 1 }], { duration: dur, delay, fill: 'both' });  
-        el.style.visibility = 'hidden'; hidden.push(el);  
-        jobs.push({ g: [ga, gb], el, from: Array.from(old.text), to: Array.from(toText), delay, swap });  
-      });  
-      const shapeHidden = [];  
-      // lines and boxes pair by vertical order across registers: each Development card expands from a Research rule  
-      // (the last captured rule serves any further cards); each Research rule collapses from a Development card  
-      const byTop = (a, b) => a[1].rect.top - b[1].rect.top;  
-      const oldRules = [...(olds.shapes || [])].filter(([n, o]) => o.isRule && n !== 'rule-0').sort(byTop);  
-      const oldCards = [...(olds.shapes || [])].filter(([n]) => n.startsWith('card-')).sort(byTop);  
-      const newEls = [...main.querySelectorAll('[data-shape]')].map((el) => [el, el.getBoundingClientRect()]);  
-      const newCards = newEls.filter(([el]) => el.dataset.shape.startsWith('card-')).sort((a, b) => a[1].top - b[1].top).map(([el]) => el);  
-      const newRules = newEls.filter(([el]) => el.tagName === 'HR' && el.dataset.shape !== 'rule-0').sort((a, b) => a[1].top - b[1].top).map(([el]) => el);  
-      const resolve = (el) => { const n = el.dataset.shape, direct = olds.shapes && (olds.shapes.get(n) || (el.dataset.shapeAlt && olds.shapes.get(el.dataset.shapeAlt))); if (direct) return direct;  
-        if (n.startsWith('card-')) { const k = newCards.indexOf(el); return oldRules.length ? oldRules[Math.min(k, oldRules.length - 1)][1] : null; }  
-        if (el.tagName === 'HR' && n !== 'rule-0') { const k = newRules.indexOf(el); return oldCards.length ? oldCards[Math.min(k, oldCards.length - 1)][1] : null; }  
-        return null; };  
-      main.querySelectorAll('[data-shape]').forEach((el) => {  
-        const old = resolve(el); const rc = el.getBoundingClientRect(); if (!old || !rc.width || rc.top > vh * 1.6) return;  
-        const isRule = el.tagName === 'HR'; const c = getComputedStyle(el); const nc = isRule ? c.backgroundColor : parseFloat(c.borderTopWidth) > 2 ? c.outlineColor : c.borderTopColor;  
-        const g = document.createElement('div'); g.style.cssText = 'position:absolute; box-sizing:border-box; border-style:solid; border-width:0; overflow:hidden; background-size:cover; background-position:center;'; layer.appendChild(g);  
-        const delay = Math.min(160, Math.max(0, rc.top) / vh * 160);  
-        // the photograph travels inside the frame: paint the captured plate on the flying box and  
-        // keep the destination slot blank until the box lands on it  
-        const photo = old.img || this.slotSrc(el);  
-        if (photo) {  
-          g.style.backgroundImage = 'url("' + photo + '")';  
-          g.animate([{ filter: old.filter && old.filter !== 'none' ? old.filter : 'none' }, { filter: c.filter && c.filter !== 'none' ? c.filter : 'none' }], { duration: dur, delay, easing, fill: 'both' });  
-          const slot = el.matches('image-slot') ? el : el.querySelector('image-slot');  
-          if (slot) { const prev = slot.style.opacity; slot.style.opacity = '0'; setTimeout(() => { slot.style.transition = 'opacity 200ms ease'; slot.style.opacity = prev || '1'; setTimeout(() => { slot.style.transition = ''; }, 240); }, dur + delay); }  
-        }  
-        const w0 = old.isRule ? '1px 0 0 0' : '1px', w1 = isRule ? '1px 0 0 0' : '1px';  
-        const hh0 = old.isRule ? 1 : old.rect.height, hh1 = isRule ? 1 : rc.height;  
-        g.animate([{ left: old.rect.left + 'px', top: old.rect.top + 'px', width: old.rect.width + 'px', height: hh0 + 'px', borderWidth: w0, borderColor: old.color },  
-                   { left: rc.left + 'px', top: rc.top + 'px', width: rc.width + 'px', height: hh1 + 'px', borderWidth: w1, borderColor: nc }], { duration: dur, delay, easing, fill: 'both' });  
-        // restore the exact prior value: clearing border-color with '' would strip it out of the border shorthand  
-        if (isRule) { shapeHidden.push([el, 'opacity', el.style.opacity]); el.style.opacity = '0'; } else { shapeHidden.push([el, 'borderColor', el.style.borderColor]); el.style.borderColor = 'transparent'; }  
-        setTimeout(() => { shapeHidden.forEach(([e, p, v]) => { e.style[p] = v; }); }, dur + delay + 60);  
-      });  
-      olds.forEach((old, name) => { if (seen.has(name)) return; const g = document.createElement('div'); Object.assign(g.style, old.style, { position: 'absolute', margin: 0, whiteSpace: 'pre-wrap', overflow: 'hidden', left: old.rect.left + 'px', top: old.rect.top + 'px', width: old.rect.width + 'px', height: old.rect.height + 'px' }); g.textContent = old.text; layer.appendChild(g); g.animate([{ opacity: 1 }, { opacity: 0, transform: 'translateY(-6px)' }], { duration: 360, easing, fill: 'forwards' }); });  
-      const t0 = performance.now(); let lastRoll = 0, band = {};  
-      const ease = (x) => this.bez(x);  
-      const tick = (now) => {  
-        const t = now - t0; let live = false;  
-        const reroll = now - lastRoll > 90; if (reroll) { lastRoll = now; band = {}; }  
-        for (const j of jobs) {  
-          const k = Math.min(1, Math.max(0, (t - j.delay) / dur));  
-          if (k < 1) live = true;  
-          if (k >= 1) { if (!j.done) { j.done = true; const txt = j.to.join(''); j.g.forEach((g) => { g.textContent = txt; }); j.el.style.visibility = ''; j.el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180, easing: 'ease' }); j.g.forEach((g) => g.animate([{ opacity: g === j.g[1] ? 1 : 0 }, { opacity: 0 }], { duration: 180, easing: 'ease', fill: 'forwards' })); } continue; }  
-          if (!j.swap) continue;  
-          const p = ease(k), L = Math.round(j.from.length + (j.to.length - j.from.length) * p), cut = Math.floor(p * L);  
-          let s = '';  
-          for (let i = 0; i < L; i++) {  
-            if (i < cut) s += j.to[i] ?? '';  
-            else s += j.from[i] ?? j.to[i] ?? ' ';  
-          }  
-          j.g.forEach((g) => { g.textContent = s; });  
-        }  
-        if (live) this.morphRaf = requestAnimationFrame(tick); else setTimeout(() => this.finishMorph(), 200);  
-        // ~30fps is plenty for the glyph hand-off and halves the text-node writes  
-      };  
-      this.morph = { layer, hidden };  
-      this.morphRaf = requestAnimationFrame(tick);  
-    }  
-    finishMorph(keep) { cancelAnimationFrame(this.morphRaf); document.querySelectorAll('body > div[data-morph-layer]').forEach((l) => { if (l !== keep && (!this.morph || l !== this.morph.layer)) l.remove(); }); if (!this.morph) return; this.morph.hidden.forEach((el) => { el.style.visibility = ''; }); this.morph.layer.remove(); this.morph = null; this.mountTextEffects(); this.remeasureText(); }  
-    // the gold wake on the serif pages breathes: glow reach and intensity ride one sine (3.4s), between a resting and a peak value  
-    // the mono tab glitches in rhythm: on a 3.4s beat, one or two glyphs flip to a symbol or case for a few frames,  
-    // sometimes with a quick second stutter, then settle. The counterpart of the serif tab's breathing leaf.  
-    startGlitch() {  
-      if (this.glitchTimer) return;  
-      const word = 'Development';  
-      const burst = (n) => {  
-        const idx = new Set(); while (idx.size < n) idx.add((Math.random() * word.length) | 0);  
-        this.setState({ devGlitch: Array.from(word).map((ch, i) => idx.has(i) ? this.pickGlyph(ch) : ch) });  
-      };  
-      const settle = () => this.setState({ devGlitch: null });  
-      // a beat is a short cascade: 3 → 2 → 1 glyphs scrambled over ~330ms, then a late single stutter  
-      const beat = () => {  
-        burst(3); setTimeout(() => burst(2), 110); setTimeout(() => burst(1), 220); setTimeout(settle, 330);  
-        if (Math.random() < 0.6) { setTimeout(() => burst(2), 520); setTimeout(settle, 620); }  
-      };  
-      this.glitchTimer = setInterval(beat, 3400); setTimeout(beat, 900);  
-    }  
-    startBreath() {  
-      if (this.breathRaf) return;  
-      const lo = [125, 84, 17], hi = [194, 141, 65]; // accent-700 → accent-500  
-      const tick = (now) => {  
-        this.breathRaf = requestAnimationFrame(tick);  
-        const s = 0.5 - 0.5 * Math.cos((now / 3400) * Math.PI * 2); // 0..1 sine  
-        const radius = Math.round(150 + 150 * s);  
-        const c = lo.map((v, i) => Math.round(v + (hi[i] - v) * s));  
-        const wakeColor = 'rgb(' + c.join(',') + ')';  
-        let any = false;  
-        (this.trInstances || []).forEach((t) => { if (!t.__breathes || t._destroyed) return; any = true; if (t.__lastR !== radius) { t.update({ radius, wakeColor }); t.__lastR = radius; } });  
-        this.feedParchment();  
-        if (!any) { cancelAnimationFrame(this.breathRaf); this.breathRaf = null; }  
-      };  
-      this.breathRaf = requestAnimationFrame(tick);  
-    }  
-    remeasureText() { (this.trInstances || []).forEach((t) => { try { t.remeasure(); } catch (e) {} }); }  
-    bez(t) { const c1 = .6, c2 = .2; let lo = 0, hi = 1; for (let i = 0; i < 24; i++) { const m = (lo + hi) / 2, x = 3*(1-m)*(1-m)*m*c1 + 3*(1-m)*m*m*c2 + m*m*m; if (x < t) lo = m; else hi = m; } const m = (lo + hi) / 2; return 3*(1-m)*m*m + m*m*m; }  
-    startTyping(pi, len) { this.stopTyping(); this.setState({ hovered: pi, leafHover: true, typed: 0 }); this.typeTimer = setInterval(() => { this.setState((st) => { if (st.typed >= len) { clearInterval(this.typeTimer); return null; } return { typed: st.typed + 6 }; }); }, 22); }  
-    stopTyping() { clearInterval(this.typeTimer); this.setState({ leafHover: false, typed: 0 }); }  
-    goHome() {  
-      // leaving the Development platform: remember its box so the cube can take over from it (see syncHome)  
-      const pf = this.state.view === 'page' ? this.platformRef.current : null;  
-      const from = pf && this.parch && this.parch.isPlatform() ? (({ left, top, width, height }) => ({ x: left, y: top, w: width, h: height }))(pf.getBoundingClientRect()) : null;  
-      this.transition({ view: 'home', page: this.state.page });  
-      if (from) { this.plateLead = true; this.plateFrom = from; }  
-    }  
-    syncHome() {  
-      this.syncFog();  
-      const layer = this.homeLayerRef.current; if (!layer) return;  
-      const box = (el) => { const r = el.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; };  
-      const cell = this.state.view === 'home' ? this.homeCubeRef.current : null;  
-      if (cell) {  
-        clearTimeout(this.homeKillTimer); this.homeKillTimer = null;  
-        if (!this.home) {  
-          if (this.homeLoading) return;  
-          this.homeLoading = true;  
-          import('./home.js').then((m) => { this.homeLoading = false; if (!this.homeLayerRef.current || this.home) return; this.home = m.mount(this.homeLayerRef.current); this.syncHome(); }).catch(() => { this.homeLoading = false; });  
-          return;  
-        }  
-        this.cubeLead = false; clearTimeout(this.cubeFadeTimer); this.cubeFadeTimer = null;  
-        const root = this.rootRef.current;  
-        // arriving from the Development platform: the cube stands in for the platform as its plate, rises back into  
-        // a cube and travels to its cell while the word re-forms; the ink darkens as the ground lightens  
-        if (this.plateLead && this.plateFrom) {  
-          this.plateLead = false; const from = this.plateFrom; this.plateFrom = null;  
-          document.body.appendChild(layer); layer.style.zIndex = '4'; layer.style.clipPath = 'none';  
-          if (this.parch) this.home.setPlatformFrame(this.parch.platformFrame());  
-          this.home.setInk('#f3f2f2', true); this.home.setOpacity(1);  
-          this.home.expand(from, box(cell), this.CUBE_COLLAPSE_MS);  
-          // the cube canvas may have just been mounted: let it draw its first frame, then cross-fade it in over the  
-          // platform (which fades out from here, not from syncParchment — otherwise the platform dims before the plate exists)  
-          layer.style.transition = 'none'; layer.style.opacity = '0';  
-          requestAnimationFrame(() => requestAnimationFrame(() => {  
-            layer.style.transition = 'opacity 200ms cubic-bezier(.65,0,.15,1)'; layer.style.opacity = '1';  
-            const pl = this.parchLayerRef.current; if (pl) { pl.style.transition = 'opacity 200ms cubic-bezier(.65,0,.15,1)'; pl.style.opacity = '0'; }  
-          }));  
-          clearTimeout(this.plateTimer);  
-          setTimeout(() => { if (this.home) this.home.setInk('#1a1918'); }, 150);  
-          this.plateTimer = setTimeout(() => { const r = this.rootRef.current; if (r && layer.parentNode !== r) r.insertBefore(layer, r.firstChild); layer.style.zIndex = '2'; }, this.CUBE_COLLAPSE_MS);  
-          return;  
-        }  
-        if (this.home.busy()) { this.home.setAnchor(box(cell)); return; }  
-        if (root && layer.parentNode !== root) { root.insertBefore(layer, root.firstChild); }  
-        layer.style.zIndex = '2'; layer.style.clipPath = 'none'; layer.style.opacity = '1';  
-        this.home.reset(); this.home.setAnchor(box(cell)); this.home.setOpacity(1); this.home.setInk('#1a1918');  
-        return;  
-      }  
-      if (!this.home) return;  
-      const pf = this.platformRef.current;  
-      // clicked the cube: the word dissolves, the cube travels into the platform's pose and presses flat into a plate  
-      // with the platform's exact frame; the parchment platform then takes over under a cross-fade (see syncParchment)  
-      if (this.cubeLead && pf) {  
-        // above the page-morph snapshot for the trip (as the roll does)  
-        if (layer.parentNode !== document.body) { document.body.appendChild(layer); layer.style.zIndex = '4'; }  
-        if (this.parch) this.home.setPlatformFrame(this.parch.platformFrame());  
-        // ink eases to paper alongside the ground darkening (snapping it would blank the cube on the still-light page)  
-        this.home.setInk('#f3f2f2'); this.home.setOpacity(1);  
-        this.home.collapse(box(pf), this.CUBE_COLLAPSE_MS);  
-        if (!this.cubeFadeTimer) this.cubeFadeTimer = setTimeout(() => {  
-          // landed: clip to the model opening and hand over to the platform  
-          this.cubeFadeTimer = null;  
-          const r = pf.getBoundingClientRect();  
-          layer.style.clipPath = 'inset(' + r.top + 'px ' + (window.innerWidth - r.right) + 'px ' + (window.innerHeight - r.bottom) + 'px ' + r.left + 'px)';  
-          layer.style.zIndex = '2'; if (this.home) this.home.setOpacity(0);  
-        }, this.CUBE_COLLAPSE_MS);  
-      } else {  
-        this.home.setOpacity(0);  
-      }  
-      if (!this.homeKillTimer) this.homeKillTimer = setTimeout(() => { this.homeKillTimer = null; if (this.state.view !== 'home' && this.home) { this.home.destroy(); this.home = null; } }, 2200);  
-    }  
-    goPage(page) { this.transition({ view: 'page', page, idx: this.featuredFor[page][0], hovered: this.featuredFor[page][0] }); }  
-    open(i) { this.transition({ view: 'chapter', idx: i, page: this.pageOf(i) }); }  
-    scrollTo(ref) { const el = ref.current; if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: 'smooth' }); }  
-    go(ref) { if (this.state.view !== 'page') { this.setState({ view: 'page', page: this.pageOf(this.state.idx) }, () => setTimeout(() => this.scrollTo(ref), 60)); } else this.scrollTo(ref); }  
-    
-    BRAND = 'Yiliang Shao';  
-    SYMBOLS = '!@#$%^&*+=<>?/|~';  
-    pickGlyph(ch) {  
-      if (ch === ' ') return ' ';  
-      if (Math.random() < 0.08) return this.SYMBOLS.charAt((Math.random() * this.SYMBOLS.length) | 0);  
-      const lo = ch.toLowerCase(), up = ch.toUpperCase();  
-      return lo !== up ? (ch === up ? lo : up) : this.SYMBOLS.charAt((Math.random() * this.SYMBOLS.length) | 0);  
-    }  
-    retypeBrand(fromReg, toReg) {  
-      cancelAnimationFrame(this.brandRaf);  
-      const chars = Array.from(this.BRAND), dur = 780, t0 = performance.now();  
-      let lastRoll = 0, rolled = chars.map((c) => this.pickGlyph(c));  
-      const tick = (now) => {  
-        const k = Math.min(1, (now - t0) / dur), p = this.bez(k), done = k >= 1;  
-        const cut = Math.floor(p * chars.length);  
-        const anim = chars.map((c, i) => {  
-          if (i < cut) return { ch: c, reg: toReg, swap: false };  
-          if (i < cut + 3) return { ch: c, reg: toReg, swap: true };  
-          return { ch: c, reg: fromReg, swap: false };  
-        });  
-        this.setState({ brandAnim: done ? null : anim });  
-        if (!done) this.brandRaf = requestAnimationFrame(tick);  
-      };  
-      this.brandRaf = requestAnimationFrame(tick);  
-    }  
-    measureTabs() {  
-      const head = this.headRef.current; const reg = this.curReg();  
-      const tab = (reg === 'mono' ? this.tabToolingRef : this.tabWritingRef).current;  
-      if (!head || !tab) return;  
-      const left = tab.getBoundingClientRect().left - head.getBoundingClientRect().left, width = tab.offsetWidth;  
-      if (left !== this.state.tab.left || width !== this.state.tab.width) this.setState({ tab: { left, width } });  
-    }  
-    componentDidMount() {  
-      this.startGlitch();  
-      this.onTilt = (e) => {  
-        const hero = this.heroRef.current || this.platformRef.current || this.homeRollRef.current, img = this.parchLayerRef.current, txt = this.heroTextRef.current; if (!hero || !img) return;  
-        const rc = hero.getBoundingClientRect(); const nx = (e.clientX - rc.left) / rc.width - 0.5, ny = (e.clientY - rc.top) / rc.height - 0.5;  
-        const inside = nx > -0.6 && nx < 0.6 && ny > -0.6 && ny < 0.6; const kx = inside ? nx : 0, ky = inside ? ny : 0;  
-    
-        if (this.parch) { this.parch.setTilt(kx, ky, inside); this.parch.setCursor(e.clientX, e.clientY); }  
-        const rootEl = this.rootRef.current; if (rootEl) { rootEl.style.setProperty('--mx', String(kx)); rootEl.style.setProperty('--my', String(ky)); }  
-        if (this.fog) this.fog.setPointer(e.clientX, e.clientY, true);  
-        if (this.dragLast && this.parch) { this.parch.drag(e.clientX - this.dragLast[0], e.clientY - this.dragLast[1]); this.dragLast = [e.clientX, e.clientY]; }  
-      };  
-      window.addEventListener('pointermove', this.onTilt, { passive: true });  
-      // dragging the platform orbits it (turn + elevation); it eases back to the axonometric home when let go  
-      this.onDown = (e) => { const pf = this.platformRef.current; if (!pf || !this.parch || !this.parch.isPlatform() || e.button !== 0) return; const r = pf.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return; this.dragLast = [e.clientX, e.clientY]; this.parch.dragStart(); pf.style.cursor = 'grabbing'; };  
-      this.onUp = () => { if (!this.dragLast) return; this.dragLast = null; if (this.parch) this.parch.dragEnd(); const pf = this.platformRef.current; if (pf) pf.style.cursor = 'grab'; };  
-      window.addEventListener('pointerdown', this.onDown); window.addEventListener('pointerup', this.onUp); window.addEventListener('pointercancel', this.onUp);  
-      this.onScroll = () => { this.syncParchment(); this.syncHome(); this.setState({ scrollY: window.scrollY }); clearTimeout(this.remeasureTimer); this.remeasureTimer = setTimeout(() => this.remeasureText(), 120); };  
-      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => setTimeout(() => { this.remeasureText(); this.syncParchment(); }, 50));  
-      this.onResize = () => { this.setState({ narrow: window.innerWidth < 1000 }); this.measureTabs(); this.syncParchment(); this.syncHome(); };  
-      this.onKey = (e) => {  
-        const t = e.target; if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;  
-        const n = this.data.length, { view, idx } = this.state;  
-        if (e.key === 'Escape') this.goPage(this.state.view === 'chapter' ? this.pageOf(idx) : this.state.page);  
-        else if (e.key === 't' || e.key === 'T') this.goPage('tooling');  
-        else if (e.key === 'e' || e.key === 'E') this.goPage('writing');  
-        else if (e.key === 'ArrowRight') this.open(view === 'chapter' ? (idx + 1) % n : this.featuredFor[this.state.page][0]);  
-        else if (e.key === 'ArrowLeft') this.open(view === 'chapter' ? (idx + n - 1) % n : this.featuredFor[this.state.page][1]);  
-        else if (/^[1-9]$/.test(e.key) && +e.key <= n) this.open(+e.key - 1);  
-        else return;  
-        this.setState({ usedKeys: true });  
-      };  
-      this.onResize(); window.addEventListener('resize', this.onResize);  
-      window.addEventListener('scroll', this.onScroll, { passive: true });  
-      window.addEventListener('keydown', this.onKey);  
-      this.observer = new IntersectionObserver((entries) => entries.forEach((en) => { if (en.isIntersecting) { en.target.setAttribute('data-enter', 'in'); this.observer.unobserve(en.target); } }), { rootMargin: '0px 0px -8% 0px' });  
-      this.observeReveals(); this.mountTextEffects(); this.syncParchment(); this.syncHome();  
-      this.hintTimer = setTimeout(() => this.setState({ hintGone: true }), 9000);  
-      setTimeout(() => this.measureTabs(), 400);  
-    }  
-    componentDidUpdate() { this.observeReveals(); this.mountTextEffects(); this.measureTabs(); this.syncParchment(); this.syncHome(); }  
-    // the glowing glyphs of the hero title are the parchment's heat source: read each lit glyph span's inline glow  
-    // (the text effect writes a text-shadow whose alpha tracks brightness), project its centre into the roll's box  
-    feedParchment() {  
-      const roll = this.parchLayerRef.current, title = this.heroTextRef.current && this.heroTextRef.current.querySelector('[data-tr="title"]');  
-      if (!this.parch || !roll || !title) return;  
-      const rr = roll.getBoundingClientRect(); if (!rr.width) return;  
-      const out = [];  
-      title.querySelectorAll('span[style*="text-shadow"]').forEach((s) => {  
-        // the effect writes `0 0 {14*b}px rgba(...)`; the browser serialises it as `rgba(...) 0px 0px {14*b}px` — read the blur  
-        const ts = s.style.textShadow; const m = /(\d+(?:\.\d+)?)px\s*$/.exec(ts) || /0px\s+0px\s+(\d+(?:\.\d+)?)px/.exec(ts); const w = Math.min(1, m ? parseFloat(m[1]) / 14 : 0); if (w < 0.2) return;  
-        const b = s.getBoundingClientRect(); if (!b.width) return;  
-        // heat sits on the glyph's profile: sample points around the x-height box of the glyph, not its centre  
-        const x0 = b.left + b.width * 0.15, x1 = b.right - b.width * 0.15, y0 = b.top + b.height * 0.3, y1 = b.top + b.height * 0.78;  
-        const pts = [[x0, y0], [x1, y0], [x0, y1], [x1, y1], [(x0 + x1) / 2, y0], [(x0 + x1) / 2, y1]];  
-        for (const [x, y] of pts) out.push({ x: (x - rr.left) / rr.width, y: (y - rr.top) / rr.height, w });  
-      });  
-      this.parch.setSources(out);  
-    }  
-    syncParchment() {  
-      const layer = this.parchLayerRef.current, root = this.rootRef.current; if (!layer || !root) return;  
-      if (!this.parch && !this.parchLoading && !this.parchFailed) { this.parchLoading = true; import('./parchment.js').then((m) => { this.parchLoading = false; if (this.parchLayerRef.current && !this.parch) { try { this.parch = m.mount(this.parchLayerRef.current); } catch (e) { this.parchFailed = true; return; } this.syncParchment(); } }).catch(() => { this.parchLoading = false; this.parchFailed = true; }); return; }  
-      if (!this.parch) return;  
-      const ph = this.state.view === 'home' ? this.homeRollRef.current : (this.scriptRef.current || this.platformRef.current);  
-      // chapter/sheet views have no anchor for the roll: fade the layer away rather than leave it parked mid-page  
-      layer.style.transition = 'opacity 420ms cubic-bezier(.65,0,.15,1)';  
-      if (!ph) { layer.style.opacity = '0'; return; }  
-      if (!this.parchHold) layer.style.opacity = '0.8';  
-      const pr = ph.getBoundingClientRect(), k = ph === this.platformRef.current ? 1 : 0;  
-      const to = { x: pr.left, y: pr.top, w: pr.width, h: pr.height, k };  
-      // the model lives in one grid opening on the Development page: clip the fixed layer to that cell  
-      layer.style.clipPath = k === 1 && !this.parchTween  
-        ? 'inset(' + pr.top + 'px ' + (window.innerWidth - pr.right) + 'px ' + (window.innerHeight - pr.bottom) + 'px ' + pr.left + 'px)'  
-        : 'none';  
-      if (this.parchTween) { if (this.parchTween.k === k) this.parchTween.to = to; return; }  
-      const cur = this.parchPose;  
-      const place = (p) => { this.parch.setAnchor(p); this.parch.setUnroll(p.k); this.parchPose = p; };  
-      const travel = this.parchTravel; this.parchTravel = false;  
-      if (!cur || (cur.k === k && !travel)) { place(to); return; }  
-      // the cube led this transition (either way): the roll/platform does not travel — it fades out where it stood and  
-      // the other one fades up in its place once the cube has finished collapsing or expanding. Later sync calls only  
-      // retarget the pending placement; they must not re-arm the timer (that is what left a gap before the platform showed)  
-      if (this.parchFadeTimer) { this.parchPending = to; return; }  
-      if ((this.cubeLead && k === 1) || (this.plateLead && k === 0)) {  
-        this.parchHold = true; this.parchPending = to;  
-        // cube → platform: the roll fades out now. platform → cube: syncHome fades the platform out once the plate is drawn  
-        if (this.cubeLead) { layer.style.transition = 'opacity 200ms cubic-bezier(.65,0,.15,1)'; layer.style.opacity = '0'; }  
-        this.parchFadeTimer = setTimeout(() => {  
-          place(this.parchPending);  
-          this.parchFadeTimer = setTimeout(() => { this.parchFadeTimer = null; this.parchHold = false; layer.style.transition = 'opacity 520ms cubic-bezier(.65,0,.15,1)'; layer.style.opacity = '0.8'; this.syncParchment(); }, 60);  
-        }, this.CUBE_COLLAPSE_MS - 60);  
-        return;  
-      }  
-      // register change. The canvas is fixed and full-viewport, so nothing resizes: the roll itself travels in 3D from  
-      // where it stood to its new anchor. Lifted to the body (above the page-morph snapshot, below the header) for the trip.  
-      const from = { ...cur };  
-      document.body.appendChild(layer); layer.style.zIndex = '4'; layer.style.opacity = '1';  
-      // opening: the roll waits for the page cross-fade (0–0.2), then travels on its own (0.2–0.62), then unrolls (0.6–1)  
-      // closing: rolls up first (0–0.4), then travels home (0.38–0.8), and the essay title settles around it  
-      this.parch.quench();  
-      // the stamp is spent once a travel claims it; the next travel gets its own from the next transition  
-      const t0 = this.parchT0 || performance.now(); this.parchT0 = null;  
-      const dur = 900, tw = this.parchTween = { k, to };  
-      const tick = (now) => {  
-        const dest = tw.to, t = Math.min(1, (now - t0) / dur), p = this.bez(t);  
-        const L = (a, b) => a + (b - a) * p;  
-        place({ x: L(from.x, dest.x), y: L(from.y, dest.y), w: L(from.w, dest.w), h: L(from.h, dest.h), k: L(from.k, dest.k) });  
-        if (t < 1) { this.parchRaf = requestAnimationFrame(tick); return; }  
-        this.parchTween = null; root.insertBefore(layer, root.firstChild); layer.style.zIndex = '1'; layer.style.opacity = '0.8'; this.syncParchment();  
-      };  
-      this.parchRaf = requestAnimationFrame(tick);  
-    }  
-    componentWillUnmount() { if (this.fog) { this.fog.destroy(); this.fog = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); this.observer?.disconnect(); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }  
-    observeReveals() { document.querySelectorAll('[data-enter=""]').forEach((el) => this.observer.observe(el)); }  
-    mountTextEffects() {  
-      if (!window.TextRippling || (this.props.textEffects ?? true) === false || this.morph) return;  
-      this.trInstances = this.trInstances || [];  
-      document.querySelectorAll('[data-tr]').forEach((el) => {  
-        if (el.__tr) return;  
-        const css = getComputedStyle(el);  
-        const accent = css.getPropertyValue('--color-accent').trim() || '#b68235';  
-        const ink = css.getPropertyValue('--color-text').trim() || '#201f1d';  
-        const mono = el.dataset.reg === 'mono';  
-        // mono: the wavefront flips glyphs (case + symbols); serif: brightness-only wake, letters never scramble  
-        const fx = mono ? { effect: 'ripple', swapMode: 'caseFlip', rippleEdge: 18 } : { effect: 'glow', radius: 200 };  
-        const opts = { ...fx, wakeColor: mono ? '#ffffff' : accent };  
-        el.__tr = new window.TextRippling(el, opts); el.__tr.__el = el; el.__tr.__breathes = !mono;  
-        this.startBreath();  
-        setTimeout(() => { if (!el.__tr._destroyed) el.__tr.remeasure(); }, 700);  
-        this.trInstances.push(el.__tr);  
-      });  
-      this.trInstances = this.trInstances.filter((t) => { const alive = document.contains(t.__el); if (!alive) t.destroy(); return alive; });  
-    }  
-    
-    renderVals() {  
-      const { view, idx, hovered, page: pageKey } = this.state;  
-      const marginalia = this.props.marginalia ?? true;  
-      const R = this.curReg(), mono = R === 'mono';  
-      const brandReg = R;  
-      const page = { ...this.pages[pageKey], introCover: this.cover(this.pages[pageKey].intro) };  
-      const projects = this.data.map((d, i) => {  
-        const m = this.reg(i) === 'mono';  
-        return { ...d, numeral: this.num(i), register: this.reg(i), why: this.why[i], kindLower: d.kind.toLowerCase(), figNo: String(i + 1).padStart(2, '0'), slotId: 'toc-' + i, plateSlotId: 'plate-' + i, heroSlotId: 'cover-' + i, detailSlotA: 'detail-a-' + i, detailSlotB: 'detail-b-' + i,  
-          dropCap: d.body1[0], body1: d.body1.slice(1), body1Full: d.body1, subtitleCover: this.cover(d.subtitle),  
-          previewOpacity: hovered === i ? '1' : '0',  
-          ghost: m ? 'SHT-' + String(i + 1).padStart(2, '0') : this.num(i),  
-          kickerWord: m ? 'Sheet' : 'Chapter', figWord: m ? 'Fig.' : 'Plate', backWord: m ? 'Sheet register' : 'Contents',  
-          signal: this.signal(d), shapeIdx: 0, open: () => this.open(i), hover: () => this.setState({ hovered: i }) };  
-      });  
-      // one screen, two gutters. Each gutter: a large anchor (a real chapter), a mid leaf and a small one, set so the  
-      // caption always has room on the inner side and nothing crosses the title column. Sizes are fractions of the gutter.  
-      // each gutter is a 2×3 grid. The anchor (a real chapter) spans a row with its caption beside it; the smaller leaves  
-      // take single cells with captions beneath, staggered across the two columns so the eye zigzags down the margin  
-      const leafPos = [  
-        { side: 'left',  col: '1 / 3', row: '1', selfY: 'start',  selfX: 'start', imgH: 'min(22vh, 330px)', ratio: '4/3', dir: 'row',         alignItems: 'flex-end',   align: 'left',  titleSize: '26px', px: '-18px', py: '-10px', dur: '7.5s', delay: '0s',    bleedX: '-72px', cover: 'https://picsum.photos/seed/halvorsen-cuts/800/600' },  
-        { side: 'right', col: '1 / 3', row: '2', selfY: 'center', selfX: 'end',   imgH: 'min(24vh, 360px)', ratio: '3/4', dir: 'row-reverse', alignItems: 'flex-end',   align: 'right', titleSize: '26px', px: '-26px', py: '-14px', dur: '9s',   delay: '-3s',   bleedX: '72px', cover: 'https://picsum.photos/seed/halvorsen-machines/600/800' },  
-        { side: 'left',  col: '1',     row: '2', selfY: 'center', selfX: 'start', imgH: 'min(14vh, 220px)', ratio: '1/1', dir: 'column',      alignItems: 'flex-start', align: 'left',  titleSize: '17px', px: '-14px', py: '-8px',  dur: '8s',   delay: '-5s',   bleedX: '-40px', cover: 'https://picsum.photos/seed/halvorsen-3/700/700' },  
-        { side: 'right', col: '1 / 3', row: '1', selfY: 'start',  selfX: 'end',   imgH: 'min(18vh, 260px)', ratio: '3/2', dir: 'row-reverse', alignItems: 'flex-start', align: 'right', titleSize: '17px', px: '-22px', py: '-12px', dur: '10s',  delay: '-1.5s', bleedX: '44px', cover: 'https://picsum.photos/seed/halvorsen-4/900/600' },  
-        { side: 'left',  col: '2',     row: '3', selfY: 'end',    selfX: 'end',   imgH: 'min(12vh, 200px)', ratio: '5/4', dir: 'column',      alignItems: 'flex-start', align: 'left',  titleSize: '15px', px: '-20px', py: '-9px',  dur: '8.5s', delay: '-2s',   bleedX: '0px', cover: 'https://picsum.photos/seed/halvorsen-5/700/560' },  
-        { side: 'right', col: '2',     row: '3', selfY: 'end',    selfX: 'end'  , imgH: 'min(15vh, 240px)', ratio: '2/3', dir: 'column',      alignItems: 'flex-end',   align: 'right', titleSize: '15px', px: '-16px', py: '-11px', dur: '9.5s', delay: '-4s',   bleedX: '30px', cover: 'https://picsum.photos/seed/halvorsen-6/600/900' },  
-      ];  
-    
-    
-    
-      // beyond the written chapters, forthcoming leaves hold the stage as placeholders  
-      const forthcoming = [{ title: 'Forthcoming', kind: 'Essay', year: '—', numeral: '·' }, { title: 'Forthcoming', kind: 'Research', year: '—', numeral: '·' }, { title: 'Forthcoming', kind: 'Essay', year: '—', numeral: '·' }, { title: 'Forthcoming', kind: 'Research', year: '—', numeral: '·' }];  
-    
-    
-    
-      // the margins only hold chapters that belong to this register; empty slots read as forthcoming  
-      const own = projects.filter((p) => this.pageOf(projects.indexOf(p)) === pageKey);  
-      const leaves = [...own, ...forthcoming].slice(0, 6).map((p, k) => { const real = own.includes(p), pi = real ? projects.indexOf(p) : -1 - k; const on = real && hovered === pi && this.state.leafHover; const pos = leafPos[k % leafPos.length];  
-        // only the two large outer plates bleed, and they bleed outward far enough to cross the page edge  
-        const bleeds = ['-56px', '56px', '0px', '0px', '0px', '-60px'];  
-        const bleedX = bleeds[k % bleeds.length];  
-        const bleedY = ['0px', '0px', '52px', '0px', '0px', '0px'][k % 6];  
-        const detail = real ? p.subtitle + '\n' + p.role + ' · ' + p.status + ' · pp. ' + p.pages : '';  
-        const typed = on ? detail.slice(0, this.state.typed || 0) : '';  
-        return { ...p, ...pos, idx: pi, cardNo: k + 1, typed, kicker: real ? 'Chapter ' + p.numeral + ' · ' + p.year : 'Forthcoming', detailDisplay: on ? 'block' : 'none', detailOpacity: on ? '1' : '0', caretOpacity: on && typed.length < detail.length ? '1' : '0', morphName: real ? 'row-' + k : 'leaf-' + k, figNo: real ? p.figNo : 'x' + k, placeholder: real ? p.placeholder : 'Plate: forthcoming', coverSlotId: real ? 'cover-' + pi : 'cover-next-' + k, open: real ? p.open : () => {}, bleedX, bleedY, zIndex: on ? 30 : 12 - k, origin: (pos.selfX === 'start' ? 'left ' : 'right ') + (pos.selfY === 'start' ? 'top' : pos.selfY === 'end' ? 'bottom' : 'center'), cursor: real ? 'pointer' : 'default', lift: on ? '-10px' : '0px', scale: on ? '1.06' : '1', shadow: on ? '0 24px 48px -20px rgba(32,31,29,0.35), 0 2px 6px rgba(32,31,29,0.08)' : '0 8px 24px -16px rgba(32,31,29,0.25)',  
-          hover: () => { if (real) this.startTyping(pi, detail.length); }, unhover: () => { this.stopTyping(); } }; });  
-      const pageProjects = projects.filter((p) => this.pageOf(projects.indexOf(p)) === pageKey).map((p, k) => ({ ...p, shapeIdx: k + 1, dir: k % 2 ? 'rtl' : 'ltr', textCol: k % 2 ? '13 / 23' : '1 / 11', plateCol: k % 2 ? '1 / 13' : '11 / 23', cardRow: (16 + 9 * k) + ' / ' + (23 + 9 * k), bandNo: String(k + 1).padStart(2, '0'), morphName: k < 2 ? 'row-' + k : 'feat-' + (k - 2) + '-title', frameShape: k < 2 ? 'plate-' + k : 'frame-' + k }));  
-      const introChars = Array.from(page.intro);  
-      page.dropCap = introChars[0]; page.introRest = introChars.slice(1).join('');  
-      // the Development page is placed on a 44px module: cards are 7 rows with two blank rows between  
-      const lastCardEnd = 23 + 9 * Math.max(0, pageProjects.length - 1);  
-      const gridRows = { plates: lastCardEnd + ' / ' + (lastCardEnd + 1), author: (lastCardEnd + 2) + ' / ' + (lastCardEnd + 18), colophon: (lastCardEnd + 20) + ' / ' + (lastCardEnd + 23) };  
-      const pad = (n) => String(n).padStart(2, '0');  
-      const featured = this.featuredFor[pageKey].map((i, k) => ({ ...projects[i], plateNumeral: this.num(k) }));  
-      const current = projects[idx];  
-      const hov = projects[hovered] && this.pageOf(hovered) === pageKey ? projects[hovered] : pageProjects[0];  
-      const tabColor = (r) => brandReg === r ? 'var(--color-text)' : 'var(--color-neutral-600)';  
-      return {  
-        isHome: view === 'home', showTabs: view !== 'home', goHome: () => this.goHome(),  
-        homeLayerRef: this.homeLayerRef, homeRollRef: this.homeRollRef, homeCubeRef: this.homeCubeRef, fogLayerRef: this.fogLayerRef, homeHeadRef: this.homeHeadRef, homeFootRef: this.homeFootRef,  
-        goToolingFromCube: () => { this.goPage('tooling'); this.cubeLead = true; },  
-        homeCubeOn: () => { if (this.home) this.home.setHover(true); }, homeCubeOff: () => { if (this.home) this.home.setHover(false); },  
-        isPage: view === 'page', isChapter: view === 'chapter', marginalia, page, pageReg: page.reg, pageKey: pageKey, pageLabel: page.label,  
-        isSerifPage: view === 'page' && page.reg === 'serif', isMonoPage: view === 'page' && page.reg === 'mono',  
-        isMono: view === 'chapter' && mono, isSerif: view === 'chapter' && !mono, chapterKey: R + '-' + idx,  
-        rHeading: mono ? this.MONO : 'var(--font-heading)', rBody: mono ? this.MONO : 'var(--font-body)', rAlign: mono ? 'left' : 'justify', rTracking: mono ? '-0.03em' : '0',  
-        brandChars: (this.state.brandAnim || Array.from(this.BRAND).map((ch) => ({ ch, reg: brandReg, swap: false }))).map((c) => ({  
-          ch: c.ch, font: c.reg === 'mono' ? this.MONO : 'var(--font-heading)', tracking: c.reg === 'mono' ? '-0.03em' : '0',  
-          color: c.swap ? 'var(--color-neutral-600)' : 'inherit' })),  
-        gridBg: mono ? 'linear-gradient(color-mix(in srgb, var(--color-text) 7%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--color-text) 7%, transparent) 1px, transparent 1px)' : 'radial-gradient(color-mix(in srgb, var(--color-text) 16%, transparent) 1px, transparent 1.1px)',  
-        ...(mono  
-          ? { tBg: '#1b1a19', tSurface: '#292625', tText: '#f3f2f2', tAccent: '#f3f2f2', tAccent600: '#ffffff', tAccent700: '#e2dfdf', tAccent800: '#f3f2f2', tAccent100: 'color-mix(in srgb, #f3f2f2 10%, transparent)', tDivider: 'color-mix(in srgb, #f3f2f2 10%, transparent)', tN100: 'color-mix(in srgb, #f3f2f2 8%, transparent)', tN400: '#605d5d', tN500: '#8a8686', tN600: '#a19d9d', tN700: '#c4c0c0', tN800: '#e2dfdf' }  
-          : { tBg: '#f3f2f2', tSurface: '#eae9e9', tText: '#201f1d', tAccent: '#b68235', tAccent600: '#a06f24', tAccent700: '#7d5411', tAccent800: '#5a3b0a', tAccent100: '#fff3e4', tDivider: 'color-mix(in srgb, #201f1d 16%, transparent)', tN100: '#f8f4f4', tN400: '#bab6b6', tN500: '#9b9797', tN600: '#7d7979', tN700: '#605d5d', tN800: '#444141' }),  
-        plateFilter: mono ? 'none' : 'sepia(0.22) saturate(0.82) contrast(1.05)', marksOpacity: mono ? '1' : '0',  
-        ghostSize: mono ? 'clamp(64px,9vw,140px)' : 'clamp(160px,22vw,320px)', ghostFont: mono ? "'DM Mono', ui-monospace, monospace" : 'var(--deco)', ghostTracking: mono ? '-0.04em' : '0',  
-        titleSize: mono ? 'clamp(36px,5vw,72px)' : 'clamp(44px,6vw,88px)', titleTracking: mono ? '-0.03em' : '-0.01em',  
-        ledeSize: mono ? '20px' : '30px', ledeMeasure: mono ? '52ch' : '30ch', captionLeadSize: mono ? '13px' : '17px', nextSize: mono ? '24px' : '30px',  
-        rootRef: this.rootRef, heroRef: this.heroRef, scriptRef: this.scriptRef, parchLayerRef: this.parchLayerRef, platformRef: this.platformRef, heroTextRef: this.heroTextRef, sheetCount: pad(pageProjects.length),  
-        tabLeft: this.state.tab.left + 'px', tabWidth: this.state.tab.width + 'px',  
-        tabToolingColor: tabColor('mono'), tabWritingColor: tabColor('serif'),  
-        ampFont: mono ? "'Google Sans', 'Product Sans', sans-serif" : "'Libre Baskerville', serif", ampStyle: mono ? 'normal' : 'italic',  
-        devChars: Array.from('Development').map((ch, i) => { const g = this.state.devGlitch && this.state.devGlitch[i]; return { ch: g || ch, color: g && g !== ch ? 'var(--color-accent)' : 'inherit' }; }),  
-        subBrandDisplay: this.state.narrow ? 'none' : 'inline', indexCols: this.state.narrow ? 'minmax(0,1fr)' : 'minmax(0,7fr) minmax(0,5fr)', previewDisplay: this.state.narrow ? 'none' : 'block',  
-        parallax: Math.round((this.state.scrollY || 0) * 0.18) + 'px',  
-        hintOpacity: this.state.hintGone || this.state.usedKeys ? '0' : '1', bloomHintOpacity: this.state.bloomTouched ? '0' : '1',  
-        projects, pageProjects, leaves, leftLeaves: leaves.filter((l) => l.side === 'left'), rightLeaves: leaves.filter((l) => l.side === 'right'), featured, current, next: projects[(idx + 1) % projects.length], hovered: hov, cv: this.cv,  
-        gridPlatesRow: gridRows.plates, gridAuthorRow: gridRows.author, gridColophonRow: gridRows.colophon,  
-        contentsRef: this.contentsRef, platesRef: this.platesRef, notesRef: this.notesRef, headRef: this.headRef, tabToolingRef: this.tabToolingRef, tabWritingRef: this.tabWritingRef,  
-        goTooling: () => this.goPage('tooling'), goWriting: () => this.goPage('writing'),  
-        goPageCurrent: () => this.goPage(view === 'chapter' ? this.pageOf(idx) : pageKey), goNotes: () => this.go(this.notesRef),  
-        previewMono: () => this.setState({ previewReg: 'mono' }), previewSerif: () => this.setState({ previewReg: 'serif' }), previewNone: () => this.setState({ previewReg: null }),  
-        openNext: () => this.open((idx + 1) % projects.length),  
-      };  
-    }  
+  
+  class Component extends DCLogic {
+    state = { view: 'home', page: 'writing', idx: 2, hovered: 2, tab: { left: 0, width: 0 } };
+    contentsRef = React.createRef(); platesRef = React.createRef(); notesRef = React.createRef();
+    homeLayerRef = React.createRef(); homeRollRef = React.createRef(); homeCubeRef = React.createRef(); fogLayerRef = React.createRef(); homeHeadRef = React.createRef(); homeFootRef = React.createRef();
+    // the home fog lives only on the home view; it fades out (and stops) elsewhere
+    syncFog() {
+      const layer = this.fogLayerRef.current; if (!layer) return;
+      const home = this.state.view === 'home', roll = this.homeRollRef.current, cube = this.homeCubeRef.current;
+      if (home && roll && cube) {
+        if (!this.fog) { if (this.fogLoading) return; this.fogLoading = true; import('./field.js').then((m) => { this.fogLoading = false; if (!this.fogLayerRef.current || this.fog) return; this.fog = m.mount(this.fogLayerRef.current); this.syncFog(); }).catch(() => { this.fogLoading = false; }); return; }
+        const box = (el) => { const r = el.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; };
+        // the visible objects, not their layout cells: the roll stands about as wide as its word, the cube is a square
+        const rb = box(roll), rs = roll.firstElementChild ? box(roll.firstElementChild) : rb, rw = Math.max(rs.w, rb.h * 0.5), cb = box(cube), cs = Math.min(cb.w, cb.h);
+        this.fog.setSources([{ x: rb.x + rb.w / 2 - rw / 2, y: rb.y, w: rw, h: rb.h }, { x: cb.x + cb.w / 2 - cs / 2, y: cb.y + cb.h / 2 - cs / 2, w: cs, h: cs }]);
+        // the type stays clear: threads thin out under the headline block and the footer line
+        const tight = (el) => { if (!el) return null; const b = box(el), first = el.firstElementChild; const w = first ? Math.max(first.getBoundingClientRect().width, ...[...el.children].map((c) => c.getBoundingClientRect().width)) : b.w; return { x: b.x + (b.w - w) / 2 - 24, y: b.y, w: w + 48, h: b.h }; };
+        this.fog.setQuiet([tight(this.homeHeadRef.current), tight(this.homeFootRef.current)].filter(Boolean)); layer.style.opacity = '1';
+      } else {
+        layer.style.opacity = '0';
+        if (this.fog) { clearTimeout(this.fogKillTimer); this.fogKillTimer = setTimeout(() => { if (this.fog && this.state.view !== 'home') { this.fog.destroy(); this.fog = null; } }, 1000); }
+      }
+    }
+    headRef = React.createRef(); rootRef = React.createRef(); heroRef = React.createRef(); scriptRef = React.createRef(); parchLayerRef = React.createRef(); platformRef = React.createRef(); heroTextRef = React.createRef(); tabToolingRef = React.createRef(); tabWritingRef = React.createRef(); sheetGridRef = React.createRef();
+    MONO = "'Geist Mono', ui-monospace, monospace";
+    CUBE_COLLAPSE_MS = 1500; // the cube's collapse into the platform: dissolve, travel, press flat
+    romans = ['I','II','III','IV','V','VI','VII','VIII'];
+  
+    data = [
+      { title: 'Lattice', subtitle: 'A parametric façade toolkit that thinks in mullions, not meshes.', kind: 'Tooling', year: 2025, page: 9, pages: '9–18', role: 'Design lead, core engineer', with: 'Two engineers, one façade consultant', status: 'Shipped, in daily use', statusShort: 'shipped', stack: 'Rhino / Grasshopper plugin, C#, a small Rust solver, IFC export.', link: 'Release notes and documentation', caption: 'A curtain-wall study with every mullion still editable.', placeholder: 'Capture: façade study, elevation + axon',
+        margin: 'Most façade tools optimise the geometry and then hand you a mesh. Lattice keeps the grammar: bays, transoms, joints. You can still argue with it afterwards.',
+        summary: 'A plugin for façade designers that keeps the architectural grammar intact while it optimises. Bays stay bays; joints stay joints; the export still opens in the fabricator’s software without a phone call.',
+        body1: 'Lattice began as a spreadsheet. A façade consultant I worked with kept a workbook of mullion spacings, glass sizes and thermal breaks, and every design change meant re-typing half of it. The first version simply read that workbook and drew it. The second version let you draw and wrote the workbook back.',
+        body2: 'The part I am proudest of is what it refuses to do. It will not turn a façade into a triangulated surface. Every element it produces is something a fabricator can name, price and bolt to a slab. That constraint made the solver harder to write and the tool much easier to trust.',
+        body3: 'It shipped in the spring of 2025 and is now used on four projects I know of, and probably several I do not. The documentation is longer than the code, which I take as a good sign.' },
+      { title: 'Plot Room', subtitle: 'Reviewing drawing sets the way editors review manuscripts.', kind: 'Tooling', year: 2024, page: 19, pages: '19–28', role: 'Designer and sole developer', with: 'A pilot studio of fourteen', status: 'Private beta', statusShort: 'beta', stack: 'Web app, PDF parsing, a redline layer, comments anchored to sheet coordinates.', link: 'A short film of a review session', caption: 'Sheet A-301 during a Tuesday review, redlines and all.', placeholder: 'Capture: drawing set under review',
+        margin: 'A drawing set is a book with a hundred authors. Plot Room gives it an editor’s desk.',
+        summary: 'A web tool for reviewing construction drawing sets. Comments anchor to sheet coordinates, survive revisions, and read like margin notes rather than tickets.',
+        body1: 'Every studio reviews drawings by printing them, marking them in red, and scanning them back in. Plot Room keeps the red pen and loses the printer. Comments attach to a coordinate on a sheet and follow that detail through revisions, so a note about a flashing on issue three still points at the flashing on issue nine.',
+        body2: 'The interface is deliberately quiet: a sheet, a margin, a list. I wanted it to feel closer to a proofreader’s desk than to project-management software, because the people using it are proofreading, at scale, under deadline.',
+        body3: 'Fourteen people in one studio have used it for a year. Their feedback is mostly about paper sizes and printer margins, which tells me the rest is working.' },
+      { title: 'Cuts', subtitle: 'Learning to draw building sections from plans alone.', kind: 'Research', year: 2024, page: 29, pages: '29–36', role: 'First author', with: 'Two co-authors at the institute', status: 'Published, peer reviewed', statusShort: 'published', stack: 'PyTorch, a dataset of 40,000 plan–section pairs, a lot of cleaning.', link: 'The paper, with code and dataset', caption: 'Predicted sections (grey) against the drawn ones (ink), from a held-out set.', placeholder: 'Plate: predicted vs. drawn sections',
+        margin: 'The model is wrong in interesting ways: it invents basements and forgets roofs. Both tell you something about what plans do not say.',
+        summary: 'A paper on whether a model can infer a building’s section from its plans. It mostly can, and the failures are more instructive than the successes.',
+        body1: 'The question was simple to state and awkward to answer: given a set of plans, can a model draw a plausible section? We assembled forty thousand plan–section pairs from public archives, cleaned them for a year, and trained something unremarkable on them.',
+        body2: 'The results were good enough to publish and bad enough to be interesting. The model understood floor-to-floor heights and stair positions. It invented basements where none existed, and it consistently forgot roofs, which are the one thing a plan says nothing about.',
+        body3: 'The paper argues that these failures map precisely onto the information a plan omits, and that this is a useful way to think about what drawings encode. The reviewers were kind. The dataset has been downloaded more often than the paper.' },
+      { title: 'Timber Index', subtitle: 'A side project cataloguing mass-timber connections, one joint at a time.', kind: 'Side project', year: 2023, page: 37, pages: '37–44', role: 'Everything', with: 'Contributors, eventually', status: 'Live, growing slowly', statusShort: 'live', stack: 'A static site, hand-drawn axonometrics, a spreadsheet as the database.', link: 'The index, 212 joints and counting', caption: 'Joint 087: a CLT-to-glulam hanger, drawn at 1:5.', placeholder: 'Capture: axonometric of a timber joint',
+        margin: 'It started because I could not find a picture of a joint I needed. It continues because other people could not either.',
+        summary: 'A catalogue of mass-timber connection details, each redrawn to the same conventions. Started for myself; now used by people I have never met.',
+        body1: 'I needed a picture of a particular CLT hanger and could not find one that was not a manufacturer’s render. So I drew it, and then drew the next one, and by the fortieth joint it had become a project with a name.',
+        body2: 'Every joint is redrawn to the same scale and the same conventions: an axonometric, a section, a short note on where it fails. The consistency is the point. You can compare two connections without first learning two drawing styles.',
+        body3: 'There are two hundred and twelve joints now, and other people send me theirs. I redraw them anyway, which is slow, and which is why the index is trusted.' },
+      { title: 'On drawing with machines', subtitle: 'An essay on what changes when software starts to propose, not just record.', kind: 'Writing', year: 2025, page: 45, pages: '45–52', role: 'Author', with: 'A patient editor', status: 'Published', statusShort: 'published', stack: 'A text editor, three drafts, a walk between each.', link: 'Read the essay', caption: 'A sketch from the essay: the same room, drawn by hand and by suggestion.', placeholder: 'Plate: hand sketch beside a machine proposal',
+        margin: 'A tool that records is a pencil. A tool that proposes is a colleague, and colleagues need manners.',
+        summary: 'A long essay on generative tools in architecture, written for practitioners rather than futurists. Its argument is about manners: what a proposing tool owes the person drawing.',
+        body1: 'For most of its history, architectural software has been a very good pencil. It recorded what you decided. That is changing, and the essay tries to describe the change without either panic or advertising.',
+        body2: 'The central idea is that a tool which proposes has entered a conversation, and conversations have etiquette. It should say when it is unsure. It should not interrupt. It should let you be wrong on purpose. Most current tools fail all three, and the essay says so plainly.',
+        body3: 'It was published in the summer of 2025 and has been argued with at length, which was the intent. I still agree with most of it.' },
+      { title: 'Survey Pipeline', subtitle: 'From a muddy site to a usable model in a single afternoon.', kind: 'R&D', year: 2022, page: 53, pages: '53–60', role: 'Research engineer', with: 'A surveying firm and a very cold intern', status: 'Internal, in use', statusShort: 'internal', stack: 'Point-cloud processing, a plane-fitting heuristic, exports to the studio’s BIM.', link: 'Technical note', caption: 'A scanned barn, its walls found, its clutter politely ignored.', placeholder: 'Capture: point cloud with fitted planes',
+        margin: 'The hard part was never the scanning. It was deciding which of the six hundred million points were a wall.',
+        summary: 'An internal pipeline that turns a morning’s laser scan into walls, floors and openings by evening. Less clever than it sounds and more useful than expected.',
+        body1: 'Scanning a building is easy now. Getting a model you can draw over is not. The pipeline takes a raw point cloud and does the boring work: finds the floors, finds the walls, guesses the openings, and hands you something honest enough to start from.',
+        body2: 'It is not machine learning, mostly. It is plane fitting, a handful of heuristics, and a great deal of respect for the ways old buildings are not square. The heuristics were written on site, in a barn, in February.',
+        body3: 'It has been used on around thirty existing-building projects. Surveyors like it because it makes their scans useful; architects like it because it does not pretend to be finished.' },
+    ];
+    cv = [
+      { years: '2024 — now', role: 'Independent — tooling and research', place: 'Oslo', note: 'Lattice, Plot Room, essays, and consulting for studios who want their software to argue less.' },
+      { years: '2021 — 2024', role: 'Research engineer, Built Environment Lab', place: 'Copenhagen', note: 'Survey pipeline, the Cuts paper, and a dataset that outlived the grant.' },
+      { years: '2019 — 2021', role: 'Computational designer', place: 'A mid-sized practice, Copenhagen', note: 'Façade scripting, drawing standards, and the workbook that became Lattice.' },
+      { years: '2017 — 2019', role: 'Architectural assistant', place: 'Oslo', note: 'Stair details. Many stair details.' },
+      { years: '2012 — 2017', role: 'MArch, Architecture', place: 'Oslo School of Architecture', note: 'Thesis on drawing conventions as a programming language.' },
+    ];
+    pages = {
+      writing: { reg: 'serif', label: 'Research', kicker: 'Essays · Research', bio: 'I write about what happens when machines start drawing too, and I publish the research that keeps me honest. The tools live next door, in mono.', title: 'Drawings, tools, and other arguments.', byline: 'by Yiliang Shao', edition: 'Edition of one', stamp: 'MMXXVI',
+        intro: 'I write about what happens when machines start drawing too, and I publish the research that keeps me honest. This is the bound half of the last seven years: the papers that survived review and a few essays I still agree with. The tools live next door, in mono.',
+        indexKicker: 'Contents', indexTitle: 'Two chapters, hover to preview.', indexNote: 'Page numbers follow the bound edition. Chapters marked Research link to the published paper; the rest are written here in full.',
+        platesKicker: 'Selected plates', platesTitle: 'Two pieces I would show first, if you only had ten minutes.', readWord: 'Read chapter', notesTitle: 'Trained as an architect. Stayed for the tooling.',
+        colophon: 'Set in Newsreader and Lora on a near-white ground. Photographs are matted as plates. Nothing here is generated; everything here was drawn, built, or written by hand, sometimes slowly.',
+        titleSize: 'clamp(48px,7vw,104px)', titleTracking: '-0.01em', bylineSize: '26px', bodySize: '17px', smallBodySize: '15.5px', stampSize: '40px', h2Size: '40px', h3Size: '34px', cvSize: '22px', capLeadSize: '18px', marginSize: '19px', marginStyle: 'italic', marginPrefix: '' },
+      tooling: { reg: 'mono', label: 'Development', kicker: 'tooling · r+d · side projects', title: 'I build software for people who draw buildings, and I keep the drawings in charge.', byline: '>_ y.shao · oslo — this register is kept by hand and issued when something changes', edition: 'Rev 2026.09 · issued for review', stamp: 'SHT-00',
+        intro: 'Four things I made because I needed them in practice: a façade toolkit, a drawing-set review desk, a catalogue of timber joints, and a pipeline that turns a morning\u2019s scan into walls by evening. Each is listed with the reason I built it, because the reason is usually the interesting part. The arguments about all this live next door, in serif.',
+        indexKicker: 'four things I made because I needed them', indexTitle: '', indexNote: 'sheet numbers are stable across revisions; rev is the year of the last issue. click a row for the full sheet.',
+        platesKicker: 'Selected sheets', platesTitle: '', readWord: 'Open sheet', notesTitle: 'Trained as an architect. Stayed for the tooling.',
+        colophon: 'set in geist mono on a dark sheet. figures are screen captures at 1:1, unretouched. no gold on this side: the essays keep the leaf, the tools keep the ink.',
+        titleSize: 'clamp(36px,5.2vw,76px)', titleTracking: '-0.03em', bylineSize: '15px', bodySize: '15px', smallBodySize: '14px', stampSize: '28px', h2Size: '32px', h3Size: '26px', cvSize: '18px', capLeadSize: '13px', marginSize: '13px', marginStyle: 'normal', marginPrefix: '// ' },
+    };
+    featuredFor = { writing: [2, 4], tooling: [0, 5] };
+  
+    // Where every module of a Development sheet sits on the 22 column, 44px row drawing grid, as
+    // "start / end" grid lines. The wide table is the desk-width sheet; the narrow table is the same
+    // drawing stacked, chosen off state.narrow (window.innerWidth < 1000). Both are written as plain
+    // literals so tools/check-sheet-grid.mjs can read them without running this file, and the template
+    // binds sheet.<name>.col / .row rather than carrying any span of its own.
+    // The plot-in stagger: 40ms per row of a module's starting row, so the sheet inks itself top to
+    // bottom. The table holds the raw figure; the IntersectionObserver rebases it to whichever module
+    // of the batch comes first and caps what is left, so the last module of any batch starts within a
+    // second of the first, whether that batch is the opening screenful or one module arriving on scroll.
+    PLOT_STEP = 40;
+    PLOT_CAP = 1000;
+    SHEET_WIDE = {
+      back:          { col: '1 / 7',   row: '1 / 2' },
+      header:        { col: '1 / 15',  row: '3 / 11' },
+      ghost:         { col: '15 / 23', row: '3 / 11' },
+      specSheet:     { col: '1 / 5',   row: '12 / 14' },
+      specRole:      { col: '5 / 9',   row: '12 / 14' },
+      specWith:      { col: '9 / 14',  row: '12 / 14' },
+      specStatus:    { col: '14 / 18', row: '12 / 14' },
+      specRev:       { col: '18 / 23', row: '12 / 14' },
+      hero:          { col: '1 / 23',  row: '15 / 29' },
+      heroCaption:   { col: '1 / 23',  row: '29 / 30' },
+      body1:         { col: '1 / 15',  row: '31 / 36' },
+      body2:         { col: '1 / 15',  row: '36 / 41' },
+      body3:         { col: '1 / 15',  row: '41 / 45' },
+      aside:         { col: '15 / 23', row: '31 / 39' },
+      detailA:       { col: '1 / 12',  row: '46 / 55' },
+      detailB:       { col: '12 / 23', row: '46 / 55' },
+      detailCaption: { col: '1 / 23',  row: '55 / 56' },
+      navBack:       { col: '1 / 7',   row: '57 / 59' },
+      navNext:       { col: '11 / 23', row: '57 / 59' },
+    };
+    SHEET_NARROW = {
+      back:          { col: '1 / 23',  row: '1 / 2' },
+      header:        { col: '1 / 23',  row: '3 / 9' },
+      ghost:         { col: '1 / 23',  row: '9 / 12' },
+      specSheet:     { col: '1 / 8',   row: '13 / 16' },
+      specRole:      { col: '8 / 15',  row: '13 / 16' },
+      specWith:      { col: '15 / 23', row: '13 / 16' },
+      specStatus:    { col: '1 / 12',  row: '16 / 19' },
+      specRev:       { col: '12 / 23', row: '16 / 19' },
+      hero:          { col: '1 / 23',  row: '20 / 30' },
+      heroCaption:   { col: '1 / 23',  row: '30 / 32' },
+      body1:         { col: '1 / 23',  row: '33 / 39' },
+      body2:         { col: '1 / 23',  row: '39 / 45' },
+      body3:         { col: '1 / 23',  row: '45 / 50' },
+      aside:         { col: '1 / 23',  row: '51 / 58' },
+      detailA:       { col: '1 / 23',  row: '59 / 71' },
+      detailB:       { col: '1 / 23',  row: '71 / 83' },
+      detailCaption: { col: '1 / 23',  row: '83 / 85' },
+      navBack:       { col: '1 / 23',  row: '86 / 88' },
+      navNext:       { col: '1 / 23',  row: '89 / 91' },
+    };
+  
+    why = [
+      'A consultant kept a workbook of mullion spacings by hand. I wanted the drawing to write the workbook, not the other way round.',
+      'Studios review sets by printing, redlining and scanning. I wanted the red pen without the printer, and notes that survive revisions.',
+      'The model was wrong in interesting ways; I wanted to know exactly which ways.',
+      'I could not find a picture of a joint I needed that was not a manufacturer\u2019s render. So I drew it, then the next one.',
+      'Every tool I use had started to propose things. I wanted to say what a proposing tool owes the person drawing.',
+      'Scans were easy; models you could draw over were not. I wanted the boring part done by evening.',
+    ];
+  
+    num(i) { return (this.props.numerals ?? 'roman') === 'roman' ? this.romans[i] : String(i + 1); }
+    reg(i) { return /Research|Writing/.test(this.data[i].kind) ? 'serif' : 'mono'; }
+    pageOf(i) { return this.reg(i) === 'mono' ? 'tooling' : 'writing'; }
+    curReg() { const { view, idx, page } = this.state; return view === 'home' ? 'serif' : view === 'chapter' ? this.reg(idx) : this.pages[page].reg; }
+    cover(s) { return s.replace(/\S/g, '·'); }
+  
+    // dramatic register change: a gold hairline drops at the tab, a paper curtain sweeps out from it, the new page re-typesets underneath
+    transition(nextState) {
+      this.parchTravel = true; this.cubeLead = false; this.plateLead = false; this.plateFrom = null;
+      const toReg = nextState.view === 'home' ? 'serif' : nextState.view === 'chapter' ? this.reg(nextState.idx) : this.pages[nextState.page].reg;
+      const sameReg = toReg === this.curReg();
+      this.finishMorph();
+      this.slideLeaves = !sameReg;
+      const olds = this.captureTexts();
+      // every transition stamps its own start, so the roll's travel is anchored to the moment the page turned. A stamp
+      // left behind by an earlier register change would already be spent, and the tween would land finished on frame one
+      this.parchT0 = performance.now();
+      if (!sameReg && this.parch) this.parch.quench();
+      (this.trInstances || []).forEach((t) => t.destroy()); this.trInstances = [];
+      if (!sameReg) this.retypeBrand(this.curReg(), toReg);
+      this.setState(nextState, () => { window.scrollTo({ top: 0 }); if (olds) requestAnimationFrame(() => this.morphTexts(olds)); });
+      if (!olds) window.scrollTo({ top: 0 });
+    }
+    signal(d) { return /shipped|live|published/i.test(d.status) ? 'var(--sig-ok)' : /beta/i.test(d.status) ? 'var(--sig-warn)' : 'var(--sig-info)'; }
+    // Every named text slot is paired across the two registers; the old text travels to the new slot's position
+    // while its glyphs are swapped one by one into the new text (a 3-glyph caseFlip band at the boundary — the repo's picker).
+    // the photo a framed element is showing, as a URL (image-slot keeps its <img> in shadow DOM)
+    slotSrc(el) { const s = el.matches('image-slot') ? el : el.querySelector('image-slot'); if (!s) return ''; const im = s.shadowRoot && s.shadowRoot.querySelector('img'); return (im && im.currentSrc) || s.getAttribute('src') || ''; }
+    textStyle(el) { const c = getComputedStyle(el); return { fontFamily: c.fontFamily, fontSize: c.fontSize, fontWeight: c.fontWeight, fontStyle: c.fontStyle, letterSpacing: c.letterSpacing, lineHeight: c.lineHeight, textTransform: c.textTransform, textAlign: c.textAlign, textWrap: c.textWrap, color: c.color, hyphens: c.hyphens, WebkitTextStroke: c.webkitTextStroke }; }
+    textRect(el, fallback) { try { const rg = document.createRange(); rg.selectNodeContents(el); const rc = rg.getBoundingClientRect(); return rc.width ? rc : fallback; } catch (e) { return fallback; } }
+    captureTexts() {
+      const root = this.rootRef.current, main = root && root.querySelector('main[data-screen-label]'); if (!main) return null;
+      const vh = window.innerHeight, out = new Map();
+      main.querySelectorAll('[data-morph]').forEach((el) => {
+        const rc = el.getBoundingClientRect(); if (rc.bottom < -vh || rc.top > vh * 1.6 || !rc.width) return;
+        const rec = { rect: this.textRect(el, rc), text: el.textContent, style: this.textStyle(el) };
+        out.set(el.dataset.morph, rec); if (el.dataset.morphAlt) out.set(el.dataset.morphAlt, rec);
+      });
+      out.shapes = new Map();
+      main.querySelectorAll('[data-shape]').forEach((el) => {
+        const rc = el.getBoundingClientRect(); if (rc.bottom < -vh || rc.top > vh * 1.6 || !rc.width) return;
+        const c = getComputedStyle(el); const isRule = el.tagName === 'HR';
+        const thick = parseFloat(c.borderTopWidth) > 2, rec = { rect: rc, color: isRule ? c.backgroundColor : thick ? c.outlineColor : c.borderTopColor, isRule, outline: c.outlineColor, img: this.slotSrc(el), filter: c.filter };
+        out.shapes.set(el.dataset.shape, rec); if (el.dataset.shapeAlt) out.shapes.set(el.dataset.shapeAlt, rec);
+      });
+      const rc = main.getBoundingClientRect(), wrap = document.createElement('div');
+      wrap.setAttribute('style', root.getAttribute('style') + '; position:absolute; inset:0; min-height:0; background:var(--color-bg); background-image:none; transition:none; will-change:opacity;');
+      const clone = main.cloneNode(true);
+      clone.style.cssText += '; position:absolute; top:' + rc.top + 'px; left:' + rc.left + 'px; width:' + rc.width + 'px; margin:0; box-sizing:border-box;';
+      clone.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
+      // the snapshot can't carry a live <image-slot> (its shadow DOM doesn't clone with the photo),
+      // so bake each slot's current photo into a plain div as a background image
+      const liveSlots = [...main.querySelectorAll('image-slot')];
+      clone.querySelectorAll('image-slot').forEach((el, i) => {
+        const src = (() => { const s = liveSlots[i]; const im = s && s.shadowRoot && s.shadowRoot.querySelector('img'); return im && im.currentSrc || (s && s.getAttribute('src')) || ''; })();
+        const d = document.createElement('div');
+        d.style.cssText = 'width:100%; height:100%; background:var(--color-surface);' + (src ? ' background-image:url("' + src + '"); background-size:cover; background-position:center;' : '');
+        el.replaceWith(d);
+      });
+      clone.querySelectorAll('[data-enter]').forEach((el) => el.setAttribute('data-enter', 'in'));
+      clone.querySelectorAll('[data-tr]').forEach((el) => { el.textContent = el.textContent; });
+      clone.style.willChange = 'opacity'; clone.style.contain = 'paint';
+      clone.querySelectorAll('[data-morph]').forEach((el) => { if (out.has(el.dataset.morph)) el.style.opacity = '0'; });
+      if (this.slideLeaves) clone.querySelectorAll('[data-leaf]').forEach((el, i) => { const dir = el.dataset.leaf === 'left' ? -1 : 1; el.style.animation = 'none'; el.style.transition = 'none';
+        el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(' + dir * 110 + 'vw)' }], { duration: 640, delay: (i % 3) * 60, easing: 'cubic-bezier(.5,0,.85,.2)', fill: 'forwards' }); });
+      wrap.appendChild(clone); out.snapshot = wrap;
+      const layer = document.createElement('div');
+      layer.style.cssText = 'position:fixed; inset:0; z-index:3; pointer-events:none; overflow:hidden;';
+      layer.setAttribute('data-morph-layer', ''); layer.appendChild(wrap); document.body.appendChild(layer); out.layer = layer;
+      return out;
+    }
+    morphTexts(olds) {
+      this.finishMorph(olds.layer);
+      const root = this.rootRef.current, main = root && root.querySelector('main[data-screen-label]'); if (!main) return;
+      // the morph is the entry animation for whatever it carries: a module holding a morph target must
+      // not still be under its plot-in ground while its text is flying in, so those modules land drawn
+      main.querySelectorAll('[data-morph],[data-shape]').forEach((el) => {
+        const mod = el.closest('[data-enter]'); if (!mod) return;
+        mod.style.setProperty('--d', '0ms'); mod.setAttribute('data-enter', 'in');
+      });
+      const vh = window.innerHeight, dur = 780, easing = 'cubic-bezier(.65,0,.15,1)';
+      const layer = olds.layer;
+      if (olds.snapshot) { olds.snapshot.animate([{ opacity: 1 }, { opacity: 1, offset: this.slideLeaves ? 0.55 : 0 }, { opacity: 0 }], { duration: this.slideLeaves ? 820 : 560, easing: 'cubic-bezier(.4,0,.6,1)', fill: 'forwards' }); }
+      main.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 520, delay: 160, easing: 'ease', fill: 'backwards' });
+      if (this.slideLeaves) main.querySelectorAll('[data-leaf]').forEach((el, i) => { const dir = el.dataset.leaf === 'left' ? -1 : 1;
+        el.animate([{ transform: 'translateX(' + dir * 110 + 'vw)' }, { transform: 'translateX(0)' }], { duration: 760, delay: 220 + (i % 3) * 70, easing: 'cubic-bezier(.15,.8,.2,1)', fill: 'backwards' }); });
+      const jobs = [], hidden = [], seen = new Set();
+      main.querySelectorAll('[data-morph]').forEach((el) => {
+        const name = el.dataset.morph, rc0 = el.getBoundingClientRect(); if (!rc0.width) return;
+        const rc = this.textRect(el, rc0);
+        const old = olds.get(name) || (el.dataset.morphAlt && olds.get(el.dataset.morphAlt));
+        const delay = Math.min(160, Math.max(0, rc.top) / vh * 160);
+        if (!old) { el.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 520, delay: 300 + delay, easing, fill: 'backwards' }); return; }
+        seen.add(name); if (el.dataset.morphAlt) seen.add(el.dataset.morphAlt);
+        if (rc.top > vh * 1.6) return;
+        const ns = this.textStyle(el);
+        const mk = (st, rect) => { const g = document.createElement('div'); Object.assign(g.style, st, { position: 'absolute', margin: 0, whiteSpace: 'pre-wrap', boxSizing: 'border-box', hyphens: 'manual', textAlign: st.textAlign === 'center' ? 'center' : 'left', textWrap: st.textWrap || 'wrap', left: 0, top: 0, width: (rect.width + 2) + 'px', transformOrigin: '0 0', willChange: 'transform, opacity', contain: 'paint' }); g.textContent = old.text; layer.appendChild(g); return g; };
+        const ga = mk(old.style, old.rect), gb = mk(ns, rc);
+        const toText = el.textContent, ratio = Math.max(old.text.length, toText.length) / Math.max(1, Math.min(old.text.length, toText.length));
+        const oneLine = old.rect.height < parseFloat(old.style.lineHeight || '0') * 1.6 && rc.height < parseFloat(ns.lineHeight || '0') * 1.6;
+        const swap = oneLine && old.text.length <= 60 && toText.length <= 60 && ratio <= 1.4;
+        gb.textContent = toText;
+        if (swap) { [ga, gb].forEach((g) => { g.style.whiteSpace = 'nowrap'; g.style.width = 'auto'; }); }
+        const sA = rc.width / Math.max(1, old.rect.width), sB = old.rect.width / Math.max(1, rc.width);
+        const tr = (x, y, s) => 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+        ga.animate([{ transform: tr(old.rect.left, old.rect.top, 1) }, { transform: tr(rc.left, rc.top, sA) }], { duration: dur, delay, easing, fill: 'both' });
+        gb.animate([{ transform: tr(old.rect.left, old.rect.top, sB) }, { transform: tr(rc.left, rc.top, 1) }], { duration: dur, delay, easing, fill: 'both' });
+        ga.animate([{ opacity: 1 }, { opacity: 1, offset: 0.3 }, { opacity: 0, offset: 0.7 }, { opacity: 0 }], { duration: dur, delay, fill: 'both' });
+        gb.animate([{ opacity: 0 }, { opacity: 0, offset: 0.3 }, { opacity: 1, offset: 0.7 }, { opacity: 1 }], { duration: dur, delay, fill: 'both' });
+        el.style.visibility = 'hidden'; hidden.push(el);
+        jobs.push({ g: [ga, gb], el, from: Array.from(old.text), to: Array.from(toText), delay, swap });
+      });
+      const shapeHidden = [];
+      // lines and boxes pair by vertical order across registers: each Development card expands from a Research rule
+      // (the last captured rule serves any further cards); each Research rule collapses from a Development card
+      const byTop = (a, b) => a[1].rect.top - b[1].rect.top;
+      const oldRules = [...(olds.shapes || [])].filter(([n, o]) => o.isRule && n !== 'rule-0').sort(byTop);
+      const oldCards = [...(olds.shapes || [])].filter(([n]) => n.startsWith('card-')).sort(byTop);
+      const newEls = [...main.querySelectorAll('[data-shape]')].map((el) => [el, el.getBoundingClientRect()]);
+      const newCards = newEls.filter(([el]) => el.dataset.shape.startsWith('card-')).sort((a, b) => a[1].top - b[1].top).map(([el]) => el);
+      const newRules = newEls.filter(([el]) => el.tagName === 'HR' && el.dataset.shape !== 'rule-0').sort((a, b) => a[1].top - b[1].top).map(([el]) => el);
+      const resolve = (el) => { const n = el.dataset.shape, direct = olds.shapes && (olds.shapes.get(n) || (el.dataset.shapeAlt && olds.shapes.get(el.dataset.shapeAlt))); if (direct) return direct;
+        if (n.startsWith('card-')) { const k = newCards.indexOf(el); return oldRules.length ? oldRules[Math.min(k, oldRules.length - 1)][1] : null; }
+        if (el.tagName === 'HR' && n !== 'rule-0') { const k = newRules.indexOf(el); return oldCards.length ? oldCards[Math.min(k, oldCards.length - 1)][1] : null; }
+        return null; };
+      main.querySelectorAll('[data-shape]').forEach((el) => {
+        const old = resolve(el); const rc = el.getBoundingClientRect(); if (!old || !rc.width || rc.top > vh * 1.6) return;
+        const isRule = el.tagName === 'HR'; const c = getComputedStyle(el); const nc = isRule ? c.backgroundColor : parseFloat(c.borderTopWidth) > 2 ? c.outlineColor : c.borderTopColor;
+        const g = document.createElement('div'); g.style.cssText = 'position:absolute; box-sizing:border-box; border-style:solid; border-width:0; overflow:hidden; background-size:cover; background-position:center;'; layer.appendChild(g);
+        const delay = Math.min(160, Math.max(0, rc.top) / vh * 160);
+        // the photograph travels inside the frame: paint the captured plate on the flying box and
+        // keep the destination slot blank until the box lands on it
+        const photo = old.img || this.slotSrc(el);
+        if (photo) {
+          g.style.backgroundImage = 'url("' + photo + '")';
+          g.animate([{ filter: old.filter && old.filter !== 'none' ? old.filter : 'none' }, { filter: c.filter && c.filter !== 'none' ? c.filter : 'none' }], { duration: dur, delay, easing, fill: 'both' });
+          const slot = el.matches('image-slot') ? el : el.querySelector('image-slot');
+          if (slot) { const prev = slot.style.opacity; slot.style.opacity = '0'; setTimeout(() => { slot.style.transition = 'opacity 200ms ease'; slot.style.opacity = prev || '1'; setTimeout(() => { slot.style.transition = ''; }, 240); }, dur + delay); }
+        }
+        const w0 = old.isRule ? '1px 0 0 0' : '1px', w1 = isRule ? '1px 0 0 0' : '1px';
+        const hh0 = old.isRule ? 1 : old.rect.height, hh1 = isRule ? 1 : rc.height;
+        g.animate([{ left: old.rect.left + 'px', top: old.rect.top + 'px', width: old.rect.width + 'px', height: hh0 + 'px', borderWidth: w0, borderColor: old.color },
+                   { left: rc.left + 'px', top: rc.top + 'px', width: rc.width + 'px', height: hh1 + 'px', borderWidth: w1, borderColor: nc }], { duration: dur, delay, easing, fill: 'both' });
+        // restore the exact prior value: clearing border-color with '' would strip it out of the border shorthand
+        if (isRule) { shapeHidden.push([el, 'opacity', el.style.opacity]); el.style.opacity = '0'; } else { shapeHidden.push([el, 'borderColor', el.style.borderColor]); el.style.borderColor = 'transparent'; }
+        setTimeout(() => { shapeHidden.forEach(([e, p, v]) => { e.style[p] = v; }); }, dur + delay + 60);
+      });
+      olds.forEach((old, name) => { if (seen.has(name)) return; const g = document.createElement('div'); Object.assign(g.style, old.style, { position: 'absolute', margin: 0, whiteSpace: 'pre-wrap', overflow: 'hidden', left: old.rect.left + 'px', top: old.rect.top + 'px', width: old.rect.width + 'px', height: old.rect.height + 'px' }); g.textContent = old.text; layer.appendChild(g); g.animate([{ opacity: 1 }, { opacity: 0, transform: 'translateY(-6px)' }], { duration: 360, easing, fill: 'forwards' }); });
+      const t0 = performance.now(); let lastRoll = 0, band = {};
+      const ease = (x) => this.bez(x);
+      const tick = (now) => {
+        const t = now - t0; let live = false;
+        const reroll = now - lastRoll > 90; if (reroll) { lastRoll = now; band = {}; }
+        for (const j of jobs) {
+          const k = Math.min(1, Math.max(0, (t - j.delay) / dur));
+          if (k < 1) live = true;
+          if (k >= 1) { if (!j.done) { j.done = true; const txt = j.to.join(''); j.g.forEach((g) => { g.textContent = txt; }); j.el.style.visibility = ''; j.el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180, easing: 'ease' }); j.g.forEach((g) => g.animate([{ opacity: g === j.g[1] ? 1 : 0 }, { opacity: 0 }], { duration: 180, easing: 'ease', fill: 'forwards' })); } continue; }
+          if (!j.swap) continue;
+          const p = ease(k), L = Math.round(j.from.length + (j.to.length - j.from.length) * p), cut = Math.floor(p * L);
+          let s = '';
+          for (let i = 0; i < L; i++) {
+            if (i < cut) s += j.to[i] ?? '';
+            else s += j.from[i] ?? j.to[i] ?? ' ';
+          }
+          j.g.forEach((g) => { g.textContent = s; });
+        }
+        if (live) this.morphRaf = requestAnimationFrame(tick); else setTimeout(() => this.finishMorph(), 200);
+        // ~30fps is plenty for the glyph hand-off and halves the text-node writes
+      };
+      this.morph = { layer, hidden };
+      this.morphRaf = requestAnimationFrame(tick);
+    }
+    finishMorph(keep) { cancelAnimationFrame(this.morphRaf); document.querySelectorAll('body > div[data-morph-layer]').forEach((l) => { if (l !== keep && (!this.morph || l !== this.morph.layer)) l.remove(); }); if (!this.morph) return; this.morph.hidden.forEach((el) => { el.style.visibility = ''; }); this.morph.layer.remove(); this.morph = null; this.mountTextEffects(); this.remeasureText(); }
+    // the gold wake on the serif pages breathes: glow reach and intensity ride one sine (3.4s), between a resting and a peak value
+    // the mono tab glitches in rhythm: on a 3.4s beat, one or two glyphs flip to a symbol or case for a few frames,
+    // sometimes with a quick second stutter, then settle. The counterpart of the serif tab's breathing leaf.
+    startGlitch() {
+      if (this.glitchTimer) return;
+      const word = 'Development';
+      const burst = (n) => {
+        const idx = new Set(); while (idx.size < n) idx.add((Math.random() * word.length) | 0);
+        this.setState({ devGlitch: Array.from(word).map((ch, i) => idx.has(i) ? this.pickGlyph(ch) : ch) });
+      };
+      const settle = () => this.setState({ devGlitch: null });
+      // a beat is a short cascade: 3 → 2 → 1 glyphs scrambled over ~330ms, then a late single stutter
+      const beat = () => {
+        burst(3); setTimeout(() => burst(2), 110); setTimeout(() => burst(1), 220); setTimeout(settle, 330);
+        if (Math.random() < 0.6) { setTimeout(() => burst(2), 520); setTimeout(settle, 620); }
+      };
+      this.glitchTimer = setInterval(beat, 3400); setTimeout(beat, 900);
+    }
+    startBreath() {
+      if (this.breathRaf) return;
+      const lo = [125, 84, 17], hi = [194, 141, 65]; // accent-700 → accent-500
+      const tick = (now) => {
+        this.breathRaf = requestAnimationFrame(tick);
+        const s = 0.5 - 0.5 * Math.cos((now / 3400) * Math.PI * 2); // 0..1 sine
+        const radius = Math.round(150 + 150 * s);
+        const c = lo.map((v, i) => Math.round(v + (hi[i] - v) * s));
+        const wakeColor = 'rgb(' + c.join(',') + ')';
+        let any = false;
+        (this.trInstances || []).forEach((t) => { if (!t.__breathes || t._destroyed) return; any = true; if (t.__lastR !== radius) { t.update({ radius, wakeColor }); t.__lastR = radius; } });
+        this.feedParchment();
+        if (!any) { cancelAnimationFrame(this.breathRaf); this.breathRaf = null; }
+      };
+      this.breathRaf = requestAnimationFrame(tick);
+    }
+    remeasureText() { (this.trInstances || []).forEach((t) => { try { t.remeasure(); } catch (e) {} }); }
+    bez(t) { const c1 = .6, c2 = .2; let lo = 0, hi = 1; for (let i = 0; i < 24; i++) { const m = (lo + hi) / 2, x = 3*(1-m)*(1-m)*m*c1 + 3*(1-m)*m*m*c2 + m*m*m; if (x < t) lo = m; else hi = m; } const m = (lo + hi) / 2; return 3*(1-m)*m*m + m*m*m; }
+    startTyping(pi, len) { this.stopTyping(); this.setState({ hovered: pi, leafHover: true, typed: 0 }); this.typeTimer = setInterval(() => { this.setState((st) => { if (st.typed >= len) { clearInterval(this.typeTimer); return null; } return { typed: st.typed + 6 }; }); }, 22); }
+    stopTyping() { clearInterval(this.typeTimer); this.setState({ leafHover: false, typed: 0 }); }
+    goHome() {
+      // leaving the Development platform: remember its box so the cube can take over from it (see syncHome)
+      const pf = this.state.view === 'page' ? this.platformRef.current : null;
+      const from = pf && this.parch && this.parch.isPlatform() ? (({ left, top, width, height }) => ({ x: left, y: top, w: width, h: height }))(pf.getBoundingClientRect()) : null;
+      this.transition({ view: 'home', page: this.state.page });
+      if (from) { this.plateLead = true; this.plateFrom = from; }
+    }
+    syncHome() {
+      this.syncFog();
+      const layer = this.homeLayerRef.current; if (!layer) return;
+      const box = (el) => { const r = el.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; };
+      const cell = this.state.view === 'home' ? this.homeCubeRef.current : null;
+      if (cell) {
+        clearTimeout(this.homeKillTimer); this.homeKillTimer = null;
+        if (!this.home) {
+          if (this.homeLoading) return;
+          this.homeLoading = true;
+          import('./home.js').then((m) => { this.homeLoading = false; if (!this.homeLayerRef.current || this.home) return; this.home = m.mount(this.homeLayerRef.current); this.syncHome(); }).catch(() => { this.homeLoading = false; });
+          return;
+        }
+        this.cubeLead = false; clearTimeout(this.cubeFadeTimer); this.cubeFadeTimer = null;
+        const root = this.rootRef.current;
+        // arriving from the Development platform: the cube stands in for the platform as its plate, rises back into
+        // a cube and travels to its cell while the word re-forms; the ink darkens as the ground lightens
+        if (this.plateLead && this.plateFrom) {
+          this.plateLead = false; const from = this.plateFrom; this.plateFrom = null;
+          document.body.appendChild(layer); layer.style.zIndex = '4'; layer.style.clipPath = 'none';
+          if (this.parch) this.home.setPlatformFrame(this.parch.platformFrame());
+          this.home.setInk('#f3f2f2', true); this.home.setOpacity(1);
+          this.home.expand(from, box(cell), this.CUBE_COLLAPSE_MS);
+          // the cube canvas may have just been mounted: let it draw its first frame, then cross-fade it in over the
+          // platform (which fades out from here, not from syncParchment — otherwise the platform dims before the plate exists)
+          layer.style.transition = 'none'; layer.style.opacity = '0';
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            layer.style.transition = 'opacity 200ms cubic-bezier(.65,0,.15,1)'; layer.style.opacity = '1';
+            const pl = this.parchLayerRef.current; if (pl) { pl.style.transition = 'opacity 200ms cubic-bezier(.65,0,.15,1)'; pl.style.opacity = '0'; }
+          }));
+          clearTimeout(this.plateTimer);
+          setTimeout(() => { if (this.home) this.home.setInk('#1a1918'); }, 150);
+          this.plateTimer = setTimeout(() => { const r = this.rootRef.current; if (r && layer.parentNode !== r) r.insertBefore(layer, r.firstChild); layer.style.zIndex = '2'; }, this.CUBE_COLLAPSE_MS);
+          return;
+        }
+        if (this.home.busy()) { this.home.setAnchor(box(cell)); return; }
+        if (root && layer.parentNode !== root) { root.insertBefore(layer, root.firstChild); }
+        layer.style.zIndex = '2'; layer.style.clipPath = 'none'; layer.style.opacity = '1';
+        this.home.reset(); this.home.setAnchor(box(cell)); this.home.setOpacity(1); this.home.setInk('#1a1918');
+        return;
+      }
+      if (!this.home) return;
+      const pf = this.platformRef.current;
+      // clicked the cube: the word dissolves, the cube travels into the platform's pose and presses flat into a plate
+      // with the platform's exact frame; the parchment platform then takes over under a cross-fade (see syncParchment)
+      if (this.cubeLead && pf) {
+        // above the page-morph snapshot for the trip (as the roll does)
+        if (layer.parentNode !== document.body) { document.body.appendChild(layer); layer.style.zIndex = '4'; }
+        if (this.parch) this.home.setPlatformFrame(this.parch.platformFrame());
+        // ink eases to paper alongside the ground darkening (snapping it would blank the cube on the still-light page)
+        this.home.setInk('#f3f2f2'); this.home.setOpacity(1);
+        this.home.collapse(box(pf), this.CUBE_COLLAPSE_MS);
+        if (!this.cubeFadeTimer) this.cubeFadeTimer = setTimeout(() => {
+          // landed: clip to the model opening and hand over to the platform
+          this.cubeFadeTimer = null;
+          const r = pf.getBoundingClientRect();
+          layer.style.clipPath = 'inset(' + r.top + 'px ' + (window.innerWidth - r.right) + 'px ' + (window.innerHeight - r.bottom) + 'px ' + r.left + 'px)';
+          layer.style.zIndex = '2'; if (this.home) this.home.setOpacity(0);
+        }, this.CUBE_COLLAPSE_MS);
+      } else {
+        this.home.setOpacity(0);
+      }
+      if (!this.homeKillTimer) this.homeKillTimer = setTimeout(() => { this.homeKillTimer = null; if (this.state.view !== 'home' && this.home) { this.home.destroy(); this.home = null; } }, 2200);
+    }
+    goPage(page) { this.transition({ view: 'page', page, idx: this.featuredFor[page][0], hovered: this.featuredFor[page][0] }); }
+    open(i) { this.transition({ view: 'chapter', idx: i, page: this.pageOf(i) }); }
+    scrollTo(ref) { const el = ref.current; if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: 'smooth' }); }
+    go(ref) { if (this.state.view !== 'page') { this.setState({ view: 'page', page: this.pageOf(this.state.idx) }, () => setTimeout(() => this.scrollTo(ref), 60)); } else this.scrollTo(ref); }
+  
+    BRAND = 'Yiliang Shao';
+    SYMBOLS = '!@#$%^&*+=<>?/|~';
+    pickGlyph(ch) {
+      if (ch === ' ') return ' ';
+      if (Math.random() < 0.08) return this.SYMBOLS.charAt((Math.random() * this.SYMBOLS.length) | 0);
+      const lo = ch.toLowerCase(), up = ch.toUpperCase();
+      return lo !== up ? (ch === up ? lo : up) : this.SYMBOLS.charAt((Math.random() * this.SYMBOLS.length) | 0);
+    }
+    retypeBrand(fromReg, toReg) {
+      cancelAnimationFrame(this.brandRaf);
+      const chars = Array.from(this.BRAND), dur = 780, t0 = performance.now();
+      let lastRoll = 0, rolled = chars.map((c) => this.pickGlyph(c));
+      const tick = (now) => {
+        const k = Math.min(1, (now - t0) / dur), p = this.bez(k), done = k >= 1;
+        const cut = Math.floor(p * chars.length);
+        const anim = chars.map((c, i) => {
+          if (i < cut) return { ch: c, reg: toReg, swap: false };
+          if (i < cut + 3) return { ch: c, reg: toReg, swap: true };
+          return { ch: c, reg: fromReg, swap: false };
+        });
+        this.setState({ brandAnim: done ? null : anim });
+        if (!done) this.brandRaf = requestAnimationFrame(tick);
+      };
+      this.brandRaf = requestAnimationFrame(tick);
+    }
+    measureTabs() {
+      const head = this.headRef.current; const reg = this.curReg();
+      const tab = (reg === 'mono' ? this.tabToolingRef : this.tabWritingRef).current;
+      if (!head || !tab) return;
+      const left = tab.getBoundingClientRect().left - head.getBoundingClientRect().left, width = tab.offsetWidth;
+      if (left !== this.state.tab.left || width !== this.state.tab.width) this.setState({ tab: { left, width } });
+    }
+    componentDidMount() {
+      this.startGlitch();
+      this.onTilt = (e) => {
+        const hero = this.heroRef.current || this.platformRef.current || this.homeRollRef.current, img = this.parchLayerRef.current, txt = this.heroTextRef.current; if (!hero || !img) return;
+        const rc = hero.getBoundingClientRect(); const nx = (e.clientX - rc.left) / rc.width - 0.5, ny = (e.clientY - rc.top) / rc.height - 0.5;
+        const inside = nx > -0.6 && nx < 0.6 && ny > -0.6 && ny < 0.6; const kx = inside ? nx : 0, ky = inside ? ny : 0;
+  
+        if (this.parch) { this.parch.setTilt(kx, ky, inside); this.parch.setCursor(e.clientX, e.clientY); }
+        const rootEl = this.rootRef.current; if (rootEl) { rootEl.style.setProperty('--mx', String(kx)); rootEl.style.setProperty('--my', String(ky)); }
+        if (this.fog) this.fog.setPointer(e.clientX, e.clientY, true);
+        if (this.dragLast && this.parch) { this.parch.drag(e.clientX - this.dragLast[0], e.clientY - this.dragLast[1]); this.dragLast = [e.clientX, e.clientY]; }
+      };
+      window.addEventListener('pointermove', this.onTilt, { passive: true });
+      // dragging the platform orbits it (turn + elevation); it eases back to the axonometric home when let go
+      this.onDown = (e) => { const pf = this.platformRef.current; if (!pf || !this.parch || !this.parch.isPlatform() || e.button !== 0) return; const r = pf.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return; this.dragLast = [e.clientX, e.clientY]; this.parch.dragStart(); pf.style.cursor = 'grabbing'; };
+      this.onUp = () => { if (!this.dragLast) return; this.dragLast = null; if (this.parch) this.parch.dragEnd(); const pf = this.platformRef.current; if (pf) pf.style.cursor = 'grab'; };
+      window.addEventListener('pointerdown', this.onDown); window.addEventListener('pointerup', this.onUp); window.addEventListener('pointercancel', this.onUp);
+      this.onScroll = () => { this.syncParchment(); this.syncHome(); this.setState({ scrollY: window.scrollY }); clearTimeout(this.remeasureTimer); this.remeasureTimer = setTimeout(() => this.remeasureText(), 120); };
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => setTimeout(() => { this.remeasureText(); this.syncParchment(); }, 50));
+      this.onResize = () => { this.setState({ narrow: window.innerWidth < 1000 }); this.measureTabs(); this.syncParchment(); this.syncHome(); };
+      this.onKey = (e) => {
+        const t = e.target; if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+        const n = this.data.length, { view, idx } = this.state;
+        if (e.key === 'Escape') this.goPage(this.state.view === 'chapter' ? this.pageOf(idx) : this.state.page);
+        else if (e.key === 't' || e.key === 'T') this.goPage('tooling');
+        else if (e.key === 'e' || e.key === 'E') this.goPage('writing');
+        else if (e.key === 'ArrowRight') this.open(view === 'chapter' ? (idx + 1) % n : this.featuredFor[this.state.page][0]);
+        else if (e.key === 'ArrowLeft') this.open(view === 'chapter' ? (idx + n - 1) % n : this.featuredFor[this.state.page][1]);
+        else if (/^[1-9]$/.test(e.key) && +e.key <= n) this.open(+e.key - 1);
+        else return;
+        this.setState({ usedKeys: true });
+      };
+      this.onResize(); window.addEventListener('resize', this.onResize);
+      window.addEventListener('scroll', this.onScroll, { passive: true });
+      window.addEventListener('keydown', this.onKey);
+      // One scroll brings a batch of modules in at once. The stagger is rebased to the first module of
+      // each batch, so the sheet inks top to bottom wherever the reader joins it instead of making a
+      // module low on the sheet sit out the whole run before it draws: --d still comes from the
+      // placement table, only its origin moves. A module the scroll jumped clean over is revealed too,
+      // or it would sit blank above the reader for good.
+      this.observer = new IntersectionObserver((entries) => {
+        const hit = entries.filter((en) => en.isIntersecting || en.boundingClientRect.bottom < 0);
+        if (!hit.length) return;
+        const ds = hit.map((en) => parseFloat(en.target.style.getPropertyValue('--d')) || 0);
+        const base = Math.min(...ds);
+        hit.forEach((en, i) => {
+          if (en.target.style.getPropertyValue('--d')) en.target.style.setProperty('--d', Math.min(this.PLOT_CAP, Math.max(0, ds[i] - base)) + 'ms');
+          en.target.setAttribute('data-enter', 'in');
+          this.observer.unobserve(en.target);
+        });
+      }, { rootMargin: '100% 0px -8% 0px' });
+      this.observeReveals(); this.mountTextEffects(); this.syncParchment(); this.syncHome();
+      this.hintTimer = setTimeout(() => this.setState({ hintGone: true }), 9000);
+      setTimeout(() => this.measureTabs(), 400);
+    }
+    componentDidUpdate() { this.observeReveals(); this.mountTextEffects(); this.measureTabs(); this.syncParchment(); this.syncHome(); }
+    // the glowing glyphs of the hero title are the parchment's heat source: read each lit glyph span's inline glow
+    // (the text effect writes a text-shadow whose alpha tracks brightness), project its centre into the roll's box
+    feedParchment() {
+      const roll = this.parchLayerRef.current, title = this.heroTextRef.current && this.heroTextRef.current.querySelector('[data-tr="title"]');
+      if (!this.parch || !roll || !title) return;
+      const rr = roll.getBoundingClientRect(); if (!rr.width) return;
+      const out = [];
+      title.querySelectorAll('span[style*="text-shadow"]').forEach((s) => {
+        // the effect writes `0 0 {14*b}px rgba(...)`; the browser serialises it as `rgba(...) 0px 0px {14*b}px` — read the blur
+        const ts = s.style.textShadow; const m = /(\d+(?:\.\d+)?)px\s*$/.exec(ts) || /0px\s+0px\s+(\d+(?:\.\d+)?)px/.exec(ts); const w = Math.min(1, m ? parseFloat(m[1]) / 14 : 0); if (w < 0.2) return;
+        const b = s.getBoundingClientRect(); if (!b.width) return;
+        // heat sits on the glyph's profile: sample points around the x-height box of the glyph, not its centre
+        const x0 = b.left + b.width * 0.15, x1 = b.right - b.width * 0.15, y0 = b.top + b.height * 0.3, y1 = b.top + b.height * 0.78;
+        const pts = [[x0, y0], [x1, y0], [x0, y1], [x1, y1], [(x0 + x1) / 2, y0], [(x0 + x1) / 2, y1]];
+        for (const [x, y] of pts) out.push({ x: (x - rr.left) / rr.width, y: (y - rr.top) / rr.height, w });
+      });
+      this.parch.setSources(out);
+    }
+    syncParchment() {
+      const layer = this.parchLayerRef.current, root = this.rootRef.current; if (!layer || !root) return;
+      if (!this.parch && !this.parchLoading && !this.parchFailed) { this.parchLoading = true; import('./parchment.js').then((m) => { this.parchLoading = false; if (this.parchLayerRef.current && !this.parch) { try { this.parch = m.mount(this.parchLayerRef.current); } catch (e) { this.parchFailed = true; return; } this.syncParchment(); } }).catch(() => { this.parchLoading = false; this.parchFailed = true; }); return; }
+      if (!this.parch) return;
+      const ph = this.state.view === 'home' ? this.homeRollRef.current : (this.scriptRef.current || this.platformRef.current);
+      // chapter/sheet views have no anchor for the roll: fade the layer away rather than leave it parked mid-page
+      layer.style.transition = 'opacity 420ms cubic-bezier(.65,0,.15,1)';
+      if (!ph) { layer.style.opacity = '0'; return; }
+      if (!this.parchHold) layer.style.opacity = '0.8';
+      const pr = ph.getBoundingClientRect(), k = ph === this.platformRef.current ? 1 : 0;
+      const to = { x: pr.left, y: pr.top, w: pr.width, h: pr.height, k };
+      // the model lives in one grid opening on the Development page: clip the fixed layer to that cell
+      layer.style.clipPath = k === 1 && !this.parchTween
+        ? 'inset(' + pr.top + 'px ' + (window.innerWidth - pr.right) + 'px ' + (window.innerHeight - pr.bottom) + 'px ' + pr.left + 'px)'
+        : 'none';
+      if (this.parchTween) { if (this.parchTween.k === k) this.parchTween.to = to; return; }
+      const cur = this.parchPose;
+      const place = (p) => { this.parch.setAnchor(p); this.parch.setUnroll(p.k); this.parchPose = p; };
+      const travel = this.parchTravel; this.parchTravel = false;
+      if (!cur || (cur.k === k && !travel)) { place(to); return; }
+      // the cube led this transition (either way): the roll/platform does not travel — it fades out where it stood and
+      // the other one fades up in its place once the cube has finished collapsing or expanding. Later sync calls only
+      // retarget the pending placement; they must not re-arm the timer (that is what left a gap before the platform showed)
+      if (this.parchFadeTimer) { this.parchPending = to; return; }
+      if ((this.cubeLead && k === 1) || (this.plateLead && k === 0)) {
+        this.parchHold = true; this.parchPending = to;
+        // cube → platform: the roll fades out now. platform → cube: syncHome fades the platform out once the plate is drawn
+        if (this.cubeLead) { layer.style.transition = 'opacity 200ms cubic-bezier(.65,0,.15,1)'; layer.style.opacity = '0'; }
+        this.parchFadeTimer = setTimeout(() => {
+          place(this.parchPending);
+          this.parchFadeTimer = setTimeout(() => { this.parchFadeTimer = null; this.parchHold = false; layer.style.transition = 'opacity 520ms cubic-bezier(.65,0,.15,1)'; layer.style.opacity = '0.8'; this.syncParchment(); }, 60);
+        }, this.CUBE_COLLAPSE_MS - 60);
+        return;
+      }
+      // register change. The canvas is fixed and full-viewport, so nothing resizes: the roll itself travels in 3D from
+      // where it stood to its new anchor. Lifted to the body (above the page-morph snapshot, below the header) for the trip.
+      const from = { ...cur };
+      document.body.appendChild(layer); layer.style.zIndex = '4'; layer.style.opacity = '1';
+      // opening: the roll waits for the page cross-fade (0–0.2), then travels on its own (0.2–0.62), then unrolls (0.6–1)
+      // closing: rolls up first (0–0.4), then travels home (0.38–0.8), and the essay title settles around it
+      this.parch.quench();
+      // the stamp is spent once a travel claims it; the next travel gets its own from the next transition
+      const t0 = this.parchT0 || performance.now(); this.parchT0 = null;
+      const dur = 900, tw = this.parchTween = { k, to };
+      const tick = (now) => {
+        const dest = tw.to, t = Math.min(1, (now - t0) / dur), p = this.bez(t);
+        const L = (a, b) => a + (b - a) * p;
+        place({ x: L(from.x, dest.x), y: L(from.y, dest.y), w: L(from.w, dest.w), h: L(from.h, dest.h), k: L(from.k, dest.k) });
+        if (t < 1) { this.parchRaf = requestAnimationFrame(tick); return; }
+        this.parchTween = null; root.insertBefore(layer, root.firstChild); layer.style.zIndex = '1'; layer.style.opacity = '0.8'; this.syncParchment();
+      };
+      this.parchRaf = requestAnimationFrame(tick);
+    }
+    componentWillUnmount() { if (this.fog) { this.fog.destroy(); this.fog = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); this.observer?.disconnect(); cancelAnimationFrame(this.cellRaf); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
+    observeReveals() { document.querySelectorAll('[data-enter=""]').forEach((el) => this.observer.observe(el)); }
+    // the cursor's cell on the sheet grid, sampled once a frame and only written when the cell actually
+    // changes, so crossing a 48px column re-renders once rather than once per pixel of travel
+    onPlateMove(name, e) {
+      const grid = this.sheetGridRef.current; if (!grid) return;
+      const r = grid.getBoundingClientRect();
+      const x = Math.min(22, Math.max(1, Math.floor((e.clientX - r.left) / (r.width / 22)) + 1));
+      const y = Math.max(1, Math.floor((e.clientY - r.top) / 44) + 1);
+      this.lastPlate = name;
+      this.pendingCell = { plate: name, x, y };
+      if (this.cellRaf) return;
+      this.cellRaf = requestAnimationFrame(() => {
+        this.cellRaf = 0;
+        const c = this.pendingCell, s = this.state.cell; if (!c) return;
+        if (s && s.plate === c.plate && s.x === c.x && s.y === c.y) return;
+        this.setState({ cell: c });
+      });
+    }
+    onPlateLeave() {
+      cancelAnimationFrame(this.cellRaf); this.cellRaf = 0; this.pendingCell = null;
+      if (this.state.cell) this.setState({ cell: null });
+    }
+    mountTextEffects() {
+      if (!window.TextRippling || (this.props.textEffects ?? true) === false || this.morph) return;
+      this.trInstances = this.trInstances || [];
+      // Scoped to the app root, not the document. captureTexts leaves its snapshot of the outgoing
+      // screen in <body>, flattened on purpose so it carries no live effect; a document-wide query
+      // mounted fresh ones onto that snapshot in the window before this.morph is set, which put a
+      // second copy of every glyph on the animation loop for the length of the transition.
+      const root = this.rootRef.current; if (!root) return;
+      root.querySelectorAll('[data-tr]').forEach((el) => {
+        if (el.__tr) return;
+        const css = getComputedStyle(el);
+        const accent = css.getPropertyValue('--color-accent').trim() || '#b68235';
+        const ink = css.getPropertyValue('--color-text').trim() || '#201f1d';
+        const mono = el.dataset.reg === 'mono';
+        // mono: the wavefront flips glyphs (case + symbols); serif: brightness-only wake, letters never scramble
+        const fx = mono ? { effect: 'ripple', swapMode: 'caseFlip', rippleEdge: 18 } : { effect: 'glow', radius: 200 };
+        const opts = { ...fx, wakeColor: mono ? '#ffffff' : accent };
+        el.__tr = new window.TextRippling(el, opts); el.__tr.__el = el; el.__tr.__breathes = !mono;
+        this.startBreath();
+        setTimeout(() => { if (!el.__tr._destroyed) el.__tr.remeasure(); }, 700);
+        this.trInstances.push(el.__tr);
+      });
+      this.trInstances = this.trInstances.filter((t) => { const alive = document.contains(t.__el); if (!alive) t.destroy(); return alive; });
+    }
+  
+    renderVals() {
+      const { view, idx, hovered, page: pageKey } = this.state;
+      const marginalia = this.props.marginalia ?? true;
+      const R = this.curReg(), mono = R === 'mono';
+      const brandReg = R;
+      const page = { ...this.pages[pageKey], introCover: this.cover(this.pages[pageKey].intro) };
+      const projects = this.data.map((d, i) => {
+        const m = this.reg(i) === 'mono';
+        return { ...d, numeral: this.num(i), why: this.why[i], kindLower: d.kind.toLowerCase(), figNo: String(i + 1).padStart(2, '0'), slotId: 'toc-' + i, plateSlotId: 'plate-' + i, heroSlotId: 'cover-' + i, detailSlotA: 'detail-a-' + i, detailSlotB: 'detail-b-' + i,
+          dropCap: d.body1[0], body1: d.body1.slice(1), body1Full: d.body1, subtitleCover: this.cover(d.subtitle),
+          previewOpacity: hovered === i ? '1' : '0',
+          ghost: m ? 'SHT-' + String(i + 1).padStart(2, '0') : this.num(i),
+          kickerWord: m ? 'Sheet' : 'Chapter', figWord: m ? 'Fig.' : 'Plate', backWord: m ? 'Sheet register' : 'Contents',
+          signal: this.signal(d), shapeIdx: 0, open: () => this.open(i), hover: () => this.setState({ hovered: i }) };
+      });
+      // one screen, two gutters. Each gutter: a large anchor (a real chapter), a mid leaf and a small one, set so the
+      // caption always has room on the inner side and nothing crosses the title column. Sizes are fractions of the gutter.
+      // each gutter is a 2×3 grid. The anchor (a real chapter) spans a row with its caption beside it; the smaller leaves
+      // take single cells with captions beneath, staggered across the two columns so the eye zigzags down the margin
+      const leafPos = [
+        { side: 'left',  col: '1 / 3', row: '1', selfY: 'start',  selfX: 'start', imgH: 'min(22vh, 330px)', ratio: '4/3', dir: 'row',         alignItems: 'flex-end',   align: 'left',  titleSize: '26px', px: '-18px', py: '-10px', dur: '7.5s', delay: '0s',    bleedX: '-72px', cover: 'https://picsum.photos/seed/halvorsen-cuts/800/600' },
+        { side: 'right', col: '1 / 3', row: '2', selfY: 'center', selfX: 'end',   imgH: 'min(24vh, 360px)', ratio: '3/4', dir: 'row-reverse', alignItems: 'flex-end',   align: 'right', titleSize: '26px', px: '-26px', py: '-14px', dur: '9s',   delay: '-3s',   bleedX: '72px', cover: 'https://picsum.photos/seed/halvorsen-machines/600/800' },
+        { side: 'left',  col: '1',     row: '2', selfY: 'center', selfX: 'start', imgH: 'min(14vh, 220px)', ratio: '1/1', dir: 'column',      alignItems: 'flex-start', align: 'left',  titleSize: '17px', px: '-14px', py: '-8px',  dur: '8s',   delay: '-5s',   bleedX: '-40px', cover: 'https://picsum.photos/seed/halvorsen-3/700/700' },
+        { side: 'right', col: '1 / 3', row: '1', selfY: 'start',  selfX: 'end',   imgH: 'min(18vh, 260px)', ratio: '3/2', dir: 'row-reverse', alignItems: 'flex-start', align: 'right', titleSize: '17px', px: '-22px', py: '-12px', dur: '10s',  delay: '-1.5s', bleedX: '44px', cover: 'https://picsum.photos/seed/halvorsen-4/900/600' },
+        { side: 'left',  col: '2',     row: '3', selfY: 'end',    selfX: 'end',   imgH: 'min(12vh, 200px)', ratio: '5/4', dir: 'column',      alignItems: 'flex-start', align: 'left',  titleSize: '15px', px: '-20px', py: '-9px',  dur: '8.5s', delay: '-2s',   bleedX: '0px', cover: 'https://picsum.photos/seed/halvorsen-5/700/560' },
+        { side: 'right', col: '2',     row: '3', selfY: 'end',    selfX: 'end'  , imgH: 'min(15vh, 240px)', ratio: '2/3', dir: 'column',      alignItems: 'flex-end',   align: 'right', titleSize: '15px', px: '-16px', py: '-11px', dur: '9.5s', delay: '-4s',   bleedX: '30px', cover: 'https://picsum.photos/seed/halvorsen-6/600/900' },
+      ];
+  
+  
+  
+      // beyond the written chapters, forthcoming leaves hold the stage as placeholders
+      const forthcoming = [{ title: 'Forthcoming', kind: 'Essay', year: '—', numeral: '·' }, { title: 'Forthcoming', kind: 'Research', year: '—', numeral: '·' }, { title: 'Forthcoming', kind: 'Essay', year: '—', numeral: '·' }, { title: 'Forthcoming', kind: 'Research', year: '—', numeral: '·' }];
+  
+  
+  
+      // the margins only hold chapters that belong to this register; empty slots read as forthcoming
+      const own = projects.filter((p) => this.pageOf(projects.indexOf(p)) === pageKey);
+      const leaves = [...own, ...forthcoming].slice(0, 6).map((p, k) => { const real = own.includes(p), pi = real ? projects.indexOf(p) : -1 - k; const on = real && hovered === pi && this.state.leafHover; const pos = leafPos[k % leafPos.length];
+        // only the two large outer plates bleed, and they bleed outward far enough to cross the page edge
+        const bleeds = ['-56px', '56px', '0px', '0px', '0px', '-60px'];
+        const bleedX = bleeds[k % bleeds.length];
+        const bleedY = ['0px', '0px', '52px', '0px', '0px', '0px'][k % 6];
+        const detail = real ? p.subtitle + '\n' + p.role + ' · ' + p.status + ' · pp. ' + p.pages : '';
+        const typed = on ? detail.slice(0, this.state.typed || 0) : '';
+        return { ...p, ...pos, idx: pi, cardNo: k + 1, typed, kicker: real ? 'Chapter ' + p.numeral + ' · ' + p.year : 'Forthcoming', detailDisplay: on ? 'block' : 'none', detailOpacity: on ? '1' : '0', caretOpacity: on && typed.length < detail.length ? '1' : '0', morphName: real ? 'row-' + k : 'leaf-' + k, figNo: real ? p.figNo : 'x' + k, placeholder: real ? p.placeholder : 'Plate: forthcoming', coverSlotId: real ? 'cover-' + pi : 'cover-next-' + k, open: real ? p.open : () => {}, bleedX, bleedY, zIndex: on ? 30 : 12 - k, origin: (pos.selfX === 'start' ? 'left ' : 'right ') + (pos.selfY === 'start' ? 'top' : pos.selfY === 'end' ? 'bottom' : 'center'), cursor: real ? 'pointer' : 'default', lift: on ? '-10px' : '0px', scale: on ? '1.06' : '1', shadow: on ? '0 24px 48px -20px rgba(32,31,29,0.35), 0 2px 6px rgba(32,31,29,0.08)' : '0 8px 24px -16px rgba(32,31,29,0.25)',
+          hover: () => { if (real) this.startTyping(pi, detail.length); }, unhover: () => { this.stopTyping(); } }; });
+      const pageProjects = projects.filter((p) => this.pageOf(projects.indexOf(p)) === pageKey).map((p, k) => ({ ...p, shapeIdx: k + 1, dir: k % 2 ? 'rtl' : 'ltr', textCol: k % 2 ? '13 / 23' : '1 / 11', plateCol: k % 2 ? '1 / 13' : '11 / 23', cardRow: (16 + 9 * k) + ' / ' + (23 + 9 * k), bandNo: String(k + 1).padStart(2, '0'), morphName: k < 2 ? 'row-' + k : 'feat-' + (k - 2) + '-title', frameShape: k < 2 ? 'plate-' + k : 'frame-' + k }));
+      const introChars = Array.from(page.intro);
+      page.dropCap = introChars[0]; page.introRest = introChars.slice(1).join('');
+      // the Development page is placed on a 44px module: cards are 7 rows with two blank rows between
+      const lastCardEnd = 23 + 9 * Math.max(0, pageProjects.length - 1);
+      const gridRows = { plates: lastCardEnd + ' / ' + (lastCardEnd + 1), author: (lastCardEnd + 2) + ' / ' + (lastCardEnd + 18), colophon: (lastCardEnd + 20) + ' / ' + (lastCardEnd + 23) };
+      const pad = (n) => String(n).padStart(2, '0');
+      const featured = this.featuredFor[pageKey].map((i, k) => ({ ...projects[i], plateNumeral: this.num(k) }));
+      const current = projects[idx];
+      const hov = projects[hovered] && this.pageOf(hovered) === pageKey ? projects[hovered] : pageProjects[0];
+      const tabColor = (r) => brandReg === r ? 'var(--color-text)' : 'var(--color-neutral-600)';
+      // the sheet's modules, placed off whichever table the width calls for. The template names a module
+      // and reads its span back; nothing about where a module sits is written in the markup
+      const place = this.state.narrow ? this.SHEET_NARROW : this.SHEET_WIDE;
+      const at = (s) => s.split('/').map((v) => parseInt(v, 10));
+      const sheet = {};
+      for (const name of Object.keys(place)) {
+        sheet[name] = { col: place[name].col, row: place[name].row,
+          delay: ((at(place[name].row)[0] - 1) * this.PLOT_STEP) + 'ms' };
+      }
+      // hovering a plate carries its own edges across the whole sheet as guide lines, and reads the
+      // cursor's cell back into that plate's caption. The lines are placed off the same table the plate
+      // is, so nothing has to be measured; the last plate is kept so the guides fade out where they were
+      const cur = this.state.cell;
+      const gp = place[(cur && cur.plate) || this.lastPlate || 'hero'];
+      const [gc0, gc1] = at(gp.col), [gr0, gr1] = at(gp.row);
+      const pad2 = (n) => String(n).padStart(2, '0');
+      const readout = cur ? 'x ' + pad2(cur.x) + ' · y ' + pad2(cur.y) : '';
+      sheet.guides = { on: cur ? '1' : '0',
+        top: ((gr0 - 1) * 44) + 'px', bottom: ((gr1 - 1) * 44) + 'px',
+        left: 'calc((100% / 22) * ' + (gc0 - 1) + ')', right: 'calc((100% / 22) * ' + (gc1 - 1) + ')' };
+      sheet.heroReadout = cur && cur.plate === 'hero' ? readout : '';
+      sheet.detailReadout = cur && cur.plate !== 'hero' ? readout : '';
+      for (const name of ['hero', 'detailA', 'detailB']) {
+        sheet[name].move = (e) => this.onPlateMove(name, e);
+        sheet[name].leave = () => this.onPlateLeave();
+      }
+      return {
+        isHome: view === 'home', showTabs: view !== 'home', goHome: () => this.goHome(),
+        homeLayerRef: this.homeLayerRef, homeRollRef: this.homeRollRef, homeCubeRef: this.homeCubeRef, fogLayerRef: this.fogLayerRef, homeHeadRef: this.homeHeadRef, homeFootRef: this.homeFootRef,
+        goToolingFromCube: () => { this.goPage('tooling'); this.cubeLead = true; },
+        homeCubeOn: () => { if (this.home) this.home.setHover(true); }, homeCubeOff: () => { if (this.home) this.home.setHover(false); },
+        isPage: view === 'page', marginalia, page, pageReg: page.reg, pageKey: pageKey, pageLabel: page.label,
+        isSerifPage: view === 'page' && page.reg === 'serif', isMonoPage: view === 'page' && page.reg === 'mono',
+        isMono: view === 'chapter' && mono, isSerif: view === 'chapter' && !mono, chapterKey: R + '-' + idx,
+        rBody: mono ? this.MONO : 'var(--font-body)', rAlign: mono ? 'left' : 'justify', rTracking: mono ? '-0.03em' : '0',
+        brandChars: (this.state.brandAnim || Array.from(this.BRAND).map((ch) => ({ ch, reg: brandReg, swap: false }))).map((c) => ({
+          ch: c.ch, font: c.reg === 'mono' ? this.MONO : 'var(--font-heading)', tracking: c.reg === 'mono' ? '-0.03em' : '0',
+          color: c.swap ? 'var(--color-neutral-600)' : 'inherit' })),
+        ...(mono
+          ? { tBg: '#1b1a19', tSurface: '#292625', tText: '#f3f2f2', tAccent: '#f3f2f2', tAccent600: '#ffffff', tAccent700: '#e2dfdf', tAccent800: '#f3f2f2', tAccent100: 'color-mix(in srgb, #f3f2f2 10%, transparent)', tDivider: 'color-mix(in srgb, #f3f2f2 10%, transparent)', tN100: 'color-mix(in srgb, #f3f2f2 8%, transparent)', tN400: '#605d5d', tN500: '#8a8686', tN600: '#a19d9d', tN700: '#c4c0c0', tN800: '#e2dfdf' }
+          : { tBg: '#f3f2f2', tSurface: '#eae9e9', tText: '#201f1d', tAccent: '#b68235', tAccent600: '#a06f24', tAccent700: '#7d5411', tAccent800: '#5a3b0a', tAccent100: '#fff3e4', tDivider: 'color-mix(in srgb, #201f1d 16%, transparent)', tN100: '#f8f4f4', tN400: '#bab6b6', tN500: '#9b9797', tN600: '#7d7979', tN700: '#605d5d', tN800: '#444141' }),
+        rootRef: this.rootRef, heroRef: this.heroRef, scriptRef: this.scriptRef, parchLayerRef: this.parchLayerRef, platformRef: this.platformRef, heroTextRef: this.heroTextRef, sheetCount: pad(pageProjects.length),
+        tabLeft: this.state.tab.left + 'px', tabWidth: this.state.tab.width + 'px',
+        tabToolingColor: tabColor('mono'), tabWritingColor: tabColor('serif'),
+        ampFont: mono ? "'Google Sans', 'Product Sans', sans-serif" : "'Libre Baskerville', serif", ampStyle: mono ? 'normal' : 'italic',
+        devChars: Array.from('Development').map((ch, i) => { const g = this.state.devGlitch && this.state.devGlitch[i]; return { ch: g || ch, color: g && g !== ch ? 'var(--color-accent)' : 'inherit' }; }),
+        subBrandDisplay: this.state.narrow ? 'none' : 'inline', indexCols: this.state.narrow ? 'minmax(0,1fr)' : 'minmax(0,7fr) minmax(0,5fr)', previewDisplay: this.state.narrow ? 'none' : 'block',
+        parallax: Math.round((this.state.scrollY || 0) * 0.18) + 'px',
+        hintOpacity: this.state.hintGone || this.state.usedKeys ? '0' : '1', bloomHintOpacity: this.state.bloomTouched ? '0' : '1',
+        projects, pageProjects, leaves, leftLeaves: leaves.filter((l) => l.side === 'left'), rightLeaves: leaves.filter((l) => l.side === 'right'), featured, current, next: projects[(idx + 1) % projects.length], hovered: hov, cv: this.cv,
+        gridPlatesRow: gridRows.plates, gridAuthorRow: gridRows.author, gridColophonRow: gridRows.colophon,
+        sheet, sheetGridRef: this.sheetGridRef,
+        contentsRef: this.contentsRef, platesRef: this.platesRef, notesRef: this.notesRef, headRef: this.headRef, tabToolingRef: this.tabToolingRef, tabWritingRef: this.tabWritingRef,
+        goTooling: () => this.goPage('tooling'), goWriting: () => this.goPage('writing'),
+        goPageCurrent: () => this.goPage(view === 'chapter' ? this.pageOf(idx) : pageKey), goNotes: () => this.go(this.notesRef),
+        previewMono: () => this.setState({ previewReg: 'mono' }), previewSerif: () => this.setState({ previewReg: 'serif' }), previewNone: () => this.setState({ previewReg: null }),
+        openNext: () => this.open((idx + 1) % projects.length),
+      };
+    }
   }
 
   // The wrapper the runtime put around the template: owns the logic instance, forwards lifecycle,
