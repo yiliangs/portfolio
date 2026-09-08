@@ -177,9 +177,9 @@
   <div ref="{{ parchLayerRef }}" data-print="hide" aria-hidden="true" style="position:fixed; inset:0; pointer-events:none; z-index:1; opacity:0.8;"></div>
   <div ref="{{ homeLayerRef }}" data-print="hide" aria-hidden="true" style="position:fixed; inset:0; pointer-events:none; z-index:2;"></div>
   <header data-print="hide" style="position:sticky; top:0; z-index:5; border-bottom:1px solid var(--color-divider); background:var(--color-bg); transition:background-color 780ms cubic-bezier(.65,0,.15,1), border-color 780ms cubic-bezier(.65,0,.15,1), color 780ms cubic-bezier(.65,0,.15,1);">
-    <div ref="{{ headRef }}" style="position:relative; display:flex; align-items:stretch; justify-content:space-between; gap:var(--space-4); padding:0 clamp(20px,5vw,72px); height:56px; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; font-feature-settings:'tnum' 1;">
+    <div ref="{{ headRef }}" style="position:relative; display:flex; align-items:stretch; justify-content:space-between; gap:var(--space-4); padding:0 clamp(14px,5vw,72px); height:56px; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; font-feature-settings:'tnum' 1;">
       <button onClick="{{ goHome }}" style="all:unset; cursor:pointer; display:flex; gap:var(--space-3); align-items:center; color:var(--color-text); flex-shrink:0; white-space:nowrap; transition:color 780ms cubic-bezier(.65,0,.15,1);" style-hover="color:var(--color-accent-700)">
-        <span aria-label="Yiliang Shao" style="display:inline-flex; font-weight:600; font-size:18px; text-transform:none; line-height:20px; white-space:pre;">
+        <span aria-label="Yiliang Shao" style="display:inline-flex; font-weight:600; font-size:clamp(14px,3.9vw,18px); text-transform:none; line-height:20px; white-space:pre;">
           <sc-for list="{{ brandChars }}" as="c" hint-placeholder-count="12"><span style="font-family:{{ c.font }}; letter-spacing:{{ c.tracking }}; color:{{ c.color }};">{{ c.ch }}</span></sc-for>
         </span>
         <span style="color:var(--color-neutral-600); display:{{ subBrandDisplay }}; transition:color 780ms cubic-bezier(.65,0,.15,1);">Collected work · 2019–2026</span>
@@ -195,7 +195,7 @@
           <span style="display:inline-flex; white-space:pre;"><sc-for list="{{ devChars }}" as="c" hint-placeholder-count="11"><span style="display:inline-block; color:{{ c.color }};">{{ c.ch }}</span></sc-for><span aria-hidden="true" class="caret" style="display:inline-block; color:var(--color-accent);">_</span></span>
         </button>
         </span>
-        <span style="display:flex; align-items:center; justify-content:flex-end; width:130px; flex:none; font-family:var(--mono); font-size:11px; letter-spacing:0.08em; color:var(--color-neutral-600); white-space:nowrap; opacity:{{ hintOpacity }}; transition:opacity 400ms ease, color 780ms cubic-bezier(.65,0,.15,1);">t / e · ← → · esc</span>
+        <span style="display:{{ hintDisplay }}; align-items:center; justify-content:flex-end; width:130px; flex:none; font-family:var(--mono); font-size:11px; letter-spacing:0.08em; color:var(--color-neutral-600); white-space:nowrap; opacity:{{ hintOpacity }}; transition:opacity 400ms ease, color 780ms cubic-bezier(.65,0,.15,1);">t / e · ← → · esc</span>
       </nav>
       <span aria-hidden="true" style="position:absolute; bottom:-1px; height:3px; background:var(--color-accent); left:{{ tabLeft }}; width:{{ tabWidth }}; transition:left 420ms cubic-bezier(.7,0,.3,1), width 420ms cubic-bezier(.7,0,.3,1);"></span>
       </sc-if>
@@ -206,13 +206,17 @@
   <!-- ============ HOME — two objects in the void: the roll and the cube ============ -->
   <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
   <!-- the objects sit on the page's exact vertical centre: the main is one full-height row and the footer
-       is pinned to its bottom edge rather than taking a row of its own -->
-  <main key="home" data-screen-label="Home" style="position:relative; padding:0 clamp(20px,5vw,72px); min-height:calc(100vh - 57px); box-sizing:border-box; display:grid; grid-template-rows:minmax(0,1fr);">
-    <div style="display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,0.9fr); align-items:center; gap:clamp(16px,4vw,72px);">
-      <button ref="{{ homeRollRef }}" onClick="{{ goWriting }}" style="all:unset; cursor:pointer; position:relative; display:flex; align-items:center; justify-content:center; height:min(44vh,400px); font-family:var(--font-heading);">
+       is pinned to its bottom edge rather than taking a row of its own.
+       On a page taller than it is wide the pair is read down instead of across: one column, two rows, and
+       the main takes the screen's own height exactly rather than a minimum, so nothing here can ever grow
+       the page. Every value below comes from renderVals, so the landscape composition is written beside
+       the portrait one rather than being the markup's own. -->
+  <main key="home" data-screen-label="Home" style="position:relative; padding:0 clamp(20px,5vw,72px); {{ homeMainBox }} box-sizing:border-box; display:grid; grid-template-rows:minmax(0,1fr);">
+    <div style="display:grid; grid-template-columns:{{ homeGridCols }}; grid-template-rows:{{ homeGridRows }}; align-items:center; justify-items:stretch; gap:{{ homeGridGap }};">
+      <button ref="{{ homeRollRef }}" onClick="{{ goWriting }}" style="all:unset; cursor:pointer; position:relative; display:flex; align-items:center; justify-content:center; height:{{ homeRollH }}; font-family:var(--font-heading);">
         <span class="breathe" style="position:relative; z-index:3; font-weight:300; font-size:clamp(26px,3.4vw,50px); letter-spacing:0.01em;">Research</span>
       </button>
-      <button ref="{{ homeCubeRef }}" onClick="{{ goToolingFromCube }}" onMouseEnter="{{ homeCubeOn }}" onMouseLeave="{{ homeCubeOff }}" onFocus="{{ homeCubeOn }}" onBlur="{{ homeCubeOff }}" aria-label="Development" style="all:unset; cursor:pointer; position:relative; height:min(40vh,360px);"></button>
+      <button ref="{{ homeCubeRef }}" onClick="{{ goToolingFromCube }}" onMouseEnter="{{ homeCubeOn }}" onMouseLeave="{{ homeCubeOff }}" onFocus="{{ homeCubeOn }}" onBlur="{{ homeCubeOff }}" aria-label="Development" style="all:unset; cursor:pointer; position:relative; height:{{ homeCubeH }};"></button>
     </div>
     <nav aria-label="Contact" style="position:absolute; left:0; right:0; bottom:clamp(18px,4vh,40px); display:flex; justify-content:center; gap:clamp(20px,3vw,44px); font-family:var(--deco); font-size:12px;">
       <a href="{{ cvMailto }}" style="font-family:'Cinzel Decorative', var(--deco); text-transform:lowercase; color:var(--color-accent); text-decoration:none; letter-spacing:0.06em; display:flex; align-items:center; line-height:1; transition:color 200ms ease, letter-spacing 200ms ease;" style-hover="text-transform:uppercase; color:var(--color-accent-700); letter-spacing:0.1em">Email</a>
@@ -365,32 +369,34 @@
   <sc-if value="{{ isMonoPage }}" hint-placeholder-val="{{ false }}">
 
   <!-- On a page that is not landscape the register is the stacked sheet: a centred column, the statement
-       and the platform at the top, then one full-width band per project. It reads well on a vertical tablet
-       and is left exactly as it was; the desktop composition follows it. -->
+       and the platform at the top, then one full-width band per project. Two readings of it, LANDING_NARROW
+       and LANDING_PHONE in the logic class: the tablet column it has always been, and a phone column where
+       the statement stands over the platform and each card stands its text over its plate. No module below
+       names its own place; every one of them reads a span back from whichever table the width chose. -->
   <sc-if value="{{ isLandingNarrow }}" hint-placeholder-val="{{ true }}">
   <main key="tooling" data-screen-label="Development" style="max-width:1160px; margin:0 auto; padding:0 clamp(20px,4vw,48px) 88px; font-family:var(--mono); font-size:14px; line-height:22px;">
     <div style="margin-top:88px; display:grid; grid-template-columns:repeat(22,1fr); grid-auto-rows:44px; gap:0; border-right:1px solid var(--hair); border-bottom:1px solid var(--hair); background-image:linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px); background-size:calc(100%/22) 44px;">
 
     <!-- statement -->
-    <section class="mod" style="grid-column:1 / 15; grid-row:2 / 12; padding:22px;">
+    <section class="mod" style="grid-column:{{ stack.statement.col }}; grid-row:{{ stack.statement.row }}; padding:clamp(14px,3.7vw,22px);">
       <p data-morph="kicker" style="margin:0 0 22px; font-size:12px; line-height:14px; letter-spacing:0.08em; color:var(--color-neutral-600);">{{ page.kicker }}</p>
       <h1 data-tr="title" data-reg="mono" data-morph="title" style="margin:0; font-family:var(--mono); font-weight:400; font-size:clamp(22px,2.6vw,32px); line-height:1.375; letter-spacing:-0.02em; max-width:34ch;">{{ page.title }}</h1>
       <p data-tr="wake" data-reg="mono" data-morph="intro" style="margin:22px 0 0; max-width:60ch; color:var(--color-neutral-700);">{{ page.intro }}</p>
       <p data-morph="byline" style="margin:22px 0 0; font-size:12px; color:var(--color-neutral-600);">{{ page.byline }}</p>
     </section>
     <!-- the platform takes the module the statement leaves off at, so no empty column stands between them -->
-    <div ref="{{ platformRef }}" aria-hidden="true" class="mod" style="grid-column:15 / 23; grid-row:2 / 12; min-height:0; cursor:grab; touch-action:none; user-select:none;"></div>
+    <div ref="{{ platformRef }}" aria-hidden="true" class="mod" style="grid-column:{{ stack.platform.col }}; grid-row:{{ stack.platform.row }}; min-height:0; cursor:grab; touch-action:none; user-select:none;"></div>
 
     <!-- projects: one per band, alternating sides. The band's plate shows the entry's hero as a
          teaser: it is a slice of the card rather than the picture's own shape, so it takes fit
          cover here and contain on the sheet the card opens. An entry that names no hero keeps the
          placeholder slot, which is what an absent src leaves behind. -->
-    <p ref="{{ contentsRef }}" data-morph="index-kicker" class="mod" style="grid-column:1 / 7; grid-row:14 / 15; margin:0; display:flex; align-items:center; padding:0 22px; font-size:12px; letter-spacing:0.08em; color:var(--color-neutral-600);">{{ page.indexKicker }}</p>
+    <p ref="{{ contentsRef }}" data-morph="index-kicker" class="mod" style="grid-column:{{ stack.contents.col }}; grid-row:{{ stack.contents.row }}; margin:0; display:flex; align-items:center; padding:0 clamp(14px,3.7vw,22px); font-size:12px; letter-spacing:0.08em; color:var(--color-neutral-600);">{{ page.indexKicker }}</p>
     <sc-for list="{{ pageProjects }}" as="p" hint-placeholder-count="4">
-      <div data-shape="card-{{ p.shapeIdx }}" onClick="{{ p.open }}" onMouseEnter="{{ p.hover }}" class="mod mod-ctl" style="grid-column:1 / 23; grid-row:{{ p.cardRow }}; display:grid; grid-template-columns:repeat(22,1fr); cursor:pointer; color:var(--color-text);">
-        <div style="grid-column:{{ p.textCol }}; grid-row:1; min-width:0; padding:22px; box-sizing:border-box; align-self:end;">
+      <div data-shape="card-{{ p.shapeIdx }}" onClick="{{ p.open }}" onMouseEnter="{{ p.hover }}" class="mod mod-ctl" style="grid-column:{{ stack.cards.col }}; grid-row:{{ p.cardRow }}; display:grid; grid-template-columns:repeat(22,1fr); grid-template-rows:{{ p.cardGrid }}; cursor:pointer; color:var(--color-text);">
+        <div style="grid-column:{{ p.textCol }}; grid-row:{{ p.textRow }}; min-width:0; padding:clamp(14px,3.7vw,22px); box-sizing:border-box; align-self:end;">
           <p style="margin:0 0 22px; font-size:12px; color:var(--color-neutral-600);">{{ p.bandNo }} · {{ p.kindLower }} · {{ p.year }}</p>
-          <p data-morph="{{ p.morphName }}" data-morph-alt="title-{{ p.figNo }}" style="margin:0; font-size:28px; line-height:34px; letter-spacing:-0.03em;">{{ p.title }}</p>
+          <p data-morph="{{ p.morphName }}" data-morph-alt="title-{{ p.figNo }}" style="margin:0; font-size:clamp(22px,5.6vw,28px); line-height:clamp(28px,6.8vw,34px); letter-spacing:-0.03em;">{{ p.title }}</p>
           <p data-morph="why-{{ p.figNo }}" data-morph-alt="lede-{{ p.figNo }}" style="margin:10px 0 0; color:var(--color-neutral-700); max-width:44ch;">{{ p.why }}</p>
         </div>
         <!-- The picture keeps a frame of its own inside the card's, and the clip that crops it to the
@@ -399,19 +405,19 @@
              instead and grows the row past the cells the card was given, which drops the text through
              the card's bottom line. Out of flow it takes the frame's height rather than setting it, and
              the frame stays free to draw its two outer strokes. -->
-        <div data-shape="{{ p.frameShape }}" data-shape-alt="frame-{{ p.figNo }}" class="mod" style="grid-column:{{ p.plateCol }}; grid-row:1;"><div style="position:absolute; inset:0; overflow:hidden;"><image-slot id="{{ p.plateSlotId }}" src="{{ p.hero }}" shape="rect" fit="cover" placeholder="{{ p.placeholder }}" style="width:100%; height:100%;"></image-slot></div></div>
+        <div data-shape="{{ p.frameShape }}" data-shape-alt="frame-{{ p.figNo }}" class="mod" style="grid-column:{{ p.plateCol }}; grid-row:{{ p.plateRow }};"><div style="position:absolute; inset:0; overflow:hidden;"><image-slot id="{{ p.plateSlotId }}" src="{{ p.hero }}" shape="rect" fit="cover" placeholder="{{ p.placeholder }}" style="width:100%; height:100%;"></image-slot></div></div>
       </div>
     </sc-for>
-    <div ref="{{ platesRef }}" style="grid-column:1 / 2; grid-row:{{ gridPlatesRow }}; height:0;"></div>
+    <div ref="{{ platesRef }}" style="grid-column:{{ stack.plates.col }}; grid-row:{{ stack.plates.row }}; height:0;"></div>
 
     <!-- author -->
-    <section ref="{{ notesRef }}" class="mod" style="grid-column:1 / 11; grid-row:{{ gridAuthorRow }}; padding:22px;">
+    <section ref="{{ notesRef }}" class="mod" style="grid-column:{{ stack.author.col }}; grid-row:{{ stack.author.row }}; padding:clamp(14px,3.7vw,22px);">
       <p data-morph="notes-kicker" style="margin:0 0 22px; font-size:12px; letter-spacing:0.08em; color:var(--color-neutral-600);">who</p>
       <p data-morph="notes-title" style="margin:0; font-weight:500; letter-spacing:-0.02em;">{{ page.notesTitle }}</p>
       <p data-morph="notes-body" style="margin:22px 0 0; color:var(--color-neutral-700); max-width:44ch;">Five years of architecture school, then two in the Polyhedral Structures Laboratory at Penn, where structure stopped being something applied to a design after the fact. Since 2022 I have been at SOM in Chicago, building the platform its teams model in. I care about structure and design being one decision, about tools that stay out of the way, and about writing plainly on subjects that tempt people to be grand.</p>
       <p style="margin:22px 0 0; display:flex; gap:20px; font-size:13px;"><a href="{{ cvMailto }}" style="color:var(--color-text); text-decoration-color:var(--color-neutral-600);">mail</a><a href="{{ cvGithub }}" style="color:var(--color-text); text-decoration-color:var(--color-neutral-600);">github</a><button onClick="{{ goCvMono }}" style="all:unset; cursor:pointer; font-family:var(--mono); font-size:13px; color:var(--color-text); text-decoration:underline; text-decoration-color:var(--color-neutral-600); text-underline-offset:3px;">cv</button></p>
     </section>
-    <ol class="mod" style="grid-column:12 / 23; grid-row:{{ gridAuthorRow }}; padding:22px; list-style:none; margin:0; font-feature-settings:'tnum' 1;">
+    <ol class="mod" style="grid-column:{{ stack.cv.col }}; grid-row:{{ stack.cv.row }}; padding:clamp(14px,3.7vw,22px); list-style:none; margin:0; font-feature-settings:'tnum' 1;">
       <sc-for list="{{ cv }}" as="c" hint-placeholder-count="5">
         <li style="display:grid; grid-template-columns:9em minmax(0,1fr); gap:16px; padding:0 0 22px; align-items:baseline;">
           <span data-morph="cv-{{ $index }}-years" style="color:var(--color-neutral-600); font-size:13px;">{{ c.years }}</span>
@@ -420,18 +426,19 @@
       </sc-for>
     </ol>
 
-    <p data-morph="colophon" class="mod" style="grid-column:1 / 16; grid-row:{{ gridColophonRow }}; margin:0; padding:22px; color:var(--color-neutral-600); font-size:12px; line-height:18px;">{{ page.colophon }}</p>
+    <p data-morph="colophon" class="mod" style="grid-column:{{ stack.colophon.col }}; grid-row:{{ stack.colophon.row }}; margin:0; padding:clamp(14px,3.7vw,22px); color:var(--color-neutral-600); font-size:12px; line-height:18px;">{{ page.colophon }}</p>
 
     <!-- contact: three small cells at the left of the sheet's last row, on the register's own frame.
          They are controls, so unlike a plain module they take their frame to full ink under the
          cursor and set their label in caps at 700. Each one is positioned and carries a z-index so
          the hovered cell rises over its neighbours: a module's right and bottom hairlines are drawn
          outside its own box, so a cell painting in flow order has two of its four lit edges covered
-         by whichever neighbour comes after it. The placement comes from gridRows like every other
-         module below the cards, so the sheet grows by the one row this band takes. -->
-    <a href="{{ cvMailto }}" class="mod mod-ctl" style="grid-column:1 / 3; grid-row:{{ gridContactRow }}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;" style-hover="z-index:3; font-weight:700; text-transform:uppercase">email</a>
-    <a href="{{ cvGithub }}" class="mod mod-ctl" style="grid-column:3 / 5; grid-row:{{ gridContactRow }}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;" style-hover="z-index:3; font-weight:700; text-transform:uppercase">github</a>
-    <button onClick="{{ goCvMono }}" class="mod mod-ctl" style="all:unset; grid-column:5 / 7; grid-row:{{ gridContactRow }}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text);" style-hover="z-index:3; font-weight:700; text-transform:uppercase">cv</button>
+         by whichever neighbour comes after it. The placement comes from the table like every
+         other module below the cards, whose rows are counted from the line the last card closes
+         on, so the sheet grows by the one row this band takes. -->
+    <a href="{{ cvMailto }}" class="mod mod-ctl" style="grid-column:{{ stack.contactEmail.col }}; grid-row:{{ stack.contactEmail.row }}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;" style-hover="z-index:3; font-weight:700; text-transform:uppercase">email</a>
+    <a href="{{ cvGithub }}" class="mod mod-ctl" style="grid-column:{{ stack.contactGithub.col }}; grid-row:{{ stack.contactGithub.row }}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;" style-hover="z-index:3; font-weight:700; text-transform:uppercase">github</a>
+    <button onClick="{{ goCvMono }}" class="mod mod-ctl" style="all:unset; grid-column:{{ stack.contactCv.col }}; grid-row:{{ stack.contactCv.row }}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text);" style-hover="z-index:3; font-weight:700; text-transform:uppercase">cv</button>
     </div>
   </main>
   </sc-if>
@@ -574,10 +581,13 @@
       </div>
       <sc-for list="{{ cvDoc.jobs }}" as="job" hint-placeholder-count="2">
       <section class="cv-job">
-        <!-- tier 1: the employer heads the entry. Each org unit is one unbreakable run, so the name
-             wraps between entities and never mid-name; the location glues to the last unit, muted -->
+        <!-- tier 1: the employer heads the entry. The org name is one unbreakable run, so it wraps
+             between entities and never mid-name; the location is a run of its own beside it, glued to
+             its unit and muted, and breakable, so the city falls to the next line when the pair does not
+             fit. Held inside the name's own run it was unbreakable, and 'Skidmore, Owings & Merrill
+             (SOM), Chicago, IL' is 381px against the 297px measure a 360px page gives. -->
         <div class="cv-row">
-          <p style="margin:0; font-size:1.05em;"><sc-for list="{{ job.units }}" as="u" hint-placeholder-count="1"><span style="white-space:nowrap; font-weight:700;">{{ u.t }}<span style="font-weight:400; color:var(--color-neutral-700);">{{ u.loc }}</span></span> </sc-for></p>
+          <p style="margin:0; font-size:1.05em;"><sc-for list="{{ job.units }}" as="u" hint-placeholder-count="1"><span style="white-space:nowrap; font-weight:700;">{{ u.t }}</span><span style="font-weight:400; color:var(--color-neutral-700);">{{ u.loc }}</span> </sc-for></p>
           <span class="cv-date">{{ job.dates }}</span>
         </div>
         <!-- tier 2: the current title with its own dates, then one faint line of the prior ones -->
@@ -839,7 +849,7 @@
   <main key="{{ chapterKey }}" data-screen-label="Chapter" style="max-width:1200px; margin:0 auto; padding:0 clamp(20px,5vw,72px); background-image:radial-gradient(color-mix(in srgb, var(--color-text) 16%, transparent) 1px, transparent 1.1px); background-size:28px 28px;">
 
     <section style="position:relative; padding:calc(3*28px) 0 calc(2*28px);">
-      <span aria-hidden="true" style="position:absolute; right:0; top:28px; font-family:var(--font-heading); font-weight:300; font-size:clamp(160px,22vw,320px); line-height:1; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; pointer-events:none; user-select:none; font-feature-settings:'tnum' 1; letter-spacing:0; transform:translateY({{ parallax }}); will-change:transform;">{{ current.ghost }}</span>
+      <span aria-hidden="true" style="position:absolute; right:0; top:28px; font-family:var(--font-heading); font-weight:300; font-size:{{ chapterGhost }}; line-height:1; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; pointer-events:none; user-select:none; font-feature-settings:'tnum' 1; letter-spacing:0; transform:translateY({{ parallax }}); will-change:transform;">{{ current.ghost }}</span>
       <button class="btn btn-ghost" onClick="{{ goPageCurrent }}" style="white-space:nowrap; margin-left:calc(-1*var(--space-1)); font-family:var(--r-body);">← {{ current.backWord }}</button>
       <p key="kicker-{{ current.figNo }}" data-tr="wake" data-reg="serif" data-fx="ripple" style="margin:calc(2*28px) 0 14px; font-size:12px; line-height:14px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-accent-700); font-feature-settings:'tnum' 1;">{{ current.kickerWord }} {{ current.numeral }} · {{ current.kind }} · {{ current.year }}</p>
       <h1 key="title-{{ current.figNo }}" data-morph="title-{{ current.figNo }}" data-tr="wake" data-reg="serif" data-fx="ripple" style="margin:0 0 0 -0.042em; font-family:var(--font-heading); font-weight:400; font-size:clamp(44px,6vw,88px); line-height:1.04; letter-spacing:-0.01em; max-width:16ch;">{{ current.title }}</h1>
@@ -871,11 +881,11 @@
          over the blocks they stand beside instead of stretching one row and pushing the body down.
          Blocks are memoized; the captions type on hover and the tail folds, so both are rebuilt. -->
     <sc-if value="{{ isPaper }}" hint-placeholder-val="{{ false }}">
-    <section data-paper-body="" data-enter="" style="display:grid; grid-template-columns:minmax(0,8fr) minmax(0,4fr); gap:0 clamp(28px,5vw,80px); padding:calc(2.5*28px) 0; align-items:start;">
+    <section data-paper-body="" data-enter="" style="display:grid; grid-template-columns:{{ chapterCols }}; gap:0 clamp(28px,5vw,80px); padding:calc(2.5*28px) 0; align-items:start;">
       {{ paperBlocks }}
       {{ paperCaptions }}
       {{ paperTail }}
-      <aside style="grid-column:2; grid-row:{{ paperAsideRow }}; align-self:start; display:flex; flex-direction:column; gap:28px; font-size:13px; line-height:20px; color:var(--color-neutral-700);">
+      <aside style="grid-column:{{ paperAsideCol }}; grid-row:{{ paperAsideRow }}; align-self:start; display:flex; flex-direction:column; gap:28px; font-size:13px; line-height:20px; color:var(--color-neutral-700);">
         <sc-if value="{{ marginalia }}" hint-placeholder-val="{{ true }}">
           <p key="margin-{{ current.figNo }}" data-tr="wake" data-reg="serif" data-fx="ripple" style="margin:0; padding-left:var(--space-3); border-left:1px solid var(--color-accent); font-family:var(--font-heading); font-style:italic; font-size:19px; line-height:26px;">{{ current.margin }}</p>
         </sc-if>
@@ -892,8 +902,8 @@
     </sc-if>
 
     <sc-if value="{{ isEssay }}" hint-placeholder-val="{{ true }}">
-    <section data-enter="" style="display:grid; grid-template-columns:minmax(0,8fr) minmax(0,4fr); gap:28px clamp(28px,5vw,80px); padding:calc(2.5*28px) 0; align-items:start;">
-      <div style="columns:2; column-gap:56px; column-rule:1px solid var(--color-divider); text-align:justify; hyphens:auto; color:color-mix(in srgb, var(--color-text) 84%, transparent); font-size:16px; line-height:28px;">
+    <section data-enter="" style="display:grid; grid-template-columns:{{ chapterCols }}; gap:28px clamp(28px,5vw,80px); padding:calc(2.5*28px) 0; align-items:start;">
+      <div style="columns:{{ essayColumns }}; column-gap:56px; column-rule:1px solid var(--color-divider); text-align:justify; hyphens:auto; color:color-mix(in srgb, var(--color-text) 84%, transparent); font-size:16px; line-height:28px;">
         <p style="margin:0 0 28px;"><span style="float:left; font-family:var(--deco); font-weight:400; font-size:64px; line-height:56px; padding:6px 12px 0 0; color:var(--color-text);">{{ current.dropCap }}</span>{{ current.body1 }}</p>
         <p style="margin:0 0 28px;">{{ current.body2 }}</p>
         <p style="margin:0;">{{ current.body3 }}</p>
@@ -944,23 +954,23 @@
     <div ref="{{ sheetGridRef }}" style="position:relative; margin-top:88px; display:grid; grid-template-columns:repeat(22,1fr); grid-auto-rows:44px; gap:0; border-right:1px solid var(--hair); border-bottom:1px solid var(--hair); background-image:linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px); background-size:calc(100%/22) 44px;">
 
     <!-- back to the sheet register -->
-    <button class="mod sheet-mod mod-ctl" data-enter="" data-mod="back" onClick="{{ goPageCurrent }}" style="all:unset; position:relative; grid-column:{{ sheet.back.col }}; grid-row:{{ sheet.back.row }}; --d:{{ sheet.back.delay }}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);">← {{ current.backWord }}</button>
+    <button class="mod sheet-mod mod-ctl" data-enter="" data-mod="back" onClick="{{ goPageCurrent }}" style="all:unset; position:relative; grid-column:{{ sheet.back.col }}; grid-row:{{ sheet.back.row }}; --d:{{ sheet.back.delay }}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 clamp(14px,3.7vw,22px); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);">← {{ current.backWord }}</button>
 
     <!-- title block: the sheet number stands outlined in its own module, beside the heading -->
-    <section class="mod sheet-mod" data-enter="" data-mod="header" style="grid-column:{{ sheet.header.col }}; grid-row:{{ sheet.header.row }}; --d:{{ sheet.header.delay }}; padding:22px;">
+    <section class="mod sheet-mod" data-enter="" data-mod="header" style="grid-column:{{ sheet.header.col }}; grid-row:{{ sheet.header.row }}; --d:{{ sheet.header.delay }}; padding:clamp(14px,3.7vw,22px);">
       <p key="kicker-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0 0 22px; font-size:12px; line-height:14px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-accent-700); font-feature-settings:'tnum' 1;">{{ current.kickerWord }} {{ current.numeral }} · {{ current.kind }} · {{ current.year }}</p>
-      <h1 key="title-{{ current.figNo }}" data-morph="title-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-family:var(--mono); font-weight:400; font-size:clamp(36px,5vw,72px); line-height:1.04; letter-spacing:-0.03em; max-width:16ch;">{{ current.title }}</h1>
-      <p key="lede-{{ current.figNo }}" data-morph="lede-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:22px 0 0; font-family:var(--mono); font-size:20px; line-height:26px; font-weight:400; max-width:52ch; color:var(--color-neutral-700);">{{ current.subtitle }}</p>
+      <h1 key="title-{{ current.figNo }}" data-morph="title-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-family:var(--mono); font-weight:400; font-size:clamp(26px,5vw,72px); line-height:1.04; letter-spacing:-0.03em; max-width:16ch;">{{ current.title }}</h1>
+      <p key="lede-{{ current.figNo }}" data-morph="lede-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:22px 0 0; font-family:var(--mono); font-size:clamp(16px,4vw,20px); line-height:clamp(21px,5.2vw,26px); font-weight:400; max-width:52ch; color:var(--color-neutral-700);">{{ current.subtitle }}</p>
     </section>
-    <span class="mod sheet-mod" data-enter="" data-mod="ghost" aria-hidden="true" style="grid-column:{{ sheet.ghost.col }}; grid-row:{{ sheet.ghost.row }}; --d:{{ sheet.ghost.delay }}; display:flex; align-items:flex-end; justify-content:flex-end; padding:22px; font-family:'DM Mono', ui-monospace, monospace; font-weight:400; font-size:clamp(40px,5.5vw,84px); line-height:1; letter-spacing:-0.04em; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; user-select:none; font-feature-settings:'tnum' 1;">{{ current.ghost }}</span>
+    <span class="mod sheet-mod" data-enter="" data-mod="ghost" aria-hidden="true" style="grid-column:{{ sheet.ghost.col }}; grid-row:{{ sheet.ghost.row }}; --d:{{ sheet.ghost.delay }}; display:flex; align-items:flex-end; justify-content:flex-end; padding:clamp(14px,3.7vw,22px); font-family:'DM Mono', ui-monospace, monospace; font-weight:400; font-size:clamp(28px,5.5vw,84px); line-height:1; letter-spacing:-0.04em; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; user-select:none; font-feature-settings:'tnum' 1;">{{ current.ghost }}</span>
 
     <!-- title-block strip: five fields across the sheet, three and two when it stacks. The labels are
          chrome and stay still; the values are the sheet's own text and answer the cursor -->
-    <div class="mod sheet-mod" data-enter="" data-mod="specSheet" style="grid-column:{{ sheet.specSheet.col }}; grid-row:{{ sheet.specSheet.row }}; --d:{{ sheet.specSheet.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Sheet</p><p key="spec-sheet-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px; color:var(--color-accent-700);">{{ current.ghost }}</p></div>
-    <div class="mod sheet-mod" data-enter="" data-mod="specRole" style="grid-column:{{ sheet.specRole.col }}; grid-row:{{ sheet.specRole.row }}; --d:{{ sheet.specRole.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Role</p><p key="spec-role-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px;">{{ current.role }}</p></div>
-    <div class="mod sheet-mod" data-enter="" data-mod="specWith" style="grid-column:{{ sheet.specWith.col }}; grid-row:{{ sheet.specWith.row }}; --d:{{ sheet.specWith.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">With</p><p key="spec-with-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px;">{{ current.with }}</p></div>
-    <div class="mod sheet-mod" data-enter="" data-mod="specStatus" style="grid-column:{{ sheet.specStatus.col }}; grid-row:{{ sheet.specStatus.row }}; --d:{{ sheet.specStatus.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Status</p><p key="spec-status-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px;">{{ current.status }}</p></div>
-    <div class="mod sheet-mod" data-enter="" data-mod="specRev" style="grid-column:{{ sheet.specRev.col }}; grid-row:{{ sheet.specRev.row }}; --d:{{ sheet.specRev.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Rev / Scale</p><p key="spec-rev-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px; font-feature-settings:'tnum' 1;">{{ current.year }} · 1:1</p></div>
+    <div class="mod sheet-mod" data-enter="" data-mod="specSheet" style="grid-column:{{ sheet.specSheet.col }}; grid-row:{{ sheet.specSheet.row }}; --d:{{ sheet.specSheet.delay }}; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px);"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Sheet</p><p key="spec-sheet-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px; color:var(--color-accent-700);">{{ current.ghost }}</p></div>
+    <div class="mod sheet-mod" data-enter="" data-mod="specRole" style="grid-column:{{ sheet.specRole.col }}; grid-row:{{ sheet.specRole.row }}; --d:{{ sheet.specRole.delay }}; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px);"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Role</p><p key="spec-role-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px;">{{ current.role }}</p></div>
+    <div class="mod sheet-mod" data-enter="" data-mod="specWith" style="grid-column:{{ sheet.specWith.col }}; grid-row:{{ sheet.specWith.row }}; --d:{{ sheet.specWith.delay }}; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px);"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">With</p><p key="spec-with-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px;">{{ current.with }}</p></div>
+    <div class="mod sheet-mod" data-enter="" data-mod="specStatus" style="grid-column:{{ sheet.specStatus.col }}; grid-row:{{ sheet.specStatus.row }}; --d:{{ sheet.specStatus.delay }}; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px);"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Status</p><p key="spec-status-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px;">{{ current.status }}</p></div>
+    <div class="mod sheet-mod" data-enter="" data-mod="specRev" style="grid-column:{{ sheet.specRev.col }}; grid-row:{{ sheet.specRev.row }}; --d:{{ sheet.specRev.delay }}; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px);"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Rev / Scale</p><p key="spec-rev-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px; font-feature-settings:'tnum' 1;">{{ current.year }} · 1:1</p></div>
 
     <!-- the figure's height is a row count, not a ratio. Under the cursor it throws its own edges
          across the sheet as guide lines and reads the cell back into its caption.
@@ -981,19 +991,19 @@
       <sc-if value="{{ heroStill }}" hint-placeholder-val="{{ true }}"><image-slot id="{{ current.heroSlotId }}" src="{{ current.hero }}" shape="rect" fit="contain" placeholder="{{ current.placeholder }}" style="width:100%; height:100%;"></image-slot></sc-if>
       <span class="sheet-mark" aria-hidden="true" style="right:8px; bottom:5px;">+</span>
     </figure>
-    <p class="mod sheet-mod" data-enter="" data-mod="heroCaption" style="grid-column:{{ sheet.heroCaption.col }}; grid-row:{{ sheet.heroCaption.row }}; --d:{{ sheet.heroCaption.delay }}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="min-width:0;"><span style="color:var(--color-accent);">{{ current.figWord }} {{ current.numeral }}.</span> <span key="cap-hero-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.caption }}</span></span><span style="flex:none; color:var(--color-neutral-600); white-space:nowrap;">{{ sheet.heroReadout }}</span></p>
+    <p class="mod sheet-mod" data-enter="" data-mod="heroCaption" style="grid-column:{{ sheet.heroCaption.col }}; grid-row:{{ sheet.heroCaption.row }}; --d:{{ sheet.heroCaption.delay }}; margin:0; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px); display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="min-width:0;"><span style="color:var(--color-accent);">{{ current.figWord }} {{ current.numeral }}.</span> <span key="cap-hero-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.caption }}</span></span><span style="flex:none; color:var(--color-neutral-600); white-space:nowrap;">{{ sheet.heroReadout }}</span></p>
 
     <!-- the account: three numbered notes, each its own module, with the sheet's data beside them -->
-    <div class="mod sheet-mod" data-enter="" data-mod="body1" style="grid-column:{{ sheet.body1.col }}; grid-row:{{ sheet.body1.row }}; --d:{{ sheet.body1.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);">
+    <div class="mod sheet-mod" data-enter="" data-mod="body1" style="grid-column:{{ sheet.body1.col }}; grid-row:{{ sheet.body1.row }}; --d:{{ sheet.body1.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:clamp(14px,3.7vw,22px); font-size:clamp(13px,3.4vw,14.5px); line-height:clamp(23px,6.1vw,26px); color:rgb(217, 216, 216);">
       <span style="font-size:12px; line-height:26px; letter-spacing:0.08em; color:var(--color-accent-700);">01 //</span><p key="body1-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0;">{{ current.body1Full }}</p>
     </div>
-    <div class="mod sheet-mod" data-enter="" data-mod="body2" style="grid-column:{{ sheet.body2.col }}; grid-row:{{ sheet.body2.row }}; --d:{{ sheet.body2.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);">
+    <div class="mod sheet-mod" data-enter="" data-mod="body2" style="grid-column:{{ sheet.body2.col }}; grid-row:{{ sheet.body2.row }}; --d:{{ sheet.body2.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:clamp(14px,3.7vw,22px); font-size:clamp(13px,3.4vw,14.5px); line-height:clamp(23px,6.1vw,26px); color:rgb(217, 216, 216);">
       <span style="font-size:12px; line-height:26px; letter-spacing:0.08em; color:var(--color-accent-700);">02 //</span><p key="body2-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0;">{{ current.body2 }}</p>
     </div>
-    <div class="mod sheet-mod" data-enter="" data-mod="body3" style="grid-column:{{ sheet.body3.col }}; grid-row:{{ sheet.body3.row }}; --d:{{ sheet.body3.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);">
+    <div class="mod sheet-mod" data-enter="" data-mod="body3" style="grid-column:{{ sheet.body3.col }}; grid-row:{{ sheet.body3.row }}; --d:{{ sheet.body3.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:clamp(14px,3.7vw,22px); font-size:clamp(13px,3.4vw,14.5px); line-height:clamp(23px,6.1vw,26px); color:rgb(217, 216, 216);">
       <span style="font-size:12px; line-height:26px; letter-spacing:0.08em; color:var(--color-accent-700);">03 //</span><p key="body3-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0;">{{ current.body3 }}</p>
     </div>
-    <aside class="mod sheet-mod" data-enter="" data-mod="aside" style="grid-column:{{ sheet.aside.col }}; grid-row:{{ sheet.aside.row }}; --d:{{ sheet.aside.delay }}; display:flex; flex-direction:column; gap:20px; padding:22px; font-size:12.5px; line-height:20px; color:var(--color-neutral-700);">
+    <aside class="mod sheet-mod" data-enter="" data-mod="aside" style="grid-column:{{ sheet.aside.col }}; grid-row:{{ sheet.aside.row }}; --d:{{ sheet.aside.delay }}; display:flex; flex-direction:column; gap:20px; padding:clamp(14px,3.7vw,22px); font-size:12.5px; line-height:20px; color:var(--color-neutral-700);">
       <sc-if value="{{ marginalia }}" hint-placeholder-val="{{ true }}">
         <p key="margin-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; padding-left:12px; border-left:1px solid var(--color-accent); color:var(--color-text);">// {{ current.margin }}</p>
       </sc-if>
@@ -1037,7 +1047,7 @@
     </figure>
     </sc-if>
     <sc-if value="{{ hasDetail }}" hint-placeholder-val="{{ true }}">
-    <p class="mod sheet-mod" data-enter="" data-mod="detailCaption" style="grid-column:{{ sheet.detailCaption.col }}; grid-row:{{ sheet.detailCaption.row }}; --d:{{ sheet.detailCaption.delay }}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="min-width:0;"><span style="color:var(--color-accent);">{{ current.detailFigWord }}</span> <span key="cap-detail-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.detailCaptionText }}</span></span><span style="flex:none; color:var(--color-neutral-600); white-space:nowrap;">{{ sheet.detailReadout }}</span></p>
+    <p class="mod sheet-mod" data-enter="" data-mod="detailCaption" style="grid-column:{{ sheet.detailCaption.col }}; grid-row:{{ sheet.detailCaption.row }}; --d:{{ sheet.detailCaption.delay }}; margin:0; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px); display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="min-width:0;"><span style="color:var(--color-accent);">{{ current.detailFigWord }}</span> <span key="cap-detail-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.detailCaptionText }}</span></span><span style="flex:none; color:var(--color-neutral-600); white-space:nowrap;">{{ sheet.detailReadout }}</span></p>
     </sc-if>
 
     <!-- Linked sheets: the other end of the graph the landing draws. What this sheet names and what
@@ -1047,25 +1057,25 @@
          down by exactly what it took. A row is a control and lights its own type; the frame around the
          whole module is the module's, which is why no row carries mod-ctl. An edge may cross into
          the serif register, and a row that does says Chapter where the others say a sheet number. -->
-    <div class="mod sheet-mod" data-enter="" data-mod="links" style="grid-column:{{ sheet.links.col }}; grid-row:{{ sheet.links.row }}; --d:{{ sheet.links.delay }}; display:grid; grid-auto-rows:44px; align-content:start; overflow:clip; overflow-clip-margin:1px;">
-      <p style="margin:0; display:flex; align-items:center; padding:0 22px; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Linked sheets</p>
+    <div class="mod sheet-mod" data-enter="" data-mod="links" style="grid-column:{{ sheet.links.col }}; grid-row:{{ sheet.links.row }}; --d:{{ sheet.links.delay }}; display:grid; grid-template-columns:minmax(0,1fr); grid-auto-rows:44px; align-content:start; overflow:clip; overflow-clip-margin:1px;">
+      <p style="margin:0; display:flex; align-items:center; padding:0 clamp(14px,3.7vw,22px); font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Linked sheets</p>
       <sc-for list="{{ sheetLinks }}" as="l" hint-placeholder-count="3">
-        <button onClick="{{ l.open }}" style="all:unset; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; gap:14px; padding:0 22px; font-family:var(--mono); font-size:13px; line-height:18px; color:var(--color-text); box-shadow:inset 0 1px 0 0 var(--hair); transition:color 200ms ease;" style-hover="color:var(--color-accent-700)">
+        <button onClick="{{ l.open }}" style="all:unset; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; gap:14px; padding:0 clamp(14px,3.7vw,22px); font-family:var(--mono); font-size:13px; line-height:18px; color:var(--color-text); box-shadow:inset 0 1px 0 0 var(--hair); transition:color 200ms ease;" style-hover="color:var(--color-accent-700)">
           <span style="flex:none; font-size:11px; letter-spacing:0.08em; color:var(--color-accent-700); font-feature-settings:'tnum' 1;">{{ l.ghost }}</span>
           <span style="min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ l.title }}</span>
           <span style="flex:none; margin-left:auto; font-size:11px; letter-spacing:0.06em; color:var(--color-neutral-600); white-space:nowrap;">{{ l.kindLower }} · {{ l.year }} →</span>
         </button>
       </sc-for>
       <sc-if value="{{ linksEmpty }}" hint-placeholder-val="{{ false }}">
-        <p style="margin:0; display:flex; align-items:center; padding:0 22px; font-size:13px; line-height:18px; color:var(--color-neutral-600); box-shadow:inset 0 1px 0 0 var(--hair);">nothing in the register stands next to this sheet yet</p>
+        <p style="margin:0; display:flex; align-items:center; padding:0 clamp(14px,3.7vw,22px); font-size:13px; line-height:18px; color:var(--color-neutral-600); box-shadow:inset 0 1px 0 0 var(--hair);">nothing in the register stands next to this sheet yet</p>
       </sc-if>
     </div>
 
     <!-- issue line -->
-    <button class="mod sheet-mod mod-ctl" data-enter="" data-mod="navBack" onClick="{{ goPageCurrent }}" style="all:unset; position:relative; grid-column:{{ sheet.navBack.col }}; grid-row:{{ sheet.navBack.row }}; --d:{{ sheet.navBack.delay }}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);">← {{ current.backWord }}</button>
-    <button class="mod sheet-mod mod-ctl" data-enter="" data-mod="navNext" onClick="{{ openNext }}" style="all:unset; position:relative; grid-column:{{ sheet.navNext.col }}; grid-row:{{ sheet.navNext.row }}; --d:{{ sheet.navNext.delay }}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:11px 22px; text-align:right; color:var(--color-text); background:var(--color-bg);">
+    <button class="mod sheet-mod mod-ctl" data-enter="" data-mod="navBack" onClick="{{ goPageCurrent }}" style="all:unset; position:relative; grid-column:{{ sheet.navBack.col }}; grid-row:{{ sheet.navBack.row }}; --d:{{ sheet.navBack.delay }}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 clamp(14px,3.7vw,22px); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);">← {{ current.backWord }}</button>
+    <button class="mod sheet-mod mod-ctl" data-enter="" data-mod="navNext" onClick="{{ openNext }}" style="all:unset; position:relative; grid-column:{{ sheet.navNext.col }}; grid-row:{{ sheet.navNext.row }}; --d:{{ sheet.navNext.delay }}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px); text-align:right; color:var(--color-text); background:var(--color-bg);">
       <span style="font-size:11px; line-height:14px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-neutral-600);">Next · {{ next.kickerWord }} {{ next.numeral }}</span>
-      <span key="next-{{ next.figNo }}" data-tr="wake" data-reg="mono" style="font-family:var(--mono); font-size:24px; line-height:32px; font-weight:400; letter-spacing:-0.03em;">{{ next.title }} →</span>
+      <span key="next-{{ next.figNo }}" data-tr="wake" data-reg="mono" style="font-family:var(--mono); font-size:clamp(18px,4.6vw,24px); line-height:clamp(24px,6.2vw,32px); font-weight:400; letter-spacing:-0.03em;">{{ next.title }} →</span>
     </button>
     </div>
   </main>
@@ -1397,12 +1407,25 @@ class Component extends DCLogic {
   STACK_W = 1000;
   STACK_RATIO = 1.2;
   isStacked(w = window.innerWidth, h = window.innerHeight) { return w < this.STACK_W || w < h * this.STACK_RATIO; }
+  // A phone is not a small tablet. The stacked tier above still reads as a column with room for a
+  // measure beside it: the Development landing keeps its cards text-beside-plate, the sheet keeps
+  // three spec cells to a row, and the chapter keeps a margin column. None of that survives a page
+  // 390px wide. So a second term, under the first: below PHONE_W the same compositions are read
+  // again as one column with nothing at their side. It is a refinement of the stacked tier and never
+  // a branch beside it, which is what PHONE_W < STACK_W buys: a phone is always stacked as well, so
+  // no composition has to answer both questions at once.
+  PHONE_W = 600;
+  isPhone(w = window.innerWidth) { return w < this.PHONE_W; }
+  // Whether the page stands taller than it is wide. Only the home asks: its two objects are a pair
+  // laid across the page, and what they need is width rather than a large width, so a portrait
+  // tablet stacks them for the same reason a phone does. Everything else reads the two terms above.
+  isPortrait(w = window.innerWidth, h = window.innerHeight) { return h > w; }
   // narrow and landingRows decide which composition renders and how many rows it is drawn on, so they
   // are read from the window here rather than waiting for componentDidMount's first onResize: the first
   // paint would otherwise be the wrong one, replaced a frame later. The address bar is read the same
   // way, so a deep link paints the view it names, not the home first.
   state = { view: 'home', page: 'writing', cvReg: 'serif', idx: 10, hovered: 10, tab: { left: 0, width: 0 },
-    narrow: this.isStacked(), landingRows: this.visibleRows(),
+    narrow: this.isStacked(), landingRows: this.visibleRows(), phone: this.isPhone(), portrait: this.isPortrait(),
     // the description's clamp, in lines, and whether it was cut: both read off the page after the
     // first layout, since 0 lines means "not measured yet" and the module's overflow guard holds the
     // one frame before the answer arrives
@@ -1410,8 +1433,9 @@ class Component extends DCLogic {
     ...this.routeState(this.parseRoute(location.hash)) };
 
   // Where every module of a Development sheet sits on the 22 column, 44px row drawing grid, as
-  // "start / end" grid lines. The wide table is the desk-width sheet; the narrow table is the same
-  // drawing stacked, chosen off state.narrow (window.innerWidth < 1000). Both are written as plain
+  // "start / end" grid lines. The wide table is the desk-width sheet, the narrow table is the same
+  // drawing stacked, and the phone table is that stack read again with nothing beside anything;
+  // which one is used comes off state.phone and state.narrow. All three are written as plain
   // literals so tools/check-sheet-grid.mjs can read them without running this file, and the template
   // binds sheet.<name>.col / .row rather than carrying any span of its own.
   // The plot-in stagger: 40ms per row of a module's starting row, so the sheet inks itself top to
@@ -1485,6 +1509,34 @@ class Component extends DCLogic {
     navBack:       { col: '1 / 23',  row: '89 / 91' },
     navNext:       { col: '1 / 23',  row: '92 / 94' },
   };
+  // The phone reading of the same drawing. The narrow sheet is already a column, but a column with
+  // things beside each other in it: three spec cells to a row band is 110px a cell at 390, which is
+  // a label and half a value. Here every module takes the whole width and no two share a row band,
+  // which is the invariant tools/check-sheet-grid.mjs holds this table to and the whole of what the
+  // tier is for. The row counts are measured rather than chosen: the longest of the fourteen mono
+  // entries at 360px wide, with the phone type sizes the markup carries, and a row of slack over it.
+  SHEET_PHONE = {
+    back:          { col: '1 / 23',  row: '1 / 2' },
+    header:        { col: '1 / 23',  row: '3 / 10' },
+    ghost:         { col: '1 / 23',  row: '10 / 13' },
+    specSheet:     { col: '1 / 23',  row: '14 / 16' },
+    specRole:      { col: '1 / 23',  row: '16 / 18' },
+    specWith:      { col: '1 / 23',  row: '18 / 20' },
+    specStatus:    { col: '1 / 23',  row: '20 / 22' },
+    specRev:       { col: '1 / 23',  row: '22 / 24' },
+    hero:          { col: '1 / 23',  row: '25 / 35' },
+    heroCaption:   { col: '1 / 23',  row: '35 / 40' },
+    body1:         { col: '1 / 23',  row: '41 / 54' },
+    body2:         { col: '1 / 23',  row: '54 / 66' },
+    body3:         { col: '1 / 23',  row: '66 / 76' },
+    aside:         { col: '1 / 23',  row: '77 / 89' },
+    detailA:       { col: '1 / 23',  row: '90 / 102' },
+    detailB:       { col: '1 / 23',  row: '102 / 114' },
+    detailCaption: { col: '1 / 23',  row: '114 / 118' },
+    links:         { col: '1 / 23',  row: '119 / 121' },
+    navBack:       { col: '1 / 23',  row: '122 / 124' },
+    navNext:       { col: '1 / 23',  row: '125 / 129' },
+  };
 
   // The desktop Development landing is the same drawing grid run full bleed: 22 columns across the
   // viewport, 44px rows, at least a screen tall. Only these five modules are placed by hand. The
@@ -1547,6 +1599,61 @@ class Component extends DCLogic {
     'building-graph-neural-network':                { col: '6 / 10',  row: '10 / 16' },
   };
   LANDING_PAD = 22; // the padding every module of the drawing grid is set in
+  // Where every module of the STACKED Development landing sits, on the same 22 column, 44px row
+  // drawing grid. Below 1000px the landing is not drawn but read top to bottom, and these are its
+  // two readings: the tablet column, which is the composition the markup used to carry inline, and
+  // the phone column, where nothing stands beside anything. Chosen off state.phone, and plain
+  // literals like the sheet tables so tools/check-landing-grid.mjs can read them without running
+  // this file.
+  //
+  // Three kinds of row, because unlike the sheet this drawing grows with the register:
+  //
+  //   * a pair of grid lines, for the corner above the cards, which is a fixed shape
+  //   * cards, the first card's own band. The drawing leaves two empty rows between two modules, so
+  //     that band is the step as well as the size: every card after the first opens two rows below
+  //     where the one before it closed
+  //   * a pair written with a leading +, for everything under the cards: rows counted from the line
+  //     the last card closes on, which is known only once the entries are counted
+  //
+  // cardTextA / cardPlateA and their B pair are not on this grid at all. They are on the card's own
+  // inner grid, which is 22 columns like the sheet and as many 44px rows as the card's band, and A
+  // takes the even bands while B takes the odd ones. That alternation is the whole of what makes the
+  // tablet column read plate-left then plate-right; on a phone both pairs are the same, because a
+  // card there is its text over its plate and there is no side for either to be on.
+  LANDING_NARROW = {
+    statement:     { col: '1 / 15',  row: '2 / 12' },
+    platform:      { col: '15 / 23', row: '2 / 12' },
+    contents:      { col: '1 / 7',   row: '14 / 15' },
+    cards:         { col: '1 / 23',  row: '16 / 23' },
+    cardTextA:     { col: '1 / 11',  row: '1 / 8' },
+    cardPlateA:    { col: '11 / 23', row: '1 / 8' },
+    cardTextB:     { col: '13 / 23', row: '1 / 8' },
+    cardPlateB:    { col: '1 / 13',  row: '1 / 8' },
+    plates:        { col: '1 / 2',   row: '+0 / +1' },
+    author:        { col: '1 / 11',  row: '+2 / +18' },
+    cv:            { col: '12 / 23', row: '+2 / +18' },
+    colophon:      { col: '1 / 16',  row: '+20 / +23' },
+    contactEmail:  { col: '1 / 3',   row: '+25 / +26' },
+    contactGithub: { col: '3 / 5',   row: '+25 / +26' },
+    contactCv:     { col: '5 / 7',   row: '+25 / +26' },
+  };
+  LANDING_PHONE = {
+    statement:     { col: '1 / 23',  row: '2 / 18' },
+    platform:      { col: '1 / 23',  row: '19 / 27' },
+    contents:      { col: '1 / 23',  row: '28 / 29' },
+    cards:         { col: '1 / 23',  row: '30 / 44' },
+    cardTextA:     { col: '1 / 23',  row: '1 / 8' },
+    cardPlateA:    { col: '1 / 23',  row: '8 / 15' },
+    cardTextB:     { col: '1 / 23',  row: '1 / 8' },
+    cardPlateB:    { col: '1 / 23',  row: '8 / 15' },
+    plates:        { col: '1 / 2',   row: '+0 / +1' },
+    author:        { col: '1 / 23',  row: '+2 / +16' },
+    cv:            { col: '1 / 23',  row: '+17 / +43' },
+    colophon:      { col: '1 / 23',  row: '+44 / +48' },
+    contactEmail:  { col: '1 / 9',   row: '+49 / +50' },
+    contactGithub: { col: '9 / 16',  row: '+49 / +50' },
+    contactCv:     { col: '16 / 23', row: '+49 / +50' },
+  };
   // Whether this page is being tuned rather than read, off the URL, once: the flag decides both which
   // modules are fetched at all, in componentDidMount, and how the landing draws, just below. Read on
   // the instance rather than at each of them, since a page where the two disagreed would either ship
@@ -2221,7 +2328,7 @@ class Component extends DCLogic {
     window.addEventListener('pointerdown', this.onDown); window.addEventListener('pointerup', this.onUp); window.addEventListener('pointercancel', this.onUp);
     this.onScroll = () => { this.syncParchment(); this.syncHome(); this.setState({ scrollY: window.scrollY }); clearTimeout(this.remeasureTimer); this.remeasureTimer = setTimeout(() => this.remeasureText(), 120); };
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => setTimeout(() => { this.remeasureText(); this.fitLandingStatement(); this.syncParchment(); }, 50));
-    this.onResize = () => { this.setState({ narrow: this.isStacked(), landingRows: this.visibleRows() }); this.measureTabs(); this.syncParchment(); this.syncHome(); };
+    this.onResize = () => { this.setState({ narrow: this.isStacked(), landingRows: this.visibleRows(), phone: this.isPhone(), portrait: this.isPortrait() }); this.measureTabs(); this.syncParchment(); this.syncHome(); };
     this.onKey = (e) => {
       const t = e.target; if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
       const n = this.data.length, { view, idx } = this.state;
@@ -2272,7 +2379,7 @@ class Component extends DCLogic {
         .then((m) => { if (!this.dead) this.leafTuner = m.mount({ spreads: this.LEAF_SPREADS, pairs: this.LEAF_PAIRS, rerender: () => this.forceUpdate() }); })
         .catch((e) => console.error('leaves-dev', e));
       import('./grid-dev.js')
-        .then((m) => { if (!this.dead) this.gridTuner = m.mount({ tables: { SHEET_WIDE: this.SHEET_WIDE, SHEET_NARROW: this.SHEET_NARROW, LANDING_WIDE: this.LANDING_WIDE, LANDING_PINS: this.LANDING_PINS }, sheetTable: () => (this.state.narrow ? 'SHEET_NARROW' : 'SHEET_WIDE'), landingError: () => this.landingError, quiet: (on) => { this.devQuiet = on; if (on) this.stopTyping(); else this.forceUpdate(); }, rerender: () => { this.landingCache = null; this.forceUpdate(); } }); })
+        .then((m) => { if (!this.dead) this.gridTuner = m.mount({ tables: { SHEET_WIDE: this.SHEET_WIDE, SHEET_NARROW: this.SHEET_NARROW, SHEET_PHONE: this.SHEET_PHONE, LANDING_WIDE: this.LANDING_WIDE, LANDING_PINS: this.LANDING_PINS }, sheetTable: () => (this.state.phone ? 'SHEET_PHONE' : this.state.narrow ? 'SHEET_NARROW' : 'SHEET_WIDE'), landingError: () => this.landingError, quiet: (on) => { this.devQuiet = on; if (on) this.stopTyping(); else this.forceUpdate(); }, rerender: () => { this.landingCache = null; this.forceUpdate(); } }); })
         .catch((e) => console.error('grid-dev', e));
     }
     this.observeReveals(); this.mountTextEffects(); this.syncParchment(); this.syncHome(); this.syncPaper(); this.placeLeafText();
@@ -2363,15 +2470,26 @@ class Component extends DCLogic {
   // tallest item, so a one-row caption taller than the block beside it pushes the rest of the body
   // down by its own height, while a spanning one lays that height over the whole run of blocks it
   // stands beside and lifts nothing until it is taller than all of them together.
-  static planPaperRows(blocks) {
+  //
+  // On a phone there is no column 2 to hold any of that: 4fr of a 350px measure is 107px, which is a
+  // gutter with words falling out of it rather than a margin. So the same body is read as one column.
+  // The aside opens it on row 1, every block follows in document order, and a plate's caption takes
+  // the row directly under the plate rather than standing beside it. Nothing spans, because with one
+  // column a span is a stack and a wide figure is no wider than any other block. The two readings are
+  // one method because they are one ordering of one list, and tools/check-paper.mjs runs both over
+  // every module in content/.
+  static planPaperRows(blocks, phone) {
     const cells = [], caps = [];
     // the rows a wide block takes: it reaches across both columns, so column 2 is spoken for there
     const wideRows = [];
-    let row = 0, firstFigRow = 0;
-    const at = (wide) => { row++; if (wide) wideRows.push(row); return { gridRow: String(row), gridColumn: wide ? '1 / -1' : '1', minWidth: 0 }; };
+    // on a phone row 1 belongs to the aside and the blocks open under it
+    let row = phone ? 1 : 0, firstFigRow = 0;
+    const at = (wide) => { row++; if (wide && !phone) wideRows.push(row); return { gridRow: String(row), gridColumn: phone ? '1' : (wide ? '1 / -1' : '1'), minWidth: 0 }; };
     // two captions must never land in the same cell; the second one steps down a row
     const taken = new Set();
     const capRow = (r) => { while (taken.has(r)) r++; taken.add(r); return r; };
+    // beside the plate on a page with a margin, on the row under it on a phone
+    const cap = (r, figs) => caps.push(phone ? { row: ++row, end: row + 1, col: '1', figs } : { row: capRow(r), col: '2', figs });
     (blocks || []).forEach((b, i) => {
       const k = b && b.k;
       if (k === 'fig') {
@@ -2379,11 +2497,11 @@ class Component extends DCLogic {
         if (!firstFigRow) firstFigRow = row;
         // a wide plate already owns column 2 on its own row, so its caption drops to the next one,
         // where it sits beside the paragraph that follows the figure
-        caps.push({ row: capRow(b.wide ? row + 1 : row), figs: [b] });
+        cap(b.wide ? row + 1 : row, [b]);
       } else if (k === 'figrow') {
         cells[i] = at(false);
         if (!firstFigRow) firstFigRow = row;
-        caps.push({ row: capRow(row), figs: b.figs });
+        cap(row, b.figs);
       } else {
         // every block renderPaper draws takes a row of its own. A fold takes none: the tail carries
         // its own open and closed state, so renderPaperTail places it on the row this leaves free.
@@ -2399,20 +2517,22 @@ class Component extends DCLogic {
     // which is right, since nothing stands in column 2 there. A caption already standing on or
     // below where its span would end (a wide plate closing the body, whose caption has nowhere left
     // to drop) keeps the one row it has.
-    caps.forEach((c, i) => {
+    if (!phone) caps.forEach((c, i) => {
       const nextCap = i + 1 < caps.length ? caps[i + 1].row : tailRow + 1;
       const nextWide = wideRows.find((w) => w > c.row);
       const next = nextWide === undefined ? nextCap : Math.min(nextCap, nextWide);
       c.end = next > c.row ? next : c.row + 1;
     });
-    return { cells, caps, tailRow, asideRow: '1 / ' + (firstFigRow || tailRow) };
+    return { cells, caps, tailRow, asideRow: phone ? '1 / 2' : '1 / ' + (firstFigRow || tailRow) };
   }
   // The paper body, built once per loaded module and memoized on it. The app re-renders on every
   // scroll event and on the glitch timer; handing React the same element objects each time lets it
   // bail out of the whole subtree instead of rebuilding several hundred nodes a frame.
-  renderPaper(mod) {
+  renderPaper(mod, phone) {
     if (!mod) return null;
-    if (mod.__els) return mod.__els;
+    // the memo is keyed on which reading built it: the two put the same blocks on different rows and
+    // in different columns, so a resize across PHONE_W rebuilds rather than being handed the last one
+    if (mod.__els && mod.__phone === phone) return mod.__els;
     const e = React.createElement;
     const ink = 'color-mix(in srgb, var(--color-text) 84%, transparent)';
     // The panes this body can carry: a heading, the keywords line and an author's name are each one
@@ -2429,7 +2549,7 @@ class Component extends DCLogic {
     const folds = [];
     // every block's cell on the body grid, worked out ahead of the elements; this method owns no
     // row counter of its own, it only reads the plan back block by block
-    const plan = Component.planPaperRows(mod.blocks);
+    const plan = Component.planPaperRows(mod.blocks, phone);
     // The frame is the plate's own hairline, drawn on the image and nothing else. The design system's
     // .plate is a 6px surface mat plus a 1px outline that goes accent on hover; the mat is dropped so
     // the outline lands on the image edge, and its sepia (meant for placeholder photographs) with it.
@@ -2510,6 +2630,7 @@ class Component extends DCLogic {
           b.n ? e('span', { key: 'n', style: { position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--color-neutral-600)' } }, '(' + b.n + ')') : null));
       }
     });
+    mod.__phone = phone;
     mod.__els = els;
     mod.__caps = plan.caps;
     mod.__folds = folds;
@@ -2527,7 +2648,7 @@ class Component extends DCLogic {
     const e = React.createElement;
     const kicker = { margin: '0 0 6px', fontFamily: 'var(--deco)', fontSize: '10px', letterSpacing: '0.1em', color: 'var(--color-accent-700)', whiteSpace: 'nowrap' };
     const line = { margin: 0, fontFamily: "'Libre Baskerville', var(--font-heading), serif", fontStyle: 'italic', fontSize: '15px', lineHeight: '21px', color: 'var(--color-neutral-700)', whiteSpace: 'pre-wrap', maxWidth: '30ch' };
-    return mod.__caps.map((c) => e('div', { key: 'pc' + c.row, 'data-figcaps': '', style: { gridColumn: 2, gridRow: c.row + ' / ' + c.end, alignSelf: 'start', margin: '10px 0 0', display: 'flex', flexDirection: 'column', gap: '20px' } },
+    return mod.__caps.map((c) => e('div', { key: 'pc' + c.row, 'data-figcaps': '', style: { gridColumn: c.col, gridRow: c.row + ' / ' + c.end, alignSelf: 'start', margin: '10px 0 0', display: 'flex', flexDirection: 'column', gap: '20px' } },
       c.figs.map((f) => {
         const full = 'Fig. ' + f.n + '. ' + f.capText, typed = this.typedText('fig-' + f.n, full);
         return e('div', { key: f.n, 'data-figcap': String(f.n) },
@@ -3127,7 +3248,23 @@ class Component extends DCLogic {
     // zero-padded to two digits. Those are different numbers, so the frame name is kept out of the
     // 'frame-<figNo>' namespace the chapters use and out of the 'card-' one the engine keeps its own
     // fallback bucket in. The entry-to-chapter pairing is the plate's data-shape-alt, frame-<figNo>.
-    const pageProjects = projects.filter((p) => this.pageOf(projects.indexOf(p)) === pageKey).map((p, k) => ({ ...p, shapeIdx: k + 1, dir: k % 2 ? 'rtl' : 'ltr', textCol: k % 2 ? '13 / 23' : '1 / 11', plateCol: k % 2 ? '1 / 13' : '11 / 23', cardRow: (16 + 9 * k) + ' / ' + (23 + 9 * k), bandNo: String(k + 1).padStart(2, '0'), morphName: k < 2 ? 'row-' + k : 'feat-' + (k - 2) + '-title', frameShape: 'plate-frame-' + k }));
+    // The stacked Development landing, off whichever of its two tables the width calls for. Every
+    // span the markup used to carry inline is read back from there now, the way the sheet reads its
+    // own, so the tablet column and the phone column are two readings of one drawing rather than one
+    // composition with the other nowhere.
+    const at = (s) => s.split('/').map((v) => parseInt(v, 10));
+    const stackPlace = this.state.phone ? this.LANDING_PHONE : this.LANDING_NARROW;
+    // a card's band is its size and its step both: the drawing leaves two empty rows between two
+    // modules, so the next card opens that far below where the last one closed
+    const cardBand = at(stackPlace.cards.row), cardRows = cardBand[1] - cardBand[0], cardStep = cardRows + 2;
+    // the card's own inner grid is ruled on the same 44px module as the sheet it stands on, so a
+    // cell of it lands on the drawing's own lines rather than on a share of the card's height
+    const cardGrid = 'repeat(' + cardRows + ', ' + this.SHEET_ROW + 'px)';
+    const cardCell = (k, part) => stackPlace['card' + part + (k % 2 ? 'B' : 'A')];
+    const pageProjects = projects.filter((p) => this.pageOf(projects.indexOf(p)) === pageKey).map((p, k) => ({ ...p, shapeIdx: k + 1, dir: k % 2 ? 'rtl' : 'ltr',
+      textCol: cardCell(k, 'Text').col, textRow: cardCell(k, 'Text').row, plateCol: cardCell(k, 'Plate').col, plateRow: cardCell(k, 'Plate').row,
+      cardRow: (cardBand[0] + cardStep * k) + ' / ' + (cardBand[1] + cardStep * k), cardGrid,
+      bandNo: String(k + 1).padStart(2, '0'), morphName: k < 2 ? 'row-' + k : 'feat-' + (k - 2) + '-title', frameShape: 'plate-frame-' + k }));
     // The desktop Development landing. Its statement, platform and contact cells come off
     // LANDING_WIDE; every project is a plate pinned to a cell by landing-grid.js, and the grid ends on
     // whatever row that placement needed, so the contact band closes the sheet however far it grew.
@@ -3216,15 +3353,20 @@ class Component extends DCLogic {
     }).filter(Boolean);
     const introChars = Array.from(page.intro);
     page.dropCap = introChars[0]; page.introRest = introChars.slice(1).join('');
-    // the Development page is placed on a 44px module: cards are 7 rows with two blank rows between
-    const lastCardEnd = 23 + 9 * Math.max(0, pageProjects.length - 1);
-    // the contact band closes the sheet: one row, after the same two-row gap the colophon takes
-    const gridRows = { plates: lastCardEnd + ' / ' + (lastCardEnd + 1), author: (lastCardEnd + 2) + ' / ' + (lastCardEnd + 18), colophon: (lastCardEnd + 20) + ' / ' + (lastCardEnd + 23), contact: (lastCardEnd + 25) + ' / ' + (lastCardEnd + 26) };
+    // Where the last card closes, and with it every module the table placed under the cards. Those
+    // rows are written in the table with a leading +, because how far down this line falls is a fact
+    // about how many entries the register carries rather than about the drawing.
+    const lastCardEnd = cardBand[1] + cardStep * Math.max(0, pageProjects.length - 1);
+    const stack = {};
+    for (const [name, spot] of Object.entries(stackPlace)) {
+      const after = /^\+(\d+) \/ \+(\d+)$/.exec(spot.row);
+      stack[name] = { col: spot.col, row: after ? (lastCardEnd + +after[1]) + ' / ' + (lastCardEnd + +after[2]) : spot.row };
+    }
     const pad = (n) => String(n).padStart(2, '0');
     const featured = this.featuredFor[pageKey].map((i, k) => ({ ...projects[i], plateNumeral: this.num(k) }));
     const current = projects[idx];
     const paperMod = current.paper ? (this.papers || {})[idx] : null;
-    const paperBlocks = this.renderPaper(paperMod);
+    const paperBlocks = this.renderPaper(paperMod, this.state.phone);
     const paperCaptions = this.renderPaperCaptions(paperMod);
     const paperTail = this.renderPaperTail(paperMod, this.state.paperOpen || {});
     const hov = projects[hovered] && this.pageOf(hovered) === pageKey ? projects[hovered] : pageProjects[0];
@@ -3248,8 +3390,7 @@ class Component extends DCLogic {
     //
     // The second is an entry that names one detail instead of the pair. The single figure takes the
     // columns the pair spanned, from detailA's first to detailB's last, on both sheets.
-    const place = this.state.narrow ? this.SHEET_NARROW : this.SHEET_WIDE;
-    const at = (s) => s.split('/').map((v) => parseInt(v, 10));
+    const place = this.state.phone ? this.SHEET_PHONE : this.state.narrow ? this.SHEET_NARROW : this.SHEET_WIDE;
 
     const heroSpan = at(place.hero.row);
     const portrait = !this.state.narrow && current.heroW > 0 && current.heroH > current.heroW;
@@ -3325,6 +3466,18 @@ class Component extends DCLogic {
       isHome: view === 'home', showTabs: view !== 'home', goHome: () => this.goHome(),
       homeLayerRef: this.homeLayerRef, homeRollRef: this.homeRollRef, homeCubeRef: this.homeCubeRef, fogLayerRef: this.fogLayerRef,
       goToolingFromCube: () => { this.goPage('tooling'); this.cubeLead = true; },
+      // The home in portrait. Two objects laid across a page need width, not a large width, so a phone
+      // and an upright tablet both read them down the page instead. The main takes the screen exactly:
+      // 100dvh follows the browser chrome as it retracts, where 100vh would leave the contact line under
+      // it, and a height rather than a minimum is what keeps the one view that must never scroll from
+      // scrolling. The two objects are then sized off dvh as well, so the pair plus the gap plus the
+      // pinned contact line always stand inside that height with room over.
+      homeMainBox: this.state.portrait ? 'height:calc(100dvh - 57px); overflow:hidden;' : 'min-height:calc(100vh - 57px);',
+      homeGridCols: this.state.portrait ? 'minmax(0,1fr)' : 'minmax(0,1.1fr) minmax(0,0.9fr)',
+      homeGridRows: this.state.portrait ? 'minmax(0,1fr) minmax(0,1fr)' : 'none',
+      homeGridGap: this.state.portrait ? 'clamp(8px,2vh,32px)' : 'clamp(16px,4vw,72px)',
+      homeRollH: this.state.portrait ? 'min(30dvh,300px)' : 'min(44vh,400px)',
+      homeCubeH: this.state.portrait ? 'min(28dvh,280px)' : 'min(40vh,360px)',
       homeCubeOn: () => { if (this.home) this.home.setHover(true); }, homeCubeOff: () => { if (this.home) this.home.setHover(false); },
       isPage: view === 'page', marginalia, page, pageReg: page.reg, pageKey: pageKey, pageLabel: page.label,
       isCvSerif: view === 'cv' && cvReg === 'serif', isCvMono: view === 'cv' && cvReg === 'mono',
@@ -3342,6 +3495,18 @@ class Component extends DCLogic {
       isMono: view === 'chapter' && mono, isSerif: view === 'chapter' && !mono, chapterKey: R + '-' + idx,
       isPaper: view === 'chapter' && !mono && !!current.paper, isEssay: view === 'chapter' && !mono && !current.paper,
       paperBlocks, paperCaptions, paperTail, paperAsideRow: (paperMod && paperMod.__asideRow) || 'auto',
+      // The chapter's body, in both readings. On a phone the grid loses its margin column, the
+      // essay's justified text becomes one column of type, and the aside comes in out of the margin
+      // to open the body. Where each block and each caption then stands is planPaperRows', off the
+      // same flag.
+      // The outlined chapter numeral behind the head. It is set off the width so it always reads as a
+      // watermark rather than as a number, and its floor is the tablet's: XVIII at 160px is 375px wide
+      // and hangs 20px off the left edge of a 390px page. The phone arm reaches 160px at exactly
+      // PHONE_W, so the two are one continuous ramp rather than a step at the boundary.
+      chapterGhost: this.state.phone ? 'clamp(88px,26.7vw,160px)' : 'clamp(160px,22vw,320px)',
+      chapterCols: this.state.phone ? 'minmax(0,1fr)' : 'minmax(0,8fr) minmax(0,4fr)',
+      essayColumns: this.state.phone ? '1' : '2',
+      paperAsideCol: this.state.phone ? '1' : '2',
       heroImg: view === 'chapter' && !!current.hero, heroSlot: view === 'chapter' && !current.hero,
       // the Development sheet's hero plate: the video when the entry names one, the slot otherwise.
       // The serif chapter has no moving plate and keeps heroImg/heroSlot.
@@ -3368,8 +3533,14 @@ class Component extends DCLogic {
       subBrandDisplay: this.state.narrow ? 'none' : 'inline', indexCols: this.state.narrow ? 'minmax(0,1fr)' : 'minmax(0,7fr) minmax(0,5fr)', previewDisplay: this.state.narrow ? 'none' : 'block',
       parallax: Math.round((this.state.scrollY || 0) * 0.18) + 'px',
       hintOpacity: this.state.hintGone || this.state.usedKeys ? '0' : '1', bloomHintOpacity: this.state.bloomTouched ? '0' : '1',
+      // The keyboard hint is a 130px slot, and a 360px page gives the running head 305px of content
+      // box to put the brand and both tabs in. It is also the one thing on the bar a phone has no use
+      // for, since there is no keyboard to hint at. So it is taken off rather than shrunk, and the
+      // brand and the bar's own padding carry phone floors beside it; measureTabs re-reads the
+      // underline off the tab's own box, so nothing here moves the mark.
+      hintDisplay: this.state.phone ? 'none' : 'flex',
       projects, pageProjects, leaves, leafRows, leftLeaves: leaves.filter((l) => l.side === 'left'), rightLeaves: leaves.filter((l) => l.side === 'right'), featured, current, next: projects[(idx + 1) % projects.length], hovered: hov, cv: cvViews.timeline,
-      gridPlatesRow: gridRows.plates, gridAuthorRow: gridRows.author, gridColophonRow: gridRows.colophon, gridContactRow: gridRows.contact,
+      stack,
       sheet, sheetGridRef: this.sheetGridRef,
       contentsRef: this.contentsRef, platesRef: this.platesRef, notesRef: this.notesRef, landingStatementRef: this.landingStatementRef, headRef: this.headRef, tabToolingRef: this.tabToolingRef, tabWritingRef: this.tabWritingRef,
       goTooling: () => this.goPage('tooling'), goWriting: () => this.goPage('writing'),

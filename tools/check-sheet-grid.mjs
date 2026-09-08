@@ -6,9 +6,9 @@
 // margin pushes anything off a drawn line. The Research chapter keeps its prose layout, so the
 // isSerif branch must still be the two-column body and must not have grown a drawing grid.
 //
-// Placement lives in SHEET_WIDE and SHEET_NARROW in the logic class, not in the markup, so the
+// Placement lives in SHEET_WIDE, SHEET_NARROW and SHEET_PHONE in the logic class, not in the markup, so the
 // template must name a module and read its span back. That is what most of this file guards: a
-// module added to the template without an entry in both tables, an entry that falls off the grid,
+// module added to the template without an entry in all three tables, an entry that falls off the grid,
 // and two modules laid over one another are all failures here rather than in the browser.
 //
 // Run with `npm run check`. Exits non-zero and prints every failure it found.
@@ -116,8 +116,27 @@ function validateTable(name, table) {
 
 const wide = readTable('SHEET_WIDE');
 const narrow = readTable('SHEET_NARROW');
-validateTable('SHEET_WIDE', wide);
-validateTable('SHEET_NARROW', narrow);
+const phone = readTable('SHEET_PHONE');
+const TABLES = [['SHEET_WIDE', wide], ['SHEET_NARROW', narrow], ['SHEET_PHONE', phone]];
+for (const [name, table] of TABLES) validateTable(name, table);
+
+// The phone reading of the sheet is one column with nothing beside anything, which on a drawing grid
+// means one module to a row band. It is the invariant the whole tier turns on: a module sharing a
+// band has a neighbour, and a neighbour on a 390px page is 16px columns and words falling out of the
+// frame. Two modules share a band when their row spans overlap at all, whatever their columns say.
+if (phone) {
+  const bands = Object.entries(phone).map(([mod, at]) => [mod, span(at.row)]).filter((e) => e[1]);
+  for (let i = 0; i < bands.length; i++) {
+    for (let j = i + 1; j < bands.length; j++) {
+      const [a, ar] = bands[i], [b, br] = bands[j];
+      if (ar[0] < br[1] && br[0] < ar[1]) fail('SHEET_PHONE stands ' + a + ' and ' + b + ' on the same row band (' +
+        ar.join(' / ') + ' and ' + br.join(' / ') + '); on a phone the sheet is one module to a band');
+    }
+  }
+  for (const [mod, at] of Object.entries(phone)) {
+    if (at.col !== '1 / ' + (COLUMNS + 1)) fail('SHEET_PHONE.' + mod + ' takes columns ' + at.col + ' rather than the full width of the sheet');
+  }
+}
 
 // ---------------------------------------------------------------- locate the two chapter bodies
 
@@ -186,14 +205,15 @@ if (mono) {
         if (from) {
           // a derived module is not placed by hand: renderVals works it out from the modules it
           // stands in for, so it must not be in the tables and they must be
-          for (const table of [['SHEET_WIDE', wide], ['SHEET_NARROW', narrow]]) {
+          for (const table of TABLES) {
             if (!table[1]) continue;
             if (table[1][name]) fail(table[0] + ' places ' + name + ', which renderVals derives from ' + from.join(' and '));
             for (const src of from) if (!table[1][src]) fail('the template binds the derived sheet.' + name + ' but ' + table[0] + ' has no ' + src + ' to derive it from');
           }
         } else {
-          if (wide && !wide[name]) fail('the template binds sheet.' + name + ' but SHEET_WIDE has no entry for it');
-          if (narrow && !narrow[name]) fail('the template binds sheet.' + name + ' but SHEET_NARROW has no entry for it');
+          for (const [tname, table] of TABLES) {
+            if (table && !table[name]) fail('the template binds sheet.' + name + ' but ' + tname + ' has no entry for it');
+          }
         }
       }
 
@@ -301,7 +321,7 @@ if (mono) {
 }
 
 // a placement entry nothing binds is a module that was deleted and left behind
-for (const [name, table] of [['SHEET_WIDE', wide], ['SHEET_NARROW', narrow]]) {
+for (const [name, table] of TABLES) {
   if (!table) continue;
   for (const mod of Object.keys(table)) {
     if (!bound.has(mod)) fail(name + '.' + mod + ' places a module the template never binds');
@@ -312,7 +332,9 @@ for (const [name, table] of [['SHEET_WIDE', wide], ['SHEET_NARROW', narrow]]) {
 
 if (serif) {
   const html = tight(serif.innerHTML);
-  if (!html.includes('columns:2')) fail('the Research chapter lost its two-column body (columns:2)');
+  // The essay body is still set in text columns, and the count comes off the model rather than the
+  // markup, since a phone reads it as one. tools/check-phone-layout.mjs holds the value itself.
+  if (!html.includes('columns:{{essayColumns}}')) fail('the Research chapter lost its multi-column body (columns:{{ essayColumns }})');
   if (html.includes('repeat(22,1fr)')) fail('the Research chapter grew the drawing grid; it keeps the prose layout');
 }
 
@@ -323,4 +345,5 @@ if (failures.length) {
   for (const f of failures) console.error('  - ' + f);
   process.exit(1);
 }
-console.log('check-sheet-grid: ' + bound.size + ' modules, both placement tables agree, and the Research chapter is untouched');
+console.log('check-sheet-grid: ' + bound.size + ' modules, all ' + TABLES.length + ' placement tables agree, the phone table '
+  + 'stands one module to a row band across the full width, and the Research chapter is untouched');

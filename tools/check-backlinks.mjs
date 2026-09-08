@@ -16,7 +16,7 @@
 //      at and holds every line to landing inside the grid, on the centres of the two plates it joins.
 //
 //   2. The sheet. `links` is a module of the drawing grid like any other, so it is placed from
-//      SHEET_WIDE and SHEET_NARROW; unlike the others its row count follows its content, one row of
+//      SHEET_WIDE, SHEET_NARROW and SHEET_PHONE; unlike the others its row count follows its content, one row of
 //      label and one row per linked sheet. It grows the way the portrait hero and the single detail
 //      grow, and the issue line under it moves down by what it gained. A table that left it no room
 //      to grow into would put the module over the issue line, which is what the growth rules below
@@ -201,13 +201,14 @@ for (const [w, h] of VIEWPORTS) {
 
 const wide = (() => { try { return readTable('SHEET_WIDE', logicSrc); } catch (e) { fail(e.message); return null; } })();
 const narrow = (() => { try { return readTable('SHEET_NARROW', logicSrc); } catch (e) { fail(e.message); return null; } })();
+const phone = (() => { try { return readTable('SHEET_PHONE', logicSrc); } catch (e) { fail(e.message); return null; } })();
 
 // One row of label and one row per linked sheet, and never fewer than two rows: a sheet nothing
 // links to says so on a row of its own rather than collapsing the module away.
 const linkRows = (n) => 1 + Math.max(1, n);
 const worst = Math.max(...mono.map((d) => (related.get(d.id) || []).length), 0);
 
-for (const [name, table] of [['SHEET_WIDE', wide], ['SHEET_NARROW', narrow]]) {
+for (const [name, table] of [['SHEET_WIDE', wide], ['SHEET_NARROW', narrow], ['SHEET_PHONE', phone]]) {
   if (!table) continue;
   if (!table.links) { fail(name + ' has no links entry, so the sheet has nowhere to list what it stands next to'); continue; }
   const s = span(table.links.row);

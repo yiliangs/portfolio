@@ -61,11 +61,11 @@
         "\n  ",
         h("header", { key: "9", "data-print": "hide", style: {"position":"sticky","top":"0","zIndex":"5","borderBottom":"1px solid var(--color-divider)","background":"var(--color-bg)","transition":"background-color 780ms cubic-bezier(.65,0,.15,1), border-color 780ms cubic-bezier(.65,0,.15,1), color 780ms cubic-bezier(.65,0,.15,1)"} },
           "\n    ",
-          h("div", { key: "1", ref: V.headRef, style: {"position":"relative","display":"flex","alignItems":"stretch","justifyContent":"space-between","gap":"var(--space-4)","padding":"0 clamp(20px,5vw,72px)","height":"56px","fontSize":"12px","letterSpacing":"0.1em","textTransform":"uppercase","fontFeatureSettings":"'tnum' 1"} },
+          h("div", { key: "1", ref: V.headRef, style: {"position":"relative","display":"flex","alignItems":"stretch","justifyContent":"space-between","gap":"var(--space-4)","padding":"0 clamp(14px,5vw,72px)","height":"56px","fontSize":"12px","letterSpacing":"0.1em","textTransform":"uppercase","fontFeatureSettings":"'tnum' 1"} },
             "\n      ",
             h("button", { key: "1", onClick: V.goHome, style: {"all":"unset","cursor":"pointer","display":"flex","gap":"var(--space-3)","alignItems":"center","color":"var(--color-text)","flexShrink":"0","whiteSpace":"nowrap","transition":"color 780ms cubic-bezier(.65,0,.15,1)"}, className: "scp0" },
               "\n        ",
-              h("span", { key: "1", "aria-label": "Yiliang Shao", style: {"display":"inline-flex","fontWeight":"600","fontSize":"18px","textTransform":"none","lineHeight":"20px","whiteSpace":"pre"} },
+              h("span", { key: "1", "aria-label": "Yiliang Shao", style: {"display":"inline-flex","fontWeight":"600","fontSize":"clamp(14px,3.9vw,18px)","textTransform":"none","lineHeight":"20px","whiteSpace":"pre"} },
                 "\n          ",
                 h(F,{key:1},L(V.brandChars).map(function(item,i){
                   var Vi = Object.assign({}, V, {"c": item, $index: i});
@@ -122,7 +122,7 @@
                   "\n        "
                 ),
                 "\n        ",
-                h("span", { key: "3|17.1ju7vqw", style: S(`display:flex; align-items:center; justify-content:flex-end; width:130px; flex:none; font-family:var(--mono); font-size:11px; letter-spacing:0.08em; color:var(--color-neutral-600); white-space:nowrap; opacity:${V.hintOpacity ?? ""}; transition:opacity 400ms ease, color 780ms cubic-bezier(.65,0,.15,1);`) },
+                h("span", { key: "3|17.1ju7vqw", style: S(`display:${V.hintDisplay ?? ""}; align-items:center; justify-content:flex-end; width:130px; flex:none; font-family:var(--mono); font-size:11px; letter-spacing:0.08em; color:var(--color-neutral-600); white-space:nowrap; opacity:${V.hintOpacity ?? ""}; transition:opacity 400ms ease, color 780ms cubic-bezier(.65,0,.15,1);`) },
                   "t / e · ← → · esc"
                 ),
                 "\n      "
@@ -139,11 +139,11 @@
         (V.isHome ? h(F,{key:12},
           "\n  ",
           "\n  ",
-          h("main", { key: "home", "data-screen-label": "Home", style: {"position":"relative","padding":"0 clamp(20px,5vw,72px)","minHeight":"calc(100vh - 57px)","boxSizing":"border-box","display":"grid","gridTemplateRows":"minmax(0,1fr)"} },
+          h("main", { key: "home", "data-screen-label": "Home", style: S(`position:relative; padding:0 clamp(20px,5vw,72px); ${V.homeMainBox ?? ""} box-sizing:border-box; display:grid; grid-template-rows:minmax(0,1fr);`) },
             "\n    ",
-            h("div", { key: "1", style: {"display":"grid","gridTemplateColumns":"minmax(0,1.1fr) minmax(0,0.9fr)","alignItems":"center","gap":"clamp(16px,4vw,72px)"} },
+            h("div", { key: "1", style: S(`display:grid; grid-template-columns:${V.homeGridCols ?? ""}; grid-template-rows:${V.homeGridRows ?? ""}; align-items:center; justify-items:stretch; gap:${V.homeGridGap ?? ""};`) },
               "\n      ",
-              h("button", { key: "1|37.1kxyw0d", ref: V.homeRollRef, onClick: V.goWriting, style: {"all":"unset","cursor":"pointer","position":"relative","display":"flex","alignItems":"center","justifyContent":"center","height":"min(44vh,400px)","fontFamily":"var(--font-heading)"} },
+              h("button", { key: "1|37.1kxyw0d", ref: V.homeRollRef, onClick: V.goWriting, style: S(`all:unset; cursor:pointer; position:relative; display:flex; align-items:center; justify-content:center; height:${V.homeRollH ?? ""}; font-family:var(--font-heading);`) },
                 "\n        ",
                 h("span", { key: "1|8.171hb9u", className: "breathe", style: {"position":"relative","zIndex":"3","fontWeight":"300","fontSize":"clamp(26px,3.4vw,50px)","letterSpacing":"0.01em"} },
                   "Research"
@@ -151,7 +151,7 @@
                 "\n      "
               ),
               "\n      ",
-              h("button", { key: "3", ref: V.homeCubeRef, onClick: V.goToolingFromCube, onMouseEnter: V.homeCubeOn, onMouseLeave: V.homeCubeOff, onFocus: V.homeCubeOn, onBlur: V.homeCubeOff, "aria-label": "Development", style: {"all":"unset","cursor":"pointer","position":"relative","height":"min(40vh,360px)"} }),
+              h("button", { key: "3", ref: V.homeCubeRef, onClick: V.goToolingFromCube, onMouseEnter: V.homeCubeOn, onMouseLeave: V.homeCubeOff, onFocus: V.homeCubeOn, onBlur: V.homeCubeOff, "aria-label": "Development", style: S(`all:unset; cursor:pointer; position:relative; height:${V.homeCubeH ?? ""};`) }),
               "\n    "
             ),
             "\n    ",
@@ -481,7 +481,7 @@
               h("div", { key: "1", style: {"marginTop":"88px","display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","borderRight":"1px solid var(--hair)","borderBottom":"1px solid var(--hair)","backgroundImage":"linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
                 "\n\n    ",
                 "\n    ",
-                h("section", { key: "2", className: "mod", style: {"gridColumn":"1 / 15","gridRow":"2 / 12","padding":"22px"} },
+                h("section", { key: "2", className: "mod", style: S(`grid-column:${V.stack?.statement?.col ?? ""}; grid-row:${V.stack?.statement?.row ?? ""}; padding:clamp(14px,3.7vw,22px);`) },
                   "\n      ",
                   h("p", { key: "1|17.1dagtdl", "data-morph": "kicker", style: {"margin":"0 0 22px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
                     h(F,{key:0},"",I(V.page?.kicker,1),"")
@@ -502,10 +502,10 @@
                 ),
                 "\n    ",
                 "\n    ",
-                h("div", { key: "5", ref: V.platformRef, "aria-hidden": "true", className: "mod", style: {"gridColumn":"15 / 23","gridRow":"2 / 12","minHeight":"0","cursor":"grab","touchAction":"none","userSelect":"none"} }),
+                h("div", { key: "5", ref: V.platformRef, "aria-hidden": "true", className: "mod", style: S(`grid-column:${V.stack?.platform?.col ?? ""}; grid-row:${V.stack?.platform?.row ?? ""}; min-height:0; cursor:grab; touch-action:none; user-select:none;`) }),
                 "\n\n    ",
                 "\n    ",
-                h("p", { key: "8|22.11u5osx", ref: V.contentsRef, "data-morph": "index-kicker", className: "mod", style: {"gridColumn":"1 / 7","gridRow":"14 / 15","margin":"0","display":"flex","alignItems":"center","padding":"0 22px","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
+                h("p", { key: "8|22.11u5osx", ref: V.contentsRef, "data-morph": "index-kicker", className: "mod", style: S(`grid-column:${V.stack?.contents?.col ?? ""}; grid-row:${V.stack?.contents?.row ?? ""}; margin:0; display:flex; align-items:center; padding:0 clamp(14px,3.7vw,22px); font-size:12px; letter-spacing:0.08em; color:var(--color-neutral-600);`) },
                   h(F,{key:0},"",I(V.page?.indexKicker,1),"")
                 ),
                 "\n    ",
@@ -513,15 +513,15 @@
                   var Vi = Object.assign({}, V, {"p": item, $index: i});
                   return h(F,{key:i},
                     "\n      ",
-                    h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, onClick: Vi.p?.open, onMouseEnter: Vi.p?.hover, className: "mod mod-ctl", style: S(`grid-column:1 / 23; grid-row:${Vi.p?.cardRow ?? ""}; display:grid; grid-template-columns:repeat(22,1fr); cursor:pointer; color:var(--color-text);`) },
+                    h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, onClick: Vi.p?.open, onMouseEnter: Vi.p?.hover, className: "mod mod-ctl", style: S(`grid-column:${Vi.stack?.cards?.col ?? ""}; grid-row:${Vi.p?.cardRow ?? ""}; display:grid; grid-template-columns:repeat(22,1fr); grid-template-rows:${Vi.p?.cardGrid ?? ""}; cursor:pointer; color:var(--color-text);`) },
                       "\n        ",
-                      h("div", { key: "1", style: S(`grid-column:${Vi.p?.textCol ?? ""}; grid-row:1; min-width:0; padding:22px; box-sizing:border-box; align-self:end;`) },
+                      h("div", { key: "1", style: S(`grid-column:${Vi.p?.textCol ?? ""}; grid-row:${Vi.p?.textRow ?? ""}; min-width:0; padding:clamp(14px,3.7vw,22px); box-sizing:border-box; align-self:end;`) },
                         "\n          ",
                         h("p", { key: "1|49.14srs4v", style: {"margin":"0 0 22px","fontSize":"12px","color":"var(--color-neutral-600)"} },
                           h(F,{key:0},"",I(Vi.p?.bandNo,1)," · ",I(Vi.p?.kindLower,3)," · ",I(Vi.p?.year,5),"")
                         ),
                         "\n          ",
-                        h("p", { key: "3|13.bo1o1h", "data-morph": Vi.p?.morphName, "data-morph-alt": `title-${Vi.p?.figNo ?? ""}`, style: {"margin":"0","fontSize":"28px","lineHeight":"34px","letterSpacing":"-0.03em"} },
+                        h("p", { key: "3|13.bo1o1h", "data-morph": Vi.p?.morphName, "data-morph-alt": `title-${Vi.p?.figNo ?? ""}`, style: {"margin":"0","fontSize":"clamp(22px,5.6vw,28px)","lineHeight":"clamp(28px,6.8vw,34px)","letterSpacing":"-0.03em"} },
                           h(F,{key:0},"",I(Vi.p?.title,1),"")
                         ),
                         "\n          ",
@@ -532,7 +532,7 @@
                       ),
                       "\n        ",
                       "\n        ",
-                      h("div", { key: "4", "data-shape": Vi.p?.frameShape, "data-shape-alt": `frame-${Vi.p?.figNo ?? ""}`, className: "mod", style: S(`grid-column:${Vi.p?.plateCol ?? ""}; grid-row:1;`) },
+                      h("div", { key: "4", "data-shape": Vi.p?.frameShape, "data-shape-alt": `frame-${Vi.p?.figNo ?? ""}`, className: "mod", style: S(`grid-column:${Vi.p?.plateCol ?? ""}; grid-row:${Vi.p?.plateRow ?? ""};`) },
                         h("div", { key: "0", style: {"position":"absolute","inset":"0","overflow":"hidden"} },
                           h("image-slot", { key: "0", id: Vi.p?.plateSlotId, src: Vi.p?.hero, shape: "rect", fit: "cover", placeholder: Vi.p?.placeholder, style: {"width":"100%","height":"100%"} })
                         )
@@ -542,10 +542,10 @@
                     "\n    ");
                 })),
                 "\n    ",
-                h("div", { key: "12", ref: V.platesRef, style: S(`grid-column:1 / 2; grid-row:${V.gridPlatesRow ?? ""}; height:0;`) }),
+                h("div", { key: "12", ref: V.platesRef, style: S(`grid-column:${V.stack?.plates?.col ?? ""}; grid-row:${V.stack?.plates?.row ?? ""}; height:0;`) }),
                 "\n\n    ",
                 "\n    ",
-                h("section", { key: "15", ref: V.notesRef, className: "mod", style: S(`grid-column:1 / 11; grid-row:${V.gridAuthorRow ?? ""}; padding:22px;`) },
+                h("section", { key: "15", ref: V.notesRef, className: "mod", style: S(`grid-column:${V.stack?.author?.col ?? ""}; grid-row:${V.stack?.author?.row ?? ""}; padding:clamp(14px,3.7vw,22px);`) },
                   "\n      ",
                   h("p", { key: "1|3.377ldf", "data-morph": "notes-kicker", style: {"margin":"0 0 22px","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
                     "who"
@@ -573,7 +573,7 @@
                   "\n    "
                 ),
                 "\n    ",
-                h("ol", { key: "17", className: "mod", style: S(`grid-column:12 / 23; grid-row:${V.gridAuthorRow ?? ""}; padding:22px; list-style:none; margin:0; font-feature-settings:'tnum' 1;`) },
+                h("ol", { key: "17", className: "mod", style: S(`grid-column:${V.stack?.cv?.col ?? ""}; grid-row:${V.stack?.cv?.row ?? ""}; padding:clamp(14px,3.7vw,22px); list-style:none; margin:0; font-feature-settings:'tnum' 1;`) },
                   "\n      ",
                   h(F,{key:1},L(V.cv).map(function(item,i){
                     var Vi = Object.assign({}, V, {"c": item, $index: i});
@@ -602,20 +602,20 @@
                   "\n    "
                 ),
                 "\n\n    ",
-                h("p", { key: "19|19.19w1nxe", "data-morph": "colophon", className: "mod", style: S(`grid-column:1 / 16; grid-row:${V.gridColophonRow ?? ""}; margin:0; padding:22px; color:var(--color-neutral-600); font-size:12px; line-height:18px;`) },
+                h("p", { key: "19|19.19w1nxe", "data-morph": "colophon", className: "mod", style: S(`grid-column:${V.stack?.colophon?.col ?? ""}; grid-row:${V.stack?.colophon?.row ?? ""}; margin:0; padding:clamp(14px,3.7vw,22px); color:var(--color-neutral-600); font-size:12px; line-height:18px;`) },
                   h(F,{key:0},"",I(V.page?.colophon,1),"")
                 ),
                 "\n\n    ",
                 "\n    ",
-                h("a", { key: "22|5.49kwkt", href: V.cvMailto, className: C("mod mod-ctl","scp5"), style: S(`grid-column:1 / 3; grid-row:${V.gridContactRow ?? ""}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;`) },
+                h("a", { key: "22|5.49kwkt", href: V.cvMailto, className: C("mod mod-ctl","scp5"), style: S(`grid-column:${V.stack?.contactEmail?.col ?? ""}; grid-row:${V.stack?.contactEmail?.row ?? ""}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;`) },
                   "email"
                 ),
                 "\n    ",
-                h("a", { key: "24|6.1yz8dag", href: V.cvGithub, className: C("mod mod-ctl","scp5"), style: S(`grid-column:3 / 5; grid-row:${V.gridContactRow ?? ""}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;`) },
+                h("a", { key: "24|6.1yz8dag", href: V.cvGithub, className: C("mod mod-ctl","scp5"), style: S(`grid-column:${V.stack?.contactGithub?.col ?? ""}; grid-row:${V.stack?.contactGithub?.row ?? ""}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;`) },
                   "github"
                 ),
                 "\n    ",
-                h("button", { key: "26|2.3ho5a", onClick: V.goCvMono, className: C("mod mod-ctl","scp5"), style: S(`all:unset; grid-column:5 / 7; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text);`) },
+                h("button", { key: "26|2.3ho5a", onClick: V.goCvMono, className: C("mod mod-ctl","scp5"), style: S(`all:unset; grid-column:${V.stack?.contactCv?.col ?? ""}; grid-row:${V.stack?.contactCv?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text);`) },
                   "cv"
                 ),
                 "\n    "
@@ -829,11 +829,11 @@
                           h(F,{key:0},L(Vi.job?.units).map(function(item,i){
                             var Vii = Object.assign({}, Vi, {"u": item, $index: i});
                             return h(F,{key:i},
-                              h("span", { key: "0|33.7n66lg", style: {"whiteSpace":"nowrap","fontWeight":"700"} },
-                                h(F,{key:0},"",I(Vii.u?.t,1),""),
-                                h("span", { key: "1|11.mxc9me", style: {"fontWeight":"400","color":"var(--color-neutral-700)"} },
-                                  h(F,{key:0},"",I(Vii.u?.loc,1),"")
-                                )
+                              h("span", { key: "0|9.97yq4s", style: {"whiteSpace":"nowrap","fontWeight":"700"} },
+                                h(F,{key:0},"",I(Vii.u?.t,1),"")
+                              ),
+                              h("span", { key: "1|11.mxc9me", style: {"fontWeight":"400","color":"var(--color-neutral-700)"} },
+                                h(F,{key:0},"",I(Vii.u?.loc,1),"")
                               ),
                               " ");
                           }))
@@ -1561,7 +1561,7 @@
             "\n\n    ",
             h("section", { key: "1", style: {"position":"relative","padding":"calc(3*28px) 0 calc(2*28px)"} },
               "\n      ",
-              h("span", { key: "1|19.1h99e0b", "aria-hidden": "true", style: S(`position:absolute; right:0; top:28px; font-family:var(--font-heading); font-weight:300; font-size:clamp(160px,22vw,320px); line-height:1; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; pointer-events:none; user-select:none; font-feature-settings:'tnum' 1; letter-spacing:0; transform:translateY(${V.parallax ?? ""}); will-change:transform;`) },
+              h("span", { key: "1|19.1h99e0b", "aria-hidden": "true", style: S(`position:absolute; right:0; top:28px; font-family:var(--font-heading); font-weight:300; font-size:${V.chapterGhost ?? ""}; line-height:1; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; pointer-events:none; user-select:none; font-feature-settings:'tnum' 1; letter-spacing:0; transform:translateY(${V.parallax ?? ""}); will-change:transform;`) },
                 h(F,{key:0},"",I(V.current?.ghost,1),"")
               ),
               "\n      ",
@@ -1648,9 +1648,9 @@
             "\n    ",
             (V.isPaper ? h(F,{key:12},
               "\n    ",
-              h("section", { key: "1", "data-paper-body": "", "data-enter": "", style: {"display":"grid","gridTemplateColumns":"minmax(0,8fr) minmax(0,4fr)","gap":"0 clamp(28px,5vw,80px)","padding":"calc(2.5*28px) 0","alignItems":"start"} },
+              h("section", { key: "1", "data-paper-body": "", "data-enter": "", style: S(`display:grid; grid-template-columns:${V.chapterCols ?? ""}; gap:0 clamp(28px,5vw,80px); padding:calc(2.5*28px) 0; align-items:start;`) },
                 h(F,{key:0},"\n      ",I(V.paperBlocks,1),"\n      ",I(V.paperCaptions,3),"\n      ",I(V.paperTail,5),"\n      "),
-                h("aside", { key: "1", style: S(`grid-column:2; grid-row:${V.paperAsideRow ?? ""}; align-self:start; display:flex; flex-direction:column; gap:28px; font-size:13px; line-height:20px; color:var(--color-neutral-700);`) },
+                h("aside", { key: "1", style: S(`grid-column:${V.paperAsideCol ?? ""}; grid-row:${V.paperAsideRow ?? ""}; align-self:start; display:flex; flex-direction:column; gap:28px; font-size:13px; line-height:20px; color:var(--color-neutral-700);`) },
                   "\n        ",
                   (V.marginalia ? h(F,{key:1},
                     "\n          ",
@@ -1692,9 +1692,9 @@
             "\n\n    ",
             (V.isEssay ? h(F,{key:14},
               "\n    ",
-              h("section", { key: "1", "data-enter": "", style: {"display":"grid","gridTemplateColumns":"minmax(0,8fr) minmax(0,4fr)","gap":"28px clamp(28px,5vw,80px)","padding":"calc(2.5*28px) 0","alignItems":"start"} },
+              h("section", { key: "1", "data-enter": "", style: S(`display:grid; grid-template-columns:${V.chapterCols ?? ""}; gap:28px clamp(28px,5vw,80px); padding:calc(2.5*28px) 0; align-items:start;`) },
                 "\n      ",
-                h("div", { key: "1", style: {"columns":"2","columnGap":"56px","columnRule":"1px solid var(--color-divider)","textAlign":"justify","hyphens":"auto","color":"color-mix(in srgb, var(--color-text) 84%, transparent)","fontSize":"16px","lineHeight":"28px"} },
+                h("div", { key: "1", style: S(`columns:${V.essayColumns ?? ""}; column-gap:56px; column-rule:1px solid var(--color-divider); text-align:justify; hyphens:auto; color:color-mix(in srgb, var(--color-text) 84%, transparent); font-size:16px; line-height:28px;`) },
                   "\n        ",
                   h("p", { key: "1|53.612egm", style: {"margin":"0 0 28px"} },
                     h("span", { key: "0|21.1c59rnz", style: {"float":"left","fontFamily":"var(--deco)","fontWeight":"400","fontSize":"64px","lineHeight":"56px","padding":"6px 12px 0 0","color":"var(--color-text)"} },
@@ -1786,33 +1786,33 @@
             h("div", { key: "1", ref: V.sheetGridRef, style: {"position":"relative","marginTop":"88px","display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","borderRight":"1px solid var(--hair)","borderBottom":"1px solid var(--hair)","backgroundImage":"linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
               "\n\n    ",
               "\n    ",
-              h("button", { key: "2|24.1chn43n", className: "mod sheet-mod mod-ctl", "data-enter": "", "data-mod": "back", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.back?.col ?? ""}; grid-row:${V.sheet?.back?.row ?? ""}; --d:${V.sheet?.back?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
+              h("button", { key: "2|24.1chn43n", className: "mod sheet-mod mod-ctl", "data-enter": "", "data-mod": "back", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.back?.col ?? ""}; grid-row:${V.sheet?.back?.row ?? ""}; --d:${V.sheet?.back?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 clamp(14px,3.7vw,22px); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
                 h(F,{key:0},"← ",I(V.current?.backWord,1),"")
               ),
               "\n\n    ",
               "\n    ",
-              h("section", { key: "5", className: "mod sheet-mod", "data-enter": "", "data-mod": "header", style: S(`grid-column:${V.sheet?.header?.col ?? ""}; grid-row:${V.sheet?.header?.row ?? ""}; --d:${V.sheet?.header?.delay ?? ""}; padding:22px;`) },
+              h("section", { key: "5", className: "mod sheet-mod", "data-enter": "", "data-mod": "header", style: S(`grid-column:${V.sheet?.header?.col ?? ""}; grid-row:${V.sheet?.header?.row ?? ""}; --d:${V.sheet?.header?.delay ?? ""}; padding:clamp(14px,3.7vw,22px);`) },
                 "\n      ",
                 h("p", { key: `kicker-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0 0 22px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-accent-700)","fontFeatureSettings":"'tnum' 1"} },
                   h(F,{key:0},"",I(V.current?.kickerWord,1)," ",I(V.current?.numeral,3)," · ",I(V.current?.kind,5)," · ",I(V.current?.year,7),"")
                 ),
                 "\n      ",
-                h("h1", { key: `title-${V.current?.figNo ?? ""}`, "data-morph": `title-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0","fontFamily":"var(--mono)","fontWeight":"400","fontSize":"clamp(36px,5vw,72px)","lineHeight":"1.04","letterSpacing":"-0.03em","maxWidth":"16ch"} },
+                h("h1", { key: `title-${V.current?.figNo ?? ""}`, "data-morph": `title-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0","fontFamily":"var(--mono)","fontWeight":"400","fontSize":"clamp(26px,5vw,72px)","lineHeight":"1.04","letterSpacing":"-0.03em","maxWidth":"16ch"} },
                   h(F,{key:0},"",I(V.current?.title,1),"")
                 ),
                 "\n      ",
-                h("p", { key: `lede-${V.current?.figNo ?? ""}`, "data-morph": `lede-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"22px 0 0","fontFamily":"var(--mono)","fontSize":"20px","lineHeight":"26px","fontWeight":"400","maxWidth":"52ch","color":"var(--color-neutral-700)"} },
+                h("p", { key: `lede-${V.current?.figNo ?? ""}`, "data-morph": `lede-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"22px 0 0","fontFamily":"var(--mono)","fontSize":"clamp(16px,4vw,20px)","lineHeight":"clamp(21px,5.2vw,26px)","fontWeight":"400","maxWidth":"52ch","color":"var(--color-neutral-700)"} },
                   h(F,{key:0},"",I(V.current?.subtitle,1),"")
                 ),
                 "\n    "
               ),
               "\n    ",
-              h("span", { key: "7|19.1h99e0b", className: "mod sheet-mod", "data-enter": "", "data-mod": "ghost", "aria-hidden": "true", style: S(`grid-column:${V.sheet?.ghost?.col ?? ""}; grid-row:${V.sheet?.ghost?.row ?? ""}; --d:${V.sheet?.ghost?.delay ?? ""}; display:flex; align-items:flex-end; justify-content:flex-end; padding:22px; font-family:'DM Mono', ui-monospace, monospace; font-weight:400; font-size:clamp(40px,5.5vw,84px); line-height:1; letter-spacing:-0.04em; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; user-select:none; font-feature-settings:'tnum' 1;`) },
+              h("span", { key: "7|19.1h99e0b", className: "mod sheet-mod", "data-enter": "", "data-mod": "ghost", "aria-hidden": "true", style: S(`grid-column:${V.sheet?.ghost?.col ?? ""}; grid-row:${V.sheet?.ghost?.row ?? ""}; --d:${V.sheet?.ghost?.delay ?? ""}; display:flex; align-items:flex-end; justify-content:flex-end; padding:clamp(14px,3.7vw,22px); font-family:'DM Mono', ui-monospace, monospace; font-weight:400; font-size:clamp(28px,5.5vw,84px); line-height:1; letter-spacing:-0.04em; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; user-select:none; font-feature-settings:'tnum' 1;`) },
                 h(F,{key:0},"",I(V.current?.ghost,1),"")
               ),
               "\n\n    ",
               "\n    ",
-              h("div", { key: "10", className: "mod sheet-mod", "data-enter": "", "data-mod": "specSheet", style: S(`grid-column:${V.sheet?.specSheet?.col ?? ""}; grid-row:${V.sheet?.specSheet?.row ?? ""}; --d:${V.sheet?.specSheet?.delay ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "10", className: "mod sheet-mod", "data-enter": "", "data-mod": "specSheet", style: S(`grid-column:${V.sheet?.specSheet?.col ?? ""}; grid-row:${V.sheet?.specSheet?.row ?? ""}; --d:${V.sheet?.specSheet?.delay ?? ""}; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px);`) },
                 h("p", { key: "0|5.3wrm2m", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Sheet"
                 ),
@@ -1821,7 +1821,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "12", className: "mod sheet-mod", "data-enter": "", "data-mod": "specRole", style: S(`grid-column:${V.sheet?.specRole?.col ?? ""}; grid-row:${V.sheet?.specRole?.row ?? ""}; --d:${V.sheet?.specRole?.delay ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "12", className: "mod sheet-mod", "data-enter": "", "data-mod": "specRole", style: S(`grid-column:${V.sheet?.specRole?.col ?? ""}; grid-row:${V.sheet?.specRole?.row ?? ""}; --d:${V.sheet?.specRole?.delay ?? ""}; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px);`) },
                 h("p", { key: "0|4.yk2787", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Role"
                 ),
@@ -1830,7 +1830,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "14", className: "mod sheet-mod", "data-enter": "", "data-mod": "specWith", style: S(`grid-column:${V.sheet?.specWith?.col ?? ""}; grid-row:${V.sheet?.specWith?.row ?? ""}; --d:${V.sheet?.specWith?.delay ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "14", className: "mod sheet-mod", "data-enter": "", "data-mod": "specWith", style: S(`grid-column:${V.sheet?.specWith?.col ?? ""}; grid-row:${V.sheet?.specWith?.row ?? ""}; --d:${V.sheet?.specWith?.delay ?? ""}; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px);`) },
                 h("p", { key: "0|4.yk5x1d", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "With"
                 ),
@@ -1839,7 +1839,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "16", className: "mod sheet-mod", "data-enter": "", "data-mod": "specStatus", style: S(`grid-column:${V.sheet?.specStatus?.col ?? ""}; grid-row:${V.sheet?.specStatus?.row ?? ""}; --d:${V.sheet?.specStatus?.delay ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "16", className: "mod sheet-mod", "data-enter": "", "data-mod": "specStatus", style: S(`grid-column:${V.sheet?.specStatus?.col ?? ""}; grid-row:${V.sheet?.specStatus?.row ?? ""}; --d:${V.sheet?.specStatus?.delay ?? ""}; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px);`) },
                 h("p", { key: "0|6.1m8lgyx", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Status"
                 ),
@@ -1848,7 +1848,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "18", className: "mod sheet-mod", "data-enter": "", "data-mod": "specRev", style: S(`grid-column:${V.sheet?.specRev?.col ?? ""}; grid-row:${V.sheet?.specRev?.row ?? ""}; --d:${V.sheet?.specRev?.delay ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "18", className: "mod sheet-mod", "data-enter": "", "data-mod": "specRev", style: S(`grid-column:${V.sheet?.specRev?.col ?? ""}; grid-row:${V.sheet?.specRev?.row ?? ""}; --d:${V.sheet?.specRev?.delay ?? ""}; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px);`) },
                 h("p", { key: "0|11.1s8ry21", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Rev / Scale"
                 ),
@@ -1876,7 +1876,7 @@
                 "\n    "
               ),
               "\n    ",
-              h("p", { key: "23|141.s2m5lr", className: "mod sheet-mod", "data-enter": "", "data-mod": "heroCaption", style: S(`grid-column:${V.sheet?.heroCaption?.col ?? ""}; grid-row:${V.sheet?.heroCaption?.row ?? ""}; --d:${V.sheet?.heroCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
+              h("p", { key: "23|141.s2m5lr", className: "mod sheet-mod", "data-enter": "", "data-mod": "heroCaption", style: S(`grid-column:${V.sheet?.heroCaption?.col ?? ""}; grid-row:${V.sheet?.heroCaption?.row ?? ""}; --d:${V.sheet?.heroCaption?.delay ?? ""}; margin:0; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px); display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
                 h("span", { key: "0|92.1o5q0e0", style: {"minWidth":"0"} },
                   h("span", { key: "0|44.1e4j9ob", style: {"color":"var(--color-accent)"} },
                     h(F,{key:0},"",I(V.current?.figWord,1)," ",I(V.current?.numeral,3),".")
@@ -1892,7 +1892,7 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("div", { key: "26", className: "mod sheet-mod", "data-enter": "", "data-mod": "body1", style: S(`grid-column:${V.sheet?.body1?.col ?? ""}; grid-row:${V.sheet?.body1?.row ?? ""}; --d:${V.sheet?.body1?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
+              h("div", { key: "26", className: "mod sheet-mod", "data-enter": "", "data-mod": "body1", style: S(`grid-column:${V.sheet?.body1?.col ?? ""}; grid-row:${V.sheet?.body1?.row ?? ""}; --d:${V.sheet?.body1?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:clamp(14px,3.7vw,22px); font-size:clamp(13px,3.4vw,14.5px); line-height:clamp(23px,6.1vw,26px); color:rgb(217, 216, 216);`) },
                 "\n      ",
                 h("span", { key: "1|5.36tydg", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
                   "01 //"
@@ -1903,7 +1903,7 @@
                 "\n    "
               ),
               "\n    ",
-              h("div", { key: "28", className: "mod sheet-mod", "data-enter": "", "data-mod": "body2", style: S(`grid-column:${V.sheet?.body2?.col ?? ""}; grid-row:${V.sheet?.body2?.row ?? ""}; --d:${V.sheet?.body2?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
+              h("div", { key: "28", className: "mod sheet-mod", "data-enter": "", "data-mod": "body2", style: S(`grid-column:${V.sheet?.body2?.col ?? ""}; grid-row:${V.sheet?.body2?.row ?? ""}; --d:${V.sheet?.body2?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:clamp(14px,3.7vw,22px); font-size:clamp(13px,3.4vw,14.5px); line-height:clamp(23px,6.1vw,26px); color:rgb(217, 216, 216);`) },
                 "\n      ",
                 h("span", { key: "1|5.36uq3p", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
                   "02 //"
@@ -1914,7 +1914,7 @@
                 "\n    "
               ),
               "\n    ",
-              h("div", { key: "30", className: "mod sheet-mod", "data-enter": "", "data-mod": "body3", style: S(`grid-column:${V.sheet?.body3?.col ?? ""}; grid-row:${V.sheet?.body3?.row ?? ""}; --d:${V.sheet?.body3?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
+              h("div", { key: "30", className: "mod sheet-mod", "data-enter": "", "data-mod": "body3", style: S(`grid-column:${V.sheet?.body3?.col ?? ""}; grid-row:${V.sheet?.body3?.row ?? ""}; --d:${V.sheet?.body3?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:clamp(14px,3.7vw,22px); font-size:clamp(13px,3.4vw,14.5px); line-height:clamp(23px,6.1vw,26px); color:rgb(217, 216, 216);`) },
                 "\n      ",
                 h("span", { key: "1|5.36vhty", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
                   "03 //"
@@ -1925,7 +1925,7 @@
                 "\n    "
               ),
               "\n    ",
-              h("aside", { key: "32", className: "mod sheet-mod", "data-enter": "", "data-mod": "aside", style: S(`grid-column:${V.sheet?.aside?.col ?? ""}; grid-row:${V.sheet?.aside?.row ?? ""}; --d:${V.sheet?.aside?.delay ?? ""}; display:flex; flex-direction:column; gap:20px; padding:22px; font-size:12.5px; line-height:20px; color:var(--color-neutral-700);`) },
+              h("aside", { key: "32", className: "mod sheet-mod", "data-enter": "", "data-mod": "aside", style: S(`grid-column:${V.sheet?.aside?.col ?? ""}; grid-row:${V.sheet?.aside?.row ?? ""}; --d:${V.sheet?.aside?.delay ?? ""}; display:flex; flex-direction:column; gap:20px; padding:clamp(14px,3.7vw,22px); font-size:12.5px; line-height:20px; color:var(--color-neutral-700);`) },
                 "\n      ",
                 (V.marginalia ? h(F,{key:1},
                   "\n        ",
@@ -2036,7 +2036,7 @@
               "\n    ",
               (V.hasDetail ? h(F,{key:41},
                 "\n    ",
-                h("p", { key: "1|136.19o3fos", className: "mod sheet-mod", "data-enter": "", "data-mod": "detailCaption", style: S(`grid-column:${V.sheet?.detailCaption?.col ?? ""}; grid-row:${V.sheet?.detailCaption?.row ?? ""}; --d:${V.sheet?.detailCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
+                h("p", { key: "1|136.19o3fos", className: "mod sheet-mod", "data-enter": "", "data-mod": "detailCaption", style: S(`grid-column:${V.sheet?.detailCaption?.col ?? ""}; grid-row:${V.sheet?.detailCaption?.row ?? ""}; --d:${V.sheet?.detailCaption?.delay ?? ""}; margin:0; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px); display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
                   h("span", { key: "0|85.yyckg0", style: {"minWidth":"0"} },
                     h("span", { key: "0|27.1uoc6rv", style: {"color":"var(--color-accent)"} },
                       h(F,{key:0},"",I(V.current?.detailFigWord,1),"")
@@ -2053,9 +2053,9 @@
                 "\n    ") : null),
               "\n\n    ",
               "\n    ",
-              h("div", { key: "44", className: "mod sheet-mod", "data-enter": "", "data-mod": "links", style: S(`grid-column:${V.sheet?.links?.col ?? ""}; grid-row:${V.sheet?.links?.row ?? ""}; --d:${V.sheet?.links?.delay ?? ""}; display:grid; grid-auto-rows:44px; align-content:start; overflow:clip; overflow-clip-margin:1px;`) },
+              h("div", { key: "44", className: "mod sheet-mod", "data-enter": "", "data-mod": "links", style: S(`grid-column:${V.sheet?.links?.col ?? ""}; grid-row:${V.sheet?.links?.row ?? ""}; --d:${V.sheet?.links?.delay ?? ""}; display:grid; grid-template-columns:minmax(0,1fr); grid-auto-rows:44px; align-content:start; overflow:clip; overflow-clip-margin:1px;`) },
                 "\n      ",
-                h("p", { key: "1|13.bujc8", style: {"margin":"0","display":"flex","alignItems":"center","padding":"0 22px","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
+                h("p", { key: "1|13.bujc8", style: {"margin":"0","display":"flex","alignItems":"center","padding":"0 clamp(14px,3.7vw,22px)","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Linked sheets"
                 ),
                 "\n      ",
@@ -2063,7 +2063,7 @@
                   var Vi = Object.assign({}, V, {"l": item, $index: i});
                   return h(F,{key:i},
                     "\n        ",
-                    h("button", { key: "1|141.10mqriy", onClick: Vi.l?.open, style: {"all":"unset","boxSizing":"border-box","cursor":"pointer","display":"flex","alignItems":"center","gap":"14px","padding":"0 22px","fontFamily":"var(--mono)","fontSize":"13px","lineHeight":"18px","color":"var(--color-text)","boxShadow":"inset 0 1px 0 0 var(--hair)","transition":"color 200ms ease"}, className: "scp0" },
+                    h("button", { key: "1|141.10mqriy", onClick: Vi.l?.open, style: {"all":"unset","boxSizing":"border-box","cursor":"pointer","display":"flex","alignItems":"center","gap":"14px","padding":"0 clamp(14px,3.7vw,22px)","fontFamily":"var(--mono)","fontSize":"13px","lineHeight":"18px","color":"var(--color-text)","boxShadow":"inset 0 1px 0 0 var(--hair)","transition":"color 200ms ease"}, className: "scp0" },
                       "\n          ",
                       h("span", { key: "1|13.1hy3wic", style: {"flex":"none","fontSize":"11px","letterSpacing":"0.08em","color":"var(--color-accent-700)","fontFeatureSettings":"'tnum' 1"} },
                         h(F,{key:0},"",I(Vi.l?.ghost,1),"")
@@ -2083,7 +2083,7 @@
                 "\n      ",
                 (V.linksEmpty ? h(F,{key:5},
                   "\n        ",
-                  h("p", { key: "1|53.1x4oqh7", style: {"margin":"0","display":"flex","alignItems":"center","padding":"0 22px","fontSize":"13px","lineHeight":"18px","color":"var(--color-neutral-600)","boxShadow":"inset 0 1px 0 0 var(--hair)"} },
+                  h("p", { key: "1|53.1x4oqh7", style: {"margin":"0","display":"flex","alignItems":"center","padding":"0 clamp(14px,3.7vw,22px)","fontSize":"13px","lineHeight":"18px","color":"var(--color-neutral-600)","boxShadow":"inset 0 1px 0 0 var(--hair)"} },
                     "nothing in the register stands next to this sheet yet"
                   ),
                   "\n      ") : null),
@@ -2091,17 +2091,17 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("button", { key: "47|24.1chn43n", className: "mod sheet-mod mod-ctl", "data-enter": "", "data-mod": "navBack", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navBack?.col ?? ""}; grid-row:${V.sheet?.navBack?.row ?? ""}; --d:${V.sheet?.navBack?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
+              h("button", { key: "47|24.1chn43n", className: "mod sheet-mod mod-ctl", "data-enter": "", "data-mod": "navBack", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navBack?.col ?? ""}; grid-row:${V.sheet?.navBack?.row ?? ""}; --d:${V.sheet?.navBack?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 clamp(14px,3.7vw,22px); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
                 h(F,{key:0},"← ",I(V.current?.backWord,1),"")
               ),
               "\n    ",
-              h("button", { key: "49|110.pyry3", className: "mod sheet-mod mod-ctl", "data-enter": "", "data-mod": "navNext", onClick: V.openNext, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navNext?.col ?? ""}; grid-row:${V.sheet?.navNext?.row ?? ""}; --d:${V.sheet?.navNext?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:11px 22px; text-align:right; color:var(--color-text); background:var(--color-bg);`) },
+              h("button", { key: "49|110.pyry3", className: "mod sheet-mod mod-ctl", "data-enter": "", "data-mod": "navNext", onClick: V.openNext, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navNext?.col ?? ""}; grid-row:${V.sheet?.navNext?.row ?? ""}; --d:${V.sheet?.navNext?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px); text-align:right; color:var(--color-text); background:var(--color-bg);`) },
                 "\n      ",
                 h("span", { key: "1|47.13c0pry", style: {"fontSize":"11px","lineHeight":"14px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   h(F,{key:0},"Next · ",I(V.next?.kickerWord,1)," ",I(V.next?.numeral,3),"")
                 ),
                 "\n      ",
-                h("span", { key: `next-${V.next?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"fontFamily":"var(--mono)","fontSize":"24px","lineHeight":"32px","fontWeight":"400","letterSpacing":"-0.03em"} },
+                h("span", { key: `next-${V.next?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"fontFamily":"var(--mono)","fontSize":"clamp(18px,4.6vw,24px)","lineHeight":"clamp(24px,6.2vw,32px)","fontWeight":"400","letterSpacing":"-0.03em"} },
                   h(F,{key:0},"",I(V.next?.title,1)," →")
                 ),
                 "\n    "
@@ -2441,12 +2441,25 @@
     STACK_W = 1000;
     STACK_RATIO = 1.2;
     isStacked(w = window.innerWidth, h = window.innerHeight) { return w < this.STACK_W || w < h * this.STACK_RATIO; }
+    // A phone is not a small tablet. The stacked tier above still reads as a column with room for a
+    // measure beside it: the Development landing keeps its cards text-beside-plate, the sheet keeps
+    // three spec cells to a row, and the chapter keeps a margin column. None of that survives a page
+    // 390px wide. So a second term, under the first: below PHONE_W the same compositions are read
+    // again as one column with nothing at their side. It is a refinement of the stacked tier and never
+    // a branch beside it, which is what PHONE_W < STACK_W buys: a phone is always stacked as well, so
+    // no composition has to answer both questions at once.
+    PHONE_W = 600;
+    isPhone(w = window.innerWidth) { return w < this.PHONE_W; }
+    // Whether the page stands taller than it is wide. Only the home asks: its two objects are a pair
+    // laid across the page, and what they need is width rather than a large width, so a portrait
+    // tablet stacks them for the same reason a phone does. Everything else reads the two terms above.
+    isPortrait(w = window.innerWidth, h = window.innerHeight) { return h > w; }
     // narrow and landingRows decide which composition renders and how many rows it is drawn on, so they
     // are read from the window here rather than waiting for componentDidMount's first onResize: the first
     // paint would otherwise be the wrong one, replaced a frame later. The address bar is read the same
     // way, so a deep link paints the view it names, not the home first.
     state = { view: 'home', page: 'writing', cvReg: 'serif', idx: 10, hovered: 10, tab: { left: 0, width: 0 },
-      narrow: this.isStacked(), landingRows: this.visibleRows(),
+      narrow: this.isStacked(), landingRows: this.visibleRows(), phone: this.isPhone(), portrait: this.isPortrait(),
       // the description's clamp, in lines, and whether it was cut: both read off the page after the
       // first layout, since 0 lines means "not measured yet" and the module's overflow guard holds the
       // one frame before the answer arrives
@@ -2454,8 +2467,9 @@
       ...this.routeState(this.parseRoute(location.hash)) };
   
     // Where every module of a Development sheet sits on the 22 column, 44px row drawing grid, as
-    // "start / end" grid lines. The wide table is the desk-width sheet; the narrow table is the same
-    // drawing stacked, chosen off state.narrow (window.innerWidth < 1000). Both are written as plain
+    // "start / end" grid lines. The wide table is the desk-width sheet, the narrow table is the same
+    // drawing stacked, and the phone table is that stack read again with nothing beside anything;
+    // which one is used comes off state.phone and state.narrow. All three are written as plain
     // literals so tools/check-sheet-grid.mjs can read them without running this file, and the template
     // binds sheet.<name>.col / .row rather than carrying any span of its own.
     // The plot-in stagger: 40ms per row of a module's starting row, so the sheet inks itself top to
@@ -2529,6 +2543,34 @@
       navBack:       { col: '1 / 23',  row: '89 / 91' },
       navNext:       { col: '1 / 23',  row: '92 / 94' },
     };
+    // The phone reading of the same drawing. The narrow sheet is already a column, but a column with
+    // things beside each other in it: three spec cells to a row band is 110px a cell at 390, which is
+    // a label and half a value. Here every module takes the whole width and no two share a row band,
+    // which is the invariant tools/check-sheet-grid.mjs holds this table to and the whole of what the
+    // tier is for. The row counts are measured rather than chosen: the longest of the fourteen mono
+    // entries at 360px wide, with the phone type sizes the markup carries, and a row of slack over it.
+    SHEET_PHONE = {
+      back:          { col: '1 / 23',  row: '1 / 2' },
+      header:        { col: '1 / 23',  row: '3 / 10' },
+      ghost:         { col: '1 / 23',  row: '10 / 13' },
+      specSheet:     { col: '1 / 23',  row: '14 / 16' },
+      specRole:      { col: '1 / 23',  row: '16 / 18' },
+      specWith:      { col: '1 / 23',  row: '18 / 20' },
+      specStatus:    { col: '1 / 23',  row: '20 / 22' },
+      specRev:       { col: '1 / 23',  row: '22 / 24' },
+      hero:          { col: '1 / 23',  row: '25 / 35' },
+      heroCaption:   { col: '1 / 23',  row: '35 / 40' },
+      body1:         { col: '1 / 23',  row: '41 / 54' },
+      body2:         { col: '1 / 23',  row: '54 / 66' },
+      body3:         { col: '1 / 23',  row: '66 / 76' },
+      aside:         { col: '1 / 23',  row: '77 / 89' },
+      detailA:       { col: '1 / 23',  row: '90 / 102' },
+      detailB:       { col: '1 / 23',  row: '102 / 114' },
+      detailCaption: { col: '1 / 23',  row: '114 / 118' },
+      links:         { col: '1 / 23',  row: '119 / 121' },
+      navBack:       { col: '1 / 23',  row: '122 / 124' },
+      navNext:       { col: '1 / 23',  row: '125 / 129' },
+    };
   
     // The desktop Development landing is the same drawing grid run full bleed: 22 columns across the
     // viewport, 44px rows, at least a screen tall. Only these five modules are placed by hand. The
@@ -2591,6 +2633,61 @@
       'building-graph-neural-network':                { col: '6 / 10',  row: '10 / 16' },
     };
     LANDING_PAD = 22; // the padding every module of the drawing grid is set in
+    // Where every module of the STACKED Development landing sits, on the same 22 column, 44px row
+    // drawing grid. Below 1000px the landing is not drawn but read top to bottom, and these are its
+    // two readings: the tablet column, which is the composition the markup used to carry inline, and
+    // the phone column, where nothing stands beside anything. Chosen off state.phone, and plain
+    // literals like the sheet tables so tools/check-landing-grid.mjs can read them without running
+    // this file.
+    //
+    // Three kinds of row, because unlike the sheet this drawing grows with the register:
+    //
+    //   * a pair of grid lines, for the corner above the cards, which is a fixed shape
+    //   * cards, the first card's own band. The drawing leaves two empty rows between two modules, so
+    //     that band is the step as well as the size: every card after the first opens two rows below
+    //     where the one before it closed
+    //   * a pair written with a leading +, for everything under the cards: rows counted from the line
+    //     the last card closes on, which is known only once the entries are counted
+    //
+    // cardTextA / cardPlateA and their B pair are not on this grid at all. They are on the card's own
+    // inner grid, which is 22 columns like the sheet and as many 44px rows as the card's band, and A
+    // takes the even bands while B takes the odd ones. That alternation is the whole of what makes the
+    // tablet column read plate-left then plate-right; on a phone both pairs are the same, because a
+    // card there is its text over its plate and there is no side for either to be on.
+    LANDING_NARROW = {
+      statement:     { col: '1 / 15',  row: '2 / 12' },
+      platform:      { col: '15 / 23', row: '2 / 12' },
+      contents:      { col: '1 / 7',   row: '14 / 15' },
+      cards:         { col: '1 / 23',  row: '16 / 23' },
+      cardTextA:     { col: '1 / 11',  row: '1 / 8' },
+      cardPlateA:    { col: '11 / 23', row: '1 / 8' },
+      cardTextB:     { col: '13 / 23', row: '1 / 8' },
+      cardPlateB:    { col: '1 / 13',  row: '1 / 8' },
+      plates:        { col: '1 / 2',   row: '+0 / +1' },
+      author:        { col: '1 / 11',  row: '+2 / +18' },
+      cv:            { col: '12 / 23', row: '+2 / +18' },
+      colophon:      { col: '1 / 16',  row: '+20 / +23' },
+      contactEmail:  { col: '1 / 3',   row: '+25 / +26' },
+      contactGithub: { col: '3 / 5',   row: '+25 / +26' },
+      contactCv:     { col: '5 / 7',   row: '+25 / +26' },
+    };
+    LANDING_PHONE = {
+      statement:     { col: '1 / 23',  row: '2 / 18' },
+      platform:      { col: '1 / 23',  row: '19 / 27' },
+      contents:      { col: '1 / 23',  row: '28 / 29' },
+      cards:         { col: '1 / 23',  row: '30 / 44' },
+      cardTextA:     { col: '1 / 23',  row: '1 / 8' },
+      cardPlateA:    { col: '1 / 23',  row: '8 / 15' },
+      cardTextB:     { col: '1 / 23',  row: '1 / 8' },
+      cardPlateB:    { col: '1 / 23',  row: '8 / 15' },
+      plates:        { col: '1 / 2',   row: '+0 / +1' },
+      author:        { col: '1 / 23',  row: '+2 / +16' },
+      cv:            { col: '1 / 23',  row: '+17 / +43' },
+      colophon:      { col: '1 / 23',  row: '+44 / +48' },
+      contactEmail:  { col: '1 / 9',   row: '+49 / +50' },
+      contactGithub: { col: '9 / 16',  row: '+49 / +50' },
+      contactCv:     { col: '16 / 23', row: '+49 / +50' },
+    };
     // Whether this page is being tuned rather than read, off the URL, once: the flag decides both which
     // modules are fetched at all, in componentDidMount, and how the landing draws, just below. Read on
     // the instance rather than at each of them, since a page where the two disagreed would either ship
@@ -3265,7 +3362,7 @@
       window.addEventListener('pointerdown', this.onDown); window.addEventListener('pointerup', this.onUp); window.addEventListener('pointercancel', this.onUp);
       this.onScroll = () => { this.syncParchment(); this.syncHome(); this.setState({ scrollY: window.scrollY }); clearTimeout(this.remeasureTimer); this.remeasureTimer = setTimeout(() => this.remeasureText(), 120); };
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => setTimeout(() => { this.remeasureText(); this.fitLandingStatement(); this.syncParchment(); }, 50));
-      this.onResize = () => { this.setState({ narrow: this.isStacked(), landingRows: this.visibleRows() }); this.measureTabs(); this.syncParchment(); this.syncHome(); };
+      this.onResize = () => { this.setState({ narrow: this.isStacked(), landingRows: this.visibleRows(), phone: this.isPhone(), portrait: this.isPortrait() }); this.measureTabs(); this.syncParchment(); this.syncHome(); };
       this.onKey = (e) => {
         const t = e.target; if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
         const n = this.data.length, { view, idx } = this.state;
@@ -3316,7 +3413,7 @@
           .then((m) => { if (!this.dead) this.leafTuner = m.mount({ spreads: this.LEAF_SPREADS, pairs: this.LEAF_PAIRS, rerender: () => this.forceUpdate() }); })
           .catch((e) => console.error('leaves-dev', e));
         import('./grid-dev.js')
-          .then((m) => { if (!this.dead) this.gridTuner = m.mount({ tables: { SHEET_WIDE: this.SHEET_WIDE, SHEET_NARROW: this.SHEET_NARROW, LANDING_WIDE: this.LANDING_WIDE, LANDING_PINS: this.LANDING_PINS }, sheetTable: () => (this.state.narrow ? 'SHEET_NARROW' : 'SHEET_WIDE'), landingError: () => this.landingError, quiet: (on) => { this.devQuiet = on; if (on) this.stopTyping(); else this.forceUpdate(); }, rerender: () => { this.landingCache = null; this.forceUpdate(); } }); })
+          .then((m) => { if (!this.dead) this.gridTuner = m.mount({ tables: { SHEET_WIDE: this.SHEET_WIDE, SHEET_NARROW: this.SHEET_NARROW, SHEET_PHONE: this.SHEET_PHONE, LANDING_WIDE: this.LANDING_WIDE, LANDING_PINS: this.LANDING_PINS }, sheetTable: () => (this.state.phone ? 'SHEET_PHONE' : this.state.narrow ? 'SHEET_NARROW' : 'SHEET_WIDE'), landingError: () => this.landingError, quiet: (on) => { this.devQuiet = on; if (on) this.stopTyping(); else this.forceUpdate(); }, rerender: () => { this.landingCache = null; this.forceUpdate(); } }); })
           .catch((e) => console.error('grid-dev', e));
       }
       this.observeReveals(); this.mountTextEffects(); this.syncParchment(); this.syncHome(); this.syncPaper(); this.placeLeafText();
@@ -3407,15 +3504,26 @@
     // tallest item, so a one-row caption taller than the block beside it pushes the rest of the body
     // down by its own height, while a spanning one lays that height over the whole run of blocks it
     // stands beside and lifts nothing until it is taller than all of them together.
-    static planPaperRows(blocks) {
+    //
+    // On a phone there is no column 2 to hold any of that: 4fr of a 350px measure is 107px, which is a
+    // gutter with words falling out of it rather than a margin. So the same body is read as one column.
+    // The aside opens it on row 1, every block follows in document order, and a plate's caption takes
+    // the row directly under the plate rather than standing beside it. Nothing spans, because with one
+    // column a span is a stack and a wide figure is no wider than any other block. The two readings are
+    // one method because they are one ordering of one list, and tools/check-paper.mjs runs both over
+    // every module in content/.
+    static planPaperRows(blocks, phone) {
       const cells = [], caps = [];
       // the rows a wide block takes: it reaches across both columns, so column 2 is spoken for there
       const wideRows = [];
-      let row = 0, firstFigRow = 0;
-      const at = (wide) => { row++; if (wide) wideRows.push(row); return { gridRow: String(row), gridColumn: wide ? '1 / -1' : '1', minWidth: 0 }; };
+      // on a phone row 1 belongs to the aside and the blocks open under it
+      let row = phone ? 1 : 0, firstFigRow = 0;
+      const at = (wide) => { row++; if (wide && !phone) wideRows.push(row); return { gridRow: String(row), gridColumn: phone ? '1' : (wide ? '1 / -1' : '1'), minWidth: 0 }; };
       // two captions must never land in the same cell; the second one steps down a row
       const taken = new Set();
       const capRow = (r) => { while (taken.has(r)) r++; taken.add(r); return r; };
+      // beside the plate on a page with a margin, on the row under it on a phone
+      const cap = (r, figs) => caps.push(phone ? { row: ++row, end: row + 1, col: '1', figs } : { row: capRow(r), col: '2', figs });
       (blocks || []).forEach((b, i) => {
         const k = b && b.k;
         if (k === 'fig') {
@@ -3423,11 +3531,11 @@
           if (!firstFigRow) firstFigRow = row;
           // a wide plate already owns column 2 on its own row, so its caption drops to the next one,
           // where it sits beside the paragraph that follows the figure
-          caps.push({ row: capRow(b.wide ? row + 1 : row), figs: [b] });
+          cap(b.wide ? row + 1 : row, [b]);
         } else if (k === 'figrow') {
           cells[i] = at(false);
           if (!firstFigRow) firstFigRow = row;
-          caps.push({ row: capRow(row), figs: b.figs });
+          cap(row, b.figs);
         } else {
           // every block renderPaper draws takes a row of its own. A fold takes none: the tail carries
           // its own open and closed state, so renderPaperTail places it on the row this leaves free.
@@ -3443,20 +3551,22 @@
       // which is right, since nothing stands in column 2 there. A caption already standing on or
       // below where its span would end (a wide plate closing the body, whose caption has nowhere left
       // to drop) keeps the one row it has.
-      caps.forEach((c, i) => {
+      if (!phone) caps.forEach((c, i) => {
         const nextCap = i + 1 < caps.length ? caps[i + 1].row : tailRow + 1;
         const nextWide = wideRows.find((w) => w > c.row);
         const next = nextWide === undefined ? nextCap : Math.min(nextCap, nextWide);
         c.end = next > c.row ? next : c.row + 1;
       });
-      return { cells, caps, tailRow, asideRow: '1 / ' + (firstFigRow || tailRow) };
+      return { cells, caps, tailRow, asideRow: phone ? '1 / 2' : '1 / ' + (firstFigRow || tailRow) };
     }
     // The paper body, built once per loaded module and memoized on it. The app re-renders on every
     // scroll event and on the glitch timer; handing React the same element objects each time lets it
     // bail out of the whole subtree instead of rebuilding several hundred nodes a frame.
-    renderPaper(mod) {
+    renderPaper(mod, phone) {
       if (!mod) return null;
-      if (mod.__els) return mod.__els;
+      // the memo is keyed on which reading built it: the two put the same blocks on different rows and
+      // in different columns, so a resize across PHONE_W rebuilds rather than being handed the last one
+      if (mod.__els && mod.__phone === phone) return mod.__els;
       const e = React.createElement;
       const ink = 'color-mix(in srgb, var(--color-text) 84%, transparent)';
       // The panes this body can carry: a heading, the keywords line and an author's name are each one
@@ -3473,7 +3583,7 @@
       const folds = [];
       // every block's cell on the body grid, worked out ahead of the elements; this method owns no
       // row counter of its own, it only reads the plan back block by block
-      const plan = Component.planPaperRows(mod.blocks);
+      const plan = Component.planPaperRows(mod.blocks, phone);
       // The frame is the plate's own hairline, drawn on the image and nothing else. The design system's
       // .plate is a 6px surface mat plus a 1px outline that goes accent on hover; the mat is dropped so
       // the outline lands on the image edge, and its sepia (meant for placeholder photographs) with it.
@@ -3554,6 +3664,7 @@
             b.n ? e('span', { key: 'n', style: { position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--color-neutral-600)' } }, '(' + b.n + ')') : null));
         }
       });
+      mod.__phone = phone;
       mod.__els = els;
       mod.__caps = plan.caps;
       mod.__folds = folds;
@@ -3571,7 +3682,7 @@
       const e = React.createElement;
       const kicker = { margin: '0 0 6px', fontFamily: 'var(--deco)', fontSize: '10px', letterSpacing: '0.1em', color: 'var(--color-accent-700)', whiteSpace: 'nowrap' };
       const line = { margin: 0, fontFamily: "'Libre Baskerville', var(--font-heading), serif", fontStyle: 'italic', fontSize: '15px', lineHeight: '21px', color: 'var(--color-neutral-700)', whiteSpace: 'pre-wrap', maxWidth: '30ch' };
-      return mod.__caps.map((c) => e('div', { key: 'pc' + c.row, 'data-figcaps': '', style: { gridColumn: 2, gridRow: c.row + ' / ' + c.end, alignSelf: 'start', margin: '10px 0 0', display: 'flex', flexDirection: 'column', gap: '20px' } },
+      return mod.__caps.map((c) => e('div', { key: 'pc' + c.row, 'data-figcaps': '', style: { gridColumn: c.col, gridRow: c.row + ' / ' + c.end, alignSelf: 'start', margin: '10px 0 0', display: 'flex', flexDirection: 'column', gap: '20px' } },
         c.figs.map((f) => {
           const full = 'Fig. ' + f.n + '. ' + f.capText, typed = this.typedText('fig-' + f.n, full);
           return e('div', { key: f.n, 'data-figcap': String(f.n) },
@@ -4171,7 +4282,23 @@
       // zero-padded to two digits. Those are different numbers, so the frame name is kept out of the
       // 'frame-<figNo>' namespace the chapters use and out of the 'card-' one the engine keeps its own
       // fallback bucket in. The entry-to-chapter pairing is the plate's data-shape-alt, frame-<figNo>.
-      const pageProjects = projects.filter((p) => this.pageOf(projects.indexOf(p)) === pageKey).map((p, k) => ({ ...p, shapeIdx: k + 1, dir: k % 2 ? 'rtl' : 'ltr', textCol: k % 2 ? '13 / 23' : '1 / 11', plateCol: k % 2 ? '1 / 13' : '11 / 23', cardRow: (16 + 9 * k) + ' / ' + (23 + 9 * k), bandNo: String(k + 1).padStart(2, '0'), morphName: k < 2 ? 'row-' + k : 'feat-' + (k - 2) + '-title', frameShape: 'plate-frame-' + k }));
+      // The stacked Development landing, off whichever of its two tables the width calls for. Every
+      // span the markup used to carry inline is read back from there now, the way the sheet reads its
+      // own, so the tablet column and the phone column are two readings of one drawing rather than one
+      // composition with the other nowhere.
+      const at = (s) => s.split('/').map((v) => parseInt(v, 10));
+      const stackPlace = this.state.phone ? this.LANDING_PHONE : this.LANDING_NARROW;
+      // a card's band is its size and its step both: the drawing leaves two empty rows between two
+      // modules, so the next card opens that far below where the last one closed
+      const cardBand = at(stackPlace.cards.row), cardRows = cardBand[1] - cardBand[0], cardStep = cardRows + 2;
+      // the card's own inner grid is ruled on the same 44px module as the sheet it stands on, so a
+      // cell of it lands on the drawing's own lines rather than on a share of the card's height
+      const cardGrid = 'repeat(' + cardRows + ', ' + this.SHEET_ROW + 'px)';
+      const cardCell = (k, part) => stackPlace['card' + part + (k % 2 ? 'B' : 'A')];
+      const pageProjects = projects.filter((p) => this.pageOf(projects.indexOf(p)) === pageKey).map((p, k) => ({ ...p, shapeIdx: k + 1, dir: k % 2 ? 'rtl' : 'ltr',
+        textCol: cardCell(k, 'Text').col, textRow: cardCell(k, 'Text').row, plateCol: cardCell(k, 'Plate').col, plateRow: cardCell(k, 'Plate').row,
+        cardRow: (cardBand[0] + cardStep * k) + ' / ' + (cardBand[1] + cardStep * k), cardGrid,
+        bandNo: String(k + 1).padStart(2, '0'), morphName: k < 2 ? 'row-' + k : 'feat-' + (k - 2) + '-title', frameShape: 'plate-frame-' + k }));
       // The desktop Development landing. Its statement, platform and contact cells come off
       // LANDING_WIDE; every project is a plate pinned to a cell by landing-grid.js, and the grid ends on
       // whatever row that placement needed, so the contact band closes the sheet however far it grew.
@@ -4260,15 +4387,20 @@
       }).filter(Boolean);
       const introChars = Array.from(page.intro);
       page.dropCap = introChars[0]; page.introRest = introChars.slice(1).join('');
-      // the Development page is placed on a 44px module: cards are 7 rows with two blank rows between
-      const lastCardEnd = 23 + 9 * Math.max(0, pageProjects.length - 1);
-      // the contact band closes the sheet: one row, after the same two-row gap the colophon takes
-      const gridRows = { plates: lastCardEnd + ' / ' + (lastCardEnd + 1), author: (lastCardEnd + 2) + ' / ' + (lastCardEnd + 18), colophon: (lastCardEnd + 20) + ' / ' + (lastCardEnd + 23), contact: (lastCardEnd + 25) + ' / ' + (lastCardEnd + 26) };
+      // Where the last card closes, and with it every module the table placed under the cards. Those
+      // rows are written in the table with a leading +, because how far down this line falls is a fact
+      // about how many entries the register carries rather than about the drawing.
+      const lastCardEnd = cardBand[1] + cardStep * Math.max(0, pageProjects.length - 1);
+      const stack = {};
+      for (const [name, spot] of Object.entries(stackPlace)) {
+        const after = /^\+(\d+) \/ \+(\d+)$/.exec(spot.row);
+        stack[name] = { col: spot.col, row: after ? (lastCardEnd + +after[1]) + ' / ' + (lastCardEnd + +after[2]) : spot.row };
+      }
       const pad = (n) => String(n).padStart(2, '0');
       const featured = this.featuredFor[pageKey].map((i, k) => ({ ...projects[i], plateNumeral: this.num(k) }));
       const current = projects[idx];
       const paperMod = current.paper ? (this.papers || {})[idx] : null;
-      const paperBlocks = this.renderPaper(paperMod);
+      const paperBlocks = this.renderPaper(paperMod, this.state.phone);
       const paperCaptions = this.renderPaperCaptions(paperMod);
       const paperTail = this.renderPaperTail(paperMod, this.state.paperOpen || {});
       const hov = projects[hovered] && this.pageOf(hovered) === pageKey ? projects[hovered] : pageProjects[0];
@@ -4292,8 +4424,7 @@
       //
       // The second is an entry that names one detail instead of the pair. The single figure takes the
       // columns the pair spanned, from detailA's first to detailB's last, on both sheets.
-      const place = this.state.narrow ? this.SHEET_NARROW : this.SHEET_WIDE;
-      const at = (s) => s.split('/').map((v) => parseInt(v, 10));
+      const place = this.state.phone ? this.SHEET_PHONE : this.state.narrow ? this.SHEET_NARROW : this.SHEET_WIDE;
   
       const heroSpan = at(place.hero.row);
       const portrait = !this.state.narrow && current.heroW > 0 && current.heroH > current.heroW;
@@ -4369,6 +4500,18 @@
         isHome: view === 'home', showTabs: view !== 'home', goHome: () => this.goHome(),
         homeLayerRef: this.homeLayerRef, homeRollRef: this.homeRollRef, homeCubeRef: this.homeCubeRef, fogLayerRef: this.fogLayerRef,
         goToolingFromCube: () => { this.goPage('tooling'); this.cubeLead = true; },
+        // The home in portrait. Two objects laid across a page need width, not a large width, so a phone
+        // and an upright tablet both read them down the page instead. The main takes the screen exactly:
+        // 100dvh follows the browser chrome as it retracts, where 100vh would leave the contact line under
+        // it, and a height rather than a minimum is what keeps the one view that must never scroll from
+        // scrolling. The two objects are then sized off dvh as well, so the pair plus the gap plus the
+        // pinned contact line always stand inside that height with room over.
+        homeMainBox: this.state.portrait ? 'height:calc(100dvh - 57px); overflow:hidden;' : 'min-height:calc(100vh - 57px);',
+        homeGridCols: this.state.portrait ? 'minmax(0,1fr)' : 'minmax(0,1.1fr) minmax(0,0.9fr)',
+        homeGridRows: this.state.portrait ? 'minmax(0,1fr) minmax(0,1fr)' : 'none',
+        homeGridGap: this.state.portrait ? 'clamp(8px,2vh,32px)' : 'clamp(16px,4vw,72px)',
+        homeRollH: this.state.portrait ? 'min(30dvh,300px)' : 'min(44vh,400px)',
+        homeCubeH: this.state.portrait ? 'min(28dvh,280px)' : 'min(40vh,360px)',
         homeCubeOn: () => { if (this.home) this.home.setHover(true); }, homeCubeOff: () => { if (this.home) this.home.setHover(false); },
         isPage: view === 'page', marginalia, page, pageReg: page.reg, pageKey: pageKey, pageLabel: page.label,
         isCvSerif: view === 'cv' && cvReg === 'serif', isCvMono: view === 'cv' && cvReg === 'mono',
@@ -4386,6 +4529,18 @@
         isMono: view === 'chapter' && mono, isSerif: view === 'chapter' && !mono, chapterKey: R + '-' + idx,
         isPaper: view === 'chapter' && !mono && !!current.paper, isEssay: view === 'chapter' && !mono && !current.paper,
         paperBlocks, paperCaptions, paperTail, paperAsideRow: (paperMod && paperMod.__asideRow) || 'auto',
+        // The chapter's body, in both readings. On a phone the grid loses its margin column, the
+        // essay's justified text becomes one column of type, and the aside comes in out of the margin
+        // to open the body. Where each block and each caption then stands is planPaperRows', off the
+        // same flag.
+        // The outlined chapter numeral behind the head. It is set off the width so it always reads as a
+        // watermark rather than as a number, and its floor is the tablet's: XVIII at 160px is 375px wide
+        // and hangs 20px off the left edge of a 390px page. The phone arm reaches 160px at exactly
+        // PHONE_W, so the two are one continuous ramp rather than a step at the boundary.
+        chapterGhost: this.state.phone ? 'clamp(88px,26.7vw,160px)' : 'clamp(160px,22vw,320px)',
+        chapterCols: this.state.phone ? 'minmax(0,1fr)' : 'minmax(0,8fr) minmax(0,4fr)',
+        essayColumns: this.state.phone ? '1' : '2',
+        paperAsideCol: this.state.phone ? '1' : '2',
         heroImg: view === 'chapter' && !!current.hero, heroSlot: view === 'chapter' && !current.hero,
         // the Development sheet's hero plate: the video when the entry names one, the slot otherwise.
         // The serif chapter has no moving plate and keeps heroImg/heroSlot.
@@ -4412,8 +4567,14 @@
         subBrandDisplay: this.state.narrow ? 'none' : 'inline', indexCols: this.state.narrow ? 'minmax(0,1fr)' : 'minmax(0,7fr) minmax(0,5fr)', previewDisplay: this.state.narrow ? 'none' : 'block',
         parallax: Math.round((this.state.scrollY || 0) * 0.18) + 'px',
         hintOpacity: this.state.hintGone || this.state.usedKeys ? '0' : '1', bloomHintOpacity: this.state.bloomTouched ? '0' : '1',
+        // The keyboard hint is a 130px slot, and a 360px page gives the running head 305px of content
+        // box to put the brand and both tabs in. It is also the one thing on the bar a phone has no use
+        // for, since there is no keyboard to hint at. So it is taken off rather than shrunk, and the
+        // brand and the bar's own padding carry phone floors beside it; measureTabs re-reads the
+        // underline off the tab's own box, so nothing here moves the mark.
+        hintDisplay: this.state.phone ? 'none' : 'flex',
         projects, pageProjects, leaves, leafRows, leftLeaves: leaves.filter((l) => l.side === 'left'), rightLeaves: leaves.filter((l) => l.side === 'right'), featured, current, next: projects[(idx + 1) % projects.length], hovered: hov, cv: cvViews.timeline,
-        gridPlatesRow: gridRows.plates, gridAuthorRow: gridRows.author, gridColophonRow: gridRows.colophon, gridContactRow: gridRows.contact,
+        stack,
         sheet, sheetGridRef: this.sheetGridRef,
         contentsRef: this.contentsRef, platesRef: this.platesRef, notesRef: this.notesRef, landingStatementRef: this.landingStatementRef, headRef: this.headRef, tabToolingRef: this.tabToolingRef, tabWritingRef: this.tabWritingRef,
         goTooling: () => this.goPage('tooling'), goWriting: () => this.goPage('writing'),

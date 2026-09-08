@@ -46,7 +46,7 @@ const fail = (where, msg) => errors.push(where + ': ' + msg);
 
 function templateKinds() {
   const src = readFileSync(TEMPLATE, 'utf8');
-  const body = src.slice(src.indexOf('renderPaper(mod)'), src.indexOf('renderPaperCaptions(mod)'));
+  const body = src.slice(src.indexOf('renderPaper(mod, phone)'), src.indexOf('renderPaperCaptions(mod)'));
   const found = new Set();
   for (const m of body.matchAll(/b\.k === '([a-z0-9]+)'/g)) found.add(m[1]);
   return found;
@@ -70,7 +70,7 @@ function checkKindsInSync() {
 // or with a wide plate that already reaches across column 2 on its row, and draws over it. None of
 // that is an error in the browser, so this is the only place any of it can be caught.
 
-const PLANNER = 'static planPaperRows(blocks) {';
+const PLANNER = 'static planPaperRows(blocks, phone) {';
 
 function templatePlanner() {
   const src = readFileSync(TEMPLATE, 'utf8');
@@ -87,7 +87,7 @@ function templatePlanner() {
     fail('tools/check-paper.mjs', 'planPaperRows is not closed with "  }" so this script cannot slice it out');
     return null;
   }
-  return new Function('blocks', rest.slice(0, close.index));
+  return new Function('blocks', 'phone', rest.slice(0, close.index));
 }
 
 const planPaperRows = templatePlanner();
@@ -116,6 +116,58 @@ function checkPlannerKinds() {
     fail('tools/check-paper.mjs', 'over a narrow plate, a paragraph and a wide plate, planPaperRows spans the first caption '
       + (first ? first.row + ' / ' + first.end : 'nowhere') + ' rather than 1 / 3, so it does not stop at the wide plate on row 3');
   }
+}
+
+// The phone reading of the same plan. There is no column 2 on a phone, so the aside opens the body
+// on its own row, every block follows it in document order, and a caption takes the row under its
+// own plate instead of standing beside it. Three things can go wrong and none of them is visible in
+// the browser: a block or a caption left in column 2, where nothing is; two of them on one row,
+// which lays a caption over a plate; and a caption that is not directly under the plate it belongs
+// to, which is the whole point of the arrangement.
+function checkPhonePlan(rel, blocks) {
+  if (!planPaperRows) return;
+  let plan;
+  try {
+    plan = planPaperRows(blocks, true);
+  } catch (err) {
+    return fail(rel, 'planPaperRows threw on this module read as a phone: ' + err.message);
+  }
+  const taken = new Map();
+  const claim = (row, what) => {
+    if (taken.has(row)) fail(rel, 'on a phone ' + what + ' shares row ' + row + ' with ' + taken.get(row) + ', and one would draw over the other');
+    else taken.set(row, what);
+  };
+  const figRow = new Map();
+  blocks.forEach((b, i) => {
+    if (b && b.k === 'fold') return;
+    const c = plan.cells[i];
+    if (!c) return fail(rel + ' block[' + i + '] ' + (b && b.k), 'planPaperRows gives it no grid cell on a phone');
+    if (String(c.gridColumn) !== '1') fail(rel + ' block[' + i + '] ' + (b && b.k), 'stands in column ' + JSON.stringify(c.gridColumn) + ' on a phone, where there is only column 1');
+    claim(Number(c.gridRow), 'block[' + i + '] ' + (b && b.k));
+    if (b && (b.k === 'fig' || b.k === 'figrow')) figRow.set(b, Number(c.gridRow));
+  });
+  for (const c of plan.caps || []) {
+    if (String(c.col) !== '1') fail(rel, 'a caption stands in column ' + JSON.stringify(c.col) + ' on a phone, where there is only column 1');
+    if (c.end !== c.row + 1) fail(rel, 'a caption spans rows ' + c.row + ' / ' + c.end + ' on a phone, where every caption is one row under its plate');
+    claim(c.row, 'the caption for Fig. ' + (c.figs || []).map((f) => f && f.n).join(' and '));
+  }
+  // every caption directly under the plate it belongs to
+  const plates = blocks.filter((b) => b && (b.k === 'fig' || b.k === 'figrow'));
+  if ((plan.caps || []).length !== plates.length) {
+    fail(rel, 'on a phone the plan carries ' + (plan.caps || []).length + ' captions for ' + plates.length + ' plates');
+  }
+  plates.forEach((b, k) => {
+    const cap = (plan.caps || [])[k];
+    if (!cap) return;
+    const want = figRow.get(b);
+    if (cap.row !== want + 1) fail(rel, 'on a phone the caption for the plate on row ' + want + ' stands on row ' + cap.row + ', not the row under it');
+  });
+  const aside = /^\s*(\d+)\s*\/\s*(\d+)\s*$/.exec(String(plan.asideRow || ''));
+  if (!aside) return fail(rel, 'the aside row span is not a pair of grid lines on a phone: ' + JSON.stringify(plan.asideRow));
+  if (Number(aside[1]) !== 1 || Number(aside[2]) !== 2) {
+    fail(rel, 'the aside opens the body on rows ' + plan.asideRow + ' on a phone, not the single row 1 / 2 above every block');
+  }
+  if (taken.has(1)) fail(rel, 'a block stands on row 1 on a phone, which belongs to the aside');
 }
 
 function checkRowPlan(rel, blocks) {
@@ -323,6 +375,7 @@ async function checkModule(rel) {
   checkSequence(rel, 'table', seq.table);
   checkSequence(rel, 'algorithm', seq.alg);
   const plan = checkRowPlan(rel, mod.blocks);
+  checkPhonePlan(rel, mod.blocks);
   return { rel, blocks: mod.blocks.length, figs: seq.fig.length, eqs: seq.eq.length, tables: seq.table.length, algs: seq.alg.length, refs,
     rows: plan ? plan.rows : 0 };
 }

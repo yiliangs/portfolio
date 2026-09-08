@@ -247,7 +247,9 @@ const COLUMNS = 22;
 // always carries a scrollbar, so the containing block is tested a scrollbar narrower than vw as well
 // as flush with it.
 const WIDE_AT = [1000, 1100, 1280, 1440, 1600, 1920, 2560];
-const NARROW_AT = [420, 600, 768, 900, 999];
+const NARROW_AT = [600, 768, 900, 999];
+// the phone sheet runs below 600, and a plate cut there is cut against a 15px column
+const PHONE_AT = [320, 360, 390, 430, 599];
 const SCROLLBAR = [0]; // the rule no longer reads a scrollbar-dependent width
 let plateReport = 'none';
 
@@ -378,7 +380,7 @@ function checkCut(where, rule, laid, table, entry, vw, box) {
 try {
   const logicSrc = readLogicSource();
   const rule = readRule(logicSrc);
-  const tables = { SHEET_WIDE: readTable('SHEET_WIDE', logicSrc), SHEET_NARROW: readTable('SHEET_NARROW', logicSrc) };
+  const tables = { SHEET_WIDE: readTable('SHEET_WIDE', logicSrc), SHEET_NARROW: readTable('SHEET_NARROW', logicSrc), SHEET_PHONE: readTable('SHEET_PHONE', logicSrc) };
   if (rule.PORTRAIT_COLS < 1 || rule.PORTRAIT_COLS >= COLUMNS) {
     fail('PORTRAIT_COLS is ' + rule.PORTRAIT_COLS + ', which is not a span of the ' + COLUMNS + ' column grid');
   }
@@ -388,7 +390,7 @@ try {
   const seen = [];
   for (const d of cut) {
     for (const [name, table, widths, narrow] of [['SHEET_WIDE', tables.SHEET_WIDE, WIDE_AT, false],
-      ['SHEET_NARROW', tables.SHEET_NARROW, NARROW_AT, true]]) {
+      ['SHEET_NARROW', tables.SHEET_NARROW, NARROW_AT, true], ['SHEET_PHONE', tables.SHEET_PHONE, PHONE_AT, true]]) {
       for (const vw of widths) {
         for (const bar of SCROLLBAR) {
           const laid = cutTable(table, rule, d, vw, vw - bar, narrow);

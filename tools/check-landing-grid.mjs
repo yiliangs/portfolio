@@ -542,6 +542,153 @@ if (!/place\(\{\s*\.\.\.dest\s*\}\)/.test(logicSrc)) {
     'the anchor reads as a register change and runs the travel again');
 }
 
+// ---------------------------------------------------------------- the two stacked landings
+
+// Below 1000px the landing is not drawn, it is stacked: a column of full-width bands read top to
+// bottom. Those spans used to be written into the markup, one set of them, tuned for a tablet. They
+// are two placement tables now, LANDING_NARROW and LANDING_PHONE, written the way the sheet tables
+// are so they can be read without running the class, and chosen off state.phone.
+//
+// A stacked landing has three kinds of row, because unlike the sheet it grows with the register:
+//
+//   * a pair of grid lines, for the corner above the cards, which is a fixed shape
+//   * `cards`, the first card's own band. Every card after it steps down by that band plus the two
+//     empty rows the drawing leaves between two modules, so the band is the step as well as the size
+//   * a pair written with a leading +, for everything under the cards: rows counted from the line
+//     the last card closes on, which is known only once the entries are counted
+//
+// cardTextA / cardPlateA and their B pair are not on the sheet's grid at all: they are on the card's
+// own inner grid, which is 22 columns like the sheet and as many 44px rows as the card's band. A
+// takes the even bands and B the odd ones, which is what makes the tablet column alternate.
+//
+// What this section holds: both tables place the same modules, neither lays two of them over the
+// same cells at any register size, every card cell stays inside its own band, and LANDING_NARROW is
+// still the composition the markup carried, written out below so the move into tables cannot have
+// changed it quietly.
+const STACK_KEYS = ['statement', 'platform', 'contents', 'cards', 'cardTextA', 'cardPlateA',
+  'cardTextB', 'cardPlateB', 'plates', 'author', 'cv', 'colophon', 'contactEmail', 'contactGithub', 'contactCv'];
+const CARD_KEYS = ['cardTextA', 'cardPlateA', 'cardTextB', 'cardPlateB'];
+// The spans the stacked landing carried inline before the tables. The rows under the cards were
+// worked out in renderVals off lastCardEnd, the line the last card closes on, and are written here
+// as the offsets they were: gridRows.plates was lastCardEnd + ' / ' + (lastCardEnd + 1), and so on.
+const NARROW_WAS = {
+  statement:     { col: '1 / 15',  row: '2 / 12' },
+  platform:      { col: '15 / 23', row: '2 / 12' },
+  contents:      { col: '1 / 7',   row: '14 / 15' },
+  cards:         { col: '1 / 23',  row: '16 / 23' },
+  cardTextA:     { col: '1 / 11',  row: '1 / 8' },
+  cardPlateA:    { col: '11 / 23', row: '1 / 8' },
+  cardTextB:     { col: '13 / 23', row: '1 / 8' },
+  cardPlateB:    { col: '1 / 13',  row: '1 / 8' },
+  plates:        { col: '1 / 2',   row: '+0 / +1' },
+  author:        { col: '1 / 11',  row: '+2 / +18' },
+  cv:            { col: '12 / 23', row: '+2 / +18' },
+  colophon:      { col: '1 / 16',  row: '+20 / +23' },
+  contactEmail:  { col: '1 / 3',   row: '+25 / +26' },
+  contactGithub: { col: '3 / 5',   row: '+25 / +26' },
+  contactCv:     { col: '5 / 7',   row: '+25 / +26' },
+};
+
+const stacked = { LANDING_NARROW: readTable('LANDING_NARROW'), LANDING_PHONE: readTable('LANDING_PHONE') };
+
+// a span, either a pair of grid lines or a pair of offsets from the line the cards close on
+const stackSpan = (s) => {
+  const m = /^\s*(\+?)(\d+)\s*\/\s*\+?(\d+)\s*$/.exec(String(s));
+  return m ? { from: parseInt(m[2], 10), to: parseInt(m[3], 10), after: m[1] === '+' } : null;
+};
+
+for (const [name, table] of Object.entries(stacked)) {
+  if (!table) continue;
+  for (const k of STACK_KEYS) if (!table[k]) fail(name + ' has no ' + k + ' entry, so that module has nowhere to stand');
+  for (const k of Object.keys(table)) if (!STACK_KEYS.includes(k)) fail(name + ' places ' + k + ', which nothing on the stacked landing binds');
+  for (const [mod, at] of Object.entries(table)) {
+    const c = stackSpan(at.col), r = stackSpan(at.row);
+    if (!c || c.after) { fail(name + '.' + mod + ' has a column span this check cannot read: ' + JSON.stringify(at.col)); continue; }
+    if (!r) { fail(name + '.' + mod + ' has a row span this check cannot read: ' + JSON.stringify(at.row)); continue; }
+    if (c.from < 1 || c.to > COLUMNS + 1 || c.from >= c.to) fail(name + '.' + mod + ' runs off the ' + COLUMNS + ' column grid: ' + at.col);
+    if (r.from >= r.to) fail(name + '.' + mod + ' has an empty or reversed row span: ' + at.row);
+    const inBand = CARD_KEYS.includes(mod);
+    if (inBand && r.after) fail(name + '.' + mod + " is on the card's own grid, so its rows are that grid's own and not counted from the cards");
+    if (!inBand && mod !== 'cards' && !r.after && r.from < 1) fail(name + '.' + mod + ' starts above row 1: ' + at.row);
+  }
+  // the card cells stand inside the band the card was given, or they hang out of the module
+  const band = stackSpan(table.cards ? table.cards.row : '');
+  if (band) {
+    const rows = band.to - band.from;
+    for (const k of CARD_KEYS) {
+      const r = table[k] && stackSpan(table[k].row);
+      if (!r) continue;
+      if (r.from < 1 || r.to > rows + 1) {
+        fail(name + '.' + k + ' takes rows ' + table[k].row + " of a card band that is only " + rows + ' rows tall');
+      }
+    }
+    for (const pair of [['cardTextA', 'cardPlateA'], ['cardTextB', 'cardPlateB']]) {
+      const a = table[pair[0]], b = table[pair[1]];
+      if (!a || !b) continue;
+      const ac = stackSpan(a.col), ar = stackSpan(a.row), bc = stackSpan(b.col), br = stackSpan(b.row);
+      if (!ac || !ar || !bc || !br) continue;
+      if (ac.from < bc.to && bc.from < ac.to && ar.from < br.to && br.from < ar.to) {
+        fail(name + ' lays ' + pair[0] + ' over ' + pair[1] + ' on the card grid');
+      }
+    }
+  }
+  // and nothing on the sheet's own grid overlaps anything else, at any size of register
+  for (const count of [1, 2, PLATES, 40]) {
+    if (!band) break;
+    const step = (band.to - band.from) + 2;
+    const lastCardEnd = band.to + step * (count - 1);
+    const boxes = [['the cards', stackSpan(table.cards.col), { from: band.from, to: lastCardEnd }]];
+    for (const [mod, at] of Object.entries(table)) {
+      if (mod === 'cards' || CARD_KEYS.includes(mod)) continue;
+      const c = stackSpan(at.col), r = stackSpan(at.row);
+      if (!c || !r) continue;
+      boxes.push([mod, c, r.after ? { from: lastCardEnd + r.from, to: lastCardEnd + r.to } : r]);
+    }
+    for (let i = 0; i < boxes.length; i++) {
+      for (let j = i + 1; j < boxes.length; j++) {
+        const [a, ac, ar] = boxes[i], [b, bc, br] = boxes[j];
+        if (ac.from < bc.to && bc.from < ac.to && ar.from < br.to && br.from < ar.to) {
+          fail(name + ' lays ' + a + ' and ' + b + ' over the same cells at ' + count + ' entries');
+        }
+      }
+    }
+  }
+}
+
+// LANDING_NARROW is the composition the markup carried; moving it into a table was not the place to
+// retune it
+if (stacked.LANDING_NARROW) {
+  for (const k of STACK_KEYS) {
+    const was = NARROW_WAS[k], now = stacked.LANDING_NARROW[k];
+    if (!was || !now) continue;
+    for (const axis of ['col', 'row']) {
+      if (was[axis] !== now[axis]) {
+        fail('LANDING_NARROW.' + k + '.' + axis + ' is ' + JSON.stringify(now[axis]) + ', not the ' +
+          JSON.stringify(was[axis]) + ' the stacked landing carried in the markup');
+      }
+    }
+  }
+}
+
+// the phone reads the same drawing as one column: nothing beside anything
+if (stacked.LANDING_PHONE) {
+  for (const [mod, at] of Object.entries(stacked.LANDING_PHONE)) {
+    if (mod === 'contactEmail' || mod === 'contactGithub' || mod === 'contactCv' || mod === 'plates') continue;
+    if (at.col !== '1 / ' + (COLUMNS + 1)) {
+      fail('LANDING_PHONE.' + mod + ' takes columns ' + at.col + ' rather than the full width of a phone');
+    }
+  }
+  // the three contact cells still share one row and close the sheet across it
+  const cells = ['contactEmail', 'contactGithub', 'contactCv'].map((k) => stacked.LANDING_PHONE[k]).filter(Boolean);
+  if (cells.length === 3) {
+    if (new Set(cells.map((c) => c.row)).size !== 1) fail('the three contact cells no longer share one row on a phone');
+    const ends = cells.map((c) => stackSpan(c.col)).filter(Boolean);
+    if (ends.length === 3 && (ends[0].from !== 1 || ends[2].to !== COLUMNS + 1)) {
+      fail('the contact band does not run the full width of a phone: ' + cells.map((c) => c.col).join(', '));
+    }
+  }
+}
+
 // ---------------------------------------------------------------- report
 
 if (failures.length) {
@@ -553,4 +700,6 @@ console.log('check-landing-grid: ' + checked + ' placements over ' + VIEWPORTS.l
   STATEMENT_ROWS + ' row corner block and ' + SEEDS.length + ' seeds hold the grid (worst growth ' +
   worst + ' rows), ' + Object.keys(shipped).length + ' of ' + PLATES + ' plates pinned, a pin is honoured to the cell ' +
   'and five ways of writing a bad one are refused by name, crossed pins are drawn as written under ' +
-  'strict: false and refused without it, and both landings are in the template');
+  'strict: false and refused without it, both landings are in the template, and the two tables of the '
+  + 'stacked landing place the same ' + STACK_KEYS.length + ' modules with nothing over anything at 1, 2, '
+  + PLATES + ' and 40 entries');
