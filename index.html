@@ -42,6 +42,9 @@
     .plate:hover { outline-color: var(--color-accent); }
     .tr-char-word, .tr-char { vertical-align: baseline; }
     /* — the Development sheet: every module is a framed cell on the drawing grid.
+         The grid rules itself in --hair and a module frames itself in --frame, the heavier of the two
+         inks, so a boundary is never read as another cell edge; full var(--color-text) is the third
+         step and belongs to a control under the cursor.
          Left and top lines are drawn inside the module, right and bottom outside, so two neighbours
          put their shared line in the same place. Only one of the two is ever seen, because the module
          further right or further down is later in the markup and its opaque ground covers its
@@ -51,7 +54,7 @@
          order alone gives content, then ground, then frame. — */
     .sheet-mod { position: relative; box-sizing: border-box; background: var(--color-bg); }
     .sheet-mod::after { content: ''; position: absolute; inset: 0; pointer-events: none;
-      box-shadow: inset 1px 0 0 0 var(--hair), inset 0 1px 0 0 var(--hair), 1px 0 0 0 var(--hair), 0 1px 0 0 var(--hair);
+      box-shadow: inset 1px 0 0 0 var(--frame), inset 0 1px 0 0 var(--frame), 1px 0 0 0 var(--frame), 0 1px 0 0 var(--frame);
       transition: box-shadow 240ms ease; }
     /* only a control brings its frame up to full ink. A module that did the same read as a button
        and invited a click that does nothing; the sheet's text answers the cursor instead */
