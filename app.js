@@ -2196,8 +2196,12 @@
     //
     // sheetCol is the sheet's own column in pixels at the width the page is being read at, so the row
     // count follows the sheet rather than a design width: the main is max-width:1160px with
-    // padding:0 clamp(20px,4vw,48px), and vw counts the scrollbar while the containing block does not,
-    // which is why the two widths are read separately. rowsFor rounds up, so the plate is never
+    // padding:0 clamp(20px,4vw,48px). Both terms are read from window.innerWidth, which the scrollbar
+    // does not move. Taking the second from documentElement.clientWidth would be a shade more exact
+    // just below 1160px and would put the row count in a loop with the scrollbar: more rows makes the
+    // sheet taller, a taller sheet takes the scrollbar, the scrollbar narrows clientWidth, a narrower
+    // sheet asks for fewer rows. The picture is contained, so the error this trades for is at most a
+    // thin band, and the plate holds still. rowsFor rounds up, so the plate is never
     // shorter than the picture and the two thin bands land top and bottom rather than left and right.
     // Both are plain expressions so tools/check-dev-plates.mjs can read the rule back without running
     // this class.
@@ -2206,7 +2210,7 @@
     SHEET_ROW = 44;
     SHEET_MAX = 1160;
     sheetCol(vw, box) { return (Math.min(this.SHEET_MAX, box) - 2 * Math.min(48, Math.max(20, vw * 0.04))) / this.SHEET_COLS; }
-    rowsFor(cols, w, h) { return Math.ceil(cols * this.sheetCol(window.innerWidth, document.documentElement.clientWidth || window.innerWidth) * h / (w * this.SHEET_ROW)); }
+    rowsFor(cols, w, h) { return Math.ceil(cols * this.sheetCol(window.innerWidth, window.innerWidth) * h / (w * this.SHEET_ROW)); }
     SHEET_WIDE = {
       back:          { col: '1 / 7',   row: '1 / 2' },
       header:        { col: '1 / 15',  row: '3 / 11' },

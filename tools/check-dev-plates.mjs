@@ -149,7 +149,7 @@ const COLUMNS = 22;
 // as flush with it.
 const WIDE_AT = [1000, 1100, 1280, 1440, 1600, 1920, 2560];
 const NARROW_AT = [420, 600, 768, 900, 999];
-const SCROLLBAR = [0, 15];
+const SCROLLBAR = [0]; // the rule no longer reads a scrollbar-dependent width
 let plateReport = 'none';
 
 function readRule(logicSrc) {
@@ -284,7 +284,7 @@ try {
         for (const bar of SCROLLBAR) {
           const laid = cutTable(table, rule, d, vw, vw - bar, narrow);
           checkCut('the ' + d.title + ' sheet on ' + name + ' at ' + vw + 'px', rule, laid, table, d, vw, vw - bar);
-          if (vw === 1440 && bar === 15 && !narrow) {
+          if (vw === 1440 && bar === SCROLLBAR[0] && !narrow) {
             seen.push(d.title + ': ' + (laid.portrait ? 'hero ' + rule.PORTRAIT_COLS + ' by ' + laid.heroRows : 'hero standard') +
               ', ' + (laid.one ? 'detail ' + laid.detailCols + ' by ' + laid.detailRows : 'detail pair'));
           }
