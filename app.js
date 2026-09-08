@@ -200,7 +200,7 @@
                           "\n            "
                         ),
                         "\n            ",
-                        h("div", { key: "3", style: S(`position:relative; z-index:5; min-width:12ch; flex:1 1 auto; text-align:${Vi.lf?.align ?? ""}; padding-bottom:2px;`) },
+                        h("div", { key: "3", "data-leaf-text": "", style: S(`position:relative; z-index:5; min-width:12ch; flex:1 1 auto; text-align:${Vi.lf?.align ?? ""}; padding-bottom:2px;`) },
                           "\n              ",
                           h("p", { key: "1|15.mbtwb2", style: {"margin":"0","fontFamily":"var(--deco)","fontSize":"10px","letterSpacing":"0.1em","color":"var(--color-accent-700)","whiteSpace":"nowrap"} },
                             h(F,{key:0},"",I(Vi.lf?.kicker,1),"")
@@ -214,7 +214,7 @@
                             h(F,{key:0},"",I(Vi.lf?.kind,1),"")
                           ),
                           "\n              ",
-                          h("p", { key: "7|27.1o3ozxe", "aria-live": "polite", style: S(`position:absolute; top:100%; left:0; right:0; margin:8px 0 0; pointer-events:none; font-family:var(--font-heading); font-style:italic; font-size:15px; line-height:21px; color:var(--color-neutral-700); white-space:pre-wrap; max-width:30ch; opacity:${Vi.lf?.detailOpacity ?? ""}; transition:opacity 220ms ease;`) },
+                          h("p", { key: "7|27.1o3ozxe", "aria-live": "polite", "data-leaf-detail": "", style: S(`position:absolute; top:100%; left:0; right:0; margin:8px -8px 0; padding:5px 8px 6px; box-sizing:border-box; background:color-mix(in srgb, var(--color-bg) 90%, transparent); backdrop-filter:blur(2px); pointer-events:none; font-family:var(--font-heading); font-style:italic; font-size:15px; line-height:21px; color:var(--color-neutral-700); white-space:pre-wrap; max-width:calc(30ch + 16px); opacity:${Vi.lf?.detailOpacity ?? ""}; transition:opacity 220ms ease;`) },
                             h(F,{key:0},"",I(Vi.lf?.typed,1),""),
                             h("span", { key: "1", "aria-hidden": "true", style: S(`display:inline-block; width:1px; height:0.9em; margin-left:2px; vertical-align:-0.1em; background:var(--color-accent); opacity:${Vi.lf?.caretOpacity ?? ""};`) })
                           ),
@@ -306,7 +306,7 @@
                           "\n            "
                         ),
                         "\n            ",
-                        h("div", { key: "3", style: S(`position:relative; z-index:5; min-width:12ch; flex:1 1 auto; text-align:${Vi.lf?.align ?? ""}; padding-bottom:2px;`) },
+                        h("div", { key: "3", "data-leaf-text": "", style: S(`position:relative; z-index:5; min-width:12ch; flex:1 1 auto; text-align:${Vi.lf?.align ?? ""}; padding-bottom:2px;`) },
                           "\n              ",
                           h("p", { key: "1|15.mbtwb2", style: {"margin":"0","fontFamily":"var(--deco)","fontSize":"10px","letterSpacing":"0.1em","color":"var(--color-accent-700)","whiteSpace":"nowrap"} },
                             h(F,{key:0},"",I(Vi.lf?.kicker,1),"")
@@ -320,7 +320,7 @@
                             h(F,{key:0},"",I(Vi.lf?.kind,1),"")
                           ),
                           "\n              ",
-                          h("p", { key: "7|27.1o3ozxe", "aria-live": "polite", style: S(`position:absolute; top:100%; left:0; right:0; margin:8px 0 0; pointer-events:none; font-family:var(--font-heading); font-style:italic; font-size:15px; line-height:21px; color:var(--color-neutral-700); white-space:pre-wrap; max-width:30ch; opacity:${Vi.lf?.detailOpacity ?? ""}; transition:opacity 220ms ease;`) },
+                          h("p", { key: "7|27.1o3ozxe", "aria-live": "polite", "data-leaf-detail": "", style: S(`position:absolute; top:100%; left:0; right:0; margin:8px -8px 0; padding:5px 8px 6px; box-sizing:border-box; background:color-mix(in srgb, var(--color-bg) 90%, transparent); backdrop-filter:blur(2px); pointer-events:none; font-family:var(--font-heading); font-style:italic; font-size:15px; line-height:21px; color:var(--color-neutral-700); white-space:pre-wrap; max-width:calc(30ch + 16px); opacity:${Vi.lf?.detailOpacity ?? ""}; transition:opacity 220ms ease;`) },
                             h(F,{key:0},"",I(Vi.lf?.typed,1),""),
                             h("span", { key: "1", "aria-hidden": "true", style: S(`display:inline-block; width:1px; height:0.9em; margin-left:2px; vertical-align:-0.1em; background:var(--color-accent); opacity:${Vi.lf?.caretOpacity ?? ""};`) })
                           ),
@@ -2860,7 +2860,7 @@
           .then((m) => { if (!this.dead) this.leafTuner = m.mount({ spreads: this.LEAF_SPREADS, pairs: this.LEAF_PAIRS, rerender: () => this.forceUpdate() }); })
           .catch((e) => console.error('leaves-dev', e));
       }
-      this.observeReveals(); this.mountTextEffects(); this.syncParchment(); this.syncHome(); this.syncPaper();
+      this.observeReveals(); this.mountTextEffects(); this.syncParchment(); this.syncHome(); this.syncPaper(); this.placeLeafText();
       this.hintTimer = setTimeout(() => this.setState({ hintGone: true }), 9000);
       setTimeout(() => this.measureTabs(), 400);
     }
@@ -3252,6 +3252,40 @@
       };
       this.parchRaf = requestAnimationFrame(tick);
     }
+    // The margins are tuned by hand, and a leaf can be pushed past the page edge on purpose, so the
+    // text that belongs to it has to look after itself rather than trust where the leaf landed.
+    //
+    // A caption that would leave the hero is pulled back to its edge. That is the one case where the
+    // caption parts company with its plate, and it is the case where following the plate would mean
+    // being clipped away entirely: a plate may bleed off the page, a title may not.
+    //
+    // A hover detail hangs below the caption and is as tall as the text typed into it, so near the
+    // bottom of a one-screen page it runs out of the hero. When there is no room below it flips above
+    // the caption instead. It is measured rather than guessed because the height grows a character at
+    // a time while the line types in.
+    placeLeafText() {
+      const hero = this.heroRef.current;
+      if (!hero) return;
+      const box = hero.getBoundingClientRect(), pad = 14;
+      hero.querySelectorAll('[data-leaf] [data-leaf-text]').forEach((text) => {
+        text.style.transform = 'none';
+        const r = text.getBoundingClientRect();
+        let dx = 0;
+        if (r.left < box.left + pad) dx = box.left + pad - r.left;
+        else if (r.right > box.right - pad) dx = Math.min(0, box.right - pad - r.right);
+        if (dx) text.style.transform = 'translateX(' + Math.round(dx) + 'px)';
+  
+        const detail = text.querySelector('[data-leaf-detail]');
+        if (!detail) return;
+        detail.style.top = '100%'; detail.style.bottom = 'auto';
+        const d = detail.getBoundingClientRect();
+        if (d.height > 0 && d.bottom > box.bottom - pad) { detail.style.top = 'auto'; detail.style.bottom = '100%'; }
+      });
+    }
+  
+    // the detail grows by a character per tick while it types, so the pass runs on every update
+    componentDidUpdate() { this.placeLeafText(); }
+  
     componentWillUnmount() { this.dead = true; if (this.leafTuner) { this.leafTuner.destroy(); this.leafTuner = null; } if (this.fog) { this.fog.destroy(); this.fog = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); window.removeEventListener('popstate', this.onPop); this.observer?.disconnect(); cancelAnimationFrame(this.cellRaf); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
     observeReveals() { document.querySelectorAll('[data-enter=""]').forEach((el) => this.observer.observe(el)); }
     // the cursor's cell on the sheet grid, sampled once a frame and only written when the cell actually

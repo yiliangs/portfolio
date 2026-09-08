@@ -221,11 +221,11 @@
             <button data-shape="leaf-{{ lf.cardNo }}" data-shape-alt="frame-{{ lf.figNo }}" onClick="{{ lf.open }}" onMouseEnter="{{ lf.hover }}" onMouseLeave="{{ lf.unhover }}" onFocus="{{ lf.hover }}" onBlur="{{ lf.unhover }}" style-hover="box-shadow:0 30px 60px -22px rgba(32,31,29,0.42), 0 3px 8px rgba(32,31,29,0.1); border-color:var(--color-accent); z-index:3; filter:sepia(0.1) saturate(1) contrast(1.02)" style="all:unset; cursor:{{ lf.cursor }}; display:block; flex:none; height:{{ lf.plateH }}; width:{{ lf.plateW }}; max-width:{{ lf.plateMaxW }}; aspect-ratio:{{ lf.ratio }}; box-sizing:border-box; transform-origin:{{ lf.origin }}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:{{ lf.shadow }}; overflow:hidden; transform:translate({{ lf.bleedX }}, {{ lf.bleedY }}) translateY({{ lf.lift }}) scale({{ lf.scale }}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:{{ lf.filter }};">
               <image-slot id="{{ lf.coverSlotId }}" src="{{ lf.cover }}" shape="rect" fit="cover" placeholder="{{ lf.placeholder }}" style-hover="transform:scale(1.12)" style="width:100%; height:100%; display:block; transform:scale(1); transition:transform 620ms cubic-bezier(.2,.7,.2,1);"></image-slot>
             </button>
-            <div style="position:relative; z-index:5; min-width:12ch; flex:1 1 auto; text-align:{{ lf.align }}; padding-bottom:2px;">
+            <div data-leaf-text="" style="position:relative; z-index:5; min-width:12ch; flex:1 1 auto; text-align:{{ lf.align }}; padding-bottom:2px;">
               <p style="margin:0; font-family:var(--deco); font-size:10px; letter-spacing:0.1em; color:var(--color-accent-700); white-space:nowrap;">{{ lf.kicker }}</p>
               <p data-morph="{{ lf.morphName }}" data-morph-alt="title-{{ lf.figNo }}" style="margin:6px 0 0; font-family:var(--font-heading); font-weight:500; font-size:{{ lf.titleSize }}; line-height:1.15; color:var(--color-text); text-wrap:balance;">{{ lf.title }}</p>
               <p style="margin:4px 0 0; font-size:12px; line-height:16px; color:var(--color-neutral-600);">{{ lf.kind }}</p>
-              <p aria-live="polite" style="position:absolute; top:100%; left:0; right:0; margin:8px 0 0; pointer-events:none; font-family:var(--font-heading); font-style:italic; font-size:15px; line-height:21px; color:var(--color-neutral-700); white-space:pre-wrap; max-width:30ch; opacity:{{ lf.detailOpacity }}; transition:opacity 220ms ease;">{{ lf.typed }}<span aria-hidden="true" style="display:inline-block; width:1px; height:0.9em; margin-left:2px; vertical-align:-0.1em; background:var(--color-accent); opacity:{{ lf.caretOpacity }};"></span></p>
+              <p aria-live="polite" data-leaf-detail="" style="position:absolute; top:100%; left:0; right:0; margin:8px -8px 0; padding:5px 8px 6px; box-sizing:border-box; background:color-mix(in srgb, var(--color-bg) 90%, transparent); backdrop-filter:blur(2px); pointer-events:none; font-family:var(--font-heading); font-style:italic; font-size:15px; line-height:21px; color:var(--color-neutral-700); white-space:pre-wrap; max-width:calc(30ch + 16px); opacity:{{ lf.detailOpacity }}; transition:opacity 220ms ease;">{{ lf.typed }}<span aria-hidden="true" style="display:inline-block; width:1px; height:0.9em; margin-left:2px; vertical-align:-0.1em; background:var(--color-accent); opacity:{{ lf.caretOpacity }};"></span></p>
             </div>
           </div>
         </div>
@@ -262,11 +262,11 @@
             <button data-shape="leaf-{{ lf.cardNo }}" data-shape-alt="frame-{{ lf.figNo }}" onClick="{{ lf.open }}" onMouseEnter="{{ lf.hover }}" onMouseLeave="{{ lf.unhover }}" onFocus="{{ lf.hover }}" onBlur="{{ lf.unhover }}" style-hover="box-shadow:0 30px 60px -22px rgba(32,31,29,0.42), 0 3px 8px rgba(32,31,29,0.1); border-color:var(--color-accent); z-index:3; filter:sepia(0.1) saturate(1) contrast(1.02)" style="all:unset; cursor:{{ lf.cursor }}; display:block; flex:none; height:{{ lf.plateH }}; width:{{ lf.plateW }}; max-width:{{ lf.plateMaxW }}; aspect-ratio:{{ lf.ratio }}; box-sizing:border-box; transform-origin:{{ lf.origin }}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:{{ lf.shadow }}; overflow:hidden; transform:translate({{ lf.bleedX }}, {{ lf.bleedY }}) translateY({{ lf.lift }}) scale({{ lf.scale }}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:{{ lf.filter }};">
               <image-slot id="{{ lf.coverSlotId }}" src="{{ lf.cover }}" shape="rect" fit="cover" placeholder="{{ lf.placeholder }}" style-hover="transform:scale(1.12)" style="width:100%; height:100%; display:block; transform:scale(1); transition:transform 620ms cubic-bezier(.2,.7,.2,1);"></image-slot>
             </button>
-            <div style="position:relative; z-index:5; min-width:12ch; flex:1 1 auto; text-align:{{ lf.align }}; padding-bottom:2px;">
+            <div data-leaf-text="" style="position:relative; z-index:5; min-width:12ch; flex:1 1 auto; text-align:{{ lf.align }}; padding-bottom:2px;">
               <p style="margin:0; font-family:var(--deco); font-size:10px; letter-spacing:0.1em; color:var(--color-accent-700); white-space:nowrap;">{{ lf.kicker }}</p>
               <p data-morph="{{ lf.morphName }}" data-morph-alt="title-{{ lf.figNo }}" style="margin:6px 0 0; font-family:var(--font-heading); font-weight:500; font-size:{{ lf.titleSize }}; line-height:1.15; color:var(--color-text); text-wrap:balance;">{{ lf.title }}</p>
               <p style="margin:4px 0 0; font-size:12px; line-height:16px; color:var(--color-neutral-600);">{{ lf.kind }}</p>
-              <p aria-live="polite" style="position:absolute; top:100%; left:0; right:0; margin:8px 0 0; pointer-events:none; font-family:var(--font-heading); font-style:italic; font-size:15px; line-height:21px; color:var(--color-neutral-700); white-space:pre-wrap; max-width:30ch; opacity:{{ lf.detailOpacity }}; transition:opacity 220ms ease;">{{ lf.typed }}<span aria-hidden="true" style="display:inline-block; width:1px; height:0.9em; margin-left:2px; vertical-align:-0.1em; background:var(--color-accent); opacity:{{ lf.caretOpacity }};"></span></p>
+              <p aria-live="polite" data-leaf-detail="" style="position:absolute; top:100%; left:0; right:0; margin:8px -8px 0; padding:5px 8px 6px; box-sizing:border-box; background:color-mix(in srgb, var(--color-bg) 90%, transparent); backdrop-filter:blur(2px); pointer-events:none; font-family:var(--font-heading); font-style:italic; font-size:15px; line-height:21px; color:var(--color-neutral-700); white-space:pre-wrap; max-width:calc(30ch + 16px); opacity:{{ lf.detailOpacity }}; transition:opacity 220ms ease;">{{ lf.typed }}<span aria-hidden="true" style="display:inline-block; width:1px; height:0.9em; margin-left:2px; vertical-align:-0.1em; background:var(--color-accent); opacity:{{ lf.caretOpacity }};"></span></p>
             </div>
           </div>
         </div>
@@ -1851,7 +1851,7 @@ class Component extends DCLogic {
         .then((m) => { if (!this.dead) this.leafTuner = m.mount({ spreads: this.LEAF_SPREADS, pairs: this.LEAF_PAIRS, rerender: () => this.forceUpdate() }); })
         .catch((e) => console.error('leaves-dev', e));
     }
-    this.observeReveals(); this.mountTextEffects(); this.syncParchment(); this.syncHome(); this.syncPaper();
+    this.observeReveals(); this.mountTextEffects(); this.syncParchment(); this.syncHome(); this.syncPaper(); this.placeLeafText();
     this.hintTimer = setTimeout(() => this.setState({ hintGone: true }), 9000);
     setTimeout(() => this.measureTabs(), 400);
   }
@@ -2243,6 +2243,40 @@ class Component extends DCLogic {
     };
     this.parchRaf = requestAnimationFrame(tick);
   }
+  // The margins are tuned by hand, and a leaf can be pushed past the page edge on purpose, so the
+  // text that belongs to it has to look after itself rather than trust where the leaf landed.
+  //
+  // A caption that would leave the hero is pulled back to its edge. That is the one case where the
+  // caption parts company with its plate, and it is the case where following the plate would mean
+  // being clipped away entirely: a plate may bleed off the page, a title may not.
+  //
+  // A hover detail hangs below the caption and is as tall as the text typed into it, so near the
+  // bottom of a one-screen page it runs out of the hero. When there is no room below it flips above
+  // the caption instead. It is measured rather than guessed because the height grows a character at
+  // a time while the line types in.
+  placeLeafText() {
+    const hero = this.heroRef.current;
+    if (!hero) return;
+    const box = hero.getBoundingClientRect(), pad = 14;
+    hero.querySelectorAll('[data-leaf] [data-leaf-text]').forEach((text) => {
+      text.style.transform = 'none';
+      const r = text.getBoundingClientRect();
+      let dx = 0;
+      if (r.left < box.left + pad) dx = box.left + pad - r.left;
+      else if (r.right > box.right - pad) dx = Math.min(0, box.right - pad - r.right);
+      if (dx) text.style.transform = 'translateX(' + Math.round(dx) + 'px)';
+
+      const detail = text.querySelector('[data-leaf-detail]');
+      if (!detail) return;
+      detail.style.top = '100%'; detail.style.bottom = 'auto';
+      const d = detail.getBoundingClientRect();
+      if (d.height > 0 && d.bottom > box.bottom - pad) { detail.style.top = 'auto'; detail.style.bottom = '100%'; }
+    });
+  }
+
+  // the detail grows by a character per tick while it types, so the pass runs on every update
+  componentDidUpdate() { this.placeLeafText(); }
+
   componentWillUnmount() { this.dead = true; if (this.leafTuner) { this.leafTuner.destroy(); this.leafTuner = null; } if (this.fog) { this.fog.destroy(); this.fog = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); window.removeEventListener('popstate', this.onPop); this.observer?.disconnect(); cancelAnimationFrame(this.cellRaf); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
   observeReveals() { document.querySelectorAll('[data-enter=""]').forEach((el) => this.observer.observe(el)); }
   // the cursor's cell on the sheet grid, sampled once a frame and only written when the cell actually
