@@ -178,10 +178,10 @@
         "\n  ",
         (V.isHeroWide ? h(F,{key:16},
           "\n  ",
-          h("main", { key: "writing", "data-screen-label": "Research", style: S(`--s:${V.landingZoom ?? ""}; zoom:var(--s); max-width:none; margin:0; padding:0 clamp(20px,3vw,56px); background-image:radial-gradient(color-mix(in srgb, var(--color-text) 16%, transparent) 1px, transparent 1.1px); background-size:44px 44px; background-position:22px 22px;`) },
+          h("main", { key: "writing", "data-screen-label": "Research", style: S(`--s:${V.landingZoom ?? ""}; zoom:var(--s); max-width:none; margin:0; padding:0 clamp(20px, calc(3vw / var(--s)), 56px); background-image:radial-gradient(color-mix(in srgb, var(--color-text) 16%, transparent) 1px, transparent 1.1px); background-size:44px 44px; background-position:22px 22px;`) },
             "\n\n    ",
             "\n    ",
-            h("section", { key: "2", ref: V.heroRef, style: {"position":"relative","textAlign":"center","margin":"0 calc(-1 * clamp(20px,3vw,56px))","padding":"28px clamp(20px,3vw,56px) 96px","perspective":"1200px","overflow":"hidden","height":"calc((100vh - 57px) / var(--s))","boxSizing":"border-box","display":"grid","gridTemplateColumns":"minmax(280px,1fr) minmax(0,900px) minmax(280px,1fr)","gap":"0 40px","alignItems":"center"} },
+            h("section", { key: "2", ref: V.heroRef, style: {"position":"relative","textAlign":"center","margin":"0 calc(-1 * clamp(20px, calc(3vw / var(--s)), 56px))","padding":"28px clamp(20px, calc(3vw / var(--s)), 56px) 96px","perspective":"1200px","overflow":"hidden","height":"calc((100vh - 57px) / var(--s))","boxSizing":"border-box","display":"grid","gridTemplateColumns":"minmax(280px,1fr) minmax(0,900px) minmax(280px,1fr)","gap":"0 40px","alignItems":"center"} },
               "\n      ",
               "\n      ",
               "\n      ",
@@ -235,7 +235,7 @@
                 "\n      "
               ),
               "\n      ",
-              h("div", { key: "5", style: {"position":"relative","alignSelf":"stretch","padding":"0 0 24px","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center","gap":"clamp(8px, 1.8vh, 20px)","minHeight":"0"}, ref: V.heroTextRef },
+              h("div", { key: "5", style: {"position":"relative","alignSelf":"stretch","padding":"0 0 24px","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center","gap":"clamp(8px, calc(1.8vh / var(--s)), 20px)","minHeight":"0"}, ref: V.heroTextRef },
                 "\n      ",
                 "\n      ",
                 h("div", { key: "2", ref: V.scriptRef, "aria-hidden": "true", style: S(`position:absolute; left:50%; top:50%; height:${V.heroSheetH ?? ""}; width:auto; aspect-ratio:1/1.6; transform:translate(-50%,-50%); pointer-events:none;`) }),
@@ -246,24 +246,24 @@
                     h(F,{key:0},"",I(V.page?.kicker,1),"")
                   ),
                   "\n      ",
-                  h("h1", { key: "3|16.1908cg2", "data-tr": "title", "data-reg": "serif", "data-morph": "title", style: {"position":"relative","margin":"0 auto","fontFamily":"var(--font-heading)","fontWeight":"300","fontSize":"clamp(32px, min(4.5vw, 8vh), 86px)","lineHeight":"1.04","letterSpacing":"-0.015em","maxWidth":"13ch","textWrap":"balance"} },
+                  h("h1", { key: "3|16.1908cg2", "data-tr": "title", "data-reg": "serif", "data-morph": "title", style: {"position":"relative","margin":"0 auto","fontFamily":"var(--font-heading)","fontWeight":"300","fontSize":"clamp(32px, min(calc(4.5vw / var(--s)), calc(8vh / var(--s))), 86px)","lineHeight":"1.04","letterSpacing":"-0.015em","maxWidth":"13ch","textWrap":"balance"} },
                     h(F,{key:0},"",I(V.page?.title,1),"")
                   ),
                   "\n      ",
-                  h("p", { key: "5|17.3x40kj", "data-morph": "byline", style: {"position":"relative","margin":"clamp(8px, 1.6vh, 20px) 0 0","fontFamily":"var(--font-heading)","fontStyle":"italic","fontSize":"22px","lineHeight":"28px","color":"var(--color-neutral-700)"} },
+                  h("p", { key: "5|17.3x40kj", "data-morph": "byline", style: {"position":"relative","margin":"clamp(8px, calc(1.6vh / var(--s)), 20px) 0 0","fontFamily":"var(--font-heading)","fontStyle":"italic","fontSize":"22px","lineHeight":"28px","color":"var(--color-neutral-700)"} },
                     h(F,{key:0},"",I(V.page?.byline,1),"")
                   ),
                   "\n      "
                 ),
                 "\n      ",
                 "\n      ",
-                h("div", { key: "7", style: {"position":"relative","maxWidth":"min(34ch, 26vw)","textAlign":"center","padding":"0 12px"} },
+                h("div", { key: "7", style: {"position":"relative","maxWidth":"min(34ch, calc(26vw / var(--s)))","textAlign":"center","padding":"0 12px"} },
                   "\n        ",
                   h("p", { key: "1|5.l8mgja", "data-morph": "notes-kicker", style: {"margin":"0 0 10px","fontFamily":"var(--deco)","fontSize":"10px","letterSpacing":"0.12em","color":"var(--color-accent-700)"} },
                     "— i —"
                   ),
                   "\n        ",
-                  h("p", { key: "3|14.y6bcd6", "data-tr": "wake", "data-reg": "serif", "data-morph": "intro", style: {"margin":"0","fontSize":"clamp(13px, 0.9vw + 4px, 16px)","lineHeight":"1.55","color":"var(--color-neutral-700)","textWrap":"pretty"} },
+                  h("p", { key: "3|14.y6bcd6", "data-tr": "wake", "data-reg": "serif", "data-morph": "intro", style: {"margin":"0","fontSize":"clamp(13px, calc(0.9vw / var(--s) + 4px), 16px)","lineHeight":"1.55","color":"var(--color-neutral-700)","textWrap":"pretty"} },
                     h(F,{key:0},"",I(V.page?.bio,1),"")
                   ),
                   "\n      "
@@ -272,13 +272,13 @@
               ),
               "\n      ",
               "\n      ",
-              h("nav", { key: "8", "aria-label": "Contact", style: {"position":"absolute","left":"50%","bottom":"24px","transform":"translateX(-50%)","zIndex":"3","width":"min(360px, 30vw)","height":"44px","fontFamily":"var(--font-heading)","fontSize":"14px","lineHeight":"20px"} },
+              h("nav", { key: "8", "aria-label": "Contact", style: {"position":"absolute","left":"50%","bottom":"24px","transform":"translateX(-50%)","zIndex":"3","width":"min(360px, calc(30vw / var(--s)))","height":"44px","fontFamily":"var(--font-heading)","fontSize":"14px","lineHeight":"20px"} },
                 "\n        ",
                 h("span", { key: "1", "aria-hidden": "true", style: {"position":"absolute","left":"0","right":"0","top":"7px","bottom":"7px","borderWidth":"1px","borderStyle":"solid","borderColor":"var(--color-accent)","boxSizing":"border-box"} }),
                 "\n        ",
                 h("span", { key: "3", "aria-hidden": "true", style: {"position":"absolute","left":"7px","right":"7px","top":"0","bottom":"0","borderWidth":"1px","borderStyle":"solid","borderColor":"var(--color-accent)","boxSizing":"border-box"} }),
                 "\n        ",
-                h("span", { key: "5", style: {"position":"absolute","inset":"0","display":"flex","alignItems":"center","justifyContent":"center","gap":"clamp(20px, 3vw, 44px)"} },
+                h("span", { key: "5", style: {"position":"absolute","inset":"0","display":"flex","alignItems":"center","justifyContent":"center","gap":"clamp(20px, calc(3vw / var(--s)), 44px)"} },
                   "\n          ",
                   h("a", { key: "1|5.3mzikt", href: V.cvMailto, style: {"fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp2" },
                     "Email"
@@ -643,7 +643,7 @@
                     h(F,{key:0},"",I(V.page?.kicker,1),"")
                   ),
                   "\n      ",
-                  h("h1", { key: "3|16.1908cg2", "data-tr": "title", "data-reg": "mono", "data-morph": "title", style: {"margin":"0","fontFamily":"var(--mono)","fontWeight":"400","fontSize":"clamp(22px,2.6vw,32px)","lineHeight":"1.375","letterSpacing":"-0.02em"} },
+                  h("h1", { key: "3|16.1908cg2", "data-tr": "title", "data-reg": "mono", "data-morph": "title", style: {"margin":"0","fontFamily":"var(--mono)","fontWeight":"400","fontSize":"clamp(22px, calc(2.6vw / var(--s)), 32px)","lineHeight":"1.375","letterSpacing":"-0.02em"} },
                     h(F,{key:0},"",I(V.page?.title,1),"")
                   ),
                   "\n      ",

@@ -12,10 +12,11 @@
 // The fourth term is not a fourth composition. The two wide roots are scaled with CSS zoom, so every
 // module keeps its place and its proportion and only the size it is read at changes. That buys the
 // fix at the cost of a second pixel space: inside a zoomed root a length is written in the drawing's
-// own pixels and drawn at that many times the factor, so anything that has to line up with the page
-// rather than with the drawing has to be divided back out. The three that do are the two roots'
-// one-screen heights and the manuscript sheet behind the headline, all of which are viewport units
-// standing for the screen itself.
+// own pixels and drawn at that many times the factor. A fixed pixel is therefore set back once,
+// which is the point, but a viewport unit is set back twice, since it resolves against the smaller
+// page before the zoom takes its share as well. So every viewport unit inside the two roots is
+// divided by the factor, which resolves it against the reference page instead and makes the whole
+// composition the reference scaled exactly.
 //
 // What this file guards:
 //
@@ -25,10 +26,11 @@
 //      on a page that is stacked, which has its own composition drawn to the width it is given.
 //   2. state.scale is written in both places state.narrow is written, the first paint and onResize,
 //      and only ever from landingScale, so the window and the factor cannot disagree.
-//   3. Exactly the two wide landing roots carry the zoom, they carry it off one binding, and the
-//      lengths that stand for the screen inside them are divided by the same factor. The sheet's row
-//      count is taken in that space too, or the Development landing would rule a screen's worth of
-//      grid and end its contact band two thirds of the way up it.
+//   3. Exactly the two wide landing roots carry the zoom, they carry it off one binding, and every
+//      viewport unit inside them is divided by the same factor. That last one is read off the
+//      template as the rule rather than as a list, so a length added later has to answer to it. The
+//      sheet's row count is taken in that space too, or the Development landing would rule a
+//      screen's worth of grid and end its contact band two thirds of the way up it.
 //
 // Run with `npm run check`. Exits non-zero and prints every failure it found.
 
@@ -204,39 +206,87 @@ for (const el of zoomed) {
   }
 }
 
-// ---------------------------------------------------------------- the lengths that stand for the screen
+// ---------------------------------------------------------------- every viewport unit inside the roots
 
-// A viewport unit inside a zoomed root is read in the drawing's pixels and then drawn at that many
-// times the factor, so a box asking for the screen gets the factor's share of it. The three below
-// are the ones that stand for the screen itself rather than for a size inside the drawing, so each
-// divides the unit back out. Every other clamp in these compositions is a size in the drawing and is
-// left to shrink with it.
-{
-  const heroWide = [...tpl.content.querySelectorAll('sc-if')].find((el) => tight(el.getAttribute('value')) === '{{isHeroWide}}');
-  const hero = heroWide && heroWide.querySelector('section[ref]');
-  if (!hero) fail('the wide Research hero is gone');
-  else if (!tight(hero.getAttribute('style')).includes('height:calc((100vh-57px)/var(--s))')) {
-    fail('the wide Research hero does not divide its one screen height by the factor it is read at, so the '
-      + 'collage stands on a fraction of the page: ' + (/height:[^;]+/.exec(String(hero.getAttribute('style'))) || [''])[0]);
+// The rule, rather than a list of the lengths it applies to. A viewport unit inside a scaled root is
+// read whole, in the drawing's pixels, and then drawn at the factor's share of the screen, so the
+// drawing sees a page larger than the one it is on while every fixed pixel in it stays the size it
+// was written. Divided by the factor, the unit resolves to the reference viewport instead and the
+// whole composition is the reference scaled, which is the one thing the reader is being shown.
+//
+// It applies to every term without exception, a type clamp as much as a box: an undivided
+// clamp(32px, min(4.5vw, 8vh), 86px) is set back twice, once by resolving against a smaller page and
+// again by the zoom, and at 1280 by 720 it draws the headline at 38px where the reference scaled
+// gives 57px. Only the pixel floors and caps beside the unit are left alone, since they are already
+// lengths in the drawing.
+//
+// Checked by walking the two roots and reading every declaration, so a length added later answers to
+// the rule without this file being told about it.
+function viewportTerms(root) {
+  const out = [];
+  const els = [root, ...root.querySelectorAll('*')];
+  for (const el of els) {
+    for (const attr of el.attributes) {
+      if (!attr.name.startsWith('style')) continue;
+      const s = attr.value;
+      for (const m of s.matchAll(/(?<![\w.-])\d*\.?\d+v[wh](?![\w-])/g)) {
+        out.push({ el, attr: attr.name, term: m[0], at: m.index + m[0].length, style: s });
+      }
+    }
   }
-  const landWide = [...tpl.content.querySelectorAll('sc-if')].find((el) => tight(el.getAttribute('value')) === '{{isLandingWide}}');
-  const grid = landWide && landWide.querySelector('main > div');
-  if (!grid) fail('the wide Development landing grid is gone');
-  else if (!tight(grid.getAttribute('style')).includes('min-height:calc((100vh-57px)/var(--s))')) {
-    fail('the wide Development landing does not divide its one screen height by the factor it is read at, so the '
-      + 'sheet ends part of the way up the page: ' + (/min-height:[^;]+/.exec(String(grid.getAttribute('style'))) || [''])[0]);
+  return out;
+}
+// Walks outward from the unit: divided is either the term itself over the factor, or any expression
+// closing around it over the factor, which is the form the one screen heights use.
+function dividedAfter(s, i) {
+  let p = i;
+  for (;;) {
+    while (p < s.length && /\s/.test(s[p])) p++;
+    if (/^\/\s*var\(\s*--s\s*\)/.test(s.slice(p))) return true;
+    let depth = 0;
+    while (p < s.length) {
+      const c = s[p];
+      if (c === '(') depth++;
+      else if (c === ')') { if (depth === 0) break; depth--; }
+      else if (c === ';' && depth === 0) return false;
+      p++;
+    }
+    if (p >= s.length) return false;
+    p++;
   }
 }
+let divided = 0;
+{
+  const where = (t) => {
+    const decl = t.style.slice(0, t.at).split(';').pop().trim();
+    return t.el.tagName.toLowerCase() + ' ' + (t.el.getAttribute('data-morph') || t.el.getAttribute('data-mod') || t.el.getAttribute('key') || '')
+      + ' ' + decl.slice(0, 80);
+  };
+  for (const el of zoomed) {
+    const terms = viewportTerms(el);
+    if (!terms.some((t) => t.term === '100vh')) {
+      fail('the ' + keyOf(el) + ' landing no longer measures anything off the screen, so nothing holds it to being '
+        + 'one screen tall');
+    }
+    for (const t of terms) {
+      if (dividedAfter(t.style, t.at)) { divided++; continue; }
+      fail('the ' + keyOf(el) + ' landing carries a ' + t.term + ' that is not divided by the factor it is read at, '
+        + 'so that term is set back twice while every fixed pixel beside it is set back once: ' + where(t).trim());
+    }
+  }
+}
+// The same rule, in the one place the walk above cannot reach it: the manuscript sheet behind the
+// headline is a length composed in the logic class and handed to the wide hero as a binding, so the
+// template carries no unit for the walk to find.
 {
   const sheet = /\n {2}HERO_SHEET = '([^']+)';/.exec(logicSrc);
   if (!sheet) fail('the logic class no longer states HERO_SHEET as a literal this check can read');
   else {
-    const terms = sheet[1].match(/[\d.]+vh/g) || [];
+    const terms = [...sheet[1].matchAll(/(?<![\w.-])\d*\.?\d+v[wh](?![\w-])/g)];
     if (!terms.length) fail('HERO_SHEET no longer measures the manuscript sheet off the screen: ' + sheet[1]);
     for (const t of terms) {
-      const re = new RegExp(t.replace('.', '\\.') + '\\s*/\\s*var\\(--s\\)');
-      if (!re.test(sheet[1])) {
-        fail('the ' + t + ' term of HERO_SHEET is not divided by the factor the hero is read at, so the sheet '
+      if (!dividedAfter(sheet[1], t.index + t[0].length)) {
+        fail('the ' + t[0] + ' term of HERO_SHEET is not divided by the factor the hero is read at, so the sheet '
           + 'behind the headline is drawn smaller than the type it stands behind: ' + sheet[1]);
       }
     }
@@ -252,5 +302,5 @@ if (failures.length) {
 }
 console.log('check-laptop-scale: the wide compositions are read at their own share of the reference page over 9 '
   + 'viewports and never scaled on a stacked one, the factor is written from landingScale in both places '
-  + 'state.narrow is written, exactly the two wide landing roots carry it as one binding, and the three lengths '
-  + 'that stand for the screen inside them are divided back out of it');
+  + 'state.narrow is written, exactly the two wide landing roots carry it as one binding, and all ' + divided
+  + ' viewport units inside them, plus the manuscript sheet, are divided by it');

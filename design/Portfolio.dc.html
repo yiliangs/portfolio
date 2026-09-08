@@ -235,11 +235,11 @@
        either side, held to one screen. On any other page there is no screen to lay that across, and the
        stacked landing below takes over, on the same state.narrow the Development landing is chosen off. -->
   <sc-if value="{{ isHeroWide }}" hint-placeholder-val="{{ true }}">
-  <main key="writing" data-screen-label="Research" style="--s:{{ landingZoom }}; zoom:var(--s); max-width:none; margin:0; padding:0 clamp(20px,3vw,56px); background-image:radial-gradient(color-mix(in srgb, var(--color-text) 16%, transparent) 1px, transparent 1.1px); background-size:44px 44px; background-position:22px 22px;">
+  <main key="writing" data-screen-label="Research" style="--s:{{ landingZoom }}; zoom:var(--s); max-width:none; margin:0; padding:0 clamp(20px, calc(3vw / var(--s)), 56px); background-image:radial-gradient(color-mix(in srgb, var(--color-text) 16%, transparent) 1px, transparent 1.1px); background-size:44px 44px; background-position:22px 22px;">
 
     <!-- full bleed: the hero pulls back out of main's side padding and gives it back as its own, so the grid keeps the
          same measure while overflow:hidden clips at the page edges instead of eating the leaves' outward bleed -->
-    <section ref="{{ heroRef }}" style="position:relative; text-align:center; margin:0 calc(-1 * clamp(20px,3vw,56px)); padding:28px clamp(20px,3vw,56px) 96px; perspective:1200px; overflow:hidden; height:calc((100vh - 57px) / var(--s)); box-sizing:border-box; display:grid; grid-template-columns:minmax(280px,1fr) minmax(0,900px) minmax(280px,1fr); gap:0 40px; align-items:center;">
+    <section ref="{{ heroRef }}" style="position:relative; text-align:center; margin:0 calc(-1 * clamp(20px, calc(3vw / var(--s)), 56px)); padding:28px clamp(20px, calc(3vw / var(--s)), 56px) 96px; perspective:1200px; overflow:hidden; height:calc((100vh - 57px) / var(--s)); box-sizing:border-box; display:grid; grid-template-columns:minmax(280px,1fr) minmax(0,900px) minmax(280px,1fr); gap:0 40px; align-items:center;">
       <!-- a manuscript page behind the headline; it tilts and drifts with the cursor as a shallow 3D layer -->
       <!-- loose pages: each chapter is a leaf adrift in the margins; it drifts on its own, follows the cursor a little, and lifts to show its colophon on hover -->
       <div style="position:relative; z-index:2; align-self:stretch; min-height:0; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); grid-template-rows:repeat({{ leafRows }}, minmax(0,1fr)); gap:28px 24px; padding:28px 0;">
@@ -259,25 +259,25 @@
         </div>
         </sc-for>
       </div>
-      <div style="position:relative; align-self:stretch; padding:0 0 24px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:clamp(8px, 1.8vh, 20px); min-height:0;" ref="{{ heroTextRef }}">
+      <div style="position:relative; align-self:stretch; padding:0 0 24px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:clamp(8px, calc(1.8vh / var(--s)), 20px); min-height:0;" ref="{{ heroTextRef }}">
       <!-- a manuscript page behind the headline; it tilts and drifts with the cursor as a shallow 3D layer -->
       <div ref="{{ scriptRef }}" aria-hidden="true" style="position:absolute; left:50%; top:50%; height:{{ heroSheetH }}; width:auto; aspect-ratio:1/1.6; transform:translate(-50%,-50%); pointer-events:none;"></div>
       <div style="position:relative;">
       <p data-morph="kicker" style="position:relative; margin:0 0 14px; font-size:12px; line-height:14px; letter-spacing:0.14em; text-transform:uppercase; color:var(--color-accent-700); ">{{ page.kicker }}</p>
-      <h1 data-tr="title" data-reg="serif" data-morph="title" style="position:relative; margin:0 auto; font-family:var(--font-heading); font-weight:300; font-size:clamp(32px, min(4.5vw, 8vh), 86px); line-height:1.04; letter-spacing:-0.015em; max-width:13ch; text-wrap:balance;">{{ page.title }}</h1>
-      <p data-morph="byline" style="position:relative; margin:clamp(8px, 1.6vh, 20px) 0 0; font-family:var(--font-heading); font-style:italic; font-size:22px; line-height:28px; color:var(--color-neutral-700);">{{ page.byline }}</p>
+      <h1 data-tr="title" data-reg="serif" data-morph="title" style="position:relative; margin:0 auto; font-family:var(--font-heading); font-weight:300; font-size:clamp(32px, min(calc(4.5vw / var(--s)), calc(8vh / var(--s))), 86px); line-height:1.04; letter-spacing:-0.015em; max-width:13ch; text-wrap:balance;">{{ page.title }}</h1>
+      <p data-morph="byline" style="position:relative; margin:clamp(8px, calc(1.6vh / var(--s)), 20px) 0 0; font-family:var(--font-heading); font-style:italic; font-size:22px; line-height:28px; color:var(--color-neutral-700);">{{ page.byline }}</p>
       </div>
       <!-- bio on the lower half of the sheet -->
-      <div style="position:relative; max-width:min(34ch, 26vw); text-align:center; padding:0 12px;">
+      <div style="position:relative; max-width:min(34ch, calc(26vw / var(--s))); text-align:center; padding:0 12px;">
         <p data-morph="notes-kicker" style="margin:0 0 10px; font-family:var(--deco); font-size:10px; letter-spacing:0.12em; color:var(--color-accent-700);">— i —</p>
-        <p data-tr="wake" data-reg="serif" data-morph="intro" style="margin:0; font-size:clamp(13px, 0.9vw + 4px, 16px); line-height:1.55; color:var(--color-neutral-700); text-wrap:pretty;">{{ page.bio }}</p>
+        <p data-tr="wake" data-reg="serif" data-morph="intro" style="margin:0; font-size:clamp(13px, calc(0.9vw / var(--s) + 4px), 16px); line-height:1.55; color:var(--color-neutral-700); text-wrap:pretty;">{{ page.bio }}</p>
       </div>
       </div>
       <!-- colophon box: two hairline rectangles, one tall and one wide, offset so they interweave at the corners -->
-      <nav aria-label="Contact" style="position:absolute; left:50%; bottom:24px; transform:translateX(-50%); z-index:3; width:min(360px, 30vw); height:44px; font-family:var(--font-heading); font-size:14px; line-height:20px;">
+      <nav aria-label="Contact" style="position:absolute; left:50%; bottom:24px; transform:translateX(-50%); z-index:3; width:min(360px, calc(30vw / var(--s))); height:44px; font-family:var(--font-heading); font-size:14px; line-height:20px;">
         <span aria-hidden="true" style="position:absolute; left:0; right:0; top:7px; bottom:7px; border-width:1px; border-style:solid; border-color:var(--color-accent); box-sizing:border-box;"></span>
         <span aria-hidden="true" style="position:absolute; left:7px; right:7px; top:0; bottom:0; border-width:1px; border-style:solid; border-color:var(--color-accent); box-sizing:border-box;"></span>
-        <span style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:clamp(20px, 3vw, 44px);">
+        <span style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:clamp(20px, calc(3vw / var(--s)), 44px);">
           <a href="{{ cvMailto }}" style="font-family:'Cinzel Decorative', var(--deco); text-transform:lowercase; color:var(--color-accent); text-decoration:none; letter-spacing:0.06em; display:flex; align-items:center; line-height:1; transition:color 200ms ease, letter-spacing 200ms ease;" style-hover="text-transform:uppercase; color:var(--color-accent-700); letter-spacing:0.1em">Email</a>
           <a href="{{ cvGithub }}" style="font-family:'Cinzel Decorative', var(--deco); text-transform:lowercase; color:var(--color-accent); text-decoration:none; letter-spacing:0.06em; display:flex; align-items:center; line-height:1; transition:color 200ms ease, letter-spacing 200ms ease;" style-hover="text-transform:uppercase; color:var(--color-accent-700); letter-spacing:0.1em">GitHub</a>
           <button onClick="{{ goCvSerif }}" style="all:unset; cursor:pointer; font-size:14px; font-family:'Cinzel Decorative', var(--deco); text-transform:lowercase; color:var(--color-accent); letter-spacing:0.06em; display:flex; align-items:center; line-height:1; transition:color 200ms ease, letter-spacing 200ms ease;" style-hover="text-transform:uppercase; color:var(--color-accent-700); letter-spacing:0.1em">CV</button>
@@ -471,7 +471,7 @@
          frame draws outside the module with it. -->
     <section ref="{{ landingStatementRef }}" data-mod="statement" class="mod" onClick="{{ landIntroToggle }}" style="grid-column:{{ land.statement.col }}; grid-row:{{ land.statement.row }}; {{ landIntroBox }} padding:22px; cursor:{{ landIntroCursor }};">
       <p data-morph="kicker" style="margin:0 0 22px; font-size:12px; line-height:14px; letter-spacing:0.08em; color:var(--color-neutral-600);">{{ page.kicker }}</p>
-      <h1 data-tr="title" data-reg="mono" data-morph="title" style="margin:0; font-family:var(--mono); font-weight:400; font-size:clamp(22px,2.6vw,32px); line-height:1.375; letter-spacing:-0.02em;">{{ page.title }}</h1>
+      <h1 data-tr="title" data-reg="mono" data-morph="title" style="margin:0; font-family:var(--mono); font-weight:400; font-size:clamp(22px, calc(2.6vw / var(--s)), 32px); line-height:1.375; letter-spacing:-0.02em;">{{ page.title }}</h1>
       <p data-landing-intro="1" data-tr="wake" data-reg="mono" data-morph="intro" style="margin:22px 0 0; color:var(--color-neutral-700); {{ landIntroClamp }}">{{ page.intro }}</p>
       <!-- the byline row carries the affordance, on the right of its own line: the ellipsis says the
            text was cut and this says what to do about it. Empty, and the module inert, when the whole
