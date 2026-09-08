@@ -1739,9 +1739,13 @@
                   "+"
                 ),
                 "\n      ",
-                h("image-slot", { key: "3", id: V.current?.heroSlotId, src: V.current?.hero, shape: "rect", fit: "contain", placeholder: V.current?.placeholder, style: {"width":"100%","height":"100%"} }),
+                (V.heroVideo ? h(F,{key:3},
+                  h("video", { key: "0", src: V.current?.video, poster: V.current?.hero, autoPlay: true, muted: true, loop: true, playsInline: true, preload: "metadata", "aria-label": V.current?.caption, style: {"width":"100%","height":"100%","display":"block","objectFit":"contain","background":"var(--color-surface)"} })) : null),
                 "\n      ",
-                h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
+                (V.heroStill ? h(F,{key:5},
+                  h("image-slot", { key: "0", id: V.current?.heroSlotId, src: V.current?.hero, shape: "rect", fit: "contain", placeholder: V.current?.placeholder, style: {"width":"100%","height":"100%"} })) : null),
+                "\n      ",
+                h("span", { key: "7|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
                   "+"
                 ),
                 "\n    "
@@ -1975,17 +1979,21 @@
     // An entry may also name its pictures. `hero`, with its real pixel size in `heroW`/`heroH`, is the
     // large plate: the serif chapter cuts its plate to that ratio, the Development sheet gives it a
     // plate of its own proportion when it is portrait and letterboxes it into the standard rows when
-    // it is not, and both Development landings show it as a cropped teaser. Under the account a
-    // Development entry may either name `detailA` and `detailB` for the pair of small plates, or one
-    // `detail`, with `detailW`/`detailH`, for a single plate across the width the pair spanned; never
-    // both. `detailCaption` is the line under whichever of the two it is, and falls back to the
-    // sheet's own words. Every one of these is optional: a slot with no field named for it keeps the
-    // worded placeholder it has always had, which is how an unfinished sheet is issued next to a
-    // finished one. tools/check-dev-plates.mjs holds the files and the stated sizes to the truth.
+    // it is not, and both Development landings show it as a cropped teaser. An entry may also name
+    // `video`, an H.264 mp4 that is the same plate moving: the sheet plays it in place of the still,
+    // and `hero` is the frame it opens on, so a video is named beside a hero and never instead of one,
+    // and heroW/heroH describe both. Under the account a Development entry may either name `detailA`
+    // and `detailB` for the pair of small plates, or one `detail`, with `detailW`/`detailH`, for a
+    // single plate across the width the pair spanned; never both. `detailCaption` is the line under
+    // whichever of the two it is, and falls back to the sheet's own words. Every one of these is
+    // optional: a slot with no field named for it keeps the worded placeholder it has always had,
+    // which is how an unfinished sheet is issued next to a finished one. tools/check-dev-plates.mjs
+    // holds the files and the stated sizes to the truth.
     data = [
       // The Natalie block: the platform first, then the seven parts of it issued as their own sheets.
       // Facts are read off the natalie repository's CLAUDE.md and the per-folder CONTEXT.md signposts.
-      { title: 'Natalie', subtitle: 'An advanced computing platform for architects, living inside Rhino.', kind: 'Platform', year: 2026, page: 9, pages: '9–20', role: 'Owner, architect and principal developer', with: 'SOM design teams as the users; Rhino 8 as the host', status: 'Shipped, in use at SOM, v1.3.4', statusShort: 'shipped', stack: 'A Rhino 8 plugin in C# on .NET 8; a Rust solver crate, native and wasm; React in WebView2; TorchSharp; HiGHS; WiX; a Cloudflare relay; a Revit bridge.', link: 'Not public. In use at SOM.', caption: 'The Natalie bar docked over a Rhino viewport, with a massing under sync and the unit-stacking wizard open.', placeholder: 'Capture: the Natalie bar over a Rhino viewport',
+      { title: 'Natalie', subtitle: 'An advanced computing platform for architects, living inside Rhino.', kind: 'Platform', year: 2026, page: 9, pages: '9–20', role: 'Owner, architect and principal developer', with: 'SOM design teams as the users; Rhino 8 as the host', status: 'Shipped, in use at SOM, v1.3.4', statusShort: 'shipped', stack: 'A Rhino 8 plugin in C# on .NET 8; a Rust solver crate, native and wasm; React in WebView2; TorchSharp; HiGHS; WiX; a Cloudflare relay; a Revit bridge.', link: 'Not public. In use at SOM.', caption: 'The Natalie bar docked at the foot of a Rhino viewport, cycling through Room Layout, Resi Envelope, the layer tools and the unit stack.', placeholder: 'Capture: the Natalie bar over a Rhino viewport',
+        hero: 'assets/natalie/hero.png', heroW: 1600, heroH: 676, video: 'assets/natalie/hero.mp4',
         why: 'Architects at SOM were rebuilding the same tower three times: as a massing, as a unit plan, as a facade. I wanted one platform inside Rhino that carried the model through all three.',
         margin: 'The plugin is the host. The decisions live in a solver that knows nothing about Rhino, so the browser runs the same code.',
         summary: 'Natalie is SOM’s in-house computing platform for architects: a Rhino 8 plugin that applies learned and exact methods to design workflows. Two families of tools: Envelope, which learns from a resolved massing and applies its intent to a larger one while keeping the two models in sync, and Residential, which stacks a unit program, demises a floor plate and lays out the rooms of a unit.',
@@ -2020,7 +2028,8 @@
         body1: 'A residential facade is not one pattern repeated. Living rooms open up, bedrooms close down, and the core is blank. The host plan says which is which as hatches, and every block placed in front of a room is attached to that room’s program by containment. Blocks that belong to no room become the loose program that fills anything left over.',
         body2: 'The target outline is then segmented from the rooms rather than from a module: one plan per building records where each room overlaps the outline and who owns each span, and levels with the same plan reuse it. A segment’s owner is found by deepest containment at its midpoint, with a bounded nearest-room fallback for curved stretches that miss the intersection tolerance.',
         body3: 'From there it is the same pipeline as AI Layout: each segment computes its block queries from its pattern, the payload is baked, the floor plates are baked with it, and the result is placed under synchronisation with the massing.' },
-      { title: 'Unit Stack Calculation', subtitle: 'Stacking a residential program, live and then exactly.', kind: 'Natalie', year: 2026, page: 47, pages: '47–52', role: 'Designer and developer', with: 'The IJAC manuscript as the exact formulation', status: 'Shipped inside Natalie', statusShort: 'shipped', stack: 'A two-step wizard; closed-form kernels per keystroke; a heuristic tier that always answers and an exact MILP tier in HiGHS under a budget ladder.', link: 'The IJAC paper behind the exact tier', linkTo: 'floor-types', caption: 'The Stacking step: zones of the tower with their mixes, the delivered, program and target deltas on one bar.', placeholder: 'Capture: the stacking wizard, step two',
+      { title: 'Unit Stack Calculation', subtitle: 'Stacking a residential program, live and then exactly.', kind: 'Natalie', year: 2026, page: 47, pages: '47–52', role: 'Designer and developer', with: 'The IJAC manuscript as the exact formulation', status: 'Shipped inside Natalie', statusShort: 'shipped', stack: 'A two-step wizard; closed-form kernels per keystroke; a heuristic tier that always answers and an exact MILP tier in HiGHS under a budget ladder.', link: 'The IJAC paper behind the exact tier', linkTo: 'floor-types', caption: 'The wizard from the program step to the stacking step, the tower solved zone by zone and the program exported as a spreadsheet.', placeholder: 'Capture: the stacking wizard, step two',
+        hero: 'assets/unit-stack-calculation/hero.png', heroW: 1600, heroH: 870, video: 'assets/unit-stack-calculation/hero.mp4',
         why: 'Unit programs were negotiated in spreadsheets. I wanted the stacking to answer in the same meeting, and to answer exactly when it mattered.',
         margin: 'Kernels run on every keystroke and never touch a solver. Solvers run on a click and may take their time. The split keeps the wizard live.',
         summary: 'The Unit Stacking tool. A designer types a target net floor area and a mix of unit types, and the wizard projects it into counts and areas as they type. The second step assigns the program to vertical zones of the tower. A solve action runs a heuristic first and, where the program allows, an exact mixed-integer model that chooses the floor templates.',
@@ -2034,7 +2043,8 @@
         body1: 'The plate is read into a metric problem: the outline as the shell, the union of corridor and cores as the hole, both reduced at a physical resolution so the ring sweep does not search ninety facets in every fillet. A core that touches the outline pinches the leasable band, so a region author first decides how many components the plate has, one ring where the core sits clear and one continuation per open run where it does not.',
         body2: 'The engine, shared with the browser as wasm, sweeps the band, places demising walls, and validates each cell against entry width, facade frontage, rectangularity and the area band of its type. It returns up to a requested number of ranked candidates and, when it cannot, an honest failure list rather than a scaled plan. The area the mix panel budgets against is the same number the solver is asked to fill, measured once.',
         body3: 'A chosen candidate is baked as unit envelopes with hatches and tags, and the pair is put under sync so pushing the plate re-solves the demising. The stacking wizard calls the same path once per zone to turn a tower program into floor plans.' },
-      { title: 'Room Layout Solver', subtitle: 'Splitting a unit into rooms the way a planner does.', kind: 'Natalie', year: 2026, page: 59, pages: '59–68', role: 'Designer and developer', with: 'A recorded corpus of layouts as the oracle', status: 'Shipped inside Natalie', statusShort: 'shipped', stack: 'A boundary signed by corridor and exterior edges; a program of tokens and wires; recursive bisection in the crate, streamed a layout at a time.', link: 'Not public. In use at SOM.', caption: 'A unit boundary with its corridor and exterior edges marked, and a strip of solved layouts beneath it.', placeholder: 'Capture: solved unit layouts in the thumbnail strip',
+      { title: 'Room Layout Solver', subtitle: 'Splitting a unit into rooms the way a planner does.', kind: 'Natalie', year: 2026, page: 59, pages: '59–68', role: 'Designer and developer', with: 'A recorded corpus of layouts as the oracle', status: 'Shipped inside Natalie', statusShort: 'shipped', stack: 'A boundary signed by corridor and exterior edges; a program of tokens and wires; recursive bisection in the crate, streamed a layout at a time.', link: 'Not public. In use at SOM.', caption: 'A unit boundary with its corridor and exterior edges named, the room mix set, and the solver streaming ranked layouts until one is accepted onto the plan.', placeholder: 'Capture: solved unit layouts in the thumbnail strip',
+        hero: 'assets/room-layout-solver/hero.png', heroW: 1600, heroH: 938, video: 'assets/room-layout-solver/hero.mp4',
         why: 'The last room in a unit is always the wrong shape. I wanted a solver that splits the boundary the way a planner does, and shows its work.',
         margin: 'A suite is not a new solver. A placed suite rectangle with an entry edge is the input the solver already takes, so it solves itself.',
         summary: 'The Room Layout tool. A unit boundary is picked in Rhino and its corridor and exterior runs are named. The room program, with its adjacency rules, is compiled into a wire table, and the solver recursively bisects the boundary until every piece holds one room, streaming each complete layout to a thumbnail strip as it is found. Hallways are routed on a graph derived from each layout.',
@@ -2430,8 +2440,10 @@
     signal(d) { return /shipped|live|published|accepted/i.test(d.status) ? 'var(--sig-ok)' : /beta/i.test(d.status) ? 'var(--sig-warn)' : 'var(--sig-info)'; }
     // Every named text slot is paired across the two registers; the old text travels to the new slot's position
     // while its glyphs are swapped one by one into the new text (a 3-glyph caseFlip band at the boundary — the repo's picker).
-    // the photo a framed element is showing, as a URL (image-slot keeps its <img> in shadow DOM)
-    slotSrc(el) { const s = el.matches('image-slot') ? el : el.querySelector('image-slot'); if (!s) return ''; const im = s.shadowRoot && s.shadowRoot.querySelector('img'); return (im && im.currentSrc) || s.getAttribute('src') || ''; }
+    // the photo a framed element is showing, as a URL (image-slot keeps its <img> in shadow DOM).
+    // A moving plate answers with its poster, which is the same still the landing card carries, so the
+    // photograph that flies between the two is one picture whether the plate it lands in moves or not
+    slotSrc(el) { const v = el.matches('video') ? el : el.querySelector('video'); if (v) return v.poster || ''; const s = el.matches('image-slot') ? el : el.querySelector('image-slot'); if (!s) return ''; const im = s.shadowRoot && s.shadowRoot.querySelector('img'); return (im && im.currentSrc) || s.getAttribute('src') || ''; }
     textStyle(el) { const c = getComputedStyle(el); return { fontFamily: c.fontFamily, fontSize: c.fontSize, fontWeight: c.fontWeight, fontStyle: c.fontStyle, letterSpacing: c.letterSpacing, lineHeight: c.lineHeight, textTransform: c.textTransform, textAlign: c.textAlign, textWrap: c.textWrap, color: c.color, hyphens: c.hyphens, WebkitTextStroke: c.webkitTextStroke }; }
     textRect(el, fallback) { try { const rg = document.createRange(); rg.selectNodeContents(el); const rc = rg.getBoundingClientRect(); return rc.width ? rc : fallback; } catch (e) { return fallback; } }
     captureTexts() {
@@ -2454,11 +2466,12 @@
       const clone = main.cloneNode(true);
       clone.style.cssText += '; position:absolute; top:' + rc.top + 'px; left:' + rc.left + 'px; width:' + rc.width + 'px; margin:0; box-sizing:border-box;';
       clone.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
-      // the snapshot can't carry a live <image-slot> (its shadow DOM doesn't clone with the photo),
-      // so bake each slot's current photo into a plain div as a background image
-      const liveSlots = [...main.querySelectorAll('image-slot')];
-      clone.querySelectorAll('image-slot').forEach((el, i) => {
-        const src = (() => { const s = liveSlots[i]; const im = s && s.shadowRoot && s.shadowRoot.querySelector('img'); return im && im.currentSrc || (s && s.getAttribute('src')) || ''; })();
+      // the snapshot can't carry a live <image-slot> (its shadow DOM doesn't clone with the photo) and
+      // has no business carrying a second copy of a playing <video>, so both are baked into a plain div
+      // as a background image: the slot's photo, and the moving plate's poster
+      const liveSlots = [...main.querySelectorAll('image-slot, video')];
+      clone.querySelectorAll('image-slot, video').forEach((el, i) => {
+        const src = this.slotSrc(liveSlots[i] || el);
         const d = document.createElement('div');
         d.style.cssText = 'width:100%; height:100%; background:var(--color-surface);' + (src ? ' background-image:url("' + src + '"); background-size:cover; background-position:center;' : '');
         el.replaceWith(d);
@@ -2535,12 +2548,12 @@
         const g = document.createElement('div'); g.style.cssText = 'position:absolute; box-sizing:border-box; border-style:solid; border-width:0; overflow:hidden; background-size:cover; background-position:center;'; layer.appendChild(g);
         const delay = Math.min(160, Math.max(0, rc.top) / vh * 160);
         // the photograph travels inside the frame: paint the captured plate on the flying box and
-        // keep the destination slot blank until the box lands on it
+        // keep the destination blank until the box lands on it, whether that is a slot or a video
         const photo = old.img || this.slotSrc(el);
         if (photo) {
           g.style.backgroundImage = 'url("' + photo + '")';
           g.animate([{ filter: old.filter && old.filter !== 'none' ? old.filter : 'none' }, { filter: c.filter && c.filter !== 'none' ? c.filter : 'none' }], { duration: dur, delay, easing, fill: 'both' });
-          const slot = el.matches('image-slot') ? el : el.querySelector('image-slot');
+          const slot = el.matches('image-slot, video') ? el : el.querySelector('image-slot, video');
           if (slot) { const prev = slot.style.opacity; slot.style.opacity = '0'; setTimeout(() => { slot.style.transition = 'opacity 200ms ease'; slot.style.opacity = prev || '1'; setTimeout(() => { slot.style.transition = ''; }, 240); }, dur + delay); }
         }
         const w0 = old.isRule ? '1px 0 0 0' : '1px', w1 = isRule ? '1px 0 0 0' : '1px';
@@ -3713,6 +3726,9 @@
         isPaper: view === 'chapter' && !mono && !!current.paper, isEssay: view === 'chapter' && !mono && !current.paper,
         paperBlocks, paperCaptions, paperTail, paperAsideRow: (paperMod && paperMod.__asideRow) || 'auto',
         heroImg: view === 'chapter' && !!current.hero, heroSlot: view === 'chapter' && !current.hero,
+        // the Development sheet's hero plate: the video when the entry names one, the slot otherwise.
+        // The serif chapter has no moving plate and keeps heroImg/heroSlot.
+        heroVideo: view === 'chapter' && !!current.video, heroStill: view === 'chapter' && !current.video,
         // one plate under the account, or the pair the sheet has always carried
         detailOne: oneDetail, detailPair: !oneDetail,
         rBody: mono ? this.MONO : 'var(--font-body)', rAlign: mono ? 'left' : 'justify', rTracking: mono ? '-0.03em' : '0',
