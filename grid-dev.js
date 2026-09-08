@@ -9,11 +9,11 @@
 // type the four grid lines in. Every move snaps to a cell, because on this grid the cell is the
 // drawing. Loaded only when the URL carries ?dev, so it ships nothing to the page otherwise.
 //
-// Four tables are reachable, and which one a module writes is read off its name:
+// Five tables are reachable, and which one a module writes is read off its name:
 //
 //   plate.<slug>   a Development entry's plate on the landing        LANDING_PINS
 //   statement, platform, contactEmail, contactGithub, contactCv     LANDING_WIDE
-//   anything else  a module of the project sheet                    SHEET_WIDE or SHEET_NARROW
+//   anything else  a module of the project sheet   SHEET_WIDE, SHEET_NARROW or SHEET_PHONE
 //
 // A plate is the one that is not simply a table lookup. The landing's plates are drawn onto free
 // cells from a seed, so a plate normally has no entry at all, and each pin takes cells away from that
@@ -43,7 +43,7 @@
 // pins have left the remaining plates nowhere to go, which otherwise shows only as a landing with no
 // plates on it at all.
 //
-// Copy writes all four tables to the clipboard, ready to paste into design/Portfolio.dc.html, and
+// Copy writes all five tables to the clipboard, ready to paste into design/Portfolio.dc.html, and
 // says how much it wrote rather than printing the block: the block is what the clipboard is holding,
 // and __grid.dump() is where to read it. Paste reads such a block back, so a session survives a
 // reload rather than living only in this tab.
@@ -60,7 +60,7 @@
 // for anyone who wants to see the two together.
 //
 // mount(api) -> { destroy() }, where api is { tables, sheetTable, landingError, quiet, rerender }: the
-// four live tables off the logic class, mutated in place, a getter for which sheet table the width is
+// five live tables off the logic class, mutated in place, a getter for which sheet table the width is
 // rendering, a getter for the placement's last complaint, a setter for holding the typewriter, and
 // the component's re-render. serialize() is pure and exported on its own so the paste-back path can
 // be checked without a DOM.
@@ -70,10 +70,10 @@ const el = (tag, css, text) => { const e = document.createElement(tag); if (css)
 
 const COLS = 22;              // grid lines run 1..COLS+1, the same count the checks hold
 const ROW = 44;               // the row height, read off the grid when there is one
-const NAMES = ['SHEET_WIDE', 'SHEET_NARROW', 'LANDING_WIDE', 'LANDING_PINS'];
-// the three tables whose modules are fixed: a paste has to bring the same set back. LANDING_PINS is
+const NAMES = ['SHEET_WIDE', 'SHEET_NARROW', 'SHEET_PHONE', 'LANDING_WIDE', 'LANDING_PINS'];
+// the four tables whose modules are fixed: a paste has to bring the same set back. LANDING_PINS is
 // the odd one out, since pinning and unpinning is exactly a change of which entries it holds.
-const FIXED = ['SHEET_WIDE', 'SHEET_NARROW', 'LANDING_WIDE'];
+const FIXED = ['SHEET_WIDE', 'SHEET_NARROW', 'SHEET_PHONE', 'LANDING_WIDE'];
 const LANDING_KEYS = ['statement', 'platform', 'contactEmail', 'contactGithub', 'contactCv'];
 const PLATE = /^plate\.(.+)$/;
 
@@ -699,7 +699,7 @@ export function mount(api) {
       const text = serialize(T);
       const failed = (e) => { out.textContent = 'copy failed: ' + ((e && e.message) || e); };
       try { navigator.clipboard.writeText(text).then(() => { out.textContent = 'copied ' + text.length + ' characters'; }, failed); } catch (e) { failed(e); }
-    }, 'copy all four tables to the clipboard, ready to paste into design/Portfolio.dc.html'),
+    }, 'copy all five tables to the clipboard, ready to paste into design/Portfolio.dc.html'),
     button('paste', async () => {
       try { const text = (await navigator.clipboard.readText()) || ''; read(text); out.textContent = 'read ' + text.length + ' characters back in'; } catch (e) { out.textContent = 'paste failed: ' + e.message; }
     }, 'read a copied block back from the clipboard'),

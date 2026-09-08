@@ -1,6 +1,6 @@
 // Checks the Development grid's tuning panel against the source it is supposed to write back into.
 //
-// The panel behind ?dev adjusts four tables in place, SHEET_WIDE and SHEET_NARROW for a project
+// The panel behind ?dev adjusts five tables in place, SHEET_WIDE, SHEET_NARROW and SHEET_PHONE for a project
 // sheet and LANDING_WIDE and LANDING_PINS for the landing, and then offers to write them out as a
 // block to paste into design/Portfolio.dc.html. The failure that costs the most is a block that
 // cannot be pasted back: a dropped module, a span emitted in a shape nothing reads, a slug written
@@ -27,8 +27,8 @@ import { serialize } from '../grid-dev.js';
 const SRC = 'design/Portfolio.dc.html';
 const MODULE = './grid-dev.js';
 const COLUMNS = 22;
-const NAMES = ['SHEET_WIDE', 'SHEET_NARROW', 'LANDING_WIDE', 'LANDING_PINS'];
-const FIXED = ['SHEET_WIDE', 'SHEET_NARROW', 'LANDING_WIDE'];
+const NAMES = ['SHEET_WIDE', 'SHEET_NARROW', 'SHEET_PHONE', 'LANDING_WIDE', 'LANDING_PINS'];
+const FIXED = ['SHEET_WIDE', 'SHEET_NARROW', 'SHEET_PHONE', 'LANDING_WIDE'];
 const LANDING_KEYS = ['statement', 'platform', 'contactEmail', 'contactGithub', 'contactCv'];
 
 const failures = [];
@@ -152,6 +152,7 @@ if (ready) {
   tuned.SHEET_WIDE.ghost = { col: '9 / 10', row: '5 / 6' };
   tuned.SHEET_WIDE.aside = { col: '1 / 23', row: '120 / 148' };
   tuned.SHEET_NARROW.body1 = { col: '2 / 22', row: '33 / 41' };
+  tuned.SHEET_PHONE.body1 = { col: '1 / 23', row: '41 / 55' };
   tuned.LANDING_WIDE.platform = { col: '9 / 19', row: '1 / 11' };
   tuned.LANDING_PINS = {
     'rhino-worktree-launcher': { col: '3 / 7', row: '7 / 10' },
@@ -182,11 +183,16 @@ if (ready) {
     }
   }
 
-  // both sheet tables place the same modules, or the sheet loses one the moment the window crosses
-  // 1000px and the panel would offer a row that writes nothing
+  // all three sheet tables place the same modules, or the sheet loses one the moment the window
+  // crosses 1000px or 600px and the panel would offer a row that writes nothing
   const only = (a, b) => Object.keys(a).filter((k) => !(k in b));
-  for (const k of only(tables.SHEET_WIDE, tables.SHEET_NARROW)) fail('SHEET_WIDE places ' + k + ' and SHEET_NARROW does not');
-  for (const k of only(tables.SHEET_NARROW, tables.SHEET_WIDE)) fail('SHEET_NARROW places ' + k + ' and SHEET_WIDE does not');
+  const SHEETS = ['SHEET_WIDE', 'SHEET_NARROW', 'SHEET_PHONE'];
+  for (const a of SHEETS) {
+    for (const b of SHEETS) {
+      if (a === b) continue;
+      for (const k of only(tables[a], tables[b])) fail(a + ' places ' + k + ' and ' + b + ' does not');
+    }
+  }
 
   // the landing's five, no more and no less: the panel resolves a module name to LANDING_WIDE by
   // this list, so an entry outside it would be tuned as if it were a module of the sheet
@@ -236,7 +242,7 @@ if (!/this\.gridTuner\.destroy\(\)/.test(logicSrc)) {
 }
 // the panel reads which sheet table the width is rendering off the component rather than repeating
 // the breakpoint, or the two would drift and it would tune the table the page is not showing
-if (!/sheetTable: \(\) => \(this\.state\.narrow \? 'SHEET_NARROW' : 'SHEET_WIDE'\)/.test(logicSrc)) {
+if (!/sheetTable: \(\) => \(this\.state\.phone \? 'SHEET_PHONE' : this\.state\.narrow \? 'SHEET_NARROW' : 'SHEET_WIDE'\)/.test(logicSrc)) {
   fail('the panel is not told which sheet table the width is rendering, so it could tune the other one');
 }
 // the landing memoises its placement on the tables it was drawn from, so a tuned pin has to drop that

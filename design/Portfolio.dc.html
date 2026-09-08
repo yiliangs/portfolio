@@ -951,23 +951,23 @@
     <div ref="{{ sheetGridRef }}" style="position:relative; margin-top:88px; display:grid; grid-template-columns:repeat(22,1fr); grid-auto-rows:44px; gap:0; border-right:1px solid var(--hair); border-bottom:1px solid var(--hair); background-image:linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px); background-size:calc(100%/22) 44px;">
 
     <!-- back to the sheet register -->
-    <button class="mod sheet-mod mod-ctl" data-enter="" data-mod="back" onClick="{{ goPageCurrent }}" style="all:unset; position:relative; grid-column:{{ sheet.back.col }}; grid-row:{{ sheet.back.row }}; --d:{{ sheet.back.delay }}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);">← {{ current.backWord }}</button>
+    <button class="mod sheet-mod mod-ctl" data-enter="" data-mod="back" onClick="{{ goPageCurrent }}" style="all:unset; position:relative; grid-column:{{ sheet.back.col }}; grid-row:{{ sheet.back.row }}; --d:{{ sheet.back.delay }}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 clamp(14px,3.7vw,22px); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);">← {{ current.backWord }}</button>
 
     <!-- title block: the sheet number stands outlined in its own module, beside the heading -->
-    <section class="mod sheet-mod" data-enter="" data-mod="header" style="grid-column:{{ sheet.header.col }}; grid-row:{{ sheet.header.row }}; --d:{{ sheet.header.delay }}; padding:22px;">
+    <section class="mod sheet-mod" data-enter="" data-mod="header" style="grid-column:{{ sheet.header.col }}; grid-row:{{ sheet.header.row }}; --d:{{ sheet.header.delay }}; padding:clamp(14px,3.7vw,22px);">
       <p key="kicker-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0 0 22px; font-size:12px; line-height:14px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-accent-700); font-feature-settings:'tnum' 1;">{{ current.kickerWord }} {{ current.numeral }} · {{ current.kind }} · {{ current.year }}</p>
-      <h1 key="title-{{ current.figNo }}" data-morph="title-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-family:var(--mono); font-weight:400; font-size:clamp(36px,5vw,72px); line-height:1.04; letter-spacing:-0.03em; max-width:16ch;">{{ current.title }}</h1>
-      <p key="lede-{{ current.figNo }}" data-morph="lede-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:22px 0 0; font-family:var(--mono); font-size:20px; line-height:26px; font-weight:400; max-width:52ch; color:var(--color-neutral-700);">{{ current.subtitle }}</p>
+      <h1 key="title-{{ current.figNo }}" data-morph="title-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-family:var(--mono); font-weight:400; font-size:clamp(26px,5vw,72px); line-height:1.04; letter-spacing:-0.03em; max-width:16ch;">{{ current.title }}</h1>
+      <p key="lede-{{ current.figNo }}" data-morph="lede-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:22px 0 0; font-family:var(--mono); font-size:clamp(16px,4vw,20px); line-height:clamp(21px,5.2vw,26px); font-weight:400; max-width:52ch; color:var(--color-neutral-700);">{{ current.subtitle }}</p>
     </section>
-    <span class="mod sheet-mod" data-enter="" data-mod="ghost" aria-hidden="true" style="grid-column:{{ sheet.ghost.col }}; grid-row:{{ sheet.ghost.row }}; --d:{{ sheet.ghost.delay }}; display:flex; align-items:flex-end; justify-content:flex-end; padding:22px; font-family:'DM Mono', ui-monospace, monospace; font-weight:400; font-size:clamp(40px,5.5vw,84px); line-height:1; letter-spacing:-0.04em; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; user-select:none; font-feature-settings:'tnum' 1;">{{ current.ghost }}</span>
+    <span class="mod sheet-mod" data-enter="" data-mod="ghost" aria-hidden="true" style="grid-column:{{ sheet.ghost.col }}; grid-row:{{ sheet.ghost.row }}; --d:{{ sheet.ghost.delay }}; display:flex; align-items:flex-end; justify-content:flex-end; padding:clamp(14px,3.7vw,22px); font-family:'DM Mono', ui-monospace, monospace; font-weight:400; font-size:clamp(28px,5.5vw,84px); line-height:1; letter-spacing:-0.04em; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; user-select:none; font-feature-settings:'tnum' 1;">{{ current.ghost }}</span>
 
     <!-- title-block strip: five fields across the sheet, three and two when it stacks. The labels are
          chrome and stay still; the values are the sheet's own text and answer the cursor -->
-    <div class="mod sheet-mod" data-enter="" data-mod="specSheet" style="grid-column:{{ sheet.specSheet.col }}; grid-row:{{ sheet.specSheet.row }}; --d:{{ sheet.specSheet.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Sheet</p><p key="spec-sheet-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px; color:var(--color-accent-700);">{{ current.ghost }}</p></div>
-    <div class="mod sheet-mod" data-enter="" data-mod="specRole" style="grid-column:{{ sheet.specRole.col }}; grid-row:{{ sheet.specRole.row }}; --d:{{ sheet.specRole.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Role</p><p key="spec-role-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px;">{{ current.role }}</p></div>
-    <div class="mod sheet-mod" data-enter="" data-mod="specWith" style="grid-column:{{ sheet.specWith.col }}; grid-row:{{ sheet.specWith.row }}; --d:{{ sheet.specWith.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">With</p><p key="spec-with-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px;">{{ current.with }}</p></div>
-    <div class="mod sheet-mod" data-enter="" data-mod="specStatus" style="grid-column:{{ sheet.specStatus.col }}; grid-row:{{ sheet.specStatus.row }}; --d:{{ sheet.specStatus.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Status</p><p key="spec-status-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px;">{{ current.status }}</p></div>
-    <div class="mod sheet-mod" data-enter="" data-mod="specRev" style="grid-column:{{ sheet.specRev.col }}; grid-row:{{ sheet.specRev.row }}; --d:{{ sheet.specRev.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Rev / Scale</p><p key="spec-rev-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px; font-feature-settings:'tnum' 1;">{{ current.year }} · 1:1</p></div>
+    <div class="mod sheet-mod" data-enter="" data-mod="specSheet" style="grid-column:{{ sheet.specSheet.col }}; grid-row:{{ sheet.specSheet.row }}; --d:{{ sheet.specSheet.delay }}; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px);"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Sheet</p><p key="spec-sheet-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px; color:var(--color-accent-700);">{{ current.ghost }}</p></div>
+    <div class="mod sheet-mod" data-enter="" data-mod="specRole" style="grid-column:{{ sheet.specRole.col }}; grid-row:{{ sheet.specRole.row }}; --d:{{ sheet.specRole.delay }}; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px);"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Role</p><p key="spec-role-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px;">{{ current.role }}</p></div>
+    <div class="mod sheet-mod" data-enter="" data-mod="specWith" style="grid-column:{{ sheet.specWith.col }}; grid-row:{{ sheet.specWith.row }}; --d:{{ sheet.specWith.delay }}; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px);"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">With</p><p key="spec-with-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px;">{{ current.with }}</p></div>
+    <div class="mod sheet-mod" data-enter="" data-mod="specStatus" style="grid-column:{{ sheet.specStatus.col }}; grid-row:{{ sheet.specStatus.row }}; --d:{{ sheet.specStatus.delay }}; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px);"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Status</p><p key="spec-status-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px;">{{ current.status }}</p></div>
+    <div class="mod sheet-mod" data-enter="" data-mod="specRev" style="grid-column:{{ sheet.specRev.col }}; grid-row:{{ sheet.specRev.row }}; --d:{{ sheet.specRev.delay }}; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px);"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Rev / Scale</p><p key="spec-rev-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px; font-feature-settings:'tnum' 1;">{{ current.year }} · 1:1</p></div>
 
     <!-- the figure's height is a row count, not a ratio. Under the cursor it throws its own edges
          across the sheet as guide lines and reads the cell back into its caption.
@@ -988,19 +988,19 @@
       <sc-if value="{{ heroStill }}" hint-placeholder-val="{{ true }}"><image-slot id="{{ current.heroSlotId }}" src="{{ current.hero }}" shape="rect" fit="contain" placeholder="{{ current.placeholder }}" style="width:100%; height:100%;"></image-slot></sc-if>
       <span class="sheet-mark" aria-hidden="true" style="right:8px; bottom:5px;">+</span>
     </figure>
-    <p class="mod sheet-mod" data-enter="" data-mod="heroCaption" style="grid-column:{{ sheet.heroCaption.col }}; grid-row:{{ sheet.heroCaption.row }}; --d:{{ sheet.heroCaption.delay }}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="min-width:0;"><span style="color:var(--color-accent);">{{ current.figWord }} {{ current.numeral }}.</span> <span key="cap-hero-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.caption }}</span></span><span style="flex:none; color:var(--color-neutral-600); white-space:nowrap;">{{ sheet.heroReadout }}</span></p>
+    <p class="mod sheet-mod" data-enter="" data-mod="heroCaption" style="grid-column:{{ sheet.heroCaption.col }}; grid-row:{{ sheet.heroCaption.row }}; --d:{{ sheet.heroCaption.delay }}; margin:0; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px); display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="min-width:0;"><span style="color:var(--color-accent);">{{ current.figWord }} {{ current.numeral }}.</span> <span key="cap-hero-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.caption }}</span></span><span style="flex:none; color:var(--color-neutral-600); white-space:nowrap;">{{ sheet.heroReadout }}</span></p>
 
     <!-- the account: three numbered notes, each its own module, with the sheet's data beside them -->
-    <div class="mod sheet-mod" data-enter="" data-mod="body1" style="grid-column:{{ sheet.body1.col }}; grid-row:{{ sheet.body1.row }}; --d:{{ sheet.body1.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);">
+    <div class="mod sheet-mod" data-enter="" data-mod="body1" style="grid-column:{{ sheet.body1.col }}; grid-row:{{ sheet.body1.row }}; --d:{{ sheet.body1.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:clamp(14px,3.7vw,22px); font-size:clamp(13px,3.4vw,14.5px); line-height:clamp(23px,6.1vw,26px); color:rgb(217, 216, 216);">
       <span style="font-size:12px; line-height:26px; letter-spacing:0.08em; color:var(--color-accent-700);">01 //</span><p key="body1-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0;">{{ current.body1Full }}</p>
     </div>
-    <div class="mod sheet-mod" data-enter="" data-mod="body2" style="grid-column:{{ sheet.body2.col }}; grid-row:{{ sheet.body2.row }}; --d:{{ sheet.body2.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);">
+    <div class="mod sheet-mod" data-enter="" data-mod="body2" style="grid-column:{{ sheet.body2.col }}; grid-row:{{ sheet.body2.row }}; --d:{{ sheet.body2.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:clamp(14px,3.7vw,22px); font-size:clamp(13px,3.4vw,14.5px); line-height:clamp(23px,6.1vw,26px); color:rgb(217, 216, 216);">
       <span style="font-size:12px; line-height:26px; letter-spacing:0.08em; color:var(--color-accent-700);">02 //</span><p key="body2-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0;">{{ current.body2 }}</p>
     </div>
-    <div class="mod sheet-mod" data-enter="" data-mod="body3" style="grid-column:{{ sheet.body3.col }}; grid-row:{{ sheet.body3.row }}; --d:{{ sheet.body3.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);">
+    <div class="mod sheet-mod" data-enter="" data-mod="body3" style="grid-column:{{ sheet.body3.col }}; grid-row:{{ sheet.body3.row }}; --d:{{ sheet.body3.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:clamp(14px,3.7vw,22px); font-size:clamp(13px,3.4vw,14.5px); line-height:clamp(23px,6.1vw,26px); color:rgb(217, 216, 216);">
       <span style="font-size:12px; line-height:26px; letter-spacing:0.08em; color:var(--color-accent-700);">03 //</span><p key="body3-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0;">{{ current.body3 }}</p>
     </div>
-    <aside class="mod sheet-mod" data-enter="" data-mod="aside" style="grid-column:{{ sheet.aside.col }}; grid-row:{{ sheet.aside.row }}; --d:{{ sheet.aside.delay }}; display:flex; flex-direction:column; gap:20px; padding:22px; font-size:12.5px; line-height:20px; color:var(--color-neutral-700);">
+    <aside class="mod sheet-mod" data-enter="" data-mod="aside" style="grid-column:{{ sheet.aside.col }}; grid-row:{{ sheet.aside.row }}; --d:{{ sheet.aside.delay }}; display:flex; flex-direction:column; gap:20px; padding:clamp(14px,3.7vw,22px); font-size:12.5px; line-height:20px; color:var(--color-neutral-700);">
       <sc-if value="{{ marginalia }}" hint-placeholder-val="{{ true }}">
         <p key="margin-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; padding-left:12px; border-left:1px solid var(--color-accent); color:var(--color-text);">// {{ current.margin }}</p>
       </sc-if>
@@ -1044,7 +1044,7 @@
     </figure>
     </sc-if>
     <sc-if value="{{ hasDetail }}" hint-placeholder-val="{{ true }}">
-    <p class="mod sheet-mod" data-enter="" data-mod="detailCaption" style="grid-column:{{ sheet.detailCaption.col }}; grid-row:{{ sheet.detailCaption.row }}; --d:{{ sheet.detailCaption.delay }}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="min-width:0;"><span style="color:var(--color-accent);">{{ current.detailFigWord }}</span> <span key="cap-detail-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.detailCaptionText }}</span></span><span style="flex:none; color:var(--color-neutral-600); white-space:nowrap;">{{ sheet.detailReadout }}</span></p>
+    <p class="mod sheet-mod" data-enter="" data-mod="detailCaption" style="grid-column:{{ sheet.detailCaption.col }}; grid-row:{{ sheet.detailCaption.row }}; --d:{{ sheet.detailCaption.delay }}; margin:0; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px); display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="min-width:0;"><span style="color:var(--color-accent);">{{ current.detailFigWord }}</span> <span key="cap-detail-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.detailCaptionText }}</span></span><span style="flex:none; color:var(--color-neutral-600); white-space:nowrap;">{{ sheet.detailReadout }}</span></p>
     </sc-if>
 
     <!-- Linked sheets: the other end of the graph the landing draws. What this sheet names and what
@@ -1054,25 +1054,25 @@
          down by exactly what it took. A row is a control and lights its own type; the frame around the
          whole module is the module's, which is why no row carries mod-ctl. An edge may cross into
          the serif register, and a row that does says Chapter where the others say a sheet number. -->
-    <div class="mod sheet-mod" data-enter="" data-mod="links" style="grid-column:{{ sheet.links.col }}; grid-row:{{ sheet.links.row }}; --d:{{ sheet.links.delay }}; display:grid; grid-auto-rows:44px; align-content:start; overflow:clip; overflow-clip-margin:1px;">
-      <p style="margin:0; display:flex; align-items:center; padding:0 22px; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Linked sheets</p>
+    <div class="mod sheet-mod" data-enter="" data-mod="links" style="grid-column:{{ sheet.links.col }}; grid-row:{{ sheet.links.row }}; --d:{{ sheet.links.delay }}; display:grid; grid-template-columns:minmax(0,1fr); grid-auto-rows:44px; align-content:start; overflow:clip; overflow-clip-margin:1px;">
+      <p style="margin:0; display:flex; align-items:center; padding:0 clamp(14px,3.7vw,22px); font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Linked sheets</p>
       <sc-for list="{{ sheetLinks }}" as="l" hint-placeholder-count="3">
-        <button onClick="{{ l.open }}" style="all:unset; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; gap:14px; padding:0 22px; font-family:var(--mono); font-size:13px; line-height:18px; color:var(--color-text); box-shadow:inset 0 1px 0 0 var(--hair); transition:color 200ms ease;" style-hover="color:var(--color-accent-700)">
+        <button onClick="{{ l.open }}" style="all:unset; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; gap:14px; padding:0 clamp(14px,3.7vw,22px); font-family:var(--mono); font-size:13px; line-height:18px; color:var(--color-text); box-shadow:inset 0 1px 0 0 var(--hair); transition:color 200ms ease;" style-hover="color:var(--color-accent-700)">
           <span style="flex:none; font-size:11px; letter-spacing:0.08em; color:var(--color-accent-700); font-feature-settings:'tnum' 1;">{{ l.ghost }}</span>
           <span style="min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ l.title }}</span>
           <span style="flex:none; margin-left:auto; font-size:11px; letter-spacing:0.06em; color:var(--color-neutral-600); white-space:nowrap;">{{ l.kindLower }} · {{ l.year }} →</span>
         </button>
       </sc-for>
       <sc-if value="{{ linksEmpty }}" hint-placeholder-val="{{ false }}">
-        <p style="margin:0; display:flex; align-items:center; padding:0 22px; font-size:13px; line-height:18px; color:var(--color-neutral-600); box-shadow:inset 0 1px 0 0 var(--hair);">nothing in the register stands next to this sheet yet</p>
+        <p style="margin:0; display:flex; align-items:center; padding:0 clamp(14px,3.7vw,22px); font-size:13px; line-height:18px; color:var(--color-neutral-600); box-shadow:inset 0 1px 0 0 var(--hair);">nothing in the register stands next to this sheet yet</p>
       </sc-if>
     </div>
 
     <!-- issue line -->
-    <button class="mod sheet-mod mod-ctl" data-enter="" data-mod="navBack" onClick="{{ goPageCurrent }}" style="all:unset; position:relative; grid-column:{{ sheet.navBack.col }}; grid-row:{{ sheet.navBack.row }}; --d:{{ sheet.navBack.delay }}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);">← {{ current.backWord }}</button>
-    <button class="mod sheet-mod mod-ctl" data-enter="" data-mod="navNext" onClick="{{ openNext }}" style="all:unset; position:relative; grid-column:{{ sheet.navNext.col }}; grid-row:{{ sheet.navNext.row }}; --d:{{ sheet.navNext.delay }}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:11px 22px; text-align:right; color:var(--color-text); background:var(--color-bg);">
+    <button class="mod sheet-mod mod-ctl" data-enter="" data-mod="navBack" onClick="{{ goPageCurrent }}" style="all:unset; position:relative; grid-column:{{ sheet.navBack.col }}; grid-row:{{ sheet.navBack.row }}; --d:{{ sheet.navBack.delay }}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 clamp(14px,3.7vw,22px); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);">← {{ current.backWord }}</button>
+    <button class="mod sheet-mod mod-ctl" data-enter="" data-mod="navNext" onClick="{{ openNext }}" style="all:unset; position:relative; grid-column:{{ sheet.navNext.col }}; grid-row:{{ sheet.navNext.row }}; --d:{{ sheet.navNext.delay }}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px); text-align:right; color:var(--color-text); background:var(--color-bg);">
       <span style="font-size:11px; line-height:14px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-neutral-600);">Next · {{ next.kickerWord }} {{ next.numeral }}</span>
-      <span key="next-{{ next.figNo }}" data-tr="wake" data-reg="mono" style="font-family:var(--mono); font-size:24px; line-height:32px; font-weight:400; letter-spacing:-0.03em;">{{ next.title }} →</span>
+      <span key="next-{{ next.figNo }}" data-tr="wake" data-reg="mono" style="font-family:var(--mono); font-size:clamp(18px,4.6vw,24px); line-height:clamp(24px,6.2vw,32px); font-weight:400; letter-spacing:-0.03em;">{{ next.title }} →</span>
     </button>
     </div>
   </main>
@@ -1430,8 +1430,9 @@ class Component extends DCLogic {
     ...this.routeState(this.parseRoute(location.hash)) };
 
   // Where every module of a Development sheet sits on the 22 column, 44px row drawing grid, as
-  // "start / end" grid lines. The wide table is the desk-width sheet; the narrow table is the same
-  // drawing stacked, chosen off state.narrow (window.innerWidth < 1000). Both are written as plain
+  // "start / end" grid lines. The wide table is the desk-width sheet, the narrow table is the same
+  // drawing stacked, and the phone table is that stack read again with nothing beside anything;
+  // which one is used comes off state.phone and state.narrow. All three are written as plain
   // literals so tools/check-sheet-grid.mjs can read them without running this file, and the template
   // binds sheet.<name>.col / .row rather than carrying any span of its own.
   // The plot-in stagger: 40ms per row of a module's starting row, so the sheet inks itself top to
@@ -1504,6 +1505,34 @@ class Component extends DCLogic {
     links:         { col: '1 / 23',  row: '86 / 88' },
     navBack:       { col: '1 / 23',  row: '89 / 91' },
     navNext:       { col: '1 / 23',  row: '92 / 94' },
+  };
+  // The phone reading of the same drawing. The narrow sheet is already a column, but a column with
+  // things beside each other in it: three spec cells to a row band is 110px a cell at 390, which is
+  // a label and half a value. Here every module takes the whole width and no two share a row band,
+  // which is the invariant tools/check-sheet-grid.mjs holds this table to and the whole of what the
+  // tier is for. The row counts are measured rather than chosen: the longest of the fourteen mono
+  // entries at 360px wide, with the phone type sizes the markup carries, and a row of slack over it.
+  SHEET_PHONE = {
+    back:          { col: '1 / 23',  row: '1 / 2' },
+    header:        { col: '1 / 23',  row: '3 / 10' },
+    ghost:         { col: '1 / 23',  row: '10 / 13' },
+    specSheet:     { col: '1 / 23',  row: '14 / 16' },
+    specRole:      { col: '1 / 23',  row: '16 / 18' },
+    specWith:      { col: '1 / 23',  row: '18 / 20' },
+    specStatus:    { col: '1 / 23',  row: '20 / 22' },
+    specRev:       { col: '1 / 23',  row: '22 / 24' },
+    hero:          { col: '1 / 23',  row: '25 / 35' },
+    heroCaption:   { col: '1 / 23',  row: '35 / 40' },
+    body1:         { col: '1 / 23',  row: '41 / 54' },
+    body2:         { col: '1 / 23',  row: '54 / 66' },
+    body3:         { col: '1 / 23',  row: '66 / 76' },
+    aside:         { col: '1 / 23',  row: '77 / 89' },
+    detailA:       { col: '1 / 23',  row: '90 / 102' },
+    detailB:       { col: '1 / 23',  row: '102 / 114' },
+    detailCaption: { col: '1 / 23',  row: '114 / 118' },
+    links:         { col: '1 / 23',  row: '119 / 121' },
+    navBack:       { col: '1 / 23',  row: '122 / 124' },
+    navNext:       { col: '1 / 23',  row: '125 / 129' },
   };
 
   // The desktop Development landing is the same drawing grid run full bleed: 22 columns across the
@@ -2347,7 +2376,7 @@ class Component extends DCLogic {
         .then((m) => { if (!this.dead) this.leafTuner = m.mount({ spreads: this.LEAF_SPREADS, pairs: this.LEAF_PAIRS, rerender: () => this.forceUpdate() }); })
         .catch((e) => console.error('leaves-dev', e));
       import('./grid-dev.js')
-        .then((m) => { if (!this.dead) this.gridTuner = m.mount({ tables: { SHEET_WIDE: this.SHEET_WIDE, SHEET_NARROW: this.SHEET_NARROW, LANDING_WIDE: this.LANDING_WIDE, LANDING_PINS: this.LANDING_PINS }, sheetTable: () => (this.state.narrow ? 'SHEET_NARROW' : 'SHEET_WIDE'), landingError: () => this.landingError, quiet: (on) => { this.devQuiet = on; if (on) this.stopTyping(); else this.forceUpdate(); }, rerender: () => { this.landingCache = null; this.forceUpdate(); } }); })
+        .then((m) => { if (!this.dead) this.gridTuner = m.mount({ tables: { SHEET_WIDE: this.SHEET_WIDE, SHEET_NARROW: this.SHEET_NARROW, SHEET_PHONE: this.SHEET_PHONE, LANDING_WIDE: this.LANDING_WIDE, LANDING_PINS: this.LANDING_PINS }, sheetTable: () => (this.state.phone ? 'SHEET_PHONE' : this.state.narrow ? 'SHEET_NARROW' : 'SHEET_WIDE'), landingError: () => this.landingError, quiet: (on) => { this.devQuiet = on; if (on) this.stopTyping(); else this.forceUpdate(); }, rerender: () => { this.landingCache = null; this.forceUpdate(); } }); })
         .catch((e) => console.error('grid-dev', e));
     }
     this.observeReveals(); this.mountTextEffects(); this.syncParchment(); this.syncHome(); this.syncPaper(); this.placeLeafText();
@@ -3358,7 +3387,7 @@ class Component extends DCLogic {
     //
     // The second is an entry that names one detail instead of the pair. The single figure takes the
     // columns the pair spanned, from detailA's first to detailB's last, on both sheets.
-    const place = this.state.narrow ? this.SHEET_NARROW : this.SHEET_WIDE;
+    const place = this.state.phone ? this.SHEET_PHONE : this.state.narrow ? this.SHEET_NARROW : this.SHEET_WIDE;
 
     const heroSpan = at(place.hero.row);
     const portrait = !this.state.narrow && current.heroW > 0 && current.heroH > current.heroW;

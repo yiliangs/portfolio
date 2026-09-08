@@ -1786,33 +1786,33 @@
             h("div", { key: "1", ref: V.sheetGridRef, style: {"position":"relative","marginTop":"88px","display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","borderRight":"1px solid var(--hair)","borderBottom":"1px solid var(--hair)","backgroundImage":"linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
               "\n\n    ",
               "\n    ",
-              h("button", { key: "2|24.1chn43n", className: "mod sheet-mod mod-ctl", "data-enter": "", "data-mod": "back", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.back?.col ?? ""}; grid-row:${V.sheet?.back?.row ?? ""}; --d:${V.sheet?.back?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
+              h("button", { key: "2|24.1chn43n", className: "mod sheet-mod mod-ctl", "data-enter": "", "data-mod": "back", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.back?.col ?? ""}; grid-row:${V.sheet?.back?.row ?? ""}; --d:${V.sheet?.back?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 clamp(14px,3.7vw,22px); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
                 h(F,{key:0},"← ",I(V.current?.backWord,1),"")
               ),
               "\n\n    ",
               "\n    ",
-              h("section", { key: "5", className: "mod sheet-mod", "data-enter": "", "data-mod": "header", style: S(`grid-column:${V.sheet?.header?.col ?? ""}; grid-row:${V.sheet?.header?.row ?? ""}; --d:${V.sheet?.header?.delay ?? ""}; padding:22px;`) },
+              h("section", { key: "5", className: "mod sheet-mod", "data-enter": "", "data-mod": "header", style: S(`grid-column:${V.sheet?.header?.col ?? ""}; grid-row:${V.sheet?.header?.row ?? ""}; --d:${V.sheet?.header?.delay ?? ""}; padding:clamp(14px,3.7vw,22px);`) },
                 "\n      ",
                 h("p", { key: `kicker-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0 0 22px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-accent-700)","fontFeatureSettings":"'tnum' 1"} },
                   h(F,{key:0},"",I(V.current?.kickerWord,1)," ",I(V.current?.numeral,3)," · ",I(V.current?.kind,5)," · ",I(V.current?.year,7),"")
                 ),
                 "\n      ",
-                h("h1", { key: `title-${V.current?.figNo ?? ""}`, "data-morph": `title-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0","fontFamily":"var(--mono)","fontWeight":"400","fontSize":"clamp(36px,5vw,72px)","lineHeight":"1.04","letterSpacing":"-0.03em","maxWidth":"16ch"} },
+                h("h1", { key: `title-${V.current?.figNo ?? ""}`, "data-morph": `title-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0","fontFamily":"var(--mono)","fontWeight":"400","fontSize":"clamp(26px,5vw,72px)","lineHeight":"1.04","letterSpacing":"-0.03em","maxWidth":"16ch"} },
                   h(F,{key:0},"",I(V.current?.title,1),"")
                 ),
                 "\n      ",
-                h("p", { key: `lede-${V.current?.figNo ?? ""}`, "data-morph": `lede-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"22px 0 0","fontFamily":"var(--mono)","fontSize":"20px","lineHeight":"26px","fontWeight":"400","maxWidth":"52ch","color":"var(--color-neutral-700)"} },
+                h("p", { key: `lede-${V.current?.figNo ?? ""}`, "data-morph": `lede-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"22px 0 0","fontFamily":"var(--mono)","fontSize":"clamp(16px,4vw,20px)","lineHeight":"clamp(21px,5.2vw,26px)","fontWeight":"400","maxWidth":"52ch","color":"var(--color-neutral-700)"} },
                   h(F,{key:0},"",I(V.current?.subtitle,1),"")
                 ),
                 "\n    "
               ),
               "\n    ",
-              h("span", { key: "7|19.1h99e0b", className: "mod sheet-mod", "data-enter": "", "data-mod": "ghost", "aria-hidden": "true", style: S(`grid-column:${V.sheet?.ghost?.col ?? ""}; grid-row:${V.sheet?.ghost?.row ?? ""}; --d:${V.sheet?.ghost?.delay ?? ""}; display:flex; align-items:flex-end; justify-content:flex-end; padding:22px; font-family:'DM Mono', ui-monospace, monospace; font-weight:400; font-size:clamp(40px,5.5vw,84px); line-height:1; letter-spacing:-0.04em; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; user-select:none; font-feature-settings:'tnum' 1;`) },
+              h("span", { key: "7|19.1h99e0b", className: "mod sheet-mod", "data-enter": "", "data-mod": "ghost", "aria-hidden": "true", style: S(`grid-column:${V.sheet?.ghost?.col ?? ""}; grid-row:${V.sheet?.ghost?.row ?? ""}; --d:${V.sheet?.ghost?.delay ?? ""}; display:flex; align-items:flex-end; justify-content:flex-end; padding:clamp(14px,3.7vw,22px); font-family:'DM Mono', ui-monospace, monospace; font-weight:400; font-size:clamp(28px,5.5vw,84px); line-height:1; letter-spacing:-0.04em; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; user-select:none; font-feature-settings:'tnum' 1;`) },
                 h(F,{key:0},"",I(V.current?.ghost,1),"")
               ),
               "\n\n    ",
               "\n    ",
-              h("div", { key: "10", className: "mod sheet-mod", "data-enter": "", "data-mod": "specSheet", style: S(`grid-column:${V.sheet?.specSheet?.col ?? ""}; grid-row:${V.sheet?.specSheet?.row ?? ""}; --d:${V.sheet?.specSheet?.delay ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "10", className: "mod sheet-mod", "data-enter": "", "data-mod": "specSheet", style: S(`grid-column:${V.sheet?.specSheet?.col ?? ""}; grid-row:${V.sheet?.specSheet?.row ?? ""}; --d:${V.sheet?.specSheet?.delay ?? ""}; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px);`) },
                 h("p", { key: "0|5.3wrm2m", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Sheet"
                 ),
@@ -1821,7 +1821,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "12", className: "mod sheet-mod", "data-enter": "", "data-mod": "specRole", style: S(`grid-column:${V.sheet?.specRole?.col ?? ""}; grid-row:${V.sheet?.specRole?.row ?? ""}; --d:${V.sheet?.specRole?.delay ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "12", className: "mod sheet-mod", "data-enter": "", "data-mod": "specRole", style: S(`grid-column:${V.sheet?.specRole?.col ?? ""}; grid-row:${V.sheet?.specRole?.row ?? ""}; --d:${V.sheet?.specRole?.delay ?? ""}; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px);`) },
                 h("p", { key: "0|4.yk2787", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Role"
                 ),
@@ -1830,7 +1830,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "14", className: "mod sheet-mod", "data-enter": "", "data-mod": "specWith", style: S(`grid-column:${V.sheet?.specWith?.col ?? ""}; grid-row:${V.sheet?.specWith?.row ?? ""}; --d:${V.sheet?.specWith?.delay ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "14", className: "mod sheet-mod", "data-enter": "", "data-mod": "specWith", style: S(`grid-column:${V.sheet?.specWith?.col ?? ""}; grid-row:${V.sheet?.specWith?.row ?? ""}; --d:${V.sheet?.specWith?.delay ?? ""}; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px);`) },
                 h("p", { key: "0|4.yk5x1d", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "With"
                 ),
@@ -1839,7 +1839,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "16", className: "mod sheet-mod", "data-enter": "", "data-mod": "specStatus", style: S(`grid-column:${V.sheet?.specStatus?.col ?? ""}; grid-row:${V.sheet?.specStatus?.row ?? ""}; --d:${V.sheet?.specStatus?.delay ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "16", className: "mod sheet-mod", "data-enter": "", "data-mod": "specStatus", style: S(`grid-column:${V.sheet?.specStatus?.col ?? ""}; grid-row:${V.sheet?.specStatus?.row ?? ""}; --d:${V.sheet?.specStatus?.delay ?? ""}; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px);`) },
                 h("p", { key: "0|6.1m8lgyx", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Status"
                 ),
@@ -1848,7 +1848,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "18", className: "mod sheet-mod", "data-enter": "", "data-mod": "specRev", style: S(`grid-column:${V.sheet?.specRev?.col ?? ""}; grid-row:${V.sheet?.specRev?.row ?? ""}; --d:${V.sheet?.specRev?.delay ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "18", className: "mod sheet-mod", "data-enter": "", "data-mod": "specRev", style: S(`grid-column:${V.sheet?.specRev?.col ?? ""}; grid-row:${V.sheet?.specRev?.row ?? ""}; --d:${V.sheet?.specRev?.delay ?? ""}; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px);`) },
                 h("p", { key: "0|11.1s8ry21", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Rev / Scale"
                 ),
@@ -1876,7 +1876,7 @@
                 "\n    "
               ),
               "\n    ",
-              h("p", { key: "23|141.s2m5lr", className: "mod sheet-mod", "data-enter": "", "data-mod": "heroCaption", style: S(`grid-column:${V.sheet?.heroCaption?.col ?? ""}; grid-row:${V.sheet?.heroCaption?.row ?? ""}; --d:${V.sheet?.heroCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
+              h("p", { key: "23|141.s2m5lr", className: "mod sheet-mod", "data-enter": "", "data-mod": "heroCaption", style: S(`grid-column:${V.sheet?.heroCaption?.col ?? ""}; grid-row:${V.sheet?.heroCaption?.row ?? ""}; --d:${V.sheet?.heroCaption?.delay ?? ""}; margin:0; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px); display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
                 h("span", { key: "0|92.1o5q0e0", style: {"minWidth":"0"} },
                   h("span", { key: "0|44.1e4j9ob", style: {"color":"var(--color-accent)"} },
                     h(F,{key:0},"",I(V.current?.figWord,1)," ",I(V.current?.numeral,3),".")
@@ -1892,7 +1892,7 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("div", { key: "26", className: "mod sheet-mod", "data-enter": "", "data-mod": "body1", style: S(`grid-column:${V.sheet?.body1?.col ?? ""}; grid-row:${V.sheet?.body1?.row ?? ""}; --d:${V.sheet?.body1?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
+              h("div", { key: "26", className: "mod sheet-mod", "data-enter": "", "data-mod": "body1", style: S(`grid-column:${V.sheet?.body1?.col ?? ""}; grid-row:${V.sheet?.body1?.row ?? ""}; --d:${V.sheet?.body1?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:clamp(14px,3.7vw,22px); font-size:clamp(13px,3.4vw,14.5px); line-height:clamp(23px,6.1vw,26px); color:rgb(217, 216, 216);`) },
                 "\n      ",
                 h("span", { key: "1|5.36tydg", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
                   "01 //"
@@ -1903,7 +1903,7 @@
                 "\n    "
               ),
               "\n    ",
-              h("div", { key: "28", className: "mod sheet-mod", "data-enter": "", "data-mod": "body2", style: S(`grid-column:${V.sheet?.body2?.col ?? ""}; grid-row:${V.sheet?.body2?.row ?? ""}; --d:${V.sheet?.body2?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
+              h("div", { key: "28", className: "mod sheet-mod", "data-enter": "", "data-mod": "body2", style: S(`grid-column:${V.sheet?.body2?.col ?? ""}; grid-row:${V.sheet?.body2?.row ?? ""}; --d:${V.sheet?.body2?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:clamp(14px,3.7vw,22px); font-size:clamp(13px,3.4vw,14.5px); line-height:clamp(23px,6.1vw,26px); color:rgb(217, 216, 216);`) },
                 "\n      ",
                 h("span", { key: "1|5.36uq3p", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
                   "02 //"
@@ -1914,7 +1914,7 @@
                 "\n    "
               ),
               "\n    ",
-              h("div", { key: "30", className: "mod sheet-mod", "data-enter": "", "data-mod": "body3", style: S(`grid-column:${V.sheet?.body3?.col ?? ""}; grid-row:${V.sheet?.body3?.row ?? ""}; --d:${V.sheet?.body3?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
+              h("div", { key: "30", className: "mod sheet-mod", "data-enter": "", "data-mod": "body3", style: S(`grid-column:${V.sheet?.body3?.col ?? ""}; grid-row:${V.sheet?.body3?.row ?? ""}; --d:${V.sheet?.body3?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:clamp(14px,3.7vw,22px); font-size:clamp(13px,3.4vw,14.5px); line-height:clamp(23px,6.1vw,26px); color:rgb(217, 216, 216);`) },
                 "\n      ",
                 h("span", { key: "1|5.36vhty", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
                   "03 //"
@@ -1925,7 +1925,7 @@
                 "\n    "
               ),
               "\n    ",
-              h("aside", { key: "32", className: "mod sheet-mod", "data-enter": "", "data-mod": "aside", style: S(`grid-column:${V.sheet?.aside?.col ?? ""}; grid-row:${V.sheet?.aside?.row ?? ""}; --d:${V.sheet?.aside?.delay ?? ""}; display:flex; flex-direction:column; gap:20px; padding:22px; font-size:12.5px; line-height:20px; color:var(--color-neutral-700);`) },
+              h("aside", { key: "32", className: "mod sheet-mod", "data-enter": "", "data-mod": "aside", style: S(`grid-column:${V.sheet?.aside?.col ?? ""}; grid-row:${V.sheet?.aside?.row ?? ""}; --d:${V.sheet?.aside?.delay ?? ""}; display:flex; flex-direction:column; gap:20px; padding:clamp(14px,3.7vw,22px); font-size:12.5px; line-height:20px; color:var(--color-neutral-700);`) },
                 "\n      ",
                 (V.marginalia ? h(F,{key:1},
                   "\n        ",
@@ -2036,7 +2036,7 @@
               "\n    ",
               (V.hasDetail ? h(F,{key:41},
                 "\n    ",
-                h("p", { key: "1|136.19o3fos", className: "mod sheet-mod", "data-enter": "", "data-mod": "detailCaption", style: S(`grid-column:${V.sheet?.detailCaption?.col ?? ""}; grid-row:${V.sheet?.detailCaption?.row ?? ""}; --d:${V.sheet?.detailCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
+                h("p", { key: "1|136.19o3fos", className: "mod sheet-mod", "data-enter": "", "data-mod": "detailCaption", style: S(`grid-column:${V.sheet?.detailCaption?.col ?? ""}; grid-row:${V.sheet?.detailCaption?.row ?? ""}; --d:${V.sheet?.detailCaption?.delay ?? ""}; margin:0; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px); display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
                   h("span", { key: "0|85.yyckg0", style: {"minWidth":"0"} },
                     h("span", { key: "0|27.1uoc6rv", style: {"color":"var(--color-accent)"} },
                       h(F,{key:0},"",I(V.current?.detailFigWord,1),"")
@@ -2053,9 +2053,9 @@
                 "\n    ") : null),
               "\n\n    ",
               "\n    ",
-              h("div", { key: "44", className: "mod sheet-mod", "data-enter": "", "data-mod": "links", style: S(`grid-column:${V.sheet?.links?.col ?? ""}; grid-row:${V.sheet?.links?.row ?? ""}; --d:${V.sheet?.links?.delay ?? ""}; display:grid; grid-auto-rows:44px; align-content:start; overflow:clip; overflow-clip-margin:1px;`) },
+              h("div", { key: "44", className: "mod sheet-mod", "data-enter": "", "data-mod": "links", style: S(`grid-column:${V.sheet?.links?.col ?? ""}; grid-row:${V.sheet?.links?.row ?? ""}; --d:${V.sheet?.links?.delay ?? ""}; display:grid; grid-template-columns:minmax(0,1fr); grid-auto-rows:44px; align-content:start; overflow:clip; overflow-clip-margin:1px;`) },
                 "\n      ",
-                h("p", { key: "1|13.bujc8", style: {"margin":"0","display":"flex","alignItems":"center","padding":"0 22px","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
+                h("p", { key: "1|13.bujc8", style: {"margin":"0","display":"flex","alignItems":"center","padding":"0 clamp(14px,3.7vw,22px)","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Linked sheets"
                 ),
                 "\n      ",
@@ -2063,7 +2063,7 @@
                   var Vi = Object.assign({}, V, {"l": item, $index: i});
                   return h(F,{key:i},
                     "\n        ",
-                    h("button", { key: "1|141.10mqriy", onClick: Vi.l?.open, style: {"all":"unset","boxSizing":"border-box","cursor":"pointer","display":"flex","alignItems":"center","gap":"14px","padding":"0 22px","fontFamily":"var(--mono)","fontSize":"13px","lineHeight":"18px","color":"var(--color-text)","boxShadow":"inset 0 1px 0 0 var(--hair)","transition":"color 200ms ease"}, className: "scp0" },
+                    h("button", { key: "1|141.10mqriy", onClick: Vi.l?.open, style: {"all":"unset","boxSizing":"border-box","cursor":"pointer","display":"flex","alignItems":"center","gap":"14px","padding":"0 clamp(14px,3.7vw,22px)","fontFamily":"var(--mono)","fontSize":"13px","lineHeight":"18px","color":"var(--color-text)","boxShadow":"inset 0 1px 0 0 var(--hair)","transition":"color 200ms ease"}, className: "scp0" },
                       "\n          ",
                       h("span", { key: "1|13.1hy3wic", style: {"flex":"none","fontSize":"11px","letterSpacing":"0.08em","color":"var(--color-accent-700)","fontFeatureSettings":"'tnum' 1"} },
                         h(F,{key:0},"",I(Vi.l?.ghost,1),"")
@@ -2083,7 +2083,7 @@
                 "\n      ",
                 (V.linksEmpty ? h(F,{key:5},
                   "\n        ",
-                  h("p", { key: "1|53.1x4oqh7", style: {"margin":"0","display":"flex","alignItems":"center","padding":"0 22px","fontSize":"13px","lineHeight":"18px","color":"var(--color-neutral-600)","boxShadow":"inset 0 1px 0 0 var(--hair)"} },
+                  h("p", { key: "1|53.1x4oqh7", style: {"margin":"0","display":"flex","alignItems":"center","padding":"0 clamp(14px,3.7vw,22px)","fontSize":"13px","lineHeight":"18px","color":"var(--color-neutral-600)","boxShadow":"inset 0 1px 0 0 var(--hair)"} },
                     "nothing in the register stands next to this sheet yet"
                   ),
                   "\n      ") : null),
@@ -2091,17 +2091,17 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("button", { key: "47|24.1chn43n", className: "mod sheet-mod mod-ctl", "data-enter": "", "data-mod": "navBack", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navBack?.col ?? ""}; grid-row:${V.sheet?.navBack?.row ?? ""}; --d:${V.sheet?.navBack?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
+              h("button", { key: "47|24.1chn43n", className: "mod sheet-mod mod-ctl", "data-enter": "", "data-mod": "navBack", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navBack?.col ?? ""}; grid-row:${V.sheet?.navBack?.row ?? ""}; --d:${V.sheet?.navBack?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 clamp(14px,3.7vw,22px); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
                 h(F,{key:0},"← ",I(V.current?.backWord,1),"")
               ),
               "\n    ",
-              h("button", { key: "49|110.pyry3", className: "mod sheet-mod mod-ctl", "data-enter": "", "data-mod": "navNext", onClick: V.openNext, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navNext?.col ?? ""}; grid-row:${V.sheet?.navNext?.row ?? ""}; --d:${V.sheet?.navNext?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:11px 22px; text-align:right; color:var(--color-text); background:var(--color-bg);`) },
+              h("button", { key: "49|110.pyry3", className: "mod sheet-mod mod-ctl", "data-enter": "", "data-mod": "navNext", onClick: V.openNext, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navNext?.col ?? ""}; grid-row:${V.sheet?.navNext?.row ?? ""}; --d:${V.sheet?.navNext?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px); text-align:right; color:var(--color-text); background:var(--color-bg);`) },
                 "\n      ",
                 h("span", { key: "1|47.13c0pry", style: {"fontSize":"11px","lineHeight":"14px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   h(F,{key:0},"Next · ",I(V.next?.kickerWord,1)," ",I(V.next?.numeral,3),"")
                 ),
                 "\n      ",
-                h("span", { key: `next-${V.next?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"fontFamily":"var(--mono)","fontSize":"24px","lineHeight":"32px","fontWeight":"400","letterSpacing":"-0.03em"} },
+                h("span", { key: `next-${V.next?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"fontFamily":"var(--mono)","fontSize":"clamp(18px,4.6vw,24px)","lineHeight":"clamp(24px,6.2vw,32px)","fontWeight":"400","letterSpacing":"-0.03em"} },
                   h(F,{key:0},"",I(V.next?.title,1)," →")
                 ),
                 "\n    "
@@ -2467,8 +2467,9 @@
       ...this.routeState(this.parseRoute(location.hash)) };
   
     // Where every module of a Development sheet sits on the 22 column, 44px row drawing grid, as
-    // "start / end" grid lines. The wide table is the desk-width sheet; the narrow table is the same
-    // drawing stacked, chosen off state.narrow (window.innerWidth < 1000). Both are written as plain
+    // "start / end" grid lines. The wide table is the desk-width sheet, the narrow table is the same
+    // drawing stacked, and the phone table is that stack read again with nothing beside anything;
+    // which one is used comes off state.phone and state.narrow. All three are written as plain
     // literals so tools/check-sheet-grid.mjs can read them without running this file, and the template
     // binds sheet.<name>.col / .row rather than carrying any span of its own.
     // The plot-in stagger: 40ms per row of a module's starting row, so the sheet inks itself top to
@@ -2541,6 +2542,34 @@
       links:         { col: '1 / 23',  row: '86 / 88' },
       navBack:       { col: '1 / 23',  row: '89 / 91' },
       navNext:       { col: '1 / 23',  row: '92 / 94' },
+    };
+    // The phone reading of the same drawing. The narrow sheet is already a column, but a column with
+    // things beside each other in it: three spec cells to a row band is 110px a cell at 390, which is
+    // a label and half a value. Here every module takes the whole width and no two share a row band,
+    // which is the invariant tools/check-sheet-grid.mjs holds this table to and the whole of what the
+    // tier is for. The row counts are measured rather than chosen: the longest of the fourteen mono
+    // entries at 360px wide, with the phone type sizes the markup carries, and a row of slack over it.
+    SHEET_PHONE = {
+      back:          { col: '1 / 23',  row: '1 / 2' },
+      header:        { col: '1 / 23',  row: '3 / 10' },
+      ghost:         { col: '1 / 23',  row: '10 / 13' },
+      specSheet:     { col: '1 / 23',  row: '14 / 16' },
+      specRole:      { col: '1 / 23',  row: '16 / 18' },
+      specWith:      { col: '1 / 23',  row: '18 / 20' },
+      specStatus:    { col: '1 / 23',  row: '20 / 22' },
+      specRev:       { col: '1 / 23',  row: '22 / 24' },
+      hero:          { col: '1 / 23',  row: '25 / 35' },
+      heroCaption:   { col: '1 / 23',  row: '35 / 40' },
+      body1:         { col: '1 / 23',  row: '41 / 54' },
+      body2:         { col: '1 / 23',  row: '54 / 66' },
+      body3:         { col: '1 / 23',  row: '66 / 76' },
+      aside:         { col: '1 / 23',  row: '77 / 89' },
+      detailA:       { col: '1 / 23',  row: '90 / 102' },
+      detailB:       { col: '1 / 23',  row: '102 / 114' },
+      detailCaption: { col: '1 / 23',  row: '114 / 118' },
+      links:         { col: '1 / 23',  row: '119 / 121' },
+      navBack:       { col: '1 / 23',  row: '122 / 124' },
+      navNext:       { col: '1 / 23',  row: '125 / 129' },
     };
   
     // The desktop Development landing is the same drawing grid run full bleed: 22 columns across the
@@ -3384,7 +3413,7 @@
           .then((m) => { if (!this.dead) this.leafTuner = m.mount({ spreads: this.LEAF_SPREADS, pairs: this.LEAF_PAIRS, rerender: () => this.forceUpdate() }); })
           .catch((e) => console.error('leaves-dev', e));
         import('./grid-dev.js')
-          .then((m) => { if (!this.dead) this.gridTuner = m.mount({ tables: { SHEET_WIDE: this.SHEET_WIDE, SHEET_NARROW: this.SHEET_NARROW, LANDING_WIDE: this.LANDING_WIDE, LANDING_PINS: this.LANDING_PINS }, sheetTable: () => (this.state.narrow ? 'SHEET_NARROW' : 'SHEET_WIDE'), landingError: () => this.landingError, quiet: (on) => { this.devQuiet = on; if (on) this.stopTyping(); else this.forceUpdate(); }, rerender: () => { this.landingCache = null; this.forceUpdate(); } }); })
+          .then((m) => { if (!this.dead) this.gridTuner = m.mount({ tables: { SHEET_WIDE: this.SHEET_WIDE, SHEET_NARROW: this.SHEET_NARROW, SHEET_PHONE: this.SHEET_PHONE, LANDING_WIDE: this.LANDING_WIDE, LANDING_PINS: this.LANDING_PINS }, sheetTable: () => (this.state.phone ? 'SHEET_PHONE' : this.state.narrow ? 'SHEET_NARROW' : 'SHEET_WIDE'), landingError: () => this.landingError, quiet: (on) => { this.devQuiet = on; if (on) this.stopTyping(); else this.forceUpdate(); }, rerender: () => { this.landingCache = null; this.forceUpdate(); } }); })
           .catch((e) => console.error('grid-dev', e));
       }
       this.observeReveals(); this.mountTextEffects(); this.syncParchment(); this.syncHome(); this.syncPaper(); this.placeLeafText();
@@ -4395,7 +4424,7 @@
       //
       // The second is an entry that names one detail instead of the pair. The single figure takes the
       // columns the pair spanned, from detailA's first to detailB's last, on both sheets.
-      const place = this.state.narrow ? this.SHEET_NARROW : this.SHEET_WIDE;
+      const place = this.state.phone ? this.SHEET_PHONE : this.state.narrow ? this.SHEET_NARROW : this.SHEET_WIDE;
   
       const heroSpan = at(place.hero.row);
       const portrait = !this.state.narrow && current.heroW > 0 && current.heroH > current.heroW;

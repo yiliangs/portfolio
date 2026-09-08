@@ -231,6 +231,12 @@ tier('hintDisplay', 'phone', 'flex');
 // landing's tables are held to their own invariants in tools/check-landing-grid.mjs and the sheet's
 // in tools/check-sheet-grid.mjs; what is held here is only that the phone tier is what chooses.
 {
+  // anchored on the state it reads, since the class has another local called place
+  const place = /const place = (this\.state[^;]+);/.exec(logicSrc);
+  if (!place) fail('renderVals no longer chooses a placement table for the Development sheet');
+  else if (!/this\.state\.phone \? this\.SHEET_PHONE : this\.state\.narrow \? this\.SHEET_NARROW : this\.SHEET_WIDE/.test(place[1])) {
+    fail('the sheet does not choose its table phone first, then narrow, then wide: ' + place[1].trim());
+  }
   const stack = /const stackPlace = ([^;]+);/.exec(logicSrc);
   if (!stack) fail('renderVals no longer chooses a table for the stacked Development landing');
   else if (!/this\.state\.phone \? this\.LANDING_PHONE : this\.LANDING_NARROW/.test(stack[1])) {
