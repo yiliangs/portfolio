@@ -214,9 +214,14 @@
                             h(F,{key:0},"",I(Vi.lf?.kind,1),"")
                           ),
                           "\n              ",
-                          h("p", { key: "7|27.1o3ozxe", "aria-live": "polite", "data-leaf-detail": "", style: S(`position:absolute; top:100%; left:0; right:0; margin:8px -8px 0; padding:5px 8px 6px; box-sizing:border-box; background:color-mix(in srgb, var(--color-bg) 90%, transparent); backdrop-filter:blur(2px); pointer-events:none; font-family:var(--font-heading); font-style:italic; font-size:15px; line-height:21px; color:var(--color-neutral-700); white-space:pre-wrap; max-width:calc(30ch + 16px); opacity:${Vi.lf?.detailOpacity ?? ""}; transition:opacity 220ms ease;`) },
-                            h(F,{key:0},"",I(Vi.lf?.typed,1),""),
-                            h("span", { key: "1", "aria-hidden": "true", style: S(`display:inline-block; width:1px; height:0.9em; margin-left:2px; vertical-align:-0.1em; background:var(--color-accent); opacity:${Vi.lf?.caretOpacity ?? ""};`) })
+                          h("p", { key: "7|72.1yle4m", "aria-live": "polite", "data-leaf-detail": "", style: S(`position:absolute; top:100%; left:0; right:0; margin:8px -8px 0; padding:5px 8px 6px; box-sizing:border-box; background:color-mix(in srgb, var(--color-bg) 90%, transparent); backdrop-filter:blur(2px); pointer-events:none; font-family:var(--font-heading); font-style:italic; font-size:15px; line-height:21px; color:var(--color-neutral-700); white-space:pre-wrap; opacity:${Vi.lf?.detailOpacity ?? ""}; transition:opacity 220ms ease;`) },
+                            h("span", { key: "0|19.1a1ula3", "aria-hidden": "true", style: {"visibility":"hidden"} },
+                              h(F,{key:0},"",I(Vi.lf?.detailFull,1),"")
+                            ),
+                            h("span", { key: "1|27.1o3ozxe", style: {"position":"absolute","left":"8px","right":"8px","top":"5px"} },
+                              h(F,{key:0},"",I(Vi.lf?.typed,1),""),
+                              h("span", { key: "1", "aria-hidden": "true", style: S(`display:inline-block; width:1px; height:0.9em; margin-left:2px; vertical-align:-0.1em; background:var(--color-accent); opacity:${Vi.lf?.caretOpacity ?? ""};`) })
+                            )
                           ),
                           "\n            "
                         ),
@@ -320,9 +325,14 @@
                             h(F,{key:0},"",I(Vi.lf?.kind,1),"")
                           ),
                           "\n              ",
-                          h("p", { key: "7|27.1o3ozxe", "aria-live": "polite", "data-leaf-detail": "", style: S(`position:absolute; top:100%; left:0; right:0; margin:8px -8px 0; padding:5px 8px 6px; box-sizing:border-box; background:color-mix(in srgb, var(--color-bg) 90%, transparent); backdrop-filter:blur(2px); pointer-events:none; font-family:var(--font-heading); font-style:italic; font-size:15px; line-height:21px; color:var(--color-neutral-700); white-space:pre-wrap; max-width:calc(30ch + 16px); opacity:${Vi.lf?.detailOpacity ?? ""}; transition:opacity 220ms ease;`) },
-                            h(F,{key:0},"",I(Vi.lf?.typed,1),""),
-                            h("span", { key: "1", "aria-hidden": "true", style: S(`display:inline-block; width:1px; height:0.9em; margin-left:2px; vertical-align:-0.1em; background:var(--color-accent); opacity:${Vi.lf?.caretOpacity ?? ""};`) })
+                          h("p", { key: "7|72.1yle4m", "aria-live": "polite", "data-leaf-detail": "", style: S(`position:absolute; top:100%; left:0; right:0; margin:8px -8px 0; padding:5px 8px 6px; box-sizing:border-box; background:color-mix(in srgb, var(--color-bg) 90%, transparent); backdrop-filter:blur(2px); pointer-events:none; font-family:var(--font-heading); font-style:italic; font-size:15px; line-height:21px; color:var(--color-neutral-700); white-space:pre-wrap; opacity:${Vi.lf?.detailOpacity ?? ""}; transition:opacity 220ms ease;`) },
+                            h("span", { key: "0|19.1a1ula3", "aria-hidden": "true", style: {"visibility":"hidden"} },
+                              h(F,{key:0},"",I(Vi.lf?.detailFull,1),"")
+                            ),
+                            h("span", { key: "1|27.1o3ozxe", style: {"position":"absolute","left":"8px","right":"8px","top":"5px"} },
+                              h(F,{key:0},"",I(Vi.lf?.typed,1),""),
+                              h("span", { key: "1", "aria-hidden": "true", style: S(`display:inline-block; width:1px; height:0.9em; margin-left:2px; vertical-align:-0.1em; background:var(--color-accent); opacity:${Vi.lf?.caretOpacity ?? ""};`) })
+                            )
                           ),
                           "\n            "
                         ),
@@ -3624,6 +3634,7 @@
       const leaves = stage.map((p, k) => { const real = own.includes(p), pi = real ? projects.indexOf(p) : -1 - k; const on = real && this.state.typingKey === 'leaf-' + pi; const pos = gutters[k % 2 === 0 ? 'left' : 'right'][Math.floor(k / 2)];
         const detail = real ? p.subtitle + '\n' + p.role + ' · ' + p.status + ' · pp. ' + p.pages : '';
         const typed = on ? detail.slice(0, this.state.typed || 0) : '';
+        // the finished line, kept behind the typed one so the box is its final size from the start
         // the plate is the chapter's hero, the same image the chapter opens on and the leaf morphs
         // into; a chapter without one falls back to the position's stock photograph.
         // The sepia mat belongs to those stock photographs: a real render is shown as it is.
@@ -3658,7 +3669,7 @@
           // cell the way every other part of the collage does.
           textFlex: beside ? '0 0 auto' : '1 1 auto',
           alignItems: declared ? (beside ? 'flex-end' : (pos.side === 'left' ? 'flex-start' : 'flex-end')) : pos.alignItems,
-          idx: pi, cardNo: k + 1, typed, kicker: real ? 'Chapter ' + p.numeral + ' · ' + p.year : 'Forthcoming', detailDisplay: on ? 'block' : 'none', detailOpacity: on ? '1' : '0', caretOpacity: on && typed.length < detail.length ? '1' : '0', morphName: real ? 'row-' + k : 'leaf-' + k, figNo: real ? p.figNo : 'x' + k, placeholder: real ? p.placeholder : 'Plate: forthcoming', coverSlotId: real ? 'cover-' + pi : 'cover-next-' + k, open: real ? p.open : () => {}, zIndex: on ? 30 : Math.max(1, 12 - k), origin: (pos.selfX === 'start' ? 'left ' : 'right ') + (pos.selfY === 'start' ? 'top' : pos.selfY === 'end' ? 'bottom' : 'center'), cursor: real ? 'pointer' : 'default', lift: on ? '-10px' : '0px', scale: on ? '1.06' : '1', shadow: on ? '0 24px 48px -20px rgba(32,31,29,0.35), 0 2px 6px rgba(32,31,29,0.08)' : '0 8px 24px -16px rgba(32,31,29,0.25)',
+          idx: pi, cardNo: k + 1, typed, detailFull: detail, kicker: real ? 'Chapter ' + p.numeral + ' · ' + p.year : 'Forthcoming', detailDisplay: on ? 'block' : 'none', detailOpacity: on ? '1' : '0', caretOpacity: on && typed.length < detail.length ? '1' : '0', morphName: real ? 'row-' + k : 'leaf-' + k, figNo: real ? p.figNo : 'x' + k, placeholder: real ? p.placeholder : 'Plate: forthcoming', coverSlotId: real ? 'cover-' + pi : 'cover-next-' + k, open: real ? p.open : () => {}, zIndex: on ? 30 : Math.max(1, 12 - k), origin: (pos.selfX === 'start' ? 'left ' : 'right ') + (pos.selfY === 'start' ? 'top' : pos.selfY === 'end' ? 'bottom' : 'center'), cursor: real ? 'pointer' : 'default', lift: on ? '-10px' : '0px', scale: on ? '1.06' : '1', shadow: on ? '0 24px 48px -20px rgba(32,31,29,0.35), 0 2px 6px rgba(32,31,29,0.08)' : '0 8px 24px -16px rgba(32,31,29,0.25)',
           hover: () => { if (real) this.startTyping('leaf-' + pi, detail.length, { hovered: pi }); }, unhover: () => { this.stopTyping(); } }; });
       // The morph engine pairs an outgoing element with an incoming one by matching data-shape and
       // data-morph names, so every name is a key in a shared namespace and two namespaces must never
