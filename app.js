@@ -2913,8 +2913,11 @@
       clone.querySelectorAll('[data-tr]').forEach((el) => { el.textContent = el.textContent; });
       clone.style.willChange = 'opacity'; clone.style.contain = 'paint';
       clone.querySelectorAll('[data-morph]').forEach((el) => { if (out.has(el.dataset.morph)) el.style.opacity = '0'; });
+      // The slide is added to the leaf's own transform rather than put in its place: that transform carries the
+      // tuned offset and the parallax, and an animation that replaced it would start the leaf from its bare grid
+      // cell, a jump of the whole offset on the first frame (and the same jump back on the last, on the way in)
       if (this.slideLeaves) clone.querySelectorAll('[data-leaf]').forEach((el, i) => { const dir = el.dataset.leaf === 'left' ? -1 : 1; el.style.animation = 'none'; el.style.transition = 'none';
-        el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(' + dir * 110 + 'vw)' }], { duration: 640, delay: (i % 3) * 60, easing: 'cubic-bezier(.5,0,.85,.2)', fill: 'forwards' }).id = 'leaf-slide'; });
+        el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(' + dir * 110 + 'vw)' }], { duration: 640, delay: (i % 3) * 60, easing: 'cubic-bezier(.5,0,.85,.2)', fill: 'forwards', composite: 'add' }).id = 'leaf-slide'; });
       wrap.appendChild(clone); out.snapshot = wrap;
       const layer = document.createElement('div');
       layer.style.cssText = 'position:fixed; inset:0; z-index:3; pointer-events:none; overflow:hidden;';
@@ -2936,8 +2939,11 @@
       main.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 520, delay: 160, easing: 'ease', fill: 'backwards' });
       // named, so placeLeafText can tell a leaf still flying in from everything else the page has running and wait it
       // out rather than measuring a caption where the slide happens to have carried it (see placeLeafText)
+      // Added to the leaf's own transform, as the outgoing slide is (see captureTexts). Replacing it slid every leaf
+      // to its bare grid cell and let go there, and the tuned offset then arrived as a second move on top of the
+      // slide: the collage was seen to land and then shift once more
       if (this.slideLeaves) main.querySelectorAll('[data-leaf]').forEach((el, i) => { const dir = el.dataset.leaf === 'left' ? -1 : 1;
-        el.animate([{ transform: 'translateX(' + dir * 110 + 'vw)' }, { transform: 'translateX(0)' }], { duration: 760, delay: 220 + (i % 3) * 70, easing: 'cubic-bezier(.15,.8,.2,1)', fill: 'backwards' }).id = 'leaf-slide'; });
+        el.animate([{ transform: 'translateX(' + dir * 110 + 'vw)' }, { transform: 'translateX(0)' }], { duration: 760, delay: 220 + (i % 3) * 70, easing: 'cubic-bezier(.15,.8,.2,1)', fill: 'backwards', composite: 'add' }).id = 'leaf-slide'; });
       const jobs = [], hidden = [], seen = new Set();
       main.querySelectorAll('[data-morph]').forEach((el) => {
         const name = el.dataset.morph, rc0 = el.getBoundingClientRect(); if (!rc0.width) return;
