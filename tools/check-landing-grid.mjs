@@ -13,13 +13,14 @@
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
 import { placeLanding, PLATE_VOCAB, FIRST_PLATE } from '../landing-grid.js';
-import { monoEntries } from './dc-data.mjs';
+import { monoEntries, slugOf, readKeyedTable } from './dc-data.mjs';
 
 const SRC = 'design/Portfolio.dc.html';
 const COLUMNS = 22; // grid lines run 1..COLUMNS+1
 const HEADER = 57; // the sticky header, so the first visible row starts under it
 const ROW = 44;
-const PLATES = monoEntries().length; // the entries that route to the mono register
+const SLUGS = monoEntries().map(slugOf); // the plates in the order the register lists them
+const PLATES = SLUGS.length; // the entries that route to the mono register
 
 const failures = [];
 const fail = (msg) => failures.push(msg);
@@ -103,6 +104,28 @@ if (wide) {
   }
 }
 
+// ---------------------------------------------------------------- the pins
+
+// A plate is normally drawn onto a free cell, and LANDING_PINS is the table that says which plates
+// are not: an entry named there, by the slug its address uses, takes those cells exactly and the draw
+// arranges what is left around it. Two things about a pin are worth guarding here rather than in the
+// browser. A pin names an entry, and an entry can be renamed or removed, at which point the pin
+// silently stops applying; and a pin takes cells away from the draw, so a set of them can leave the
+// remaining plates nowhere to go, which the page shows only as a landing with no plates on it.
+let shipped = {};
+try {
+  const pins = readKeyedTable('LANDING_PINS', logicSrc);
+  for (const [slug, at] of Object.entries(pins)) {
+    const i = SLUGS.indexOf(slug);
+    if (i < 0) { fail('LANDING_PINS pins ' + slug + ', which is not a Development entry: the pin applies to nothing'); continue; }
+    const c = span(at.col), r = span(at.row);
+    if (!c || !r) { fail('LANDING_PINS.' + slug + ' has a span this check cannot read: ' + JSON.stringify(at)); continue; }
+    shipped[i] = { col: c[0], row: r[0], w: c[1] - c[0], h: r[1] - r[0] };
+  }
+} catch (e) {
+  fail('LANDING_PINS cannot be read: ' + e.message);
+}
+
 // ---------------------------------------------------------------- the placement itself
 
 const VIEWPORTS = [[1000, 700], [1280, 720], [1366, 768], [1440, 900], [1920, 1080], [2560, 1440]];
@@ -135,7 +158,7 @@ for (const [w, h] of VIEWPORTS) {
   for (const stRows of STATEMENT_ROWS) {
   reserved = [cornerAt(stRows)];
   for (const seed of SEEDS) {
-    const args = { seed, cols: COLUMNS, rows, count: PLATES, reserved, contact: contactSpec };
+    const args = { seed, cols: COLUMNS, rows, count: PLATES, reserved, contact: contactSpec, pins: shipped };
     let out;
     try { out = placeLanding(args); } catch (e) {
       fail(w + 'x' + h + ' statement ' + stRows + ' rows, seed ' + seed + ': the placement gave up (' + e.message + ')');
@@ -143,6 +166,16 @@ for (const [w, h] of VIEWPORTS) {
     }
     checked++;
     const at = w + 'x' + h + ' statement ' + stRows + ' rows, seed ' + seed + ': ';
+    // a pin is a claim on cells, so a pinned plate that came back anywhere else is the whole point of
+    // pinning gone, not a near miss
+    for (const [i, p] of Object.entries(shipped)) {
+      const got = out.plates[i];
+      if (!got) { fail(at + 'plate ' + i + ' is pinned and was not placed at all'); continue; }
+      if (got.col !== p.col || got.row !== p.row || got.w !== p.w || got.h !== p.h) {
+        fail(at + SLUGS[i] + ' is pinned to ' + p.col + ',' + p.row + ' ' + p.w + 'x' + p.h + ' and came back at ' + got.col + ',' + got.row + ' ' + got.w + 'x' + got.h);
+      }
+      if (!got.pinned) fail(at + SLUGS[i] + ' came back from the draw rather than from its pin');
+    }
     if (out.rows < rows) fail(at + 'the placement returned fewer rows (' + out.rows + ') than the screen shows (' + rows + ')');
     worst = Math.max(worst, out.rows - rows);
     if (out.plates.length !== PLATES) fail(at + 'placed ' + out.plates.length + ' plates, not ' + PLATES);
@@ -176,6 +209,86 @@ for (const [w, h] of VIEWPORTS) {
     const again = placeLanding(args);
     if (JSON.stringify(again) !== JSON.stringify(out)) fail(at + 'the placement is not deterministic: two runs of the same seed differ');
   }
+  }
+}
+
+// ---------------------------------------------------------------- pinning, exercised
+
+// LANDING_PINS ships empty, so the sweep above proves nothing about pinning until the day someone
+// pins a plate. These run the pin path on purpose: what a pin is supposed to do, and what the four
+// ways of writing a bad one are supposed to say. The last of them is the property the tuning panel's
+// "pin all" leans on, that claiming every plate exactly where the draw has just left it changes
+// nothing, which is what lets a person compose against ground that holds still.
+{
+  const rows = Math.max(6, Math.floor((900 - HEADER) / ROW));
+  // boxes() reads the corner block off the same module-level `reserved` the sweep above was moving,
+  // so this block sets it rather than keeping a second one: comparing a placement against a corner it
+  // was not placed around reports touches that are not there
+  const held = [cornerAt(12)];
+  reserved = held;
+  const run = (pins, note) => {
+    const args = { seed: 7, cols: COLUMNS, rows, count: PLATES, reserved: held, contact: contactSpec, pins };
+    try { return placeLanding(args); } catch (e) { fail('pinning, ' + note + ': ' + e.message); return null; }
+  };
+  const refuses = (pins, note, needle) => {
+    try {
+      placeLanding({ seed: 7, cols: COLUMNS, rows, count: PLATES, reserved: held, contact: contactSpec, pins });
+      fail('pinning, ' + note + ': the placement took it without complaint');
+    } catch (e) {
+      if (!e.message.includes(needle)) fail('pinning, ' + note + ': said "' + e.message + '", which does not mention ' + JSON.stringify(needle));
+    }
+  };
+
+  // a pin is honoured exactly, and the draw arranges the rest around it
+  const two = { 2: { col: 2, row: 15, w: 3, h: 3 }, 5: { col: 8, row: 15, w: 4, h: 3 } };
+  const out = run(two, 'two plates pinned low on the sheet');
+  if (out) {
+    for (const [i, p] of Object.entries(two)) {
+      const got = out.plates[i];
+      if (!got || got.col !== p.col || got.row !== p.row || got.w !== p.w || got.h !== p.h || !got.pinned) {
+        fail('pinning: plate ' + i + ' was pinned to ' + p.col + ',' + p.row + ' and came back as ' + JSON.stringify(got));
+      }
+    }
+    if (out.plates.filter(Boolean).length !== PLATES) fail('pinning: the draw placed ' + out.plates.filter(Boolean).length + ' of ' + PLATES + ' plates around two pins');
+    const all = boxes(out);
+    for (let i = 0; i < all.length; i++) {
+      for (let j = i + 1; j < all.length; j++) {
+        const [an, a] = all[i], [bn, b] = all[j];
+        if (an === 'reserved' && bn === 'reserved') continue;
+        if (overlaps(a, b)) fail('pinning: ' + an + ' and ' + bn + ' lie over the same cells');
+        else if (!gapped(a, b)) fail('pinning: ' + an + ' and ' + bn + ' touch with no empty cell between them');
+      }
+    }
+  }
+
+  // the four ways of writing a pin nobody can draw. Each has to be named rather than left to grow
+  // the sheet eighty rows and give up, because the landing renders no plates when it does and that
+  // looks like a page that failed to load
+  refuses({ 2: { col: 2, row: 15, w: 3, h: 3 }, 5: { col: 3, row: 16, w: 3, h: 3 } }, 'two pins over the same cells', 'claim the same cells');
+  refuses({ 2: { col: 2, row: 15, w: 3, h: 3 }, 5: { col: 5, row: 15, w: 3, h: 3 } }, 'two pins touching', 'claim the same cells');
+  refuses({ 3: { col: 2, row: 2, w: 3, h: 3 } }, 'a pin on the statement block', 'statement block');
+  refuses({ 99: { col: 2, row: 15, w: 3, h: 3 } }, 'a pin naming a plate that is not there', 'and there are');
+  refuses({ 2: { col: 21, row: 15, w: 4, h: 3 } }, 'a pin off the right edge', 'off the ' + COLUMNS + ' column grid');
+
+  // a pin below the sheet grows it, and the contact band stays on the last row
+  const deep = run({ 4: { col: 2, row: rows + 12, w: 3, h: 3 } }, 'a pin below the fold');
+  if (deep) {
+    if (deep.rows < rows + 14) fail('pinning: a pin at row ' + (rows + 12) + ' left the sheet ' + deep.rows + ' rows tall, with no room for it and the contact band');
+    if (deep.contact && deep.contact.row !== deep.rows) fail('pinning: the contact band is on row ' + deep.contact.row + ', not the last row (' + deep.rows + ')');
+  }
+
+  // pin all: every plate claimed where the draw left it draws the same sheet back
+  const drawn = run({}, 'nothing pinned');
+  if (drawn) {
+    const every = {};
+    drawn.plates.forEach((p, i) => { every[i] = { col: p.col, row: p.row, w: p.w, h: p.h }; });
+    const again = run(every, 'every plate pinned where it was drawn');
+    if (again) {
+      const shape = (o) => JSON.stringify(o.plates.map((p) => [p.col, p.row, p.w, p.h]));
+      if (shape(again) !== shape(drawn)) fail('pinning: claiming every plate where the draw left it moved the composition');
+      if (again.rows !== drawn.rows) fail('pinning: claiming every plate changed the sheet from ' + drawn.rows + ' rows to ' + again.rows);
+      if (!again.plates.every((p) => p.pinned)) fail('pinning: a plate pinned to its own cell still came back from the draw');
+    }
   }
 }
 
@@ -325,4 +438,5 @@ if (failures.length) {
 }
 console.log('check-landing-grid: ' + checked + ' placements over ' + VIEWPORTS.length + ' viewports, ' +
   STATEMENT_ROWS.length + ' statement heights and ' + SEEDS.length + ' seeds hold the grid (worst growth ' +
-  worst + ' rows), and both landings are in the template');
+  worst + ' rows), ' + Object.keys(shipped).length + ' of ' + PLATES + ' plates pinned, a pin is honoured to the cell ' +
+  'and five ways of writing a bad one are refused by name, and both landings are in the template');

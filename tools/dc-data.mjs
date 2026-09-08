@@ -56,6 +56,24 @@ export function readTable(name, logicSrc = readLogicSource()) {
   return table;
 }
 
+// A plain object or array literal assigned to a class field, evaluated on its own. readTable knows
+// the shape of the placement tables; this one is for a literal whose shape is its own business, such
+// as the LINKS adjacency the register's graph closes over.
+export function readLiteral(name, logicSrc = readLogicSource()) {
+  const m = new RegExp('\\n  ' + name + ' = ([\\[{])').exec(logicSrc);
+  if (!m) throw new Error('the logic class has no ' + name + ' literal');
+  const open = m.index + m[0].length - 1;
+  const close = m[1] === '[' ? '\n  ];' : '\n  };';
+  const end = logicSrc.indexOf(close, open);
+  if (end < 0) throw new Error(name + ' is not closed with "' + close.trim() + '" so it cannot be read');
+  const literal = logicSrc.slice(open, end + close.length - 1);
+  try {
+    return new Function('return ' + literal)();
+  } catch (e) {
+    throw new Error(name + ' is not a plain literal this reader can evaluate: ' + e.message);
+  }
+}
+
 // A plain numeric field of the logic class, so a rule written there can be read back rather than
 // copied into a check. The value is an expression, not always a literal.
 export function readNumber(name, logicSrc = readLogicSource()) {
@@ -70,3 +88,27 @@ export function readNumber(name, logicSrc = readLogicSource()) {
 export const registerOf = (entry) => (/Research|Writing|Essay/.test(entry.kind) ? 'serif' : 'mono');
 
 export const monoEntries = (entries = readEntries()) => entries.filter((d) => registerOf(d) === 'mono');
+
+// slugOf(i) in the logic class, kept as one line here for the same reason registerOf is: the address
+// an entry answers to is also the key LANDING_PINS names a pinned plate by, so a check that reads the
+// pins has to spell a slug the way the page spells it.
+export const slugOf = (entry) => entry.id ||
+  entry.title.toLowerCase().replace(/[’']/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+// A table whose keys may be quoted, which is what a slug needs. LANDING_PINS is the only one, and it
+// is allowed to be empty: nothing pinned is the state the register ships in.
+export function readKeyedTable(name, logicSrc = readLogicSource()) {
+  const at = logicSrc.indexOf('  ' + name + ' = {');
+  if (at < 0) throw new Error('the logic class has no ' + name + ' table');
+  const end = logicSrc.indexOf('\n  };', at);
+  if (end < 0) throw new Error(name + ' is not closed with "  };" so it cannot be read');
+  const entry = /^\s*(?:([A-Za-z_$][\w$]*)|'([^']*)'):\s*\{\s*col:\s*'([^']*)',\s*row:\s*'([^']*)'\s*\},?\s*$/;
+  const table = {};
+  for (const line of logicSrc.slice(at, end).split('\n').slice(1)) {
+    if (!line.trim()) continue;
+    const m = entry.exec(line);
+    if (!m) throw new Error(name + ' has a line this reader cannot read, so a pin could hide in it: ' + line.trim());
+    table[m[1] || m[2]] = { col: m[3], row: m[4] };
+  }
+  return table;
+}
