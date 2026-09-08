@@ -222,10 +222,12 @@ for (const d of mono) {
   }
 }
 
-// The placeholder path has to stay live: if every entry ended up with a picture the slots would
-// never be exercised and a broken placeholder would ship unnoticed.
-if (!mono.some((d) => PLATE_FIELDS.every((f) => !d[f]))) {
-  fail('every Development entry now names a plate, so nothing exercises the placeholder slot any more');
+// The placeholder path has to stay live, or a broken placeholder would ship unnoticed. This used to
+// ask for one entry naming no plate at all, which stopped meaning anything once every Development
+// sheet took a hero: the placeholder is still drawn, on the detail plates of every sheet that names
+// no detail. So the guard reads the slots rather than the entries, and keeps saying what it means.
+if (!mono.some((d) => PLATE_FIELDS.some((f) => !d[f]))) {
+  fail('every plate slot in the Development register now names a picture, so nothing draws the placeholder');
 }
 
 // ---------------------------------------------------------------- the plates cut to their picture
