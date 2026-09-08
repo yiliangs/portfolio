@@ -49,7 +49,7 @@
   // ---- template ----------------------------------------------------------
   function tpl(V) {
     return [
-      h("div", { key: "0", ref: V.rootRef, style: S(`position:relative; min-height:100vh; background:var(--color-bg); color:var(--color-text);  font-family:var(--r-body); font-size:17px; line-height:28px; --mono:'Geist Mono', ui-monospace, monospace; --sig-ok:#6cc48a; --sig-warn:#e0b04f; --sig-info:#79aed1; --font-heading:'Newsreader', 'Cormorant Garamond', Georgia, serif; --deco:'Cinzel', 'Cormorant Garamond', serif; --r-body:${V.rBody ?? ""}; --r-align:${V.rAlign ?? ""}; --r-tracking:${V.rTracking ?? ""}; --color-bg:${V.tBg ?? ""}; --color-surface:${V.tSurface ?? ""}; --color-text:${V.tText ?? ""}; --color-accent:${V.tAccent ?? ""}; --color-accent-600:${V.tAccent600 ?? ""}; --color-accent-700:${V.tAccent700 ?? ""}; --color-accent-800:${V.tAccent800 ?? ""}; --color-accent-100:${V.tAccent100 ?? ""}; --color-divider:${V.tDivider ?? ""}; --color-neutral-100:${V.tN100 ?? ""}; --color-neutral-400:${V.tN400 ?? ""}; --color-neutral-500:${V.tN500 ?? ""}; --color-neutral-600:${V.tN600 ?? ""}; --color-neutral-700:${V.tN700 ?? ""}; --color-neutral-800:${V.tN800 ?? ""}; --hair:color-mix(in srgb, var(--color-text) 16%, transparent); --frame:color-mix(in srgb, var(--color-text) 55%, transparent);`) },
+      h("div", { key: "0", ref: V.rootRef, style: S(`position:relative; min-height:100vh; background:var(--color-bg); color:var(--color-text);  font-family:var(--r-body); font-size:17px; line-height:28px; --s:1; --mono:'Geist Mono', ui-monospace, monospace; --sig-ok:#6cc48a; --sig-warn:#e0b04f; --sig-info:#79aed1; --font-heading:'Newsreader', 'Cormorant Garamond', Georgia, serif; --deco:'Cinzel', 'Cormorant Garamond', serif; --r-body:${V.rBody ?? ""}; --r-align:${V.rAlign ?? ""}; --r-tracking:${V.rTracking ?? ""}; --color-bg:${V.tBg ?? ""}; --color-surface:${V.tSurface ?? ""}; --color-text:${V.tText ?? ""}; --color-accent:${V.tAccent ?? ""}; --color-accent-600:${V.tAccent600 ?? ""}; --color-accent-700:${V.tAccent700 ?? ""}; --color-accent-800:${V.tAccent800 ?? ""}; --color-accent-100:${V.tAccent100 ?? ""}; --color-divider:${V.tDivider ?? ""}; --color-neutral-100:${V.tN100 ?? ""}; --color-neutral-400:${V.tN400 ?? ""}; --color-neutral-500:${V.tN500 ?? ""}; --color-neutral-600:${V.tN600 ?? ""}; --color-neutral-700:${V.tN700 ?? ""}; --color-neutral-800:${V.tN800 ?? ""}; --hair:color-mix(in srgb, var(--color-text) 16%, transparent); --frame:color-mix(in srgb, var(--color-text) 55%, transparent);`) },
         "\n\n\n  ",
         "\n  ",
         "\n  ",
@@ -178,10 +178,10 @@
         "\n  ",
         (V.isHeroWide ? h(F,{key:16},
           "\n  ",
-          h("main", { key: "writing", "data-screen-label": "Research", style: {"maxWidth":"none","margin":"0","padding":"0 clamp(20px,3vw,56px)","backgroundImage":"radial-gradient(color-mix(in srgb, var(--color-text) 16%, transparent) 1px, transparent 1.1px)","backgroundSize":"44px 44px","backgroundPosition":"22px 22px"} },
+          h("main", { key: "writing", "data-screen-label": "Research", style: S(`--s:${V.landingZoom ?? ""}; zoom:var(--s); max-width:none; margin:0; padding:0 clamp(20px,3vw,56px); background-image:radial-gradient(color-mix(in srgb, var(--color-text) 16%, transparent) 1px, transparent 1.1px); background-size:44px 44px; background-position:22px 22px;`) },
             "\n\n    ",
             "\n    ",
-            h("section", { key: "2", ref: V.heroRef, style: {"position":"relative","textAlign":"center","margin":"0 calc(-1 * clamp(20px,3vw,56px))","padding":"28px clamp(20px,3vw,56px) 96px","perspective":"1200px","overflow":"hidden","height":"calc(100vh - 57px)","boxSizing":"border-box","display":"grid","gridTemplateColumns":"minmax(280px,1fr) minmax(0,900px) minmax(280px,1fr)","gap":"0 40px","alignItems":"center"} },
+            h("section", { key: "2", ref: V.heroRef, style: {"position":"relative","textAlign":"center","margin":"0 calc(-1 * clamp(20px,3vw,56px))","padding":"28px clamp(20px,3vw,56px) 96px","perspective":"1200px","overflow":"hidden","height":"calc((100vh - 57px) / var(--s))","boxSizing":"border-box","display":"grid","gridTemplateColumns":"minmax(280px,1fr) minmax(0,900px) minmax(280px,1fr)","gap":"0 40px","alignItems":"center"} },
               "\n      ",
               "\n      ",
               "\n      ",
@@ -627,9 +627,9 @@
           "\n  ",
           (V.isLandingWide ? h(F,{key:5},
             "\n  ",
-            h("main", { key: "tooling", "data-screen-label": "Development", style: {"maxWidth":"none","margin":"0","padding":"0","fontFamily":"var(--mono)","fontSize":"14px","lineHeight":"22px"} },
+            h("main", { key: "tooling", "data-screen-label": "Development", style: S(`--s:${V.landingZoom ?? ""}; zoom:var(--s); max-width:none; margin:0; padding:0; font-family:var(--mono); font-size:14px; line-height:22px;`) },
               "\n    ",
-              h("div", { key: "1", style: {"display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","position":"relative","minHeight":"calc(100vh - 57px)","boxSizing":"border-box","borderRight":"1px solid var(--hair)","borderBottom":"1px solid var(--hair)","backgroundImage":"linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
+              h("div", { key: "1", style: {"display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","position":"relative","minHeight":"calc((100vh - 57px) / var(--s))","boxSizing":"border-box","borderRight":"1px solid var(--hair)","borderBottom":"1px solid var(--hair)","backgroundImage":"linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
                 "\n\n    ",
                 "\n    ",
                 h("div", { key: "2", ref: V.contentsRef, style: {"gridColumn":"1 / 2","gridRow":"1 / 2","height":"0"} }),
@@ -2454,12 +2454,43 @@
     // laid across the page, and what they need is width rather than a large width, so a portrait
     // tablet stacks them for the same reason a phone does. Everything else reads the two terms above.
     isPortrait(w = window.innerWidth, h = window.innerHeight) { return h > w; }
+    // How far back the two wide compositions are set from the page they were drawn for. Both are
+    // one-screen drawings in fixed pixels: the collage lays a 900px title column between two 280px
+    // margins and hangs its leaves off offsets tuned by hand, the Development landing rules 22 columns
+    // and 44px rows and pins its statement to eight of them. Neither carries a term that follows the
+    // width, so between the stacked tier and desk width the drawing is simply larger than the page it
+    // is on: at 1280 by 720 the Canti-Lever House leaf lands on the headline, the Graphic Statics leaf
+    // on the bio, and the Development sheet stands twice the height of the screen it is meant to be.
+    //
+    // The answer the drawings ask for is to be read smaller rather than redrawn, so the root is scaled
+    // and every module keeps its place and its proportion. 1920 by 1080 is the reference because it is
+    // the page both compositions were composed on and the one they still read correctly at; a smaller
+    // screen is set back by whichever of its two terms ran out first, which puts the drawing in the
+    // reference's own pixels whichever edge bound. SCALE_MIN is where the type stops being worth
+    // reading: at 0.6 the landing's 14px mono is drawn at 8.4px, and a page that would ask for less
+    // than that is close enough to STACK_W to be stacked instead, which is a composition rather than a
+    // smaller copy of one. A stacked page is never scaled for the same reason: the narrow tiers are
+    // drawn to the width they are given.
+    //
+    // Rounded to three places because the factor is written into a style attribute and read back out
+    // of it by every length inside the root that has to stand for the page rather than for the
+    // drawing; a thousandth of the reference is a pixel, which is as fine as any of that can be.
+    SCALE_REF_W = 1920;
+    SCALE_REF_H = 1080;
+    SCALE_MIN = 0.6;
+    landingScale(w = window.innerWidth, h = window.innerHeight) { return this.isStacked(w, h) ? 1 : Math.round(1000 * Math.max(this.SCALE_MIN, Math.min(1, w / this.SCALE_REF_W, h / this.SCALE_REF_H))) / 1000; }
+    // The other half of that fact, for the code that measures the page. Under a zoomed root there are
+    // two pixel spaces: getBoundingClientRect and event.clientX/Y answer in the viewport's, while
+    // offsetWidth, scrollHeight, computed lengths and anything written into a style inside the root are
+    // in the drawing's own. This is the factor between them, read off the element rather than out of
+    // state so it is the right one for whichever root the element stands in, and 1 everywhere else.
+    zoomOf(el) { return (el && el.currentCSSZoom) || 1; }
     // narrow and landingRows decide which composition renders and how many rows it is drawn on, so they
     // are read from the window here rather than waiting for componentDidMount's first onResize: the first
     // paint would otherwise be the wrong one, replaced a frame later. The address bar is read the same
     // way, so a deep link paints the view it names, not the home first.
     state = { view: 'home', page: 'writing', cvReg: 'serif', idx: 10, hovered: 10, tab: { left: 0, width: 0 },
-      narrow: this.isStacked(), landingRows: this.visibleRows(), phone: this.isPhone(), portrait: this.isPortrait(),
+      narrow: this.isStacked(), landingRows: this.visibleRows(), phone: this.isPhone(), portrait: this.isPortrait(), scale: this.landingScale(),
       // the description's clamp, in lines, and whether it was cut: both read off the page after the
       // first layout, since 0 lines means "not measured yet" and the module's overflow guard holds the
       // one frame before the answer arrives
@@ -2696,8 +2727,13 @@
     // one seed per page load, kept on the instance: hovering a plate, scrolling, or leaving for another
     // tab and coming back all re-render the same composition. Only the row count can redraw it.
     landingSeed = (Math.random() * 4294967296) >>> 0;
-    // the rows a screen shows under the 57px header; the sheet starts here and grows from it
-    visibleRows() { return Math.max(6, Math.floor((window.innerHeight - 57) / 44)); }
+    // the rows a screen shows under the 57px header; the sheet starts here and grows from it. Counted
+    // in the sheet's own pixels rather than the window's, because a scaled landing draws its 44px rows
+    // smaller and a screen therefore holds more of them (see landingScale). The header is not scaled,
+    // so it is taken off first, in the window's pixels, and the remainder converted. Counted off the
+    // bare window instead, the sheet would rule a screen's worth of grid and close its contact band
+    // part of the way up it.
+    visibleRows() { return Math.max(6, Math.floor((window.innerHeight - 57) / this.landingScale() / 44)); }
     // The statement's module is a fixed eight rows, so what is measured here is the type rather than
     // the grid: how many lines of the description fit in the room the module has left after the kicker,
     // the title and the byline, all of which are set before it and none of which may be cut. The
@@ -2723,8 +2759,14 @@
       const cs = getComputedStyle(el), ps = getComputedStyle(p);
       const by = el.querySelector('[data-landing-byline]');
       const bs = by && getComputedStyle(by);
-      const below = by ? by.getBoundingClientRect().height + parseFloat(bs.marginTop) : 0;
-      const room = (box.bottom - parseFloat(cs.paddingBottom)) - p.getBoundingClientRect().top - below;
+      // The three rects are in the viewport's pixels and the three lengths in the module's own, which
+      // on a scaled landing are not the same pixel (see zoomOf). The distance is taken in the
+      // viewport's, converted once, and the lengths applied to it there, since the line height it is
+      // about to be divided by is one of them.
+      const z = this.zoomOf(el);
+      const below = by ? by.getBoundingClientRect().height : 0;
+      const room = (box.bottom - p.getBoundingClientRect().top - below) / z
+        - parseFloat(cs.paddingBottom) - (by ? parseFloat(bs.marginTop) : 0);
       const line = parseFloat(ps.lineHeight) || 22;
       const lines = Math.max(1, Math.floor(room / line));
       const cut = p.scrollHeight > p.clientHeight + 1;
@@ -2930,7 +2972,12 @@
     // as a screenful of empty paper with the headline adrift in the middle of it. The stacked sheet drops
     // the content term and is measured off the viewport alone, which breaks the loop in the one direction
     // that matters: the block follows the sheet, never the other way about.
-    HERO_SHEET = 'min(max(calc(100% + 200px), 74vh), calc(100vh - 190px))';
+    // The two viewport terms are divided by the factor the collage is read at, the `100%` term is not:
+    // a percentage is already measured in the hero's own pixels, while a viewport unit inside a scaled
+    // root is read whole and then drawn at the factor's share of the screen. Undivided, the sheet would
+    // be set back twice and stand as a stamp behind type it is meant to be the page for. The 190px is a
+    // length in the drawing and stays where it is, on the far side of the division.
+    HERO_SHEET = 'min(max(calc(100% + 200px), calc(74vh / var(--s))), calc(100vh / var(--s) - 190px))';
     HERO_SHEET_STACKED = 'min(74vh, calc(100vh - 190px))';
     heroSheetH(narrow) {
       return 'calc(' + (narrow ? this.HERO_SHEET_STACKED : this.HERO_SHEET) + ' * ' + (narrow ? 0.72 : 0.9) + ')';
@@ -2974,7 +3021,13 @@
     // A moving plate answers with its poster, which is the same still the landing card carries, so the
     // photograph that flies between the two is one picture whether the plate it lands in moves or not
     slotSrc(el) { const v = el.matches('video') ? el : el.querySelector('video'); if (v) return v.poster || ''; const s = el.matches('image-slot') ? el : el.querySelector('image-slot'); if (!s) { const pl = el.matches('img') ? el : el.querySelector('img'); return pl ? (pl.currentSrc || pl.getAttribute('src') || '') : ''; } const im = s.shadowRoot && s.shadowRoot.querySelector('img'); return (im && im.currentSrc) || s.getAttribute('src') || ''; }
-    textStyle(el) { const c = getComputedStyle(el); return { fontFamily: c.fontFamily, fontSize: c.fontSize, fontWeight: c.fontWeight, fontStyle: c.fontStyle, letterSpacing: c.letterSpacing, lineHeight: c.lineHeight, textTransform: c.textTransform, textAlign: c.textAlign, textWrap: c.textWrap, color: c.color, hyphens: c.hyphens, WebkitTextStroke: c.webkitTextStroke }; }
+    // The type, as it is drawn rather than as it is written. Every length here is read back onto an
+    // element of the morph layer, which stands over the page rather than inside it, and is paired there
+    // with a rect in the viewport's pixels; a computed length inside a scaled landing is in the
+    // drawing's, so a 14px line of the Development statement is computed at 14px and drawn at 14 times
+    // the factor. Converted here, once, so nothing downstream has to hold both readings (see zoomOf).
+    textStyle(el) { const c = getComputedStyle(el), z = this.zoomOf(el), px = (v) => (z === 1 || !/^-?[\d.]+px$/.test(v) ? v : (parseFloat(v) * z).toFixed(3) + 'px');
+      return { fontFamily: c.fontFamily, fontSize: px(c.fontSize), fontWeight: c.fontWeight, fontStyle: c.fontStyle, letterSpacing: px(c.letterSpacing), lineHeight: px(c.lineHeight), textTransform: c.textTransform, textAlign: c.textAlign, textWrap: c.textWrap, color: c.color, hyphens: c.hyphens, WebkitTextStroke: c.webkitTextStroke }; }
     textRect(el, fallback) { try { const rg = document.createRange(); rg.selectNodeContents(el); const rc = rg.getBoundingClientRect(); return rc.width ? rc : fallback; } catch (e) { return fallback; } }
     captureTexts() {
       const root = this.rootRef.current, main = root && root.querySelector('main[data-screen-label]'); if (!main) return null;
@@ -2991,10 +3044,13 @@
         const thick = parseFloat(c.borderTopWidth) > 2, rec = { rect: rc, color: isRule ? c.backgroundColor : thick ? c.outlineColor : c.borderTopColor, isRule, outline: c.outlineColor, img: this.slotSrc(el), filter: c.filter };
         out.shapes.set(el.dataset.shape, rec); if (el.dataset.shapeAlt) out.shapes.set(el.dataset.shapeAlt, rec);
       });
-      const rc = main.getBoundingClientRect(), wrap = document.createElement('div');
+      const rc = main.getBoundingClientRect(), wrap = document.createElement('div'), z = this.zoomOf(main);
       wrap.setAttribute('style', root.getAttribute('style') + '; position:absolute; inset:0; min-height:0; background:var(--color-bg); background-image:none; transition:none; will-change:opacity;');
       const clone = main.cloneNode(true);
-      clone.style.cssText += '; position:absolute; top:' + rc.top + 'px; left:' + rc.left + 'px; width:' + rc.width + 'px; margin:0; box-sizing:border-box;';
+      // the clone carries the view's own style attribute, a scaled landing's factor with it, so the
+      // three lengths written on it here are read in the drawing's pixels while the rect they come from
+      // is in the viewport's: divided, the snapshot lands exactly where the view it copies stood
+      clone.style.cssText += '; position:absolute; top:' + rc.top / z + 'px; left:' + rc.left / z + 'px; width:' + rc.width / z + 'px; margin:0; box-sizing:border-box;';
       clone.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
       // the snapshot can't carry a live <image-slot> (its shadow DOM doesn't clone with the photo) and
       // has no business carrying a second copy of a playing <video>, so both are baked into a plain div
@@ -3014,7 +3070,7 @@
       // tuned offset and the parallax, and an animation that replaced it would start the leaf from its bare grid
       // cell, a jump of the whole offset on the first frame (and the same jump back on the last, on the way in)
       if (this.slideLeaves) clone.querySelectorAll('[data-leaf]').forEach((el, i) => { const dir = el.dataset.leaf === 'left' ? -1 : 1; el.style.animation = 'none'; el.style.transition = 'none';
-        el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(' + dir * 110 + 'vw)' }], { duration: 640, delay: (i % 3) * 60, easing: 'cubic-bezier(.5,0,.85,.2)', fill: 'forwards', composite: 'add' }).id = 'leaf-slide'; });
+        el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(' + dir * 110 / z + 'vw)' }], { duration: 640, delay: (i % 3) * 60, easing: 'cubic-bezier(.5,0,.85,.2)', fill: 'forwards', composite: 'add' }).id = 'leaf-slide'; });
       wrap.appendChild(clone); out.snapshot = wrap;
       const layer = document.createElement('div');
       layer.style.cssText = 'position:fixed; inset:0; z-index:3; pointer-events:none; overflow:hidden;';
@@ -3030,7 +3086,10 @@
         const mod = el.closest('[data-enter]'); if (!mod) return;
         mod.style.setProperty('--d', '0ms'); mod.setAttribute('data-enter', 'in');
       });
-      const vh = window.innerHeight, dur = 780, easing = 'cubic-bezier(.65,0,.15,1)';
+      // the slide below is written in viewport widths and read inside the collage, which on a scaled
+      // page is a smaller pixel than the viewport's: undivided, a leaf asked to leave the screen stops
+      // short of the edge and is seen to be waiting there while the snapshot fades (see zoomOf)
+      const vh = window.innerHeight, dur = 780, easing = 'cubic-bezier(.65,0,.15,1)', z = this.zoomOf(main);
       const layer = olds.layer;
       if (olds.snapshot) { olds.snapshot.animate([{ opacity: 1 }, { opacity: 1, offset: this.slideLeaves ? 0.55 : 0 }, { opacity: 0 }], { duration: this.slideLeaves ? 820 : 560, easing: 'cubic-bezier(.4,0,.6,1)', fill: 'forwards' }); }
       main.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 520, delay: 160, easing: 'ease', fill: 'backwards' });
@@ -3040,7 +3099,7 @@
       // to its bare grid cell and let go there, and the tuned offset then arrived as a second move on top of the
       // slide: the collage was seen to land and then shift once more
       if (this.slideLeaves) main.querySelectorAll('[data-leaf]').forEach((el, i) => { const dir = el.dataset.leaf === 'left' ? -1 : 1;
-        el.animate([{ transform: 'translateX(' + dir * 110 + 'vw)' }, { transform: 'translateX(0)' }], { duration: 760, delay: 220 + (i % 3) * 70, easing: 'cubic-bezier(.15,.8,.2,1)', fill: 'backwards', composite: 'add' }).id = 'leaf-slide'; });
+        el.animate([{ transform: 'translateX(' + dir * 110 / z + 'vw)' }, { transform: 'translateX(0)' }], { duration: 760, delay: 220 + (i % 3) * 70, easing: 'cubic-bezier(.15,.8,.2,1)', fill: 'backwards', composite: 'add' }).id = 'leaf-slide'; });
       const jobs = [], hidden = [], seen = new Set();
       main.querySelectorAll('[data-morph]').forEach((el) => {
         const name = el.dataset.morph, rc0 = el.getBoundingClientRect(); if (!rc0.width) return;
@@ -3362,7 +3421,7 @@
       window.addEventListener('pointerdown', this.onDown); window.addEventListener('pointerup', this.onUp); window.addEventListener('pointercancel', this.onUp);
       this.onScroll = () => { this.syncParchment(); this.syncHome(); this.setState({ scrollY: window.scrollY }); clearTimeout(this.remeasureTimer); this.remeasureTimer = setTimeout(() => this.remeasureText(), 120); };
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => setTimeout(() => { this.remeasureText(); this.fitLandingStatement(); this.syncParchment(); }, 50));
-      this.onResize = () => { this.setState({ narrow: this.isStacked(), landingRows: this.visibleRows(), phone: this.isPhone(), portrait: this.isPortrait() }); this.measureTabs(); this.syncParchment(); this.syncHome(); };
+      this.onResize = () => { this.setState({ narrow: this.isStacked(), landingRows: this.visibleRows(), phone: this.isPhone(), portrait: this.isPortrait(), scale: this.landingScale() }); this.measureTabs(); this.syncParchment(); this.syncHome(); };
       this.onKey = (e) => {
         const t = e.target; if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
         const n = this.data.length, { view, idx } = this.state;
@@ -3873,14 +3932,17 @@
         }
         return;
       }
-      const box = hero.getBoundingClientRect(), pad = 14;
+      // The caption is pushed back in by a distance measured between two rects, which are in the
+      // viewport's pixels, and written into a transform inside the collage, which is read in the
+      // collage's own; on a scaled hero the two differ by the factor it is read at (see zoomOf).
+      const box = hero.getBoundingClientRect(), pad = 14, z = this.zoomOf(hero);
       hero.querySelectorAll('[data-leaf] [data-leaf-text]').forEach((text) => {
         text.style.transform = 'none';
         const r = text.getBoundingClientRect();
         let dx = 0;
         if (r.left < box.left + pad) dx = box.left + pad - r.left;
         else if (r.right > box.right - pad) dx = Math.min(0, box.right - pad - r.right);
-        if (dx) text.style.transform = 'translateX(' + Math.round(dx) + 'px)';
+        if (dx) text.style.transform = 'translateX(' + Math.round(dx / z) + 'px)';
   
         const detail = text.querySelector('[data-leaf-detail]');
         if (!detail) return;
@@ -4520,6 +4582,11 @@
         cvEmail, cvMailto: 'mailto:' + cvEmail, cvGithub: cvLinks.github || this.CONTACT.github,
         // The Research landing has the two compositions the Development landing has, chosen off the same
         // state.narrow: the collage on a landscape page, the stacked column on any other.
+        // The factor the two wide landings are read at, handed to their roots as one value: the root
+        // declares it and takes its own zoom from it, and every length inside that stands for the page
+        // rather than for the drawing divides by it. Nothing else on the site reads it, since nothing
+        // else is a one-screen drawing in fixed pixels.
+        landingZoom: this.state.scale,
         isHeroWide: view === 'page' && page.reg === 'serif' && !heroNarrow, isHeroNarrow: heroNarrow,
         serifBands, heroSheetH: this.heroSheetH(this.state.narrow), heroBlockH: this.heroBlockH(),
         isMonoPage: view === 'page' && page.reg === 'mono',
