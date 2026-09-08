@@ -49,7 +49,7 @@
   // ---- template ----------------------------------------------------------
   function tpl(V) {
     return [
-      h("div", { key: "0", ref: V.rootRef, style: S(`position:relative; min-height:100vh; background:var(--color-bg); color:var(--color-text);  font-family:var(--r-body); font-size:17px; line-height:28px; --mono:'Geist Mono', ui-monospace, monospace; --sig-ok:#6cc48a; --sig-warn:#e0b04f; --sig-info:#79aed1; --font-heading:'Newsreader', 'Cormorant Garamond', Georgia, serif; --deco:'Cinzel', 'Cormorant Garamond', serif; --r-body:${V.rBody ?? ""}; --r-align:${V.rAlign ?? ""}; --r-tracking:${V.rTracking ?? ""}; --color-bg:${V.tBg ?? ""}; --color-surface:${V.tSurface ?? ""}; --color-text:${V.tText ?? ""}; --color-accent:${V.tAccent ?? ""}; --color-accent-600:${V.tAccent600 ?? ""}; --color-accent-700:${V.tAccent700 ?? ""}; --color-accent-800:${V.tAccent800 ?? ""}; --color-accent-100:${V.tAccent100 ?? ""}; --color-divider:${V.tDivider ?? ""}; --color-neutral-100:${V.tN100 ?? ""}; --color-neutral-400:${V.tN400 ?? ""}; --color-neutral-500:${V.tN500 ?? ""}; --color-neutral-600:${V.tN600 ?? ""}; --color-neutral-700:${V.tN700 ?? ""}; --color-neutral-800:${V.tN800 ?? ""};`) },
+      h("div", { key: "0", ref: V.rootRef, style: S(`position:relative; min-height:100vh; background:var(--color-bg); color:var(--color-text);  font-family:var(--r-body); font-size:17px; line-height:28px; --mono:'Geist Mono', ui-monospace, monospace; --sig-ok:#6cc48a; --sig-warn:#e0b04f; --sig-info:#79aed1; --font-heading:'Newsreader', 'Cormorant Garamond', Georgia, serif; --deco:'Cinzel', 'Cormorant Garamond', serif; --r-body:${V.rBody ?? ""}; --r-align:${V.rAlign ?? ""}; --r-tracking:${V.rTracking ?? ""}; --color-bg:${V.tBg ?? ""}; --color-surface:${V.tSurface ?? ""}; --color-text:${V.tText ?? ""}; --color-accent:${V.tAccent ?? ""}; --color-accent-600:${V.tAccent600 ?? ""}; --color-accent-700:${V.tAccent700 ?? ""}; --color-accent-800:${V.tAccent800 ?? ""}; --color-accent-100:${V.tAccent100 ?? ""}; --color-divider:${V.tDivider ?? ""}; --color-neutral-100:${V.tN100 ?? ""}; --color-neutral-400:${V.tN400 ?? ""}; --color-neutral-500:${V.tN500 ?? ""}; --color-neutral-600:${V.tN600 ?? ""}; --color-neutral-700:${V.tN700 ?? ""}; --color-neutral-800:${V.tN800 ?? ""}; --hair:color-mix(in srgb, var(--color-text) 16%, transparent); --frame:color-mix(in srgb, var(--color-text) 55%, transparent);`) },
         "\n\n\n  ",
         "\n  ",
         "\n  ",
@@ -157,15 +157,15 @@
             "\n    ",
             h("nav", { key: "3", "aria-label": "Contact", style: {"position":"absolute","left":"0","right":"0","bottom":"clamp(18px,4vh,40px)","display":"flex","justifyContent":"center","gap":"clamp(20px,3vw,44px)","fontFamily":"var(--deco)","fontSize":"12px"} },
               "\n      ",
-              h("a", { key: "1|5.3mzikt", href: V.cvMailto, style: {"color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp2" },
+              h("a", { key: "1|5.3mzikt", href: V.cvMailto, style: {"fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp2" },
                 "Email"
               ),
               "\n      ",
-              h("button", { key: "3|2.3hnb2", onClick: V.goCvSerif, style: {"all":"unset","cursor":"pointer","fontFamily":"var(--deco)","fontSize":"12px","color":"var(--color-accent)","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp2" },
+              h("button", { key: "3|2.3hnb2", onClick: V.goCvSerif, style: {"all":"unset","cursor":"pointer","fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","fontSize":"12px","color":"var(--color-accent)","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp2" },
                 "CV"
               ),
               "\n      ",
-              h("a", { key: "5|6.1e9lseg", href: V.cvGithub, style: {"color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp2" },
+              h("a", { key: "5|6.1e9lseg", href: V.cvGithub, style: {"fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp2" },
                 "GitHub"
               ),
               "\n    "
@@ -280,15 +280,15 @@
                 "\n        ",
                 h("span", { key: "5", style: {"position":"absolute","inset":"0","display":"flex","alignItems":"center","justifyContent":"center","gap":"clamp(20px, 3vw, 44px)"} },
                   "\n          ",
-                  h("a", { key: "1|5.3mzikt", href: V.cvMailto, style: {"fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp5" },
+                  h("a", { key: "1|5.3mzikt", href: V.cvMailto, style: {"fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp2" },
                     "Email"
                   ),
                   "\n          ",
-                  h("a", { key: "3|6.1e9lseg", href: V.cvGithub, style: {"fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp5" },
+                  h("a", { key: "3|6.1e9lseg", href: V.cvGithub, style: {"fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp2" },
                     "GitHub"
                   ),
                   "\n          ",
-                  h("button", { key: "5|2.3hnb2", onClick: V.goCvSerif, style: {"all":"unset","cursor":"pointer","fontSize":"14px","fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","color":"var(--color-accent)","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp5" },
+                  h("button", { key: "5|2.3hnb2", onClick: V.goCvSerif, style: {"all":"unset","cursor":"pointer","fontSize":"14px","fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","color":"var(--color-accent)","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp2" },
                     "CV"
                   ),
                   "\n        "
@@ -478,10 +478,10 @@
             "\n  ",
             h("main", { key: "tooling", "data-screen-label": "Development", style: {"maxWidth":"1160px","margin":"0 auto","padding":"0 clamp(20px,4vw,48px) 88px","fontFamily":"var(--mono)","fontSize":"14px","lineHeight":"22px"} },
               "\n    ",
-              h("div", { key: "1", style: {"marginTop":"88px","display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","borderRight":"1px solid color-mix(in srgb, var(--color-text) 16%, transparent)","borderBottom":"1px solid color-mix(in srgb, var(--color-text) 16%, transparent)","backgroundImage":"linear-gradient(to right, color-mix(in srgb, var(--color-text) 16%, transparent) 0 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--color-text) 16%, transparent) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
+              h("div", { key: "1", style: {"marginTop":"88px","display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","borderRight":"1px solid var(--hair)","borderBottom":"1px solid var(--hair)","backgroundImage":"linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
                 "\n\n    ",
                 "\n    ",
-                h("section", { key: "2", style: {"gridColumn":"1 / 15","gridRow":"2 / 12","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)","padding":"22px","boxSizing":"border-box"} },
+                h("section", { key: "2", className: "mod", style: {"gridColumn":"1 / 15","gridRow":"2 / 12","padding":"22px"} },
                   "\n      ",
                   h("p", { key: "1|17.1dagtdl", "data-morph": "kicker", style: {"margin":"0 0 22px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
                     h(F,{key:0},"",I(V.page?.kicker,1),"")
@@ -502,10 +502,10 @@
                 ),
                 "\n    ",
                 "\n    ",
-                h("div", { key: "5", ref: V.platformRef, "aria-hidden": "true", style: {"gridColumn":"15 / 23","gridRow":"2 / 12","minHeight":"0","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)","cursor":"grab","touchAction":"none","userSelect":"none"} }),
+                h("div", { key: "5", ref: V.platformRef, "aria-hidden": "true", className: "mod", style: {"gridColumn":"15 / 23","gridRow":"2 / 12","minHeight":"0","cursor":"grab","touchAction":"none","userSelect":"none"} }),
                 "\n\n    ",
                 "\n    ",
-                h("p", { key: "8|22.11u5osx", ref: V.contentsRef, "data-morph": "index-kicker", style: {"gridColumn":"1 / 7","gridRow":"14 / 15","margin":"0","display":"flex","alignItems":"center","padding":"0 22px","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent)","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
+                h("p", { key: "8|22.11u5osx", ref: V.contentsRef, "data-morph": "index-kicker", className: "mod", style: {"gridColumn":"1 / 7","gridRow":"14 / 15","margin":"0","display":"flex","alignItems":"center","padding":"0 22px","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
                   h(F,{key:0},"",I(V.page?.indexKicker,1),"")
                 ),
                 "\n    ",
@@ -513,7 +513,7 @@
                   var Vi = Object.assign({}, V, {"p": item, $index: i});
                   return h(F,{key:i},
                     "\n      ",
-                    h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, onClick: Vi.p?.open, onMouseEnter: Vi.p?.hover, style: S(`grid-column:1 / 23; grid-row:${Vi.p?.cardRow ?? ""}; display:grid; grid-template-columns:repeat(22,1fr); cursor:pointer; color:var(--color-text); background:var(--color-bg); border-width:0; border-style:solid; border-color:var(--color-neutral-400); box-shadow:inset 1px 0 0 0 var(--color-neutral-400), inset 0 1px 0 0 var(--color-neutral-400), 1px 0 0 0 var(--color-neutral-400), 0 1px 0 0 var(--color-neutral-400); transition:box-shadow 240ms ease;`), className: "scp6" },
+                    h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, onClick: Vi.p?.open, onMouseEnter: Vi.p?.hover, className: "mod mod-ctl", style: S(`grid-column:1 / 23; grid-row:${Vi.p?.cardRow ?? ""}; display:grid; grid-template-columns:repeat(22,1fr); cursor:pointer; color:var(--color-text);`) },
                       "\n        ",
                       h("div", { key: "1", style: S(`grid-column:${Vi.p?.textCol ?? ""}; grid-row:1; min-width:0; padding:22px; box-sizing:border-box; align-self:end;`) },
                         "\n          ",
@@ -531,8 +531,11 @@
                         "\n        "
                       ),
                       "\n        ",
-                      h("div", { key: "3", "data-shape": Vi.p?.frameShape, "data-shape-alt": `frame-${Vi.p?.figNo ?? ""}`, style: S(`grid-column:${Vi.p?.plateCol ?? ""}; grid-row:1; height:100%; box-shadow:inset 1px 0 0 0 var(--color-divider), inset 0 1px 0 0 var(--color-divider), 1px 0 0 0 var(--color-divider), 0 1px 0 0 var(--color-divider); box-sizing:border-box; position:relative; overflow:hidden;`) },
-                        h("image-slot", { key: "0", id: Vi.p?.plateSlotId, src: Vi.p?.hero, shape: "rect", fit: "cover", placeholder: Vi.p?.placeholder, style: {"width":"100%","height":"100%"} })
+                      "\n        ",
+                      h("div", { key: "4", "data-shape": Vi.p?.frameShape, "data-shape-alt": `frame-${Vi.p?.figNo ?? ""}`, className: "mod", style: S(`grid-column:${Vi.p?.plateCol ?? ""}; grid-row:1;`) },
+                        h("div", { key: "0", style: {"position":"absolute","inset":"0","overflow":"hidden"} },
+                          h("image-slot", { key: "0", id: Vi.p?.plateSlotId, src: Vi.p?.hero, shape: "rect", fit: "cover", placeholder: Vi.p?.placeholder, style: {"width":"100%","height":"100%"} })
+                        )
                       ),
                       "\n      "
                     ),
@@ -542,7 +545,7 @@
                 h("div", { key: "12", ref: V.platesRef, style: S(`grid-column:1 / 2; grid-row:${V.gridPlatesRow ?? ""}; height:0;`) }),
                 "\n\n    ",
                 "\n    ",
-                h("section", { key: "15", ref: V.notesRef, style: S(`grid-column:1 / 11; grid-row:${V.gridAuthorRow ?? ""}; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); padding:22px; box-sizing:border-box;`) },
+                h("section", { key: "15", ref: V.notesRef, className: "mod", style: S(`grid-column:1 / 11; grid-row:${V.gridAuthorRow ?? ""}; padding:22px;`) },
                   "\n      ",
                   h("p", { key: "1|3.377ldf", "data-morph": "notes-kicker", style: {"margin":"0 0 22px","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
                     "who"
@@ -552,8 +555,8 @@
                     h(F,{key:0},"",I(V.page?.notesTitle,1),"")
                   ),
                   "\n      ",
-                  h("p", { key: "5|331.1a3pxw3", "data-morph": "notes-body", style: {"margin":"22px 0 0","color":"var(--color-neutral-700)","maxWidth":"44ch"} },
-                    "I spent my first years in practice drawing stair details and wondering why the software fought me. The next years were spent fixing that, first inside studios and then in research groups. I care about drawings as a language, about tools that stay out of the way, and about writing plainly on subjects that tempt people to be grand."
+                  h("p", { key: "5|413.b1i0wx", "data-morph": "notes-body", style: {"margin":"22px 0 0","color":"var(--color-neutral-700)","maxWidth":"44ch"} },
+                    "Five years of architecture school, then two in the Polyhedral Structures Laboratory at Penn, where structure stopped being something applied to a design after the fact. Since 2022 I have been at SOM in Chicago, building the platform its teams model in. I care about structure and design being one decision, about tools that stay out of the way, and about writing plainly on subjects that tempt people to be grand."
                   ),
                   "\n      ",
                   h("p", { key: "7", style: {"margin":"22px 0 0","display":"flex","gap":"20px","fontSize":"13px"} },
@@ -570,7 +573,7 @@
                   "\n    "
                 ),
                 "\n    ",
-                h("ol", { key: "17", style: S(`grid-column:12 / 23; grid-row:${V.gridAuthorRow ?? ""}; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); padding:22px; box-sizing:border-box; list-style:none; margin:0; font-feature-settings:'tnum' 1;`) },
+                h("ol", { key: "17", className: "mod", style: S(`grid-column:12 / 23; grid-row:${V.gridAuthorRow ?? ""}; padding:22px; list-style:none; margin:0; font-feature-settings:'tnum' 1;`) },
                   "\n      ",
                   h(F,{key:1},L(V.cv).map(function(item,i){
                     var Vi = Object.assign({}, V, {"c": item, $index: i});
@@ -599,20 +602,20 @@
                   "\n    "
                 ),
                 "\n\n    ",
-                h("p", { key: "19|19.19w1nxe", "data-morph": "colophon", style: S(`grid-column:1 / 16; grid-row:${V.gridColophonRow ?? ""}; margin:0; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent);  padding:22px; box-sizing:border-box; color:var(--color-neutral-600); font-size:12px; line-height:18px;`) },
+                h("p", { key: "19|19.19w1nxe", "data-morph": "colophon", className: "mod", style: S(`grid-column:1 / 16; grid-row:${V.gridColophonRow ?? ""}; margin:0; padding:22px; color:var(--color-neutral-600); font-size:12px; line-height:18px;`) },
                   h(F,{key:0},"",I(V.page?.colophon,1),"")
                 ),
                 "\n\n    ",
                 "\n    ",
-                h("a", { key: "22|5.49kwkt", href: V.cvMailto, style: S(`grid-column:1 / 3; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("a", { key: "22|5.49kwkt", href: V.cvMailto, className: C("mod mod-ctl","scp5"), style: S(`grid-column:1 / 3; grid-row:${V.gridContactRow ?? ""}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;`) },
                   "email"
                 ),
                 "\n    ",
-                h("a", { key: "24|6.1yz8dag", href: V.cvGithub, style: S(`grid-column:3 / 5; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("a", { key: "24|6.1yz8dag", href: V.cvGithub, className: C("mod mod-ctl","scp5"), style: S(`grid-column:3 / 5; grid-row:${V.gridContactRow ?? ""}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;`) },
                   "github"
                 ),
                 "\n    ",
-                h("button", { key: "26|2.3ho5a", onClick: V.goCvMono, style: S(`all:unset; grid-column:5 / 7; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("button", { key: "26|2.3ho5a", onClick: V.goCvMono, className: C("mod mod-ctl","scp5"), style: S(`all:unset; grid-column:5 / 7; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text);`) },
                   "cv"
                 ),
                 "\n    "
@@ -626,7 +629,7 @@
             "\n  ",
             h("main", { key: "tooling", "data-screen-label": "Development", style: {"maxWidth":"none","margin":"0","padding":"0","fontFamily":"var(--mono)","fontSize":"14px","lineHeight":"22px"} },
               "\n    ",
-              h("div", { key: "1", style: {"display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","position":"relative","minHeight":"calc(100vh - 57px)","boxSizing":"border-box","borderRight":"1px solid color-mix(in srgb, var(--color-text) 16%, transparent)","borderBottom":"1px solid color-mix(in srgb, var(--color-text) 16%, transparent)","backgroundImage":"linear-gradient(to right, color-mix(in srgb, var(--color-text) 16%, transparent) 0 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--color-text) 16%, transparent) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
+              h("div", { key: "1", style: {"display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","position":"relative","minHeight":"calc(100vh - 57px)","boxSizing":"border-box","borderRight":"1px solid var(--hair)","borderBottom":"1px solid var(--hair)","backgroundImage":"linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
                 "\n\n    ",
                 "\n    ",
                 h("div", { key: "2", ref: V.contentsRef, style: {"gridColumn":"1 / 2","gridRow":"1 / 2","height":"0"} }),
@@ -634,7 +637,7 @@
                 h("div", { key: "4", ref: V.notesRef, style: {"gridColumn":"1 / 2","gridRow":"1 / 2","height":"0"} }),
                 "\n\n    ",
                 "\n    ",
-                h("section", { key: "7", ref: V.landingStatementRef, "data-mod": "statement", style: S(`grid-column:${V.land?.statement?.col ?? ""}; grid-row:${V.land?.statement?.row ?? ""}; position:relative; z-index:1; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); padding:22px; box-sizing:border-box; overflow:hidden;`) },
+                h("section", { key: "7", ref: V.landingStatementRef, "data-mod": "statement", className: "mod", onClick: V.landIntroToggle, style: S(`grid-column:${V.land?.statement?.col ?? ""}; grid-row:${V.land?.statement?.row ?? ""}; ${V.landIntroBox ?? ""} padding:22px; cursor:${V.landIntroCursor ?? ""};`) },
                   "\n      ",
                   h("p", { key: "1|17.1dagtdl", "data-morph": "kicker", style: {"margin":"0 0 22px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
                     h(F,{key:0},"",I(V.page?.kicker,1),"")
@@ -644,18 +647,24 @@
                     h(F,{key:0},"",I(V.page?.title,1),"")
                   ),
                   "\n      ",
-                  h("p", { key: "5|16.1y4952k", "data-tr": "wake", "data-reg": "mono", "data-morph": "intro", style: {"margin":"22px 0 0","color":"var(--color-neutral-700)"} },
+                  h("p", { key: "5|16.1y4952k", "data-landing-intro": "1", "data-tr": "wake", "data-reg": "mono", "data-morph": "intro", style: S(`margin:22px 0 0; color:var(--color-neutral-700); ${V.landIntroClamp ?? ""}`) },
                     h(F,{key:0},"",I(V.page?.intro,1),"")
                   ),
                   "\n      ",
-                  h("p", { key: "7|17.3x40kj", "data-morph": "byline", style: {"margin":"22px 0 0","fontSize":"12px","color":"var(--color-neutral-600)"} },
-                    h(F,{key:0},"",I(V.page?.byline,1),"")
+                  "\n      ",
+                  h("p", { key: "8|62.1nwiqyn", "data-landing-byline": "1", "data-morph": "byline", style: {"margin":"22px 0 0","fontSize":"12px","color":"var(--color-neutral-600)","display":"flex","justifyContent":"space-between","gap":"12px"} },
+                    h("span", { key: "0|17.3x40kj" },
+                      h(F,{key:0},"",I(V.page?.byline,1),"")
+                    ),
+                    h("span", { key: "1|19.k9j0z", "aria-hidden": "true", style: {"flex":"none","color":"var(--color-text)","letterSpacing":"0.08em"} },
+                      h(F,{key:0},"",I(V.landIntroMore,1),"")
+                    )
                   ),
                   "\n    "
                 ),
                 "\n    ",
                 "\n    ",
-                h("div", { key: "10", ref: V.platformRef, "aria-hidden": "true", "data-mod": "platform", style: S(`grid-column:${V.land?.platform?.col ?? ""}; grid-row:${V.land?.platform?.row ?? ""}; position:relative; z-index:1; min-height:0; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); cursor:grab; touch-action:none; user-select:none;`) }),
+                h("div", { key: "10", ref: V.platformRef, "aria-hidden": "true", "data-mod": "platform", className: "mod", style: S(`grid-column:${V.land?.platform?.col ?? ""}; grid-row:${V.land?.platform?.row ?? ""}; z-index:1; min-height:0; cursor:grab; touch-action:none; user-select:none;`) }),
                 "\n\n    ",
                 "\n    ",
                 h("svg", { key: "13", "aria-hidden": "true", style: {"position":"absolute","inset":"0","width":"100%","height":"100%","zIndex":"0","pointerEvents":"none","overflow":"visible"} },
@@ -675,7 +684,7 @@
                   var Vi = Object.assign({}, V, {"p": item, $index: i});
                   return h(F,{key:i},
                     "\n      ",
-                    h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, "data-mod": Vi.p?.mod, onClick: Vi.p?.open, onMouseEnter: Vi.p?.type, onMouseLeave: Vi.p?.untype, onFocus: Vi.p?.type, onBlur: Vi.p?.untype, tabIndex: "0", "aria-label": Vi.p?.title, style: S(`grid-column:${Vi.p?.col ?? ""}; grid-row:${Vi.p?.row ?? ""}; position:relative; z-index:${Vi.p?.zIndex ?? ""}; display:grid; grid-template-rows:minmax(0,1fr) 44px; cursor:pointer; box-sizing:border-box; color:var(--color-text); background:var(--color-bg); box-shadow:inset 1px 0 0 0 ${Vi.p?.frameInk ?? ""}, inset 0 1px 0 0 ${Vi.p?.frameInk ?? ""}, 1px 0 0 0 ${Vi.p?.frameInk ?? ""}, 0 1px 0 0 ${Vi.p?.frameInk ?? ""}; transition:box-shadow 240ms ease;`), className: "scp8" },
+                    h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, "data-mod": Vi.p?.mod, "data-lit": Vi.p?.lit, onClick: Vi.p?.open, onMouseEnter: Vi.p?.type, onMouseLeave: Vi.p?.untype, onFocus: Vi.p?.type, onBlur: Vi.p?.untype, tabIndex: "0", "aria-label": Vi.p?.title, className: C("mod mod-ctl","scp6"), style: S(`grid-column:${Vi.p?.col ?? ""}; grid-row:${Vi.p?.row ?? ""}; z-index:${Vi.p?.zIndex ?? ""}; display:grid; grid-template-rows:minmax(0,1fr) 44px; cursor:pointer; color:var(--color-text);`) },
                       "\n        ",
                       h("div", { key: "1", "data-shape": Vi.p?.frameShape, "data-shape-alt": `frame-${Vi.p?.figNo ?? ""}`, style: {"position":"relative","minHeight":"0","overflow":"hidden","boxShadow":"inset 0 -1px 0 0 var(--color-divider)"} },
                         "\n          ",
@@ -696,7 +705,7 @@
                       ),
                       "\n        ",
                       "\n        ",
-                      h("p", { key: "6|26.1pcf1c", "aria-live": "polite", style: S(`position:absolute; left:0; right:0; top:${Vi.p?.whyTop ?? ""}; bottom:${Vi.p?.whyBottom ?? ""}; margin:0; padding:10px; box-sizing:border-box; pointer-events:none; background:var(--color-bg); color:var(--color-neutral-700); font-size:12px; line-height:17px; white-space:pre-wrap; box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text); opacity:${Vi.p?.whyOpacity ?? ""}; transition:opacity 220ms ease;`) },
+                      h("p", { key: "6|26.1pcf1c", "aria-live": "polite", className: "mod", "data-lit": "", style: S(`position:absolute; left:0; right:0; top:${Vi.p?.whyTop ?? ""}; bottom:${Vi.p?.whyBottom ?? ""}; margin:0; padding:10px; pointer-events:none; color:var(--color-neutral-700); font-size:12px; line-height:17px; white-space:pre-wrap; opacity:${Vi.p?.whyOpacity ?? ""}; transition:opacity 220ms ease;`) },
                         h(F,{key:0},"",I(Vi.p?.typed,1),""),
                         h("span", { key: "1", "aria-hidden": "true", style: S(`display:inline-block; width:1px; height:0.9em; margin-left:2px; vertical-align:-0.1em; background:var(--color-text); opacity:${Vi.p?.caretOpacity ?? ""};`) })
                       ),
@@ -706,15 +715,15 @@
                 })),
                 "\n\n    ",
                 "\n    ",
-                h("a", { key: "19|5.49kwkt", href: V.cvMailto, "data-mod": "contactEmail", style: S(`grid-column:${V.land?.contactEmail?.col ?? ""}; grid-row:${V.land?.contactEmail?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("a", { key: "19|5.49kwkt", href: V.cvMailto, "data-mod": "contactEmail", className: C("mod mod-ctl","scp5"), style: S(`grid-column:${V.land?.contactEmail?.col ?? ""}; grid-row:${V.land?.contactEmail?.row ?? ""}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;`) },
                   "email"
                 ),
                 "\n    ",
-                h("a", { key: "21|6.1yz8dag", href: V.cvGithub, "data-mod": "contactGithub", style: S(`grid-column:${V.land?.contactGithub?.col ?? ""}; grid-row:${V.land?.contactGithub?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("a", { key: "21|6.1yz8dag", href: V.cvGithub, "data-mod": "contactGithub", className: C("mod mod-ctl","scp5"), style: S(`grid-column:${V.land?.contactGithub?.col ?? ""}; grid-row:${V.land?.contactGithub?.row ?? ""}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;`) },
                   "github"
                 ),
                 "\n    ",
-                h("button", { key: "23|2.3ho5a", onClick: V.goCvMono, "data-mod": "contactCv", style: S(`all:unset; grid-column:${V.land?.contactCv?.col ?? ""}; grid-row:${V.land?.contactCv?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("button", { key: "23|2.3ho5a", onClick: V.goCvMono, "data-mod": "contactCv", className: C("mod mod-ctl","scp5"), style: S(`all:unset; grid-column:${V.land?.contactCv?.col ?? ""}; grid-row:${V.land?.contactCv?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text);`) },
                   "cv"
                 ),
                 "\n    "
@@ -1140,7 +1149,7 @@
           "\n  ",
           h("main", { key: "cv-mono", "data-screen-label": "CV mono", className: "cvm", style: {"maxWidth":"min(1040px, 100% - 2 * clamp(24px, 5vw, 72px))","margin":"0 auto","boxSizing":"border-box","padding":"clamp(32px,5vw,72px) 22px"} },
             "\n\n    ",
-            h("button", { key: "1|10.buh750", onClick: V.goPageCurrent, style: {"all":"unset","cursor":"pointer","display":"inline-flex","alignItems":"center","margin":"0 0 28px","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)","transition":"color 200ms ease"}, className: "scp9" },
+            h("button", { key: "1|10.buh750", onClick: V.goPageCurrent, style: {"all":"unset","cursor":"pointer","display":"inline-flex","alignItems":"center","margin":"0 0 28px","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)","transition":"color 200ms ease"}, className: "scp7" },
               "<- back"
             ),
             "\n\n    ",
@@ -1743,33 +1752,10 @@
                 "\n    "
               ),
               "\n    ") : null),
-            "\n\n    ",
+            "\n\n\n    ",
+            h("hr", { key: "16", style: {"height":"1px","border":"0","margin":"calc(3*28px) 0 0","background":"var(--color-divider)"} }),
             "\n    ",
-            (V.isEssay ? h(F,{key:17},
-              "\n    ",
-              h("div", { key: "1", style: {"display":"grid","gridTemplateColumns":"minmax(0,1fr) minmax(0,1fr)","gap":"clamp(20px,4vw,56px)"} },
-                "\n      ",
-                h("figure", { key: "1", className: "plate", style: {"margin":"0","aspectRatio":"4/3","filter":"sepia(0.22) saturate(0.82) contrast(1.05)"} },
-                  h("image-slot", { key: "0", id: V.current?.detailSlotA, shape: "rect", placeholder: "Detail: drawing or interface", style: {"width":"100%","height":"100%"} })
-                ),
-                "\n      ",
-                h("figure", { key: "3", className: "plate", style: {"margin":"0","aspectRatio":"4/3","filter":"sepia(0.22) saturate(0.82) contrast(1.05)"} },
-                  h("image-slot", { key: "0", id: V.current?.detailSlotB, shape: "rect", placeholder: "Detail: process or site", style: {"width":"100%","height":"100%"} })
-                ),
-                "\n    "
-              ),
-              "\n    ",
-              h("p", { key: "3|97.76h6dp", style: {"margin":"14px 0 0","fontSize":"13px","lineHeight":"20px","color":"var(--color-neutral-700)"} },
-                h("span", { key: "0|10.bamrr4", style: {"fontFamily":"var(--font-heading)","fontSize":"17px","color":"var(--color-accent)"} },
-                  "Figs. 1–2."
-                ),
-                " Working states. Left, the drawing or interface; right, where it was made."
-              ),
-              "\n    ") : null),
-            "\n\n    ",
-            h("hr", { key: "19", style: {"height":"1px","border":"0","margin":"calc(3*28px) 0 0","background":"var(--color-divider)"} }),
-            "\n    ",
-            h("nav", { key: "21", style: {"display":"flex","justifyContent":"space-between","alignItems":"baseline","gap":"var(--space-4)","padding":"28px 0 calc(3*28px)","flexWrap":"wrap"} },
+            h("nav", { key: "18", style: {"display":"flex","justifyContent":"space-between","alignItems":"baseline","gap":"var(--space-4)","padding":"28px 0 calc(3*28px)","flexWrap":"wrap"} },
               "\n      ",
               h("button", { key: "1|24.1chn43n", className: "btn btn-ghost", onClick: V.goPageCurrent, style: {"whiteSpace":"nowrap","fontFamily":"var(--r-body)"} },
                 h(F,{key:0},"← ",I(V.current?.backWord,1),"")
@@ -1797,15 +1783,15 @@
           "\n  ",
           h("main", { key: V.chapterKey, "data-screen-label": "Chapter", style: {"maxWidth":"1160px","margin":"0 auto","padding":"0 clamp(20px,4vw,48px) 88px","fontFamily":"var(--mono)","fontSize":"14px","lineHeight":"22px"} },
             "\n    ",
-            h("div", { key: "1", ref: V.sheetGridRef, style: {"--hair":"color-mix(in srgb, var(--color-text) 16%, transparent)","position":"relative","marginTop":"88px","display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","borderRight":"1px solid var(--hair)","borderBottom":"1px solid var(--hair)","backgroundImage":"linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
+            h("div", { key: "1", ref: V.sheetGridRef, style: {"position":"relative","marginTop":"88px","display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","borderRight":"1px solid var(--hair)","borderBottom":"1px solid var(--hair)","backgroundImage":"linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
               "\n\n    ",
               "\n    ",
-              h("button", { key: "2|24.1chn43n", className: "sheet-mod sheet-ctl", "data-enter": "", "data-mod": "back", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.back?.col ?? ""}; grid-row:${V.sheet?.back?.row ?? ""}; --d:${V.sheet?.back?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
+              h("button", { key: "2|24.1chn43n", className: "mod sheet-mod mod-ctl", "data-enter": "", "data-mod": "back", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.back?.col ?? ""}; grid-row:${V.sheet?.back?.row ?? ""}; --d:${V.sheet?.back?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
                 h(F,{key:0},"← ",I(V.current?.backWord,1),"")
               ),
               "\n\n    ",
               "\n    ",
-              h("section", { key: "5", className: "sheet-mod", "data-enter": "", "data-mod": "header", style: S(`grid-column:${V.sheet?.header?.col ?? ""}; grid-row:${V.sheet?.header?.row ?? ""}; --d:${V.sheet?.header?.delay ?? ""}; padding:22px;`) },
+              h("section", { key: "5", className: "mod sheet-mod", "data-enter": "", "data-mod": "header", style: S(`grid-column:${V.sheet?.header?.col ?? ""}; grid-row:${V.sheet?.header?.row ?? ""}; --d:${V.sheet?.header?.delay ?? ""}; padding:22px;`) },
                 "\n      ",
                 h("p", { key: `kicker-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0 0 22px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-accent-700)","fontFeatureSettings":"'tnum' 1"} },
                   h(F,{key:0},"",I(V.current?.kickerWord,1)," ",I(V.current?.numeral,3)," · ",I(V.current?.kind,5)," · ",I(V.current?.year,7),"")
@@ -1821,12 +1807,12 @@
                 "\n    "
               ),
               "\n    ",
-              h("span", { key: "7|19.1h99e0b", className: "sheet-mod", "data-enter": "", "data-mod": "ghost", "aria-hidden": "true", style: S(`grid-column:${V.sheet?.ghost?.col ?? ""}; grid-row:${V.sheet?.ghost?.row ?? ""}; --d:${V.sheet?.ghost?.delay ?? ""}; display:flex; align-items:flex-end; justify-content:flex-end; padding:22px; font-family:'DM Mono', ui-monospace, monospace; font-weight:400; font-size:clamp(40px,5.5vw,84px); line-height:1; letter-spacing:-0.04em; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; user-select:none; font-feature-settings:'tnum' 1;`) },
+              h("span", { key: "7|19.1h99e0b", className: "mod sheet-mod", "data-enter": "", "data-mod": "ghost", "aria-hidden": "true", style: S(`grid-column:${V.sheet?.ghost?.col ?? ""}; grid-row:${V.sheet?.ghost?.row ?? ""}; --d:${V.sheet?.ghost?.delay ?? ""}; display:flex; align-items:flex-end; justify-content:flex-end; padding:22px; font-family:'DM Mono', ui-monospace, monospace; font-weight:400; font-size:clamp(40px,5.5vw,84px); line-height:1; letter-spacing:-0.04em; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; user-select:none; font-feature-settings:'tnum' 1;`) },
                 h(F,{key:0},"",I(V.current?.ghost,1),"")
               ),
               "\n\n    ",
               "\n    ",
-              h("div", { key: "10", className: "sheet-mod", "data-enter": "", "data-mod": "specSheet", style: S(`grid-column:${V.sheet?.specSheet?.col ?? ""}; grid-row:${V.sheet?.specSheet?.row ?? ""}; --d:${V.sheet?.specSheet?.delay ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "10", className: "mod sheet-mod", "data-enter": "", "data-mod": "specSheet", style: S(`grid-column:${V.sheet?.specSheet?.col ?? ""}; grid-row:${V.sheet?.specSheet?.row ?? ""}; --d:${V.sheet?.specSheet?.delay ?? ""}; padding:11px 22px;`) },
                 h("p", { key: "0|5.3wrm2m", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Sheet"
                 ),
@@ -1835,7 +1821,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "12", className: "sheet-mod", "data-enter": "", "data-mod": "specRole", style: S(`grid-column:${V.sheet?.specRole?.col ?? ""}; grid-row:${V.sheet?.specRole?.row ?? ""}; --d:${V.sheet?.specRole?.delay ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "12", className: "mod sheet-mod", "data-enter": "", "data-mod": "specRole", style: S(`grid-column:${V.sheet?.specRole?.col ?? ""}; grid-row:${V.sheet?.specRole?.row ?? ""}; --d:${V.sheet?.specRole?.delay ?? ""}; padding:11px 22px;`) },
                 h("p", { key: "0|4.yk2787", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Role"
                 ),
@@ -1844,7 +1830,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "14", className: "sheet-mod", "data-enter": "", "data-mod": "specWith", style: S(`grid-column:${V.sheet?.specWith?.col ?? ""}; grid-row:${V.sheet?.specWith?.row ?? ""}; --d:${V.sheet?.specWith?.delay ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "14", className: "mod sheet-mod", "data-enter": "", "data-mod": "specWith", style: S(`grid-column:${V.sheet?.specWith?.col ?? ""}; grid-row:${V.sheet?.specWith?.row ?? ""}; --d:${V.sheet?.specWith?.delay ?? ""}; padding:11px 22px;`) },
                 h("p", { key: "0|4.yk5x1d", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "With"
                 ),
@@ -1853,7 +1839,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "16", className: "sheet-mod", "data-enter": "", "data-mod": "specStatus", style: S(`grid-column:${V.sheet?.specStatus?.col ?? ""}; grid-row:${V.sheet?.specStatus?.row ?? ""}; --d:${V.sheet?.specStatus?.delay ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "16", className: "mod sheet-mod", "data-enter": "", "data-mod": "specStatus", style: S(`grid-column:${V.sheet?.specStatus?.col ?? ""}; grid-row:${V.sheet?.specStatus?.row ?? ""}; --d:${V.sheet?.specStatus?.delay ?? ""}; padding:11px 22px;`) },
                 h("p", { key: "0|6.1m8lgyx", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Status"
                 ),
@@ -1862,7 +1848,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "18", className: "sheet-mod", "data-enter": "", "data-mod": "specRev", style: S(`grid-column:${V.sheet?.specRev?.col ?? ""}; grid-row:${V.sheet?.specRev?.row ?? ""}; --d:${V.sheet?.specRev?.delay ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "18", className: "mod sheet-mod", "data-enter": "", "data-mod": "specRev", style: S(`grid-column:${V.sheet?.specRev?.col ?? ""}; grid-row:${V.sheet?.specRev?.row ?? ""}; --d:${V.sheet?.specRev?.delay ?? ""}; padding:11px 22px;`) },
                 h("p", { key: "0|11.1s8ry21", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Rev / Scale"
                 ),
@@ -1872,7 +1858,7 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("figure", { key: "21", className: "plate sheet-mod sheet-plate", "data-enter": "", "data-mod": "hero", "data-shape": `frame-${V.current?.figNo ?? ""}`, onMouseEnter: V.sheet?.hero?.move, onMouseMove: V.sheet?.hero?.move, onMouseLeave: V.sheet?.hero?.leave, style: S(`grid-column:${V.sheet?.hero?.col ?? ""}; grid-row:${V.sheet?.hero?.row ?? ""}; --d:${V.sheet?.hero?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
+              h("figure", { key: "21", className: "plate mod sheet-mod sheet-plate", "data-enter": "", "data-mod": "hero", "data-shape": `frame-${V.current?.figNo ?? ""}`, onMouseEnter: V.sheet?.hero?.move, onMouseMove: V.sheet?.hero?.move, onMouseLeave: V.sheet?.hero?.leave, style: S(`grid-column:${V.sheet?.hero?.col ?? ""}; grid-row:${V.sheet?.hero?.row ?? ""}; --d:${V.sheet?.hero?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
                 "\n      ",
                 h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
                   "+"
@@ -1890,7 +1876,7 @@
                 "\n    "
               ),
               "\n    ",
-              h("p", { key: "23|141.s2m5lr", className: "sheet-mod", "data-enter": "", "data-mod": "heroCaption", style: S(`grid-column:${V.sheet?.heroCaption?.col ?? ""}; grid-row:${V.sheet?.heroCaption?.row ?? ""}; --d:${V.sheet?.heroCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
+              h("p", { key: "23|141.s2m5lr", className: "mod sheet-mod", "data-enter": "", "data-mod": "heroCaption", style: S(`grid-column:${V.sheet?.heroCaption?.col ?? ""}; grid-row:${V.sheet?.heroCaption?.row ?? ""}; --d:${V.sheet?.heroCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
                 h("span", { key: "0|92.1o5q0e0", style: {"minWidth":"0"} },
                   h("span", { key: "0|44.1e4j9ob", style: {"color":"var(--color-accent)"} },
                     h(F,{key:0},"",I(V.current?.figWord,1)," ",I(V.current?.numeral,3),".")
@@ -1906,7 +1892,7 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("div", { key: "26", className: "sheet-mod", "data-enter": "", "data-mod": "body1", style: S(`grid-column:${V.sheet?.body1?.col ?? ""}; grid-row:${V.sheet?.body1?.row ?? ""}; --d:${V.sheet?.body1?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
+              h("div", { key: "26", className: "mod sheet-mod", "data-enter": "", "data-mod": "body1", style: S(`grid-column:${V.sheet?.body1?.col ?? ""}; grid-row:${V.sheet?.body1?.row ?? ""}; --d:${V.sheet?.body1?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
                 "\n      ",
                 h("span", { key: "1|5.36tydg", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
                   "01 //"
@@ -1917,7 +1903,7 @@
                 "\n    "
               ),
               "\n    ",
-              h("div", { key: "28", className: "sheet-mod", "data-enter": "", "data-mod": "body2", style: S(`grid-column:${V.sheet?.body2?.col ?? ""}; grid-row:${V.sheet?.body2?.row ?? ""}; --d:${V.sheet?.body2?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
+              h("div", { key: "28", className: "mod sheet-mod", "data-enter": "", "data-mod": "body2", style: S(`grid-column:${V.sheet?.body2?.col ?? ""}; grid-row:${V.sheet?.body2?.row ?? ""}; --d:${V.sheet?.body2?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
                 "\n      ",
                 h("span", { key: "1|5.36uq3p", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
                   "02 //"
@@ -1928,7 +1914,7 @@
                 "\n    "
               ),
               "\n    ",
-              h("div", { key: "30", className: "sheet-mod", "data-enter": "", "data-mod": "body3", style: S(`grid-column:${V.sheet?.body3?.col ?? ""}; grid-row:${V.sheet?.body3?.row ?? ""}; --d:${V.sheet?.body3?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
+              h("div", { key: "30", className: "mod sheet-mod", "data-enter": "", "data-mod": "body3", style: S(`grid-column:${V.sheet?.body3?.col ?? ""}; grid-row:${V.sheet?.body3?.row ?? ""}; --d:${V.sheet?.body3?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
                 "\n      ",
                 h("span", { key: "1|5.36vhty", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
                   "03 //"
@@ -1939,7 +1925,7 @@
                 "\n    "
               ),
               "\n    ",
-              h("aside", { key: "32", className: "sheet-mod", "data-enter": "", "data-mod": "aside", style: S(`grid-column:${V.sheet?.aside?.col ?? ""}; grid-row:${V.sheet?.aside?.row ?? ""}; --d:${V.sheet?.aside?.delay ?? ""}; display:flex; flex-direction:column; gap:20px; padding:22px; font-size:12.5px; line-height:20px; color:var(--color-neutral-700);`) },
+              h("aside", { key: "32", className: "mod sheet-mod", "data-enter": "", "data-mod": "aside", style: S(`grid-column:${V.sheet?.aside?.col ?? ""}; grid-row:${V.sheet?.aside?.row ?? ""}; --d:${V.sheet?.aside?.delay ?? ""}; display:flex; flex-direction:column; gap:20px; padding:22px; font-size:12.5px; line-height:20px; color:var(--color-neutral-700);`) },
                 "\n      ",
                 (V.marginalia ? h(F,{key:1},
                   "\n        ",
@@ -1997,29 +1983,15 @@
               ),
               "\n\n    ",
               "\n    ",
-              (V.detailPair ? h(F,{key:35},
+              (V.detailPairA ? h(F,{key:35},
                 "\n    ",
-                h("figure", { key: "1", className: "plate sheet-mod sheet-plate", "data-enter": "", "data-mod": "detailA", onMouseEnter: V.sheet?.detailA?.move, onMouseMove: V.sheet?.detailA?.move, onMouseLeave: V.sheet?.detailA?.leave, style: S(`grid-column:${V.sheet?.detailA?.col ?? ""}; grid-row:${V.sheet?.detailA?.row ?? ""}; --d:${V.sheet?.detailA?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
+                h("figure", { key: "1", className: "plate mod sheet-mod sheet-plate", "data-enter": "", "data-mod": "detailA", onMouseEnter: V.sheet?.detailA?.move, onMouseMove: V.sheet?.detailA?.move, onMouseLeave: V.sheet?.detailA?.leave, style: S(`grid-column:${V.sheet?.detailA?.col ?? ""}; grid-row:${V.sheet?.detailA?.row ?? ""}; --d:${V.sheet?.detailA?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
                   "\n      ",
                   h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
                     "+"
                   ),
                   "\n      ",
-                  h("image-slot", { key: "3", id: V.current?.detailSlotA, src: V.current?.detailA, shape: "rect", fit: "contain", placeholder: "Detail: drawing or interface", style: {"width":"100%","height":"100%"} }),
-                  "\n      ",
-                  h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
-                    "+"
-                  ),
-                  "\n    "
-                ),
-                "\n    ",
-                h("figure", { key: "3", className: "plate sheet-mod sheet-plate", "data-enter": "", "data-mod": "detailB", onMouseEnter: V.sheet?.detailB?.move, onMouseMove: V.sheet?.detailB?.move, onMouseLeave: V.sheet?.detailB?.leave, style: S(`grid-column:${V.sheet?.detailB?.col ?? ""}; grid-row:${V.sheet?.detailB?.row ?? ""}; --d:${V.sheet?.detailB?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
-                  "\n      ",
-                  h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
-                    "+"
-                  ),
-                  "\n      ",
-                  h("image-slot", { key: "3", id: V.current?.detailSlotB, src: V.current?.detailB, shape: "rect", fit: "contain", placeholder: "Detail: process or site", style: {"width":"100%","height":"100%"} }),
+                  h("image-slot", { key: "3", id: V.current?.detailSlotA, src: V.current?.detailA, shape: "rect", fit: "contain", style: {"width":"100%","height":"100%"} }),
                   "\n      ",
                   h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
                     "+"
@@ -2028,15 +2000,15 @@
                 ),
                 "\n    ") : null),
               "\n    ",
-              (V.detailOne ? h(F,{key:37},
+              (V.detailPairB ? h(F,{key:37},
                 "\n    ",
-                h("figure", { key: "1", className: "plate sheet-mod sheet-plate", "data-enter": "", "data-mod": "detail", onMouseEnter: V.sheet?.detail?.move, onMouseMove: V.sheet?.detail?.move, onMouseLeave: V.sheet?.detail?.leave, style: S(`grid-column:${V.sheet?.detail?.col ?? ""}; grid-row:${V.sheet?.detail?.row ?? ""}; --d:${V.sheet?.detail?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
+                h("figure", { key: "1", className: "plate mod sheet-mod sheet-plate", "data-enter": "", "data-mod": "detailB", onMouseEnter: V.sheet?.detailB?.move, onMouseMove: V.sheet?.detailB?.move, onMouseLeave: V.sheet?.detailB?.leave, style: S(`grid-column:${V.sheet?.detailB?.col ?? ""}; grid-row:${V.sheet?.detailB?.row ?? ""}; --d:${V.sheet?.detailB?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
                   "\n      ",
                   h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
                     "+"
                   ),
                   "\n      ",
-                  h("image-slot", { key: "3", id: V.current?.detailSlotA, src: V.current?.detail, shape: "rect", fit: "contain", placeholder: "Detail: drawing or interface", style: {"width":"100%","height":"100%"} }),
+                  h("image-slot", { key: "3", id: V.current?.detailSlotB, src: V.current?.detailB, shape: "rect", fit: "contain", style: {"width":"100%","height":"100%"} }),
                   "\n      ",
                   h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
                     "+"
@@ -2045,23 +2017,43 @@
                 ),
                 "\n    ") : null),
               "\n    ",
-              h("p", { key: "39|136.19o3fos", className: "sheet-mod", "data-enter": "", "data-mod": "detailCaption", style: S(`grid-column:${V.sheet?.detailCaption?.col ?? ""}; grid-row:${V.sheet?.detailCaption?.row ?? ""}; --d:${V.sheet?.detailCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
-                h("span", { key: "0|85.yyckg0", style: {"minWidth":"0"} },
-                  h("span", { key: "0|27.1uoc6rv", style: {"color":"var(--color-accent)"} },
-                    h(F,{key:0},"",I(V.current?.detailFigWord,1),"")
+              (V.detailOne ? h(F,{key:39},
+                "\n    ",
+                h("figure", { key: "1", className: "plate mod sheet-mod sheet-plate", "data-enter": "", "data-mod": "detail", onMouseEnter: V.sheet?.detail?.move, onMouseMove: V.sheet?.detail?.move, onMouseLeave: V.sheet?.detail?.leave, style: S(`grid-column:${V.sheet?.detail?.col ?? ""}; grid-row:${V.sheet?.detail?.row ?? ""}; --d:${V.sheet?.detail?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
+                  "\n      ",
+                  h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
+                    "+"
                   ),
-                  " ",
-                  h("span", { key: `cap-detail-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono" },
-                    h(F,{key:0},"",I(V.current?.detailCaptionText,1),"")
+                  "\n      ",
+                  h("image-slot", { key: "3", id: V.current?.detailSlotA, src: V.current?.detail, shape: "rect", fit: "contain", style: {"width":"100%","height":"100%"} }),
+                  "\n      ",
+                  h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
+                    "+"
+                  ),
+                  "\n    "
+                ),
+                "\n    ") : null),
+              "\n    ",
+              (V.hasDetail ? h(F,{key:41},
+                "\n    ",
+                h("p", { key: "1|136.19o3fos", className: "mod sheet-mod", "data-enter": "", "data-mod": "detailCaption", style: S(`grid-column:${V.sheet?.detailCaption?.col ?? ""}; grid-row:${V.sheet?.detailCaption?.row ?? ""}; --d:${V.sheet?.detailCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
+                  h("span", { key: "0|85.yyckg0", style: {"minWidth":"0"} },
+                    h("span", { key: "0|27.1uoc6rv", style: {"color":"var(--color-accent)"} },
+                      h(F,{key:0},"",I(V.current?.detailFigWord,1),"")
+                    ),
+                    " ",
+                    h("span", { key: `cap-detail-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono" },
+                      h(F,{key:0},"",I(V.current?.detailCaptionText,1),"")
+                    )
+                  ),
+                  h("span", { key: "1|25.ibc6df", style: {"flex":"none","color":"var(--color-neutral-600)","whiteSpace":"nowrap"} },
+                    h(F,{key:0},"",I(V.sheet?.detailReadout,1),"")
                   )
                 ),
-                h("span", { key: "1|25.ibc6df", style: {"flex":"none","color":"var(--color-neutral-600)","whiteSpace":"nowrap"} },
-                  h(F,{key:0},"",I(V.sheet?.detailReadout,1),"")
-                )
-              ),
+                "\n    ") : null),
               "\n\n    ",
               "\n    ",
-              h("div", { key: "42", className: "sheet-mod", "data-enter": "", "data-mod": "links", style: S(`grid-column:${V.sheet?.links?.col ?? ""}; grid-row:${V.sheet?.links?.row ?? ""}; --d:${V.sheet?.links?.delay ?? ""}; display:grid; grid-auto-rows:44px; align-content:start; overflow:hidden;`) },
+              h("div", { key: "44", className: "mod sheet-mod", "data-enter": "", "data-mod": "links", style: S(`grid-column:${V.sheet?.links?.col ?? ""}; grid-row:${V.sheet?.links?.row ?? ""}; --d:${V.sheet?.links?.delay ?? ""}; display:grid; grid-auto-rows:44px; align-content:start; overflow:clip; overflow-clip-margin:1px;`) },
                 "\n      ",
                 h("p", { key: "1|13.bujc8", style: {"margin":"0","display":"flex","alignItems":"center","padding":"0 22px","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Linked sheets"
@@ -2099,11 +2091,11 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("button", { key: "45|24.1chn43n", className: "sheet-mod sheet-ctl", "data-enter": "", "data-mod": "navBack", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navBack?.col ?? ""}; grid-row:${V.sheet?.navBack?.row ?? ""}; --d:${V.sheet?.navBack?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
+              h("button", { key: "47|24.1chn43n", className: "mod sheet-mod mod-ctl", "data-enter": "", "data-mod": "navBack", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navBack?.col ?? ""}; grid-row:${V.sheet?.navBack?.row ?? ""}; --d:${V.sheet?.navBack?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
                 h(F,{key:0},"← ",I(V.current?.backWord,1),"")
               ),
               "\n    ",
-              h("button", { key: "47|110.pyry3", className: "sheet-mod sheet-ctl", "data-enter": "", "data-mod": "navNext", onClick: V.openNext, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navNext?.col ?? ""}; grid-row:${V.sheet?.navNext?.row ?? ""}; --d:${V.sheet?.navNext?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:11px 22px; text-align:right; color:var(--color-text); background:var(--color-bg);`) },
+              h("button", { key: "49|110.pyry3", className: "mod sheet-mod mod-ctl", "data-enter": "", "data-mod": "navNext", onClick: V.openNext, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navNext?.col ?? ""}; grid-row:${V.sheet?.navNext?.row ?? ""}; --d:${V.sheet?.navNext?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:11px 22px; text-align:right; color:var(--color-text); background:var(--color-bg);`) },
                 "\n      ",
                 h("span", { key: "1|47.13c0pry", style: {"fontSize":"11px","lineHeight":"14px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   h(F,{key:0},"Next · ",I(V.next?.kickerWord,1)," ",I(V.next?.numeral,3),"")
@@ -2420,13 +2412,13 @@
     }
   
     pages = {
-      writing: { reg: 'serif', label: 'Research', kicker: 'Essays · Research', bio: 'I write about what happens when machines start drawing too, and I publish the research that keeps me honest. The tools live next door, in mono.', title: 'Drawings, tools, and other arguments.', byline: 'by Yiliang Shao', edition: 'Edition of one', stamp: 'MMXXVI',
-        intro: 'I write about what happens when machines start drawing too, and I publish the research that keeps me honest. This is the bound half of the last seven years: the papers that survived review, one proposal that put them to work, and a few essays I still agree with. The tools live next door, in mono.',
+      writing: { reg: 'serif', label: 'Research', kicker: 'Essays · Research', bio: 'I model buildings rather than draw them, and computation is how I bridge structure and design. The essays are what I make of the AI era; the papers back the tools next door, in mono.', title: 'The reasoning behind the building.', byline: 'by Yiliang Shao', edition: 'Edition of one', stamp: 'MMXXVI',
+        intro: 'I model buildings rather than draw them. The research here is structural analysis and computational thinking put to one question: how a structure that stands and a design worth building can be made the same decision, with computation as the bridge between them. This is the bound half of the last seven years: the papers that survived review, one proposal that put them to work, and the essays where I work out what the AI era is doing to all of it. The tools the papers back live next door, in mono.',
         indexKicker: 'Contents', indexTitle: 'Eight chapters, hover to preview.', indexNote: 'Page numbers follow the bound edition. Chapters marked Research link to the published paper; the rest are written here in full.',
         platesKicker: 'Selected plates', platesTitle: 'Two pieces I would show first, if you only had ten minutes.', readWord: 'Read chapter', notesTitle: 'Trained as an architect. Stayed for the tooling.',
-        colophon: 'Set in Newsreader and Lora on a near-white ground. Photographs are matted as plates. Nothing here is generated; everything here was drawn, built, or written by hand, sometimes slowly.',
+        colophon: 'Set in Newsreader and Lora on a near-white ground. Photographs are matted as plates. Nothing here is generated; everything here was modelled, built, or written by hand, sometimes slowly.',
         titleSize: 'clamp(48px,7vw,104px)', titleTracking: '-0.01em', bylineSize: '26px', bodySize: '17px', smallBodySize: '15.5px', stampSize: '40px', h2Size: '40px', h3Size: '34px', cvSize: '22px', capLeadSize: '18px', marginSize: '19px', marginStyle: 'italic', marginPrefix: '' },
-      tooling: { reg: 'mono', label: 'Development', kicker: 'tooling · r+d · side projects', title: 'I build software for people who draw buildings, and I keep the drawings in charge.', byline: '>_ y.shao · oslo — this register is kept by hand and issued when something changes', edition: 'Rev 2026.09 · issued for review', stamp: 'SHT-00',
+      tooling: { reg: 'mono', label: 'Development', kicker: 'tooling · r+d · side projects', title: 'I build software for people who model buildings, and I take the boring part out of their way.', byline: '>_ y.shao · this register is kept by hand and issued when something changes', edition: 'Rev 2026.09 · issued for review', stamp: 'SHT-00',
         intro: 'Natalie first: the computing platform I own and build at SOM, issued as one sheet for the platform and seven for the parts of it I would show first, from a learned facade correspondence to a room layout solver. After it, six smaller things I made because I needed them in practice. Each is listed with the reason I built it, because the reason is usually the interesting part. The arguments about all this live next door, in serif.',
         indexKicker: 'natalie, then six things I made because I needed them', indexTitle: '', indexNote: 'sheet numbers are stable across revisions; rev is the year of the last issue. click a row for the full sheet.',
         platesKicker: 'Selected sheets', platesTitle: '', readWord: 'Open sheet', notesTitle: 'Trained as an architect. Stayed for the tooling.',
@@ -2454,7 +2446,11 @@
     // paint would otherwise be the wrong one, replaced a frame later. The address bar is read the same
     // way, so a deep link paints the view it names, not the home first.
     state = { view: 'home', page: 'writing', cvReg: 'serif', idx: 10, hovered: 10, tab: { left: 0, width: 0 },
-      narrow: this.isStacked(), landingRows: this.visibleRows(), landingStatementRows: 12,
+      narrow: this.isStacked(), landingRows: this.visibleRows(),
+      // the description's clamp, in lines, and whether it was cut: both read off the page after the
+      // first layout, since 0 lines means "not measured yet" and the module's overflow guard holds the
+      // one frame before the answer arrives
+      landingIntroLines: 0, landingIntroCut: false, landingIntroOpen: false,
       ...this.routeState(this.parseRoute(location.hash)) };
   
     // Where every module of a Development sheet sits on the 22 column, 44px row drawing grid, as
@@ -2537,17 +2533,22 @@
     // The desktop Development landing is the same drawing grid run full bleed: 22 columns across the
     // viewport, 44px rows, at least a screen tall. Only these five modules are placed by hand. The
     // statement opens the sheet at its first cell and the platform stands beside it on the same rows,
-    // taking the column the statement leaves off at, so no empty column falls between them. Only the
-    // columns are a decision: two of the five rows are measured rather than chosen. The statement and
-    // the platform read 'fit', which is the rows the statement's own type takes at this width, counted
-    // off the page after it is laid out; the three contact cells close the sheet in the bottom right
-    // corner and read 'last', which is the grid's final row, known only once landing-grid.js has grown
-    // the sheet to hold every plate. Everything else on the landing is a plate, pinned to a cell by the
-    // seeded draw rather than by a table. Plain literals like the sheet tables above, so
-    // tools/check-landing-grid.mjs can read them without running this file.
+    // taking the column the statement leaves off at, so no empty column falls between them. The corner
+    // block is eight rows, chosen the way every other span on this grid is chosen and written here like
+    // one: the block is a fixed shape and the type is fitted into it, rather than the block being cut
+    // to whatever the type happened to measure at this viewport. What does not fit is clamped to the
+    // lines that do and unfolds on a click. That is the whole of why the composition below can be
+    // composed at all: a corner that changes depth with the window is a corner every pin has to be
+    // clear of at every depth, and there is no such thing as a pin that is clear of a block whose
+    // height is a fact about the reader's browser.
+    //
+    // Only the three contact cells still read a word, 'last', which is the grid's final row, known only
+    // once landing-grid.js has grown the sheet to hold every plate. Everything else on the landing is a
+    // plate, pinned to a cell by the table below or by the seeded draw. Plain literals like the sheet
+    // tables above, so tools/check-landing-grid.mjs can read them without running this file.
     LANDING_WIDE = {
-      statement:     { col: '1 / 12',  row: 'fit' },
-      platform:      { col: '12 / 18', row: 'fit' },
+      statement:     { col: '1 / 12',  row: '1 / 9' },
+      platform:      { col: '12 / 18', row: '1 / 9' },
       contactEmail:  { col: '17 / 19', row: 'last' },
       contactGithub: { col: '19 / 21', row: 'last' },
       contactCv:     { col: '21 / 23', row: 'last' },
@@ -2565,28 +2566,81 @@
     // them in the wrong places is one the remaining plates cannot be fitted on at all;
     // tools/check-landing-grid.mjs runs whatever is written here across every viewport and statement
     // height it sweeps, which is the place that failure is meant to surface.
+    //
+    // That is the reading a visitor gets. The page behind ?dev gets the other one, `strict: false` in
+    // landingLayout below: the panel pins every plate where the draw left it as soon as it mounts, so
+    // that a composition holds still while it is being made, and from there a drag is one pin crossing
+    // its neighbours. Refusing that composition would take every plate off the sheet mid-move, so
+    // while the panel is up the pins are drawn as written and the overlaps are named in the panel's own
+    // warning line instead. What is pasted back here therefore still has to be a composition the strict
+    // reading accepts, and the check above is where it is held to that.
     LANDING_PINS = {
+      natalie:                                        { col: '8 / 15',  row: '19 / 22' },
+      'ai-layout':                                    { col: '2 / 5',   row: '18 / 22' },
+      'synchronisation-to-the-rhino-ecosystem':       { col: '1 / 4',   row: '10 / 15' },
+      'linkage-to-rhino-blocks':                      { col: '10 / 13', row: '24 / 28' },
+      'residential-program-responsive-facade-layout': { col: '1 / 4',   row: '24 / 29' },
+      'unit-stack-calculation':                       { col: '14 / 17', row: '11 / 17' },
+      'unit-demising-calculation':                    { col: '5 / 9',   row: '23 / 29' },
+      'room-layout-solver':                           { col: '19 / 22', row: '9 / 15' },
+      'long-mission-orchestrator':                    { col: '17 / 19', row: '20 / 27' },
+      'knowledge-ratchet':                            { col: '20 / 22', row: '18 / 26' },
+      'website-renovation-signpost':                  { col: '14 / 16', row: '24 / 28' },
+      'rhino-worktree-launcher':                      { col: '11 / 13', row: '10 / 18' },
+      'agent-usage-stat':                             { col: '19 / 22', row: '2 / 7' },
+      'building-graph-neural-network':                { col: '6 / 10',  row: '10 / 16' },
     };
     LANDING_PAD = 22; // the padding every module of the drawing grid is set in
+    // Whether this page is being tuned rather than read, off the URL, once: the flag decides both which
+    // modules are fetched at all, in componentDidMount, and how the landing draws, just below. Read on
+    // the instance rather than at each of them, since a page where the two disagreed would either ship
+    // the panels or refuse the compositions made with them.
+    dev = new URLSearchParams(location.search).has('dev');
     // one seed per page load, kept on the instance: hovering a plate, scrolling, or leaving for another
     // tab and coming back all re-render the same composition. Only the row count can redraw it.
     landingSeed = (Math.random() * 4294967296) >>> 0;
     // the rows a screen shows under the 57px header; the sheet starts here and grows from it
     visibleRows() { return Math.max(6, Math.floor((window.innerHeight - 57) / 44)); }
-    // The statement's module is as tall as its type and no taller. The type is set to the module's full
-    // width, so how many rows it takes is a fact about this viewport rather than a number anyone can
-    // write in the table: it is read off the page after layout, the way measureTabs reads the tab strip
-    // and remeasureText re-reads the ripple's glyphs. The read is of the children rather than of
-    // scrollHeight, which is clipped by the module's own overflow:hidden guard and disagrees between
-    // browsers about the bottom padding. Writing back only on a change keeps componentDidUpdate from
-    // chasing itself: the module's width does not depend on its row span, so the answer is stable.
-    measureLandingStatement() {
-      const el = this.landingStatementRef.current; if (!el || !el.children.length) return;
-      const top = el.getBoundingClientRect().top;
-      const last = el.children[el.children.length - 1].getBoundingClientRect().bottom;
-      if (!(last > top)) return; // mid-transition, or the module is not laid out yet
-      const rows = Math.max(8, Math.ceil((last - top + this.LANDING_PAD) / 44));
-      if (rows !== this.state.landingStatementRows) this.setState({ landingStatementRows: rows });
+    // The statement's module is a fixed eight rows, so what is measured here is the type rather than
+    // the grid: how many lines of the description fit in the room the module has left after the kicker,
+    // the title and the byline, all of which are set before it and none of which may be cut. The
+    // description is clamped to that many lines and the last of them ends in an ellipsis; the rest is a
+    // click away. At a wide viewport the whole paragraph fits and nothing is clamped at all.
+    //
+    // The room is worked out from the module's own bottom rather than by adding the pieces up, because
+    // the pieces carry collapsing margins and their sum is not the distance they occupy. It does not
+    // depend on the answer either: where the description starts is set by the kicker and the title
+    // above it, and the byline's height is its own, so a clamp of four lines and a clamp of five give
+    // the same room and componentDidUpdate cannot chase itself. Whether the text was actually cut is
+    // the one thing that has to be read after the clamp is on, which is what scrollHeight answers.
+    fitLandingStatement() {
+      const el = this.landingStatementRef.current;
+      // The module is gone, so an unfolded one is a flag nobody can see and nobody can put back: a
+      // reader who opens the statement, opens a sheet and comes back would find it still standing over
+      // the plates. This is the one place that knows the module has left, so it is the place that folds.
+      if (!el) { if (this.state.landingIntroOpen) this.setState({ landingIntroOpen: false }); return; }
+      const p = el.querySelector('[data-landing-intro]'); if (!p) return;
+      if (this.state.landingIntroOpen) return; // unfolded: the module is as tall as its type and nothing is cut
+      const box = el.getBoundingClientRect();
+      if (!(box.height > 0)) return; // mid-transition, or the module is not laid out yet
+      const cs = getComputedStyle(el), ps = getComputedStyle(p);
+      const by = el.querySelector('[data-landing-byline]');
+      const bs = by && getComputedStyle(by);
+      const below = by ? by.getBoundingClientRect().height + parseFloat(bs.marginTop) : 0;
+      const room = (box.bottom - parseFloat(cs.paddingBottom)) - p.getBoundingClientRect().top - below;
+      const line = parseFloat(ps.lineHeight) || 22;
+      const lines = Math.max(1, Math.floor(room / line));
+      const cut = p.scrollHeight > p.clientHeight + 1;
+      if (lines !== this.state.landingIntroLines || cut !== this.state.landingIntroCut) {
+        this.setState({ landingIntroLines: lines, landingIntroCut: cut });
+      }
+    }
+    // Unfolding is the whole of what the ellipsis promises, so it is one flag and the render reads it.
+    // Folding back is a second click, Escape, or leaving the view, since a module left standing open
+    // over the plates would still be open when the reader came back to the landing from a sheet.
+    toggleLandingIntro() {
+      if (!this.state.landingIntroCut && !this.state.landingIntroOpen) return;
+      this.setState({ landingIntroOpen: !this.state.landingIntroOpen });
     }
     // The plate placement for the desktop landing. renderVals runs on every scroll frame and the draw
     // is not free, so it is memoised on everything it depends on. The module arrives by dynamic import
@@ -2595,9 +2649,9 @@
     // in and the order a pin names a plate by. The pins go into the cache key because the tuning panel
     // behind ?dev edits LANDING_PINS in place and asks for a re-render: without them the panel would
     // move a pin and get the previous composition back.
-    landingLayout(slugs, rows, statementRows) {
+    landingLayout(slugs, rows) {
       const count = slugs.length;
-      const key = this.landingSeed + '|' + count + '|' + rows + '|' + statementRows + '|' + JSON.stringify(this.LANDING_PINS);
+      const key = this.landingSeed + '|' + count + '|' + rows + '|' + JSON.stringify(this.LANDING_WIDE.statement.row) + '|' + JSON.stringify(this.LANDING_PINS);
       if (this.landingCache && this.landingCache.key === key) return this.landingCache.out;
       if (!this.landingMod) {
         if (!this.landingLoading && !this.landingFailed) {
@@ -2610,6 +2664,7 @@
       }
       const at = (s) => s.split('/').map((v) => parseInt(v, 10));
       const sc = at(this.LANDING_WIDE.statement.col), pc = at(this.LANDING_WIDE.platform.col);
+      const sr = at(this.LANDING_WIDE.statement.row);
       const e0 = at(this.LANDING_WIDE.contactEmail.col), c1 = at(this.LANDING_WIDE.contactCv.col);
       // a pin is written as spans of grid lines, the way every placement table here is; landing-grid
       // counts cells, so the two halves of that translation live on this one line
@@ -2622,9 +2677,15 @@
       let out = null;
       try {
         out = this.landingMod.placeLanding({ seed: this.landingSeed, cols: 22, rows, count, pins,
+          // The panel pins every plate the moment it mounts and a drag then carries one across its
+          // neighbours, so a sheet being tuned is asked for as written, overlaps and all. Refusing it
+          // would take the whole landing off the page, the plate under the cursor included.
+          strict: !this.dev,
           // the statement and the platform are handed over as the one block they read as, so the plates
-          // keep their empty cell from the pair rather than from each of them
-          reserved: [{ col: sc[0], row: 1, w: pc[1] - sc[0], h: statementRows }],
+          // keep their empty cell from the pair rather than from each of them. Both are the same span,
+          // and it is a span now rather than a measurement, so the block a pin has to be clear of is the
+          // same block on every screen.
+          reserved: [{ col: sc[0], row: sr[0], w: pc[1] - sc[0], h: sr[1] - sr[0] }],
           contact: { col: e0[0], w: c1[1] - e0[0] } });
         this.landingError = null;
       } catch (e) {
@@ -2853,7 +2914,7 @@
       clone.style.willChange = 'opacity'; clone.style.contain = 'paint';
       clone.querySelectorAll('[data-morph]').forEach((el) => { if (out.has(el.dataset.morph)) el.style.opacity = '0'; });
       if (this.slideLeaves) clone.querySelectorAll('[data-leaf]').forEach((el, i) => { const dir = el.dataset.leaf === 'left' ? -1 : 1; el.style.animation = 'none'; el.style.transition = 'none';
-        el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(' + dir * 110 + 'vw)' }], { duration: 640, delay: (i % 3) * 60, easing: 'cubic-bezier(.5,0,.85,.2)', fill: 'forwards' }); });
+        el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(' + dir * 110 + 'vw)' }], { duration: 640, delay: (i % 3) * 60, easing: 'cubic-bezier(.5,0,.85,.2)', fill: 'forwards' }).id = 'leaf-slide'; });
       wrap.appendChild(clone); out.snapshot = wrap;
       const layer = document.createElement('div');
       layer.style.cssText = 'position:fixed; inset:0; z-index:3; pointer-events:none; overflow:hidden;';
@@ -2873,8 +2934,10 @@
       const layer = olds.layer;
       if (olds.snapshot) { olds.snapshot.animate([{ opacity: 1 }, { opacity: 1, offset: this.slideLeaves ? 0.55 : 0 }, { opacity: 0 }], { duration: this.slideLeaves ? 820 : 560, easing: 'cubic-bezier(.4,0,.6,1)', fill: 'forwards' }); }
       main.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 520, delay: 160, easing: 'ease', fill: 'backwards' });
+      // named, so placeLeafText can tell a leaf still flying in from everything else the page has running and wait it
+      // out rather than measuring a caption where the slide happens to have carried it (see placeLeafText)
       if (this.slideLeaves) main.querySelectorAll('[data-leaf]').forEach((el, i) => { const dir = el.dataset.leaf === 'left' ? -1 : 1;
-        el.animate([{ transform: 'translateX(' + dir * 110 + 'vw)' }, { transform: 'translateX(0)' }], { duration: 760, delay: 220 + (i % 3) * 70, easing: 'cubic-bezier(.15,.8,.2,1)', fill: 'backwards' }); });
+        el.animate([{ transform: 'translateX(' + dir * 110 + 'vw)' }, { transform: 'translateX(0)' }], { duration: 760, delay: 220 + (i % 3) * 70, easing: 'cubic-bezier(.15,.8,.2,1)', fill: 'backwards' }).id = 'leaf-slide'; });
       const jobs = [], hidden = [], seen = new Set();
       main.querySelectorAll('[data-morph]').forEach((el) => {
         const name = el.dataset.morph, rc0 = el.getBoundingClientRect(); if (!rc0.width) return;
@@ -3063,6 +3126,9 @@
       if (this.cubeLead && pf) {
         // above the page-morph snapshot for the trip (as the roll does)
         if (layer.parentNode !== document.body) { document.body.appendChild(layer); layer.style.zIndex = '4'; }
+        // the one path that leaves home with the layer still up, so it says so rather than inheriting whatever the
+        // last exit left behind. Snapped, not faded: an exit fade caught a frame ago is undone without a flicker
+        layer.style.transition = 'none'; layer.style.opacity = '1';
         if (this.parch) this.home.setPlatformFrame(this.parch.platformFrame());
         // ink eases to paper alongside the ground darkening (snapping it would blank the cube on the still-light page)
         this.home.setInk('#f3f2f2'); this.home.setOpacity(1);
@@ -3075,6 +3141,12 @@
           layer.style.zIndex = '2'; if (this.home) this.home.setOpacity(0);
         }, this.CUBE_COLLAPSE_MS);
       } else {
+        // the layer is a full-viewport canvas standing over the page at z-index 2, so asking the model to fade is not
+        // enough to get the cube off a landing it does not belong to: that fade is a lerp taken once a frame, which is
+        // a frame count and not a length of time. Hide the layer itself, on the clock, the moment the view leaves home.
+        // The model fade still runs under it, and homeKillTimer is left to do the teardown it always did
+        layer.style.transition = 'opacity 220ms cubic-bezier(.65,0,.15,1)';
+        layer.style.opacity = '0';
         this.home.setOpacity(0);
       }
       if (!this.homeKillTimer) this.homeKillTimer = setTimeout(() => { this.homeKillTimer = null; if (this.state.view !== 'home' && this.home) { this.home.destroy(); this.home = null; } }, 2200);
@@ -3184,12 +3256,15 @@
       this.onUp = () => { if (!this.dragLast) return; this.dragLast = null; if (this.parch) this.parch.dragEnd(); const pf = this.platformRef.current; if (pf) pf.style.cursor = 'grab'; };
       window.addEventListener('pointerdown', this.onDown); window.addEventListener('pointerup', this.onUp); window.addEventListener('pointercancel', this.onUp);
       this.onScroll = () => { this.syncParchment(); this.syncHome(); this.setState({ scrollY: window.scrollY }); clearTimeout(this.remeasureTimer); this.remeasureTimer = setTimeout(() => this.remeasureText(), 120); };
-      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => setTimeout(() => { this.remeasureText(); this.measureLandingStatement(); this.syncParchment(); }, 50));
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => setTimeout(() => { this.remeasureText(); this.fitLandingStatement(); this.syncParchment(); }, 50));
       this.onResize = () => { this.setState({ narrow: this.isStacked(), landingRows: this.visibleRows() }); this.measureTabs(); this.syncParchment(); this.syncHome(); };
       this.onKey = (e) => {
         const t = e.target; if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
         const n = this.data.length, { view, idx } = this.state;
-        if (e.key === 'Escape') this.goPage(this.state.view === 'chapter' ? this.pageOf(idx) : this.state.page);
+        // an unfolded statement is the innermost thing Escape can close, so it takes the key first and
+        // the reader stays on the landing rather than being navigated off it
+        if (e.key === 'Escape' && this.state.landingIntroOpen) this.setState({ landingIntroOpen: false });
+        else if (e.key === 'Escape') this.goPage(this.state.view === 'chapter' ? this.pageOf(idx) : this.state.page);
         else if (e.key === 't' || e.key === 'T') this.goPage('tooling');
         else if (e.key === 'e' || e.key === 'E') this.goPage('writing');
         else if (e.key === 'ArrowRight') this.open(view === 'chapter' ? (idx + 1) % n : this.featuredFor[this.state.page][0]);
@@ -3198,7 +3273,7 @@
         else return;
         this.setState({ usedKeys: true });
       };
-      this.onResize(); this.measureLandingStatement(); window.addEventListener('resize', this.onResize);
+      this.onResize(); this.fitLandingStatement(); window.addEventListener('resize', this.onResize);
       window.addEventListener('scroll', this.onScroll, { passive: true });
       window.addEventListener('keydown', this.onKey);
       // the first entry gets the state behind its address, so a return to it restores the view as it was opened
@@ -3228,7 +3303,7 @@
       // on a view it has nothing to tune, so only one ever stands on the page. The flag is the only
       // thing that fetches them, so the page ships nothing for them otherwise, the same arrangement
       // field.js has for the home field.
-      if (new URLSearchParams(location.search).has('dev')) {
+      if (this.dev) {
         import('./leaves-dev.js')
           .then((m) => { if (!this.dead) this.leafTuner = m.mount({ spreads: this.LEAF_SPREADS, pairs: this.LEAF_PAIRS, rerender: () => this.forceUpdate() }); })
           .catch((e) => console.error('leaves-dev', e));
@@ -3246,7 +3321,7 @@
     // it on the new anchor. A window dragged across the threshold fires resize again and again and
     // self-corrected by accident; one docked there with Win+arrow fires it once, and did not.
     // The leaf detail grows by a character per tick while it types, so its placement runs here too.
-    componentDidUpdate() { this.observeReveals(); this.mountTextEffects(); this.measureTabs(); this.measureLandingStatement(); this.syncParchment(); this.syncHome(); this.syncPaper(); this.placeLeafText(); }
+    componentDidUpdate() { this.observeReveals(); this.mountTextEffects(); this.measureTabs(); this.fitLandingStatement(); this.syncParchment(); this.syncHome(); this.syncPaper(); this.placeLeafText(); }
   
     // A chapter whose entry carries a `paper` gets its body from an ES module under content/, fetched
     // the first time that chapter is opened and then kept on the instance. Nothing is imported for the
@@ -3587,9 +3662,17 @@
       // the model lives in one grid opening on the Development page: clip the fixed layer to that cell.
       // Only once the roll is actually in it: a travel still to start, or in the air, has the roll out in
       // the page, and clipping to the opening it is heading for would blink it away where it stands
-      layer.style.clipPath = k === 1 && !this.parchTween && !this.parchTravel
+      const landed = k === 1 && !this.parchTween && !this.parchTravel;
+      layer.style.clipPath = landed
         ? 'inset(' + pr.top + 'px ' + (window.innerWidth - pr.right) + 'px ' + (window.innerHeight - pr.bottom) + 'px ' + pr.left + 'px)'
         : 'none';
+      // and, for that state only, above the cell it is clipped into. The opening is an opaque module that stacks in
+      // its own right, and it comes later in the page than this layer, so at equal height the cell's ground paints
+      // over the model. Clipped, the layer reaches no further than the opening, so nothing outside it changes; the
+      // rest of the time the layer is the full viewport and has to stay under the page. syncHome carries the same
+      // rule for the cube's layer when the cube lands on this cell. Only while the layer is parked in the root: a
+      // travel lifts it to the body at 4, and that ride is not this rule's to overwrite
+      if (layer.parentNode === root) layer.style.zIndex = landed ? '2' : '1';
       // A register change that arrives while a travel is still in the air supersedes it; the roll carries
       // on from the pose that travel had reached. Queued behind it instead, as it was, the new travel sat
       // out the rest of the old one holding parchTravel, and the frame the old tween ended on was one
@@ -3651,9 +3734,26 @@
     // bottom of a one-screen page it runs out of the hero. When there is no room below it flips above
     // the caption instead. It is measured rather than guessed because the height grows a character at
     // a time while the line types in.
+    //
+    // The measurement is of a box, and a register change slides every leaf in from off-page, so a render landing
+    // mid-slide measures a caption where the slide has carried it and writes a correction for a place it is only
+    // passing through. Nothing re-runs the pass when the slide ends, so that correction stands until some later
+    // render happens to fall after it: the fault shows as a caption cut off by the page edge, healed by the next
+    // glitch beat up to three seconds later. So a slide in flight is waited out and the captions are placed once,
+    // from where the leaves land. Only the slide holds the pass back. The leaves carry drifting transforms of their
+    // own that never finish, and waiting on those would mean never placing anything at all.
     placeLeafText() {
       const hero = this.heroRef.current;
       if (!hero) return;
+      const flying = hero.getAnimations ? hero.getAnimations({ subtree: true }).filter((a) => a.id === 'leaf-slide' && a.playState === 'running') : [];
+      if (flying.length) {
+        if (!this.leafPlaceWait) {
+          this.leafPlaceWait = true;
+          // a leaf taken off the page mid-slide has its animation cancelled, and a cancelled animation rejects
+          Promise.all(flying.map((a) => a.finished.catch(() => {}))).then(() => { this.leafPlaceWait = false; this.placeLeafText(); });
+        }
+        return;
+      }
       const box = hero.getBoundingClientRect(), pad = 14;
       hero.querySelectorAll('[data-leaf] [data-leaf-text]').forEach((text) => {
         text.style.transform = 'none';
@@ -3979,7 +4079,8 @@
           // the plates under the account are captioned by the entry when it has something to say about
           // them, and by the sheet's own line when it has not; the kicker counts whatever is there
           detailFigWord: d.detail ? 'Fig. 1.' : 'Figs. 1–2.',
-          detailCaptionText: d.detailCaption || 'Working states. Left, the drawing or interface; right, where it was made.',
+          // no invented caption: a detail figure that names none says nothing under itself
+          detailCaptionText: d.detailCaption || '',
           hasLink: !!d.href || linkIdx >= 0, noLink: !d.href && linkIdx < 0, href: d.href || '#', linkTarget: d.linkBlank ? '_blank' : undefined, linkRel: d.linkBlank ? 'noopener' : undefined,
           linkClick: linkIdx >= 0 ? (e) => { e.preventDefault(); this.open(linkIdx); } : undefined,
           previewOpacity: hovered === i ? '1' : '0',
@@ -4069,15 +4170,30 @@
       // A plate shows its picture and its title at rest and types its reason in on hover, at the Research
       // leaves' tempo, from the same typewriter.
       const landingWide = view === 'page' && page.reg === 'mono' && !this.state.narrow;
-      const statementRows = this.state.landingStatementRows;
-      const lay = landingWide ? this.landingLayout(pageProjects.map((p) => p.slug), this.state.landingRows, statementRows) : null;
+      const lay = landingWide ? this.landingLayout(pageProjects.map((p) => p.slug), this.state.landingRows) : null;
       const landingRows = lay ? lay.rows : this.state.landingRows;
       const land = {};
       for (const [name, spot] of Object.entries(this.LANDING_WIDE)) {
+        // 'last' is the one row on this table nobody writes: the contact band closes the sheet on
+        // whatever row the placement ended on, which is known only once the plates are placed.
         land[name] = { col: spot.col,
-          row: spot.row === 'last' ? landingRows + ' / ' + (landingRows + 1)
-            : spot.row === 'fit' ? '1 / ' + (1 + statementRows) : spot.row };
+          row: spot.row === 'last' ? landingRows + ' / ' + (landingRows + 1) : spot.row };
       }
+      // The statement's module is a fixed block, so the description is clamped to the lines that fit in
+      // it and the rest is a click away. Four values carry that: the clamp, the word in the byline row
+      // that says there is more to read, the box the module takes while it is unfolded, and whether the
+      // module answers the cursor at all. Unfolded it is its own content height at a z-index above every
+      // plate, hovered ones included, and it keeps its own background, so what it grows over is covered
+      // rather than shown through. Nothing here is clickable when the whole paragraph already fits.
+      const introOpen = this.state.landingIntroOpen, introCut = this.state.landingIntroCut;
+      const landIntroClamp = introOpen || !this.state.landingIntroLines ? ''
+        : 'display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:' + this.state.landingIntroLines + '; overflow:hidden;';
+      // closed, the module clips its own type; the clip takes a 1px margin so it stops short of the two
+      // strokes .mod::after draws outside the module and the frame keeps all four sides
+      const landIntroBox = introOpen ? 'align-self:start; height:auto; min-height:100%; overflow:visible; z-index:35;' : 'overflow:clip; overflow-clip-margin:1px; z-index:1;';
+      const landIntroMore = introOpen ? 'less' : introCut ? 'more' : '';
+      const landIntroCursor = introOpen || introCut ? 'pointer' : 'default';
+      const landIntroToggle = () => this.toggleLandingIntro();
       // The graph, read as positions on this landing. relatedTo answers in data indices; the landing
       // knows its plates by k, their place in the register, so the two are joined once here and the
       // lines and the highlight both read the answer back.
@@ -4124,7 +4240,10 @@
           mod: 'plate.' + p.slug,
           whyTop: below ? '100%' : 'auto', whyBottom: below ? 'auto' : '100%',
           typed, whyOpacity: on ? '1' : '0', caretOpacity: on && typed.length < p.why.length ? '1' : '0',
-          frameInk: lit ? 'var(--color-text)' : 'var(--color-neutral-400)',
+          // the state, not the ink: .mod[data-lit] carries the full-ink frame, so the three steps of the
+          // ladder are all in one CSS rule and a plate says only which of them it is on. null rather than
+          // false, so React leaves the attribute off a plate that is not lit
+          lit: lit ? '' : null,
           // the hovered plate rises over its neighbours: a module's right and bottom hairlines are drawn
           // outside its own box, so without this its lit frame would be covered on two sides. A plate
           // lit by the graph rises for the same reason, but under the plate the cursor is on.
@@ -4178,7 +4297,13 @@
       const detailTop = Math.min(at(place.detailA.row)[0], at(place.detailB.row)[0]);
       const detailFoot = Math.max(at(place.detailA.row)[1], at(place.detailB.row)[1]);
       const oneDetail = !!current.detail && current.detailW > 0 && current.detailH > 0;
-      const detailRows = oneDetail
+      // The common state, and the one the module used to answer with two worded frames: an entry that
+      // names no detail picture at all. The module takes no rows, so grewDetail carries it away on its
+      // own; grewDetailGap below takes the caption's rows and the row that separated the module from
+      // the linked sheets, which is the rest of what the table wrote for a module that is not there.
+      const noDetail = !oneDetail && !current.detailA && !current.detailB;
+      const detailRows = noDetail ? 0
+        : oneDetail
         ? this.rowsFor(detailCol[1] - detailCol[0], current.detailW, current.detailH)
         : detailFoot - detailTop;
       const grewDetail = detailRows - (detailFoot - detailTop);
@@ -4197,8 +4322,11 @@
       // what the linked sheets took
       const heroMovesFrom = at(place.heroCaption.row)[0], detailMovesFrom = at(place.detailCaption.row)[0];
       const linksMovesFrom = at(place.navBack.row)[0];
+      // What a dropped detail module takes beyond its plates: its caption's rows and the blank row
+      // under them, which is exactly the distance the table leaves between the caption and the links.
+      const grewDetailGap = noDetail ? detailMovesFrom - linksTop : 0;
       const shiftAt = (row) => (row >= heroMovesFrom ? grewHero : 0) + (row >= detailMovesFrom ? grewDetail : 0) +
-        (row >= linksMovesFrom ? grewLinks : 0);
+        (row >= linksTop ? grewDetailGap : 0) + (row >= linksMovesFrom ? grewLinks : 0);
       const sheet = {};
       for (const name of Object.keys(place)) {
         const span = at(place[name].row);
@@ -4245,6 +4373,7 @@
         serifBands, heroSheetH: this.heroSheetH(this.state.narrow), heroBlockH: this.heroBlockH(),
         isMonoPage: view === 'page' && page.reg === 'mono',
         isLandingWide: landingWide, isLandingNarrow: !landingWide, land, landingPlates, landingLines,
+        landIntroClamp, landIntroBox, landIntroMore, landIntroCursor, landIntroToggle,
         sheetLinks, linksEmpty: !relatedIdx.length,
         isMono: view === 'chapter' && mono, isSerif: view === 'chapter' && !mono, chapterKey: R + '-' + idx,
         isPaper: view === 'chapter' && !mono && !!current.paper, isEssay: view === 'chapter' && !mono && !current.paper,
@@ -4254,7 +4383,7 @@
         // The serif chapter has no moving plate and keeps heroImg/heroSlot.
         heroVideo: view === 'chapter' && !!current.video, heroStill: view === 'chapter' && !current.video,
         // one plate under the account, or the pair the sheet has always carried
-        detailOne: oneDetail, detailPair: !oneDetail,
+        detailOne: oneDetail, detailPairA: !oneDetail && !!current.detailA, detailPairB: !oneDetail && !!current.detailB, hasDetail: !noDetail,
         rBody: mono ? this.MONO : 'var(--font-body)', rAlign: mono ? 'left' : 'justify', rTracking: mono ? '-0.03em' : '0',
         brandChars: (this.state.brandAnim || Array.from(this.BRAND).map((ch) => ({ ch, reg: brandReg, swap: false }))).map((c) => ({
           ch: c.ch, font: c.reg === 'mono' ? this.MONO : 'var(--font-heading)', tracking: c.reg === 'mono' ? '-0.03em' : '0',

@@ -322,6 +322,11 @@ export function mount(container) {
   let anchor = { x: 0, y: 0, w: 1, h: 1 }, ax = 0, ay = 0, as = 1;
   let vw = 1, vh = 1;
   let hover = 0, hoverTo = 0, alpha = 1, alphaTo = 1;
+  // the fade is wall-clock, not per frame. A lerp toward the target once a frame is a frame count dressed as a
+  // duration: about eight tenths of a second when the frames are cheap, and however long the frames take when they
+  // are not, which is exactly when the cube is still being drawn over a page it has already left
+  const FADE_MS = 260;
+  let alphaFrom = 1, alphaT0 = -1;
   let col = null, dis = 0, trav = 0, flat = 0, fold = 0; // the collapse timeline and its beats
   // the 4D pose. It runs free while nothing is collapsing; a collapse records where it was and the quarter turn it is
   // nearest, and the fold beat carries it there, so the figure is a plain cube before the travel starts
@@ -380,7 +385,11 @@ export function mount(container) {
       if (u0 >= 1 && col.reverse) { anchor = { ...col.cube }; col = null; dis = trav = flat = fold = 0; }
     }
     hover += (hoverTo - hover) * 0.1;
-    alpha += (alphaTo - alpha) * 0.09;
+    if (alphaT0 >= 0) {
+      const u = clamp01((now - alphaT0) / FADE_MS);
+      alpha = alphaFrom + (alphaTo - alphaFrom) * smooth(u);
+      if (u >= 1) { alpha = alphaTo; alphaT0 = -1; }
+    }
     // free pose: the three-quarter view rocking on the reader's own axis, nudged by the cursor; landed pose: the
     // platform's axonometric (in-plane turn, then tilt)
     cubePose(t, px, py, qFree);
@@ -452,7 +461,12 @@ export function mount(container) {
     // the cube is drawn in ink on the light home ground and in paper once it lands on the dark Development page
     setInk(c, now) { inkTo.set(c); if (now) inkCur.copy(inkTo); },
     setHover(b) { hoverTo = b && !col ? 1 : 0; },
-    setOpacity(a) { alphaTo = Math.max(0, Math.min(1, a)); },
+    // the tween runs from wherever the alpha stands now, so a fade reversed part way through does not jump
+    setOpacity(a) {
+      const to = clamp01(a);
+      if (to === alphaTo) return;
+      alphaTo = to; alphaFrom = alpha; alphaT0 = performance.now();
+    },
     destroy() {
       alive = false; cancelAnimationFrame(raf); ro.disconnect();
       window.removeEventListener('pointermove', onMove);
