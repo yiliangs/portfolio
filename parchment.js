@@ -472,6 +472,11 @@ export function mount(container) {
     isPlatform() { return unroll > 0.95; },
     // the platform's sheet size, column head-room and pose — so the home cube can land as this exact plate
     platformFrame() { return { W, H, stack: MAX_STACK + GAP, tilt: ISO_TILT, turn: ISO_TURN }; },
+    // the container the sources' fractions are taken against, in px, as the resize observer above last saw it.
+    // The page turns a glyph's viewport box into a fraction with it; reading the layer's rect instead would force
+    // a layout every frame, and these are the very numbers the projection in setSources maps back out of, so the
+    // two sides cannot drift apart the way a live rect and a stale aspect could.
+    layerSize() { return { w: vw, h: vh }; },
     // glyphs: [{x, y, w, h, glow}] — a lit glyph's ink box in container fractions (0..1) and its glow 0..1.
     // The page reports where the lit ink is and how bright; how finely a box is sampled is the sim's own business,
     // because it depends on the grid: a headline letterform spans several cells and is traced around its profile,

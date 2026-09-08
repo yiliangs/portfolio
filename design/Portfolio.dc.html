@@ -2457,22 +2457,28 @@ class Component extends DCLogic {
   togglePaperFold(id) { this.setState((st) => { const o = st.paperOpen || {}; return { paperOpen: { ...o, [id]: !o[id] } }; }); }
   // the glowing glyphs of the hero column are the parchment's heat source. Every text pane standing on the sheet
   // feeds it, the headline and the note beneath it alike, so the cursor burns the roll wherever it rakes the ink.
-  // Read each lit glyph span's inline glow (the text effect writes a text-shadow whose alpha tracks brightness) and
-  // hand the roll the glyph's ink box; how finely that box is sampled is the sim's business, not the page's.
+  // The lit glyphs come from the effect that lit them rather than back out of the DOM: it knows which chars are
+  // lit, how brightly and where they sit, and asking the page instead meant an attribute query and a rect per
+  // glyph, taken right after the effect had written that frame's styles, so every breath laid the whole document
+  // out again. Hand the roll each glyph's ink box; how finely that box is sampled is the sim's business, not the
+  // page's. The box those fractions are against is the one the sim already keeps for its own projection, rather
+  // than the layer's rect measured here: the layer is not the viewport (a fixed layer inside the app root takes
+  // the root's width, not the window's), and measuring it every frame is the layout this was written to avoid.
   feedParchment() {
     const roll = this.parchLayerRef.current, col = this.heroTextRef.current;
     if (!this.parch || !roll || !col) return;
-    const rr = roll.getBoundingClientRect(); if (!rr.width) return;
+    const { w: rw, h: rh } = this.parch.layerSize(); if (!rw || !rh) return;
     const out = [];
-    col.querySelectorAll('[data-tr] span[style*="text-shadow"]').forEach((s) => {
-      // the effect writes `0 0 {14*b}px rgba(...)`; the browser serialises it as `rgba(...) 0px 0px {14*b}px` — read the blur
-      const ts = s.style.textShadow; const m = /(\d+(?:\.\d+)?)px\s*$/.exec(ts) || /0px\s+0px\s+(\d+(?:\.\d+)?)px/.exec(ts); const glow = Math.min(1, m ? parseFloat(m[1]) / 14 : 0); if (glow < 0.2) return;
-      const b = s.getBoundingClientRect(); if (!b.width) return;
-      // heat sits on the letterform, so report the x-height box rather than the span's, which carries the
-      // ascender and descender space around the ink
-      const x = b.left + b.width * 0.15, y = b.top + b.height * 0.3;
-      out.push({ x: (x - rr.left) / rr.width, y: (y - rr.top) / rr.height, w: b.width * 0.7 / rr.width, h: b.height * 0.48 / rr.height, glow });
-    });
+    for (const t of this.trInstances || []) {
+      if (t._destroyed || !col.contains(t.element)) continue;
+      for (const g of t.litGlyphs(0.2)) {
+        if (!(g.w > 0)) continue;
+        // heat sits on the letterform, so report the x-height box rather than the span's, which carries the
+        // ascender and descender space around the ink
+        const x = g.x + g.w * 0.15, y = g.y + g.h * 0.3;
+        out.push({ x: x / rw, y: y / rh, w: g.w * 0.7 / rw, h: g.h * 0.48 / rh, glow: g.glow });
+      }
+    }
     this.parch.setSources(out);
   }
   // The roll travels between two poses the reader actually saw, and only those. A view with no anchor (a sheet, the

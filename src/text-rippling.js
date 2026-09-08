@@ -1489,8 +1489,10 @@
         // word-level activation with per-char animation timing.
         wordState: null,
         indexInWord: 0,
-        // Page-space center, refreshed by _measure on resize/scroll/font-load.
-        hx: 0, hy: 0,
+        // Page-space center and half-extents, refreshed by _measure on
+        // resize/scroll/font-load. The half-extents are kept so a reader can
+        // have the char's box back without asking the browser for a rect.
+        hx: 0, hy: 0, hw: 0, hh: 0,
         // Transform channel: position + rotation + scale, with velocities.
         tx: 0, ty: 0, rot: 0, scale: 1,
         vx: 0, vy: 0, vr: 0, vs: 0,
@@ -1498,6 +1500,9 @@
         // Brightness channel: 0..1, asymmetric-lerped toward target.
         bright: 0,
         wasLit: false,
+        // The faded brightness the lit shadow encodes, 0 when unlit. Written
+        // by writeLitColor and cleared beside every clear of the shadow.
+        glow: 0,
         // Glyph channel: discrete swap state, throttled per char.
         scrambled: false,
         nextSwap: 0,
@@ -1561,10 +1566,16 @@
   // Shared lit-branch math: clamp brightness, smoothstep-fade the
   // bottom 0..fadeStart range to kill the sqrt() step at the lit cutoff,
   // sqrt-ramp for perceptual linearity, then write the per-component RGB
-  // lerp + matching textShadow directly to the el. Used by both
+  // lerp + matching textShadow directly to the char's el. Used by both
   // colorAndGlow (base→wake) and colorAndGlowBloom (reveal→wake) — same
   // math, different endpoints.
-  function writeLitColor(el, brightness, fromRgb, toRgb, wakeStr) {
+  //
+  // The faded brightness is also kept on the char as `c.glow`, because it
+  // is what a reader of this effect actually wants and the only other way
+  // to it is to parse the shadow back off the element, which costs a
+  // layout. Every branch that clears the shadow clears the glow with it,
+  // so the two always say the same thing. See TextRippling#litGlyphs.
+  function writeLitColor(c, brightness, fromRgb, toRgb, wakeStr) {
     const b = brightness > 1 ? 1 : brightness;
     const fadeStart = 0.05;
     let fade;
@@ -1574,8 +1585,9 @@
     const r = (fromRgb[0] + (toRgb[0] - fromRgb[0]) * t) | 0;
     const g = (fromRgb[1] + (toRgb[1] - fromRgb[1]) * t) | 0;
     const bl = (fromRgb[2] + (toRgb[2] - fromRgb[2]) * t) | 0;
-    el.style.color = `rgb(${r},${g},${bl})`;
-    el.style.textShadow = `0 0 ${(b * 14 * fade).toFixed(2)}px rgba(${wakeStr},${(b * 0.85 * fade).toFixed(3)})`;
+    c.glow = b * fade;
+    c.el.style.color = `rgb(${r},${g},${bl})`;
+    c.el.style.textShadow = `0 0 ${(b * 14 * fade).toFixed(2)}px rgba(${wakeStr},${(b * 0.85 * fade).toFixed(3)})`;
   }
 
   const Renderer = {
@@ -1610,6 +1622,7 @@
         if (!c.colorPinned) {
           c.el.style.color = `rgb(${wakeRgb[0]},${wakeRgb[1]},${wakeRgb[2]})`;
           c.el.style.textShadow = '';
+          c.glow = 0;
           c.colorPinned = true;
           c.wasLit = false;
         }
@@ -1621,6 +1634,7 @@
       if (c.colorPinned) {
         c.el.style.color = '';
         c.el.style.textShadow = '';
+        c.glow = 0;
         c.colorPinned = false;
         c.wasLit = false;
       }
@@ -1630,11 +1644,12 @@
       // its banner above the helper for the curve rationale).
       const lit = c.bright > 0.005;
       if (lit) {
-        writeLitColor(c.el, c.bright, baseRgb, wakeRgb, wakeRgbStr);
+        writeLitColor(c, c.bright, baseRgb, wakeRgb, wakeRgbStr);
         c.wasLit = true;
       } else if (c.wasLit) {
         c.el.style.color = '';
         c.el.style.textShadow = '';
+        c.glow = 0;
         c.bright = 0;
         c.wasLit = false;
       }
@@ -1665,6 +1680,7 @@
         if (c.wasLit || c.colorPinned) {
           c.el.style.color = '';
           c.el.style.textShadow = '';
+          c.glow = 0;
           c.bright = 0;
           c.wasLit = false;
           c.colorPinned = false;
@@ -1676,7 +1692,7 @@
       if (lit) {
         // Lit branch: ramp reveal→wake by brightness via writeLitColor
         // (shared math with colorAndGlow — only the endpoints differ).
-        writeLitColor(c.el, c.bright, revealRgb, wakeRgb, wakeRgbStr);
+        writeLitColor(c, c.bright, revealRgb, wakeRgb, wakeRgbStr);
         c.wasLit = true;
         c.colorPinned = true;
       } else if (c.wasLit || !c.colorPinned) {
@@ -1685,6 +1701,7 @@
         // (b) just freshly revealed (c.colorPinned still false from cover).
         c.el.style.color = `rgb(${revealRgb[0]},${revealRgb[1]},${revealRgb[2]})`;
         c.el.style.textShadow = '';
+        c.glow = 0;
         c.bright = 0;
         c.wasLit = false;
         c.colorPinned = true;
@@ -1936,12 +1953,13 @@
   function burnColorWriter(c, x) {
     if (!c.revealed) {
       if (c.burnHeat > 0.01) {
-        writeLitColor(c.el, c.burnHeat, x.baseRgb, x.emberRgb, x.emberStr);
+        writeLitColor(c, c.burnHeat, x.baseRgb, x.emberRgb, x.emberStr);
         c.wasLit = true;
         c.colorPinned = true;
       } else if (c.wasLit || c.colorPinned) {
         c.el.style.color = '';
         c.el.style.textShadow = '';
+        c.glow = 0;
         c.wasLit = false;
         c.colorPinned = false;
       }
@@ -1950,7 +1968,7 @@
     const age = x.time - c.burnedAt;
     if (age < x.opts.burnCoolMs) {
       writeLitColor(
-        c.el,
+        c,
         1 - age / x.opts.burnCoolMs,
         x.revealRgb,
         x.emberHotRgb,
@@ -2040,10 +2058,40 @@
         const prev = c.el.style.transform;
         c.el.style.transform = '';
         const r = c.el.getBoundingClientRect();
-        c.hx = r.left + sx + r.width / 2;
-        c.hy = r.top + sy + r.height / 2;
+        c.hw = r.width / 2;
+        c.hh = r.height / 2;
+        c.hx = r.left + sx + c.hw;
+        c.hy = r.top + sy + c.hh;
         c.el.style.transform = prev;
       }
+    }
+
+    // The lit ink of this instance: one box per char whose glow has reached
+    // `minGlow`, in viewport pixels, with the glow that lit it. A page that
+    // wants this has otherwise to read it back out of the DOM, an attribute
+    // query and a rect per glyph taken after the effect has written that
+    // frame's styles, which lays the whole document out again every frame.
+    // Nothing here touches the DOM: the box is the one _measure took and the
+    // glow is what writeLitColor computed on the way to the shadow.
+    //
+    // The boxes are the chars' boxes with their transforms reset, which is the
+    // box a char has under any effect that carries brightness alone. Under one
+    // that also moves its chars this reports where the glyph is set, not where
+    // it has been pushed to.
+    litGlyphs(minGlow) {
+      const floor = minGlow > 0 ? minGlow : 0;
+      const out = [];
+      for (const c of this._chars) {
+        if (!(c.glow > 0) || c.glow < floor) continue;
+        out.push({
+          x: c.hx - c.hw - pageOffset.x,
+          y: c.hy - c.hh - pageOffset.y,
+          w: c.hw * 2,
+          h: c.hh * 2,
+          glow: c.glow,
+        });
+      }
+      return out;
     }
 
     _bind() {

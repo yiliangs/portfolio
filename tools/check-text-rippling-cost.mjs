@@ -2,7 +2,7 @@
 //
 // The effect writes an inline style to every character it lights, so anything it reads back from the
 // browser in the same breath is read against a dirty layout and pays for a whole document to be laid
-// out again. Three habits cost the page far more than the arithmetic they serve, and none of them is
+// out again. Four habits cost the page far more than the arithmetic they serve, and none of them is
 // visible in a frame: the wake looks the same either way, so only a check can hold them.
 //
 //   1. The crossing from viewport coordinates into page coordinates used to read window.scrollX, once
@@ -19,7 +19,15 @@
 //      rasterised its own layer. The transform animates as well without it, inside the layer its
 //      parent already has.
 //
-//   3. Ripple.compute used to take a square root and an exponential for every stamp in the buffer and
+//   3. The parchment roll behind the Research headline burns where the ink in front of it is lit, so
+//      the page reads which glyphs are lit, how brightly, and where, once a frame. It used to read
+//      that back off the elements, an attribute query and a rect per glyph. The effect holds all
+//      three already, so litGlyphs hands them over: the boxes _measure took, and the glow
+//      writeLitColor computed on its way to the shadow. Checked for the reads it does not make, for
+//      the box and the glow it reports, and for clearing the glow when the wake has gone, since a
+//      glow left behind is a sheet that keeps burning under a glyph that is no longer lit.
+//
+//   4. Ripple.compute used to take a square root and an exponential for every stamp in the buffer and
 //      then throw away any whose amplitude at the character fell under the floor. Those are exactly
 //      the stamps further off than the floor's distance, which a squared distance answers for nothing.
 //      Both properties are checked: that the cheap rejection actually happens, and that it decides no
@@ -46,7 +54,8 @@ const doc = window.document;
 let rafQueue = [], rafSeq = 1;
 window.requestAnimationFrame = (fn) => { const id = rafSeq++; rafQueue.push([id, fn]); return id; };
 window.cancelAnimationFrame = (id) => { rafQueue = rafQueue.filter(([i]) => i !== id); };
-const frame = (now) => { const due = rafQueue; rafQueue = []; for (const [, fn] of due) fn(now); };
+let clock = 1000;
+const frame = () => { clock += 16; const due = rafQueue; rafQueue = []; for (const [, fn] of due) fn(clock); };
 
 // jsdom has no PointerEvent, and the pointer path is the one the browser takes and the one that
 // carries the coalesced samples, so give the library the constructor it tests for.
@@ -93,7 +102,7 @@ for (let i = 0; i < 24; i++) {
   px += 11; py += 7;
   if (i % 2 === 0) pointerAt(px, py);
   else pointerAt(px, py, [[px - 6, py - 4], [px, py]]);
-  frame(1000 + i * 16);
+  frame();
 }
 const grew = offsetReads - afterMount;
 if (grew > 0) {
@@ -130,7 +139,82 @@ if (promoted.length) {
     'inside the layer the pane already has');
 }
 
-// ---------------------------------------------------------------- 3. the ripple rejects a far stamp cheaply
+// ---------------------------------------------------------------- 3. the lit ink is readable without the DOM
+
+// The parchment roll behind the Research headline burns where the ink is lit, so the page has to know which
+// glyphs are lit, how brightly and where. Reading that back off the elements is a query and a rect per glyph
+// taken after the effect wrote the frame's styles, so it costs a whole document layout every breath; the effect
+// already holds all three, and litGlyphs hands them over without touching the DOM.
+{
+  const lit = mount('lit ink');
+  const chars = lit._chars;
+  // jsdom measures everything at zero, so give the chars boxes and re-measure against them
+  chars.forEach((c, i) => {
+    const box = { x: 40 + i * 12, y: 300, width: 10, height: 20 };
+    c.el.getBoundingClientRect = () => ({ ...box, left: box.x, top: box.y, right: box.x + box.width, bottom: box.y + box.height });
+  });
+  sx = 100; sy = 40;
+  window.dispatchEvent(new window.Event('scroll'));
+  lit.remeasure();
+
+  // one char lit, the rest dark. Its brightness decays from here, so the frame below writes the shadow for it
+  // and nothing for its neighbours
+  chars[2].bright = 0.9;
+  frame();
+
+  let rects = 0;
+  const patched = chars.map((c) => {
+    const real = c.el.getBoundingClientRect;
+    c.el.getBoundingClientRect = function () { rects++; return real.call(this); };
+    return c;
+  });
+  const glyphsBefore = offsetReads;
+  const reported = lit.litGlyphs(0.2);
+  if (rects > 0 || offsetReads !== glyphsBefore) {
+    fail('reading the lit glyphs took ' + rects + ' rects and ' + (offsetReads - glyphsBefore) + ' scroll reads. ' +
+      'It is called once a frame from the breathing loop, right after the effect wrote its styles, so each of ' +
+      'those lays the document out again. The effect measured these boxes already');
+  }
+  patched.forEach((c, i) => {
+    const box = { x: 40 + i * 12, y: 300, width: 10, height: 20 };
+    c.el.getBoundingClientRect = () => ({ ...box, left: box.x, top: box.y, right: box.x + box.width, bottom: box.y + box.height });
+  });
+
+  if (reported.length !== 1) {
+    fail('one char of the pane is lit and litGlyphs reported ' + reported.length + ' of them. A dark glyph is not ' +
+      'a heat source, and every one that is reported is stepped by the sim every frame');
+  } else {
+    const g = reported[0];
+    if (g.x !== 64 || g.y !== 300 || g.w !== 10 || g.h !== 20) {
+      fail('the lit glyph came back at ' + g.x + ', ' + g.y + ' by ' + g.w + ' by ' + g.h + ' rather than at its ' +
+        'own box, 64, 300 by 10 by 20, in viewport pixels');
+    }
+    if (!(g.glow > 0.2)) fail('the lit glyph came back with glow ' + g.glow + ', which is not the brightness that lit it');
+  }
+
+  // the boxes are viewport pixels, so a scroll moves them even though the chars have not been measured again
+  sy = 140;
+  window.dispatchEvent(new window.Event('scroll'));
+  const scrolled = lit.litGlyphs(0.2);
+  if (scrolled.length === 1 && scrolled[0].y !== 200) {
+    fail('after the page scrolled 100px further down the lit glyph came back at y ' + scrolled[0].y + ' rather ' +
+      'than 200: the boxes are viewport pixels, which is the frame the roll is drawn in');
+  }
+  sy = 40;
+  window.dispatchEvent(new window.Event('scroll'));
+
+  // once the wake has decayed the effect clears the shadow, and the glow has to go with it or the roll keeps
+  // burning under a glyph that is no longer lit
+  for (let i = 0; i < 400 && chars[2].glow > 0; i++) frame();
+  if (chars[2].glow !== 0) {
+    fail('the wake decayed and the char\'s glow stayed at ' + chars[2].glow + '. Every branch that clears the ' +
+      'shadow has to clear the glow beside it, or the two disagree about what is lit');
+  }
+  if (lit.litGlyphs(0.2).length !== 0) fail('a pane whose wake has fully decayed still reports lit ink');
+  lit.destroy();
+}
+
+// ---------------------------------------------------------------- 4. the ripple rejects a far stamp cheaply
 
 const Ripple = TextRippling.ripple;
 const D = Ripple.DEFAULTS;
@@ -242,5 +326,5 @@ if (failures.length) {
   process.exit(1);
 }
 console.log('check-text-rippling-cost: the page offset is cached across pointer events and frames and follows a ' +
-  'scroll, no glyph asks for a compositor layer, and the ripple rejects a far stamp without a square root and ' +
-  'returns the same wake it did');
+  'scroll, no glyph asks for a compositor layer, the lit ink reads back without a rect, and the ripple rejects a ' +
+  'far stamp without a square root and returns the same wake it did');
