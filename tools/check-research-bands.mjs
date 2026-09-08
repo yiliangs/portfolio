@@ -75,8 +75,8 @@ function slice(what, first, last, ...members) {
 }
 function loadGeometry() {
   const stack = slice('which composition renders', 'STACK_W = ', 'isStacked(', 'STACK_RATIO');
-  const bands = slice('the stacked landing', 'BAND_ORDER = [', 'heroSheetH(narrow) {',
-    'bandOrder(entries)', 'bandSide(k)', 'HERO_SHEET');
+  const bands = slice('the stacked landing', 'BAND_ORDER = [', 'heroBlockH() {',
+    'bandOrder(entries)', 'bandSide(k)', 'HERO_SHEET', 'HERO_SHEET_STACKED', 'heroSheetH(narrow)');
   if (!stack || !bands) return null;
   try {
     // eslint-disable-next-line no-new-func
@@ -147,13 +147,20 @@ if (geo) {
 // nine tenths of the expression the page was composed with, and a further fifth off once the page is
 // stacked, which is what keeps the scroll inside the column rather than filling it.
 if (geo) {
-  const sheet = geo.HERO_SHEET;
-  if (typeof sheet !== 'string' || !sheet.includes('74vh')) fail('HERO_SHEET is not the height expression the hero was composed with');
-  for (const [narrow, factor] of [[false, 0.9], [true, 0.72]]) {
+  for (const [narrow, base, factor] of [[false, geo.HERO_SHEET, 0.9], [true, geo.HERO_SHEET_STACKED, 0.72]]) {
+    const where = narrow ? 'stacked' : 'wide';
+    if (typeof base !== 'string' || !base.includes('74vh')) { fail('the ' + where + ' sheet is not a height expression this check can read'); continue; }
     const got = geo.heroSheetH(narrow);
-    const want = 'calc(' + sheet + ' * ' + factor + ')';
-    if (got !== want) fail('the hero scroll on the ' + (narrow ? 'stacked' : 'wide') + ' page reads "' + got + '", not "' + want + '"');
+    const want = 'calc(' + base + ' * ' + factor + ')';
+    if (got !== want) fail('the hero scroll on the ' + where + ' page reads "' + got + '", not "' + want + '"');
   }
+  // The stacked sheet must not be measured off the block that is sized to hold it, or the two chase each
+  // other: a taller block asks for a taller sheet, which is given a taller block again, and the column
+  // opens on a screenful of empty paper. The collage keeps the content term, where nothing depends on it.
+  if (/100%/.test(geo.HERO_SHEET_STACKED)) fail('the stacked sheet is measured off its own block, so the block and the sheet grow each other');
+  if (!/100%/.test(geo.HERO_SHEET)) fail('the collage sheet no longer grows with the title column standing on it');
+  const block = geo.heroBlockH();
+  if (!block.includes(geo.heroSheetH(true))) fail('the stacked headline block is not sized from the sheet it has to hold: ' + block);
 }
 
 // ---------------------------------------------------------------- both landings, and only one of them
@@ -175,6 +182,7 @@ for (const [flag, block] of Object.entries(blocks)) {
     if (!block.includes('{{ ' + ref + ' }}')) fail('the ' + flag + ' landing carries no ' + ref + ', so the roll has no ' + (ref === 'heroTextRef' ? 'heat source' : 'anchor') + ' there');
   }
   if (!block.includes('{{ heroSheetH }}')) fail('the ' + flag + ' landing sizes its manuscript sheet by hand rather than from heroSheetH');
+  if (flag === 'isHeroNarrow' && !block.includes('{{ heroBlockH }}')) fail('the stacked headline block is sized by hand rather than from the sheet it holds');
 }
 if (blocks.isHeroNarrow) {
   const band = blocks.isHeroNarrow;

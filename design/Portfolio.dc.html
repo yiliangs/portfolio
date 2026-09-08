@@ -291,7 +291,7 @@
   <main key="writing" data-screen-label="Research" style="max-width:none; margin:0; padding:0 0 72px; background-image:radial-gradient(color-mix(in srgb, var(--color-text) 16%, transparent) 1px, transparent 1.1px); background-size:44px 44px; background-position:22px 22px;">
 
     <section ref="{{ heroRef }}" style="position:relative; overflow:hidden; padding:0 clamp(20px,5vw,44px);">
-      <div ref="{{ heroTextRef }}" style="position:relative; text-align:center; min-height:calc(88vh - 57px); box-sizing:border-box; perspective:1200px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:clamp(10px,2.2vh,22px);">
+      <div ref="{{ heroTextRef }}" style="position:relative; text-align:center; min-height:{{ heroBlockH }}; box-sizing:border-box; perspective:1200px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:clamp(10px,2.2vh,22px);">
         <!-- a manuscript page behind the headline; the roll is fitted to this box and to nothing else -->
         <div ref="{{ scriptRef }}" aria-hidden="true" style="position:absolute; left:50%; top:50%; height:{{ heroSheetH }}; width:auto; aspect-ratio:1/1.6; transform:translate(-50%,-50%); pointer-events:none;"></div>
         <div style="position:relative;">
@@ -1441,7 +1441,7 @@ class Component extends DCLogic {
     left: [
       { h: 105, w: 1650, ratio: '1/1', maxW: '350px', titleSize: '17px', dir: 'column', alignItems: 'flex-start', px: '-14px', py: '-8px', dur: '8s', delay: '-5s', offsetX: '336.667px', offsetY: '112px', cover: 'https://picsum.photos/seed/halvorsen-3/700/700' },
       { h: 39.342, w: 655.698, ratio: '5/4', maxW: '163.925px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-20px', py: '-9px', dur: '8.5s', delay: '-2s', offsetX: '-204.667px', offsetY: '27px', beside: true, cover: 'https://picsum.photos/seed/halvorsen-5/700/560' },
-      { h: 45.231, w: 719.064, ratio: '4/5', maxW: '148.452px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-17px', py: '-12px', dur: '7.8s', delay: '-6s', offsetX: '-478px', offsetY: '149.333px', cover: 'https://picsum.photos/seed/halvorsen-7/560/700' },
+      { h: 45.231, w: 719.064, ratio: '4/5', maxW: '148.452px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-17px', py: '-12px', dur: '7.8s', delay: '-6s', offsetX: '-215px', offsetY: '149.333px', cover: 'https://picsum.photos/seed/halvorsen-7/560/700' },
       { h: 33, w: 560, ratio: '3/2', maxW: '140px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-12px', py: '-7px', dur: '9.2s', delay: '-1s', offsetX: '0px', offsetY: '18px', cover: 'https://picsum.photos/seed/halvorsen-9/900/600' },
     ],
     right: [
@@ -1527,8 +1527,21 @@ class Component extends DCLogic {
   // box setAnchor is handed, so this element's size is the scroll's size on screen. The expression is
   // the one the page was composed with; the factor is what the scroll is read at. It stands at nine
   // tenths everywhere, and the stacked page presses it a further fifth so the headline keeps the column.
+  // On the collage the sheet grows with the column standing on it: the `100% + 200px` term is the title
+  // column's own height, and the block is a whole screen tall whatever the sheet does, so the two never
+  // argue. Stacked, they do. The block is sized to hold the sheet and the sheet is sized off the block,
+  // so a tall block asks for a tall sheet and a tall sheet is then given a taller block: the column read
+  // as a screenful of empty paper with the headline adrift in the middle of it. The stacked sheet drops
+  // the content term and is measured off the viewport alone, which breaks the loop in the one direction
+  // that matters: the block follows the sheet, never the other way about.
   HERO_SHEET = 'min(max(calc(100% + 200px), 74vh), calc(100vh - 190px))';
-  heroSheetH(narrow) { return 'calc(' + this.HERO_SHEET + ' * ' + (narrow ? 0.72 : 0.9) + ')'; }
+  HERO_SHEET_STACKED = 'min(74vh, calc(100vh - 190px))';
+  heroSheetH(narrow) {
+    return 'calc(' + (narrow ? this.HERO_SHEET_STACKED : this.HERO_SHEET) + ' * ' + (narrow ? 0.72 : 0.9) + ')';
+  }
+  // the stacked headline's block: the sheet, and enough air around it that the paper reads as a plate
+  // behind the type rather than as the page itself
+  heroBlockH() { return 'calc(' + this.heroSheetH(true) + ' + clamp(36px, 6vh, 80px))'; }
 
   num(i) { return (this.props.numerals ?? 'roman') === 'roman' ? this.romans[i] : String(i + 1); }
   reg(i) { return /Research|Writing|Essay/.test(this.data[i].kind) ? 'serif' : 'mono'; }
@@ -2915,7 +2928,7 @@ class Component extends DCLogic {
       // The Research landing has the two compositions the Development landing has, chosen off the same
       // state.narrow: the collage on a landscape page, the stacked column on any other.
       isHeroWide: view === 'page' && page.reg === 'serif' && !heroNarrow, isHeroNarrow: heroNarrow,
-      serifBands, heroSheetH: this.heroSheetH(this.state.narrow),
+      serifBands, heroSheetH: this.heroSheetH(this.state.narrow), heroBlockH: this.heroBlockH(),
       isMonoPage: view === 'page' && page.reg === 'mono',
       isLandingWide: landingWide, isLandingNarrow: !landingWide, land, landingPlates,
       isMono: view === 'chapter' && mono, isSerif: view === 'chapter' && !mono, chapterKey: R + '-' + idx,

@@ -80,7 +80,7 @@ const TUNED = {
       { row: '1', col: '1 / 3', selfY: 'start', selfX: 'start', imgH: 'min(55vh, 825px)', ratio: '4/3', maxW: '700px', titleSize: '26px', dir: 'row', alignItems: 'flex-end', align: 'left', px: '-18px', py: '-10px', dur: '7.5s', delay: '0s', offsetX: '-66.667px', offsetY: '-3.334px', bleedX: '0px', bleedY: '0px', beside: false },
       { row: '2', col: '1', selfY: 'center', selfX: 'start', imgH: 'min(35vh, 550px)', ratio: '1/1', maxW: '350px', titleSize: '17px', dir: 'column', alignItems: 'flex-start', align: 'left', px: '-14px', py: '-8px', dur: '8s', delay: '-5s', offsetX: '336.667px', offsetY: '112px', bleedX: '0px', bleedY: '0px', beside: false },
       { row: '3', col: '2', selfY: 'end', selfX: 'end', imgH: 'min(13.114vh, 218.566px)', ratio: '5/4', maxW: '163.925px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', align: 'left', px: '-20px', py: '-9px', dur: '8.5s', delay: '-2s', offsetX: '-204.667px', offsetY: '27px', bleedX: '0px', bleedY: '0px', beside: true },
-      { row: '2', col: '2', selfY: 'center', selfX: 'end', imgH: 'min(15.077vh, 239.688px)', ratio: '4/5', maxW: '148.452px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', align: 'left', px: '-17px', py: '-12px', dur: '7.8s', delay: '-6s', offsetX: '-478px', offsetY: '149.333px', bleedX: '0px', bleedY: '0px', beside: false },
+      { row: '2', col: '2', selfY: 'center', selfX: 'end', imgH: 'min(15.077vh, 239.688px)', ratio: '4/5', maxW: '148.452px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', align: 'left', px: '-17px', py: '-12px', dur: '7.8s', delay: '-6s', offsetX: '-215px', offsetY: '149.333px', bleedX: '0px', bleedY: '0px', beside: false },
   ],
   right: [
       { row: '2', col: '1 / 3', selfY: 'center', selfX: 'end', imgH: 'min(54.977vh, 824.659px)', ratio: '3/4', maxW: '641.402px', titleSize: '26px', dir: 'row-reverse', alignItems: 'flex-end', align: 'right', px: '-26px', py: '-14px', dur: '9s', delay: '-3s', offsetX: '11.333px', offsetY: '23.334px', bleedX: '0px', bleedY: '0px', beside: false },
@@ -179,6 +179,44 @@ if (geo) {
   // the whole point of the rule: a register that has not grown past the tuned six keeps three rows
   if (geo.leafRows(MIN_STAGE) !== MIN_ROWS) {
     fail('a register of ' + MIN_STAGE + ' no longer sits on ' + MIN_ROWS + ' rows, so the tuned composition is being rescaled for nothing');
+  }
+}
+
+// ---------------------------------------------------------------- no leaf is tuned off the page
+
+// A leaf is placed in its gutter by the grid and then displaced by the offset a tuning session dragged
+// it to. The offset is in pixels and the gutter is elastic, `minmax(280px, 1fr)`, so the two do not move
+// together: an offset larger than the gutter itself has carried the leaf clean out of it, and outward
+// that means off the page, where the hero's overflow:hidden deletes it with no other symptom.
+//
+// Inward is not the same case and is not bounded here. A leaf pushed toward the title column overlaps
+// the type, which is visible and is a composition the tuner may want; a leaf pushed past the page edge
+// is simply gone. That asymmetry is the rule: outward is bounded by the gutter, inward is not.
+//
+// This is what put chapter XVIII off the left edge at every viewport. It was frozen there by the panel
+// in #49 at -478px, against a gutter that is 280px at its widest on the pages the collage renders on,
+// and the freeze recorded it faithfully because a freeze records position, not visibility.
+
+const GUTTER_MIN = 280; // the hero grid's minmax(280px, 1fr); read off the template below
+
+if (geo) {
+  const templateGutter = /minmax\((\d+)px,\s*1fr\)/.exec(templateSrc);
+  if (!templateGutter) fail('the hero grid no longer sizes its gutters with minmax(<px>, 1fr), so the bound below is guesswork');
+  else if (Number(templateGutter[1]) !== GUTTER_MIN) {
+    fail('the gutters are at least ' + templateGutter[1] + 'px wide, not the ' + GUTTER_MIN + 'px this check bounds offsets by');
+  }
+  // outward is negative in the left gutter and positive in the right one
+  for (const side of ['left', 'right']) {
+    const outward = side === 'left' ? -1 : 1;
+    for (const [group, styles] of [['spreads', geo.LEAF_SPREADS[side]], ['pairs', geo.LEAF_PAIRS[side]]]) {
+      styles.forEach((st, i) => {
+        const off = parseFloat(st.offsetX || '0') * outward;
+        if (off > GUTTER_MIN) {
+          fail(group + '.' + side + '.' + i + ' is tuned ' + Math.round(off) + 'px outward, past the '
+            + GUTTER_MIN + 'px gutter, so its plate is clipped away at every viewport');
+        }
+      });
+    }
   }
 }
 
