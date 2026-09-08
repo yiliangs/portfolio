@@ -56,6 +56,24 @@ export function readTable(name, logicSrc = readLogicSource()) {
   return table;
 }
 
+// A plain object or array literal assigned to a class field, evaluated on its own. readTable knows
+// the shape of the placement tables; this one is for a literal whose shape is its own business, such
+// as the LINKS adjacency the register's graph closes over.
+export function readLiteral(name, logicSrc = readLogicSource()) {
+  const m = new RegExp('\\n  ' + name + ' = ([\\[{])').exec(logicSrc);
+  if (!m) throw new Error('the logic class has no ' + name + ' literal');
+  const open = m.index + m[0].length - 1;
+  const close = m[1] === '[' ? '\n  ];' : '\n  };';
+  const end = logicSrc.indexOf(close, open);
+  if (end < 0) throw new Error(name + ' is not closed with "' + close.trim() + '" so it cannot be read');
+  const literal = logicSrc.slice(open, end + close.length - 1);
+  try {
+    return new Function('return ' + literal)();
+  } catch (e) {
+    throw new Error(name + ' is not a plain literal this reader can evaluate: ' + e.message);
+  }
+}
+
 // A plain numeric field of the logic class, so a rule written there can be read back rather than
 // copied into a check. The value is an expression, not always a literal.
 export function readNumber(name, logicSrc = readLogicSource()) {

@@ -510,7 +510,7 @@
             "\n  ",
             h("main", { key: "tooling", "data-screen-label": "Development", style: {"maxWidth":"none","margin":"0","padding":"0","fontFamily":"var(--mono)","fontSize":"14px","lineHeight":"22px"} },
               "\n    ",
-              h("div", { key: "1", style: {"display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","minHeight":"calc(100vh - 57px)","boxSizing":"border-box","borderRight":"1px solid color-mix(in srgb, var(--color-text) 16%, transparent)","borderBottom":"1px solid color-mix(in srgb, var(--color-text) 16%, transparent)","backgroundImage":"linear-gradient(to right, color-mix(in srgb, var(--color-text) 16%, transparent) 0 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--color-text) 16%, transparent) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
+              h("div", { key: "1", style: {"display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","position":"relative","minHeight":"calc(100vh - 57px)","boxSizing":"border-box","borderRight":"1px solid color-mix(in srgb, var(--color-text) 16%, transparent)","borderBottom":"1px solid color-mix(in srgb, var(--color-text) 16%, transparent)","backgroundImage":"linear-gradient(to right, color-mix(in srgb, var(--color-text) 16%, transparent) 0 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--color-text) 16%, transparent) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
                 "\n\n    ",
                 "\n    ",
                 h("div", { key: "2", ref: V.contentsRef, style: {"gridColumn":"1 / 2","gridRow":"1 / 2","height":"0"} }),
@@ -518,7 +518,7 @@
                 h("div", { key: "4", ref: V.notesRef, style: {"gridColumn":"1 / 2","gridRow":"1 / 2","height":"0"} }),
                 "\n\n    ",
                 "\n    ",
-                h("section", { key: "7", ref: V.landingStatementRef, "data-mod": "statement", style: S(`grid-column:${V.land?.statement?.col ?? ""}; grid-row:${V.land?.statement?.row ?? ""}; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); padding:22px; box-sizing:border-box; overflow:hidden;`) },
+                h("section", { key: "7", ref: V.landingStatementRef, "data-mod": "statement", style: S(`grid-column:${V.land?.statement?.col ?? ""}; grid-row:${V.land?.statement?.row ?? ""}; position:relative; z-index:1; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); padding:22px; box-sizing:border-box; overflow:hidden;`) },
                   "\n      ",
                   h("p", { key: "1|17.1dagtdl", "data-morph": "kicker", style: {"margin":"0 0 22px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
                     h(F,{key:0},"",I(V.page?.kicker,1),"")
@@ -539,14 +539,27 @@
                 ),
                 "\n    ",
                 "\n    ",
-                h("div", { key: "10", ref: V.platformRef, "aria-hidden": "true", "data-mod": "platform", style: S(`grid-column:${V.land?.platform?.col ?? ""}; grid-row:${V.land?.platform?.row ?? ""}; min-height:0; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); cursor:grab; touch-action:none; user-select:none;`) }),
+                h("div", { key: "10", ref: V.platformRef, "aria-hidden": "true", "data-mod": "platform", style: S(`grid-column:${V.land?.platform?.col ?? ""}; grid-row:${V.land?.platform?.row ?? ""}; position:relative; z-index:1; min-height:0; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); cursor:grab; touch-action:none; user-select:none;`) }),
                 "\n\n    ",
                 "\n    ",
-                h(F,{key:13},L(V.landingPlates).map(function(item,i){
+                h("svg", { key: "13", "aria-hidden": "true", style: {"position":"absolute","inset":"0","width":"100%","height":"100%","zIndex":"0","pointerEvents":"none","overflow":"visible"} },
+                  "\n      ",
+                  h(F,{key:1},L(V.landingLines).map(function(item,i){
+                    var Vi = Object.assign({}, V, {"l": item, $index: i});
+                    return h(F,{key:i},
+                      "\n        ",
+                      h("line", { key: "1", x1: Vi.l?.x1, y1: Vi.l?.y1, x2: Vi.l?.x2, y2: Vi.l?.y2, stroke: "var(--color-text)", strokeWidth: "1", opacity: Vi.l?.on, style: {"transition":"opacity 240ms ease"} }),
+                      "\n      ");
+                  })),
+                  "\n    "
+                ),
+                "\n\n    ",
+                "\n    ",
+                h(F,{key:16},L(V.landingPlates).map(function(item,i){
                   var Vi = Object.assign({}, V, {"p": item, $index: i});
                   return h(F,{key:i},
                     "\n      ",
-                    h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, "data-mod": Vi.p?.mod, onClick: Vi.p?.open, onMouseEnter: Vi.p?.type, onMouseLeave: Vi.p?.untype, onFocus: Vi.p?.type, onBlur: Vi.p?.untype, tabIndex: "0", "aria-label": Vi.p?.title, style: S(`grid-column:${Vi.p?.col ?? ""}; grid-row:${Vi.p?.row ?? ""}; position:relative; z-index:${Vi.p?.zIndex ?? ""}; display:grid; grid-template-rows:minmax(0,1fr) 44px; cursor:pointer; box-sizing:border-box; color:var(--color-text); background:var(--color-bg); box-shadow:inset 1px 0 0 0 var(--color-neutral-400), inset 0 1px 0 0 var(--color-neutral-400), 1px 0 0 0 var(--color-neutral-400), 0 1px 0 0 var(--color-neutral-400); transition:box-shadow 240ms ease;`), className: "scp8" },
+                    h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, "data-mod": Vi.p?.mod, onClick: Vi.p?.open, onMouseEnter: Vi.p?.type, onMouseLeave: Vi.p?.untype, onFocus: Vi.p?.type, onBlur: Vi.p?.untype, tabIndex: "0", "aria-label": Vi.p?.title, style: S(`grid-column:${Vi.p?.col ?? ""}; grid-row:${Vi.p?.row ?? ""}; position:relative; z-index:${Vi.p?.zIndex ?? ""}; display:grid; grid-template-rows:minmax(0,1fr) 44px; cursor:pointer; box-sizing:border-box; color:var(--color-text); background:var(--color-bg); box-shadow:inset 1px 0 0 0 ${Vi.p?.frameInk ?? ""}, inset 0 1px 0 0 ${Vi.p?.frameInk ?? ""}, 1px 0 0 0 ${Vi.p?.frameInk ?? ""}, 0 1px 0 0 ${Vi.p?.frameInk ?? ""}; transition:box-shadow 240ms ease;`), className: "scp8" },
                       "\n        ",
                       h("div", { key: "1", "data-shape": Vi.p?.frameShape, "data-shape-alt": `frame-${Vi.p?.figNo ?? ""}`, style: {"position":"relative","minHeight":"0","overflow":"hidden","boxShadow":"inset 0 -1px 0 0 var(--color-divider)"} },
                         "\n          ",
@@ -577,15 +590,15 @@
                 })),
                 "\n\n    ",
                 "\n    ",
-                h("a", { key: "16|5.49kwkt", href: V.cvMailto, "data-mod": "contactEmail", style: S(`grid-column:${V.land?.contactEmail?.col ?? ""}; grid-row:${V.land?.contactEmail?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("a", { key: "19|5.49kwkt", href: V.cvMailto, "data-mod": "contactEmail", style: S(`grid-column:${V.land?.contactEmail?.col ?? ""}; grid-row:${V.land?.contactEmail?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
                   "email"
                 ),
                 "\n    ",
-                h("a", { key: "18|6.1yz8dag", href: V.cvGithub, "data-mod": "contactGithub", style: S(`grid-column:${V.land?.contactGithub?.col ?? ""}; grid-row:${V.land?.contactGithub?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("a", { key: "21|6.1yz8dag", href: V.cvGithub, "data-mod": "contactGithub", style: S(`grid-column:${V.land?.contactGithub?.col ?? ""}; grid-row:${V.land?.contactGithub?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
                   "github"
                 ),
                 "\n    ",
-                h("button", { key: "20|2.3ho5a", onClick: V.goCvMono, "data-mod": "contactCv", style: S(`all:unset; grid-column:${V.land?.contactCv?.col ?? ""}; grid-row:${V.land?.contactCv?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("button", { key: "23|2.3ho5a", onClick: V.goCvMono, "data-mod": "contactCv", style: S(`all:unset; grid-column:${V.land?.contactCv?.col ?? ""}; grid-row:${V.land?.contactCv?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;`), className: "scp7" },
                   "cv"
                 ),
                 "\n    "
@@ -1932,11 +1945,49 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("button", { key: "42|24.1chn43n", className: "sheet-mod sheet-ctl", "data-enter": "", "data-mod": "navBack", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navBack?.col ?? ""}; grid-row:${V.sheet?.navBack?.row ?? ""}; --d:${V.sheet?.navBack?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
+              h("div", { key: "42", className: "sheet-mod", "data-enter": "", "data-mod": "links", style: S(`grid-column:${V.sheet?.links?.col ?? ""}; grid-row:${V.sheet?.links?.row ?? ""}; --d:${V.sheet?.links?.delay ?? ""}; display:grid; grid-auto-rows:44px; align-content:start; overflow:hidden;`) },
+                "\n      ",
+                h("p", { key: "1|13.bujc8", style: {"margin":"0","display":"flex","alignItems":"center","padding":"0 22px","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
+                  "Linked sheets"
+                ),
+                "\n      ",
+                h(F,{key:3},L(V.sheetLinks).map(function(item,i){
+                  var Vi = Object.assign({}, V, {"l": item, $index: i});
+                  return h(F,{key:i},
+                    "\n        ",
+                    h("button", { key: "1|141.10mqriy", onClick: Vi.l?.open, style: {"all":"unset","boxSizing":"border-box","cursor":"pointer","display":"flex","alignItems":"center","gap":"14px","padding":"0 22px","fontFamily":"var(--mono)","fontSize":"13px","lineHeight":"18px","color":"var(--color-text)","boxShadow":"inset 0 1px 0 0 var(--hair)","transition":"color 200ms ease"}, className: "scp0" },
+                      "\n          ",
+                      h("span", { key: "1|13.1hy3wic", style: {"flex":"none","fontSize":"11px","letterSpacing":"0.08em","color":"var(--color-accent-700)","fontFeatureSettings":"'tnum' 1"} },
+                        h(F,{key:0},"",I(Vi.l?.ghost,1),"")
+                      ),
+                      "\n          ",
+                      h("span", { key: "3|13.76ksj5", style: {"minWidth":"0","overflow":"hidden","textOverflow":"ellipsis","whiteSpace":"nowrap"} },
+                        h(F,{key:0},"",I(Vi.l?.title,1),"")
+                      ),
+                      "\n          ",
+                      h("span", { key: "5|34.1b4i96q", style: {"flex":"none","marginLeft":"auto","fontSize":"11px","letterSpacing":"0.06em","color":"var(--color-neutral-600)","whiteSpace":"nowrap"} },
+                        h(F,{key:0},"",I(Vi.l?.kindLower,1)," · ",I(Vi.l?.year,3)," →")
+                      ),
+                      "\n        "
+                    ),
+                    "\n      ");
+                })),
+                "\n      ",
+                (V.linksEmpty ? h(F,{key:5},
+                  "\n        ",
+                  h("p", { key: "1|53.1x4oqh7", style: {"margin":"0","display":"flex","alignItems":"center","padding":"0 22px","fontSize":"13px","lineHeight":"18px","color":"var(--color-neutral-600)","boxShadow":"inset 0 1px 0 0 var(--hair)"} },
+                    "nothing in the register stands next to this sheet yet"
+                  ),
+                  "\n      ") : null),
+                "\n    "
+              ),
+              "\n\n    ",
+              "\n    ",
+              h("button", { key: "45|24.1chn43n", className: "sheet-mod sheet-ctl", "data-enter": "", "data-mod": "navBack", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navBack?.col ?? ""}; grid-row:${V.sheet?.navBack?.row ?? ""}; --d:${V.sheet?.navBack?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
                 h(F,{key:0},"← ",I(V.current?.backWord,1),"")
               ),
               "\n    ",
-              h("button", { key: "44|110.pyry3", className: "sheet-mod sheet-ctl", "data-enter": "", "data-mod": "navNext", onClick: V.openNext, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navNext?.col ?? ""}; grid-row:${V.sheet?.navNext?.row ?? ""}; --d:${V.sheet?.navNext?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:11px 22px; text-align:right; color:var(--color-text); background:var(--color-bg);`) },
+              h("button", { key: "47|110.pyry3", className: "sheet-mod sheet-ctl", "data-enter": "", "data-mod": "navNext", onClick: V.openNext, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navNext?.col ?? ""}; grid-row:${V.sheet?.navNext?.row ?? ""}; --d:${V.sheet?.navNext?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:11px 22px; text-align:right; color:var(--color-text); background:var(--color-bg);`) },
                 "\n      ",
                 h("span", { key: "1|47.13c0pry", style: {"fontSize":"11px","lineHeight":"14px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   h(F,{key:0},"Next · ",I(V.next?.kickerWord,1)," ",I(V.next?.numeral,3),"")
@@ -1983,9 +2034,14 @@
     // one numeral per entry of the register, so this list has to stay at least as long as data
     romans = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX','XXI','XXII','XXIII','XXIV'];
   
-    // Every entry carries its own `why`, the one-line reason on the landing card, and may carry `id` so
-    // another entry can point at it with `linkTo`: the AI Layout sheet opens the ACADIA paper and the
-    // Unit Stacking sheet opens the IJAC manuscript, in place, the way the index opens a chapter.
+    // Every entry carries its own `why`, the one-line reason on the landing card, and `id`, the name it
+    // answers to. Two things read that name and a third is spelled out of it, which is why an id is
+    // written once and never rewritten. LINKS below names the entries it stands next to; `linkTo` points
+    // at the one further document a sheet carries, so the AI Layout sheet opens the ACADIA paper and the
+    // Unit Stacking sheet opens the IJAC manuscript, in place, the way the index opens a chapter. And
+    // slugOf spells the entry's own address out of it, so an id is a live URL: renaming one breaks every
+    // link anyone kept, and giving an entry that had none an id that is not its title's slug moves the
+    // address it already had. Every Development entry carries one, whether or not it has an edge yet.
     // An entry may also name its pictures. `hero`, with its real pixel size in `heroW`/`heroH`, is the
     // large plate: the serif chapter cuts its plate to that ratio, the Development sheet gives it a
     // plate of its own proportion when it is portrait and letterboxes it into the standard rows when
@@ -2002,7 +2058,7 @@
     data = [
       // The Natalie block: the platform first, then the seven parts of it issued as their own sheets.
       // Facts are read off the natalie repository's CLAUDE.md and the per-folder CONTEXT.md signposts.
-      { title: 'Natalie', subtitle: 'An advanced computing platform for architects, living inside Rhino.', kind: 'Platform', year: 2026, page: 9, pages: '9–20', role: 'Owner, architect and principal developer', with: 'SOM design teams as the users; Rhino 8 as the host', status: 'Shipped, in use at SOM, v1.3.4', statusShort: 'shipped', stack: 'A Rhino 8 plugin in C# on .NET 8; a Rust solver crate, native and wasm; React in WebView2; TorchSharp; HiGHS; WiX; a Cloudflare relay; a Revit bridge.', link: 'Not public. In use at SOM.', caption: 'The Natalie bar docked at the foot of a Rhino viewport, cycling through Room Layout, Resi Envelope, the layer tools and the unit stack.', placeholder: 'Capture: the Natalie bar over a Rhino viewport',
+      { id: 'natalie', title: 'Natalie', subtitle: 'An advanced computing platform for architects, living inside Rhino.', kind: 'Platform', year: 2026, page: 9, pages: '9–20', role: 'Owner, architect and principal developer', with: 'SOM design teams as the users; Rhino 8 as the host', status: 'Shipped, in use at SOM, v1.3.4', statusShort: 'shipped', stack: 'A Rhino 8 plugin in C# on .NET 8; a Rust solver crate, native and wasm; React in WebView2; TorchSharp; HiGHS; WiX; a Cloudflare relay; a Revit bridge.', link: 'Not public. In use at SOM.', caption: 'The Natalie bar docked at the foot of a Rhino viewport, cycling through Room Layout, Resi Envelope, the layer tools and the unit stack.', placeholder: 'Capture: the Natalie bar over a Rhino viewport',
         hero: 'assets/natalie/hero.png', heroW: 1600, heroH: 676, video: 'assets/natalie/hero.mp4',
         why: 'Architects at SOM were rebuilding the same tower three times: as a massing, as a unit plan, as a facade. I wanted one platform inside Rhino that carried the model through all three.',
         margin: 'The plugin is the host. The decisions live in a solver that knows nothing about Rhino, so the browser runs the same code.',
@@ -2010,35 +2066,39 @@
         body1: 'Natalie began in the spring of 2024 as a way to stop drawing the same facade twice. It is now a plugin that architects at SOM open by typing its name in the Rhino command line: a sidebar, a floating overlay, and beneath them a set of solvers. Envelope reads a massing the designer has resolved and carries its articulation onto a larger one. Residential turns a unit program into a stacking, a demised plate and room layouts, in that order.',
         body2: 'The architecture keeps the thinking away from the host. A pure solver library carries no Rhino and no UI; its allocation and layout mathematics live in a Rust crate that the plugin loads natively and the browser loads as wasm, so two front ends cannot drift. A headless oracle of several hundred recorded layouts replays the engine without Rhino, which is how a change to what the solver decides gets caught.',
         body3: 'It ships as a per-user installer with an update and model channel behind a Cloudflare relay, and it is in use at SOM. The seven sheets that follow are the parts of it I would show first.' },
-      { id: 'ai-layout', title: 'AI Layout', subtitle: 'A learned facade correspondence, running on a CPU inside Rhino.', kind: 'Natalie', year: 2025, page: 21, pages: '21–28', role: 'Designer and developer', with: 'The ACADIA 2026 paper as the method', status: 'Shipped inside Natalie', statusShort: 'shipped', stack: 'A Siamese GAT as a TorchScript module, run by TorchSharp on the CPU; the massing as an attributed graph; a naive fallback.', link: 'The ACADIA paper behind it', linkTo: 'prototype-to-massing', caption: 'Prototype massing with its patterns, left; the target, right, panelised from the inferred correspondence.', placeholder: 'Capture: prototype and target massing, side by side',
+      { id: 'ai-layout', title: 'AI Layout', subtitle: 'A learned facade correspondence, running on a CPU inside Rhino.', kind: 'Natalie', year: 2025, page: 21, pages: '21–28', role: 'Designer and developer', with: 'The ACADIA 2026 paper as the method', status: 'Shipped inside Natalie', statusShort: 'shipped', stack: 'A Siamese GAT as a TorchScript module, run by TorchSharp on the CPU; the massing as an attributed graph; a naive fallback.', link: 'The ACADIA paper behind it', linkTo: 'prototype-to-massing', caption: 'The Envelope tool at work: the authored prototype at the left, its pattern carried across the target massing.', placeholder: 'Capture: prototype and target massing, side by side',
+        hero: 'assets/ai-layout/hero.jpg', heroW: 1600, heroH: 900, video: 'assets/ai-layout/hero.mp4',
         why: 'The paper proved the correspondence could be learned. I wanted it to run inside Rhino, on a CPU, in the time a designer waits for a command.',
         margin: 'The model is a guest. Every failure path degrades to the naive matcher, and the command says how many segments got a pattern.',
         summary: 'The Envelope tool’s inference step. A designer-authored prototype massing carries labelled block patterns; a target massing carries none. Both are decomposed into segments with neighbour relations, embedded by a Siamese graph attention network, and matched segment to segment, so the target is panelised with the prototype’s patterns.',
         body1: 'A designer resolves one bay of a facade by hand, as Rhino blocks on a small massing. AI Layout reads that massing as a host: levels, outlines and facade segments, each with seven features and edges to its neighbours. The larger target is read the same way. Both graphs go through the network from the paper, and every target segment takes the pattern of its nearest host segment in the shared embedding.',
         body2: 'It runs on the CPU through TorchSharp, because studio machines are not GPU machines and the graphs are small. The model ships encrypted through the update channel and is decrypted to a temporary file only at the first inference of a session. When the model is missing or fails to load, the command falls back to a linear scan over the raw features rather than throwing, and says so.',
         body3: 'The inferred labels are handed to the panelizer, which computes an immutable payload of which block goes where before any geometry is baked. That payload is what the synchronisation module regenerates every time the target massing moves.' },
-      { title: 'Synchronisation to the Rhino Ecosystem', subtitle: 'A massing and its detailed model, kept as one thing.', kind: 'Natalie', year: 2025, page: 29, pages: '29–34', role: 'Designer and developer', with: 'Rhino’s document events as the only signal', status: 'Shipped inside Natalie', statusShort: 'shipped', stack: 'RhinoDoc object events; a doppel pair per tracked massing; a display conduit for the indicator; regeneration through the command’s own solver callback.', link: 'Not public. In use at SOM.', caption: 'A massing pushed in the viewport, its facade and plates regenerating mid-drag, the sync mark at the corner.', placeholder: 'Capture: massing under sync, mid-drag',
+      { id: 'synchronisation-to-the-rhino-ecosystem', title: 'Synchronisation to the Rhino Ecosystem', subtitle: 'A massing and its detailed model, kept as one thing.', kind: 'Natalie', year: 2025, page: 29, pages: '29–34', role: 'Designer and developer', with: 'Rhino’s document events as the only signal', status: 'Shipped inside Natalie', statusShort: 'shipped', stack: 'RhinoDoc object events; a doppel pair per tracked massing; a display conduit for the indicator; regeneration through the command’s own solver callback.', link: 'Not public. In use at SOM.', caption: 'Rhino on the left, a live Enscape render on the right: the massing is pushed and the render follows it.', placeholder: 'Capture: massing under sync, mid-drag',
+        hero: 'assets/synchronisation-to-the-rhino-ecosystem/hero.jpg', heroW: 1600, heroH: 900, video: 'assets/synchronisation-to-the-rhino-ecosystem/hero.mp4',
         why: 'A massing changes every hour in a design meeting. I wanted the detailed model to follow it without anyone pressing regenerate.',
         margin: 'Solve first, kill second. The old model is the fallback for a solve that refuses, so it is never deleted to make room for a plan that may not arrive.',
         summary: 'Natalie calls a tracked massing and its generated detail a doppel pair. The pair subscribes to Rhino’s document events: when the massing is replaced, the detail is regenerated in place; deletions mid-sync are refused and undone; undo and redo step both halves together. An indicator in the viewport and on the bar shows which objects are live.',
         body1: 'The Envelope and the plan-layout tools both end by handing Natalie a live pair: the user’s massing as the tracker, and the blocks or units it generated as the doppel. From then on the plugin listens. Rhino reports every transform as a replace, so a drag of the massing arrives as a stream of replacements, and each one runs the same solver callback the command ran, synchronously, inside the event.',
         body2: 'The difficult part is the edges of that loop. Rhino replaces objects transiently during block transforms, so a delete is held for a moment to tell a real deletion from churn. Undo replays through the same events, so sync is suspended while the undo stack is active, and the pair records a breadcrumb on idle so that undo and redo move massing and detail together. A tracker deleted during sync is put back on the next idle.',
         body3: 'A single static manager owns the indicator: a display conduit draws the mark at the synced objects’ corner and the bar lights the same event. Breaking the sync is one menu item, and the detailed model stays behind as ordinary Rhino geometry.' },
-      { title: 'Linkage to Rhino Blocks', subtitle: 'Reading facade panels as the blocks they already are.', kind: 'Natalie', year: 2025, page: 35, pages: '35–40', role: 'Designer and developer', with: 'Rhino’s instance-definition table as the source of truth', status: 'Shipped inside Natalie', statusShort: 'shipped', stack: 'A block manager on Rhino’s instance-definition events; links as user data; derived variants; a calibration session with a diagnostic viewport.', link: 'Not public. In use at SOM.', caption: 'The calibration panel: one block definition per card, its origin and axes drawn over a preview, aligned ones green.', placeholder: 'Capture: block calibration panel with previews',
+      { id: 'linkage-to-rhino-blocks', title: 'Linkage to Rhino Blocks', subtitle: 'Reading facade panels as the blocks they already are.', kind: 'Natalie', year: 2025, page: 35, pages: '35–40', role: 'Designer and developer', with: 'Rhino’s instance-definition table as the source of truth', status: 'Shipped inside Natalie', statusShort: 'shipped', stack: 'A block manager on Rhino’s instance-definition events; links as user data; derived variants; a calibration session with a diagnostic viewport.', link: 'Not public. In use at SOM.', caption: 'One block definition edited in the editor, and every instance placed on the tower taking the change.', placeholder: 'Capture: block calibration panel with previews',
+        hero: 'assets/linkage-to-rhino-blocks/hero.jpg', heroW: 1600, heroH: 900, video: 'assets/linkage-to-rhino-blocks/hero.mp4',
         why: 'Facade panels live in Rhino as blocks. I wanted Natalie to read them as they are, not ask the designer to rebuild a second library.',
         margin: 'A definition sits wrong against its own origin; fixing it fixes every reference at once. Calibration is about definitions, never instances.',
         summary: 'Natalie models a facade as rows of Rhino block instances, so it has to know the document’s block definitions as they come and go. A singleton manager subscribes to the instance-definition table, tracks base definitions and the variants derived from them, and resolves the links between them lazily. Before an envelope run, a preflight checks each definition’s alignment and offers to recalibrate it.',
         body1: 'Every panel a designer places is a Rhino block. The manager registers each definition when the table announces it, reads the user data that names its parent or its children, and parks any link whose target has not arrived yet until it does. Identity is the definition’s Guid, not the managed wrapper, because Rhino hands back a fresh wrapper on every access.',
         body2: 'The convention a panel is calibrated to is two axes: width along +X and height along -Z, both touching the origin, nothing on Y, because a panel straddles the line it is placed on. The preflight assesses each definition against it, renders a small preview with the axes drawn in, and, if asked, recalibrates the definition while compensating every reference so nothing appears to move.',
         body3: 'Placed instances are read back the other way: chained into loops per level, split into rail segments by angle, and mined for the longest repeating sequence, which is the pattern the envelope tools carry onto a new massing.' },
-      { title: 'Residential Program-responsive Facade Layout', subtitle: 'A facade that knows where the bedrooms are.', kind: 'Natalie', year: 2025, page: 41, pages: '41–46', role: 'Designer and developer', with: 'The unit plan hatches as the program', status: 'Shipped inside Natalie', statusShort: 'shipped', stack: 'Program hatches on the host plan; blocks attached to rooms by containment; one segmentation plan per building, reused across identical levels.', link: 'Not public. In use at SOM.', caption: 'A residential massing panelised by program: living-room bays, bedroom bays and the core, each in its own pattern.', placeholder: 'Capture: facade coloured by unit program',
+      { id: 'residential-program-responsive-facade-layout', title: 'Residential Program-responsive Facade Layout', subtitle: 'A facade that knows where the bedrooms are.', kind: 'Natalie', year: 2025, page: 41, pages: '41–46', role: 'Designer and developer', with: 'The unit plan hatches as the program', status: 'Shipped inside Natalie', statusShort: 'shipped', stack: 'Program hatches on the host plan; blocks attached to rooms by containment; one segmentation plan per building, reused across identical levels.', link: 'Not public. In use at SOM.', caption: 'The host plan being made: a plate, a value driver, and a unit mix spread into the program the facade reads.', placeholder: 'Capture: facade coloured by unit program',
+        hero: 'assets/residential-program-responsive-facade-layout/hero.png', heroW: 1600, heroH: 900, video: 'assets/residential-program-responsive-facade-layout/hero.mp4',
         why: 'A residential facade follows the plan, not the elevation grid. I wanted the pattern to follow the program instead of a fixed module.',
         margin: 'Ownership is decided once, when the outline is cut at the rooms’ edges. Assigning a pattern afterwards is bookkeeping.',
         summary: 'The residential half of the Envelope tool. The host is a unit plan whose rooms carry a program, and the blocks placed along each room take that room’s program. The target massing’s outline is cut where the rooms meet it, and each facade segment receives the pattern of the room that owns it.',
         body1: 'A residential facade is not one pattern repeated. Living rooms open up, bedrooms close down, and the core is blank. The host plan says which is which as hatches, and every block placed in front of a room is attached to that room’s program by containment. Blocks that belong to no room become the loose program that fills anything left over.',
         body2: 'The target outline is then segmented from the rooms rather than from a module: one plan per building records where each room overlaps the outline and who owns each span, and levels with the same plan reuse it. A segment’s owner is found by deepest containment at its midpoint, with a bounded nearest-room fallback for curved stretches that miss the intersection tolerance.',
         body3: 'From there it is the same pipeline as AI Layout: each segment computes its block queries from its pattern, the payload is baked, the floor plates are baked with it, and the result is placed under synchronisation with the massing.' },
-      { title: 'Unit Stack Calculation', subtitle: 'Stacking a residential program, live and then exactly.', kind: 'Natalie', year: 2026, page: 47, pages: '47–52', role: 'Designer and developer', with: 'The IJAC manuscript as the exact formulation', status: 'Shipped inside Natalie', statusShort: 'shipped', stack: 'A two-step wizard; closed-form kernels per keystroke; a heuristic tier that always answers and an exact MILP tier in HiGHS under a budget ladder.', link: 'The IJAC paper behind the exact tier', linkTo: 'floor-types', caption: 'The wizard from the program step to the stacking step, the tower solved zone by zone and the program exported as a spreadsheet.', placeholder: 'Capture: the stacking wizard, step two',
+      { id: 'unit-stack-calculation', title: 'Unit Stack Calculation', subtitle: 'Stacking a residential program, live and then exactly.', kind: 'Natalie', year: 2026, page: 47, pages: '47–52', role: 'Designer and developer', with: 'The IJAC manuscript as the exact formulation', status: 'Shipped inside Natalie', statusShort: 'shipped', stack: 'A two-step wizard; closed-form kernels per keystroke; a heuristic tier that always answers and an exact MILP tier in HiGHS under a budget ladder.', link: 'The IJAC paper behind the exact tier', linkTo: 'floor-types', caption: 'The wizard from the program step to the stacking step, the tower solved zone by zone and the program exported as a spreadsheet.', placeholder: 'Capture: the stacking wizard, step two',
         hero: 'assets/unit-stack-calculation/hero.png', heroW: 1600, heroH: 870, video: 'assets/unit-stack-calculation/hero.mp4',
         why: 'Unit programs were negotiated in spreadsheets. I wanted the stacking to answer in the same meeting, and to answer exactly when it mattered.',
         margin: 'Kernels run on every keystroke and never touch a solver. Solvers run on a click and may take their time. The split keeps the wizard live.',
@@ -2046,14 +2106,15 @@
         body1: 'The first step is arithmetic and stays arithmetic: mix shares, unit counts and areas per unit are projected into each other on every edit, against one target. Counts per floor come from Hamilton’s method, floor the fractional counts and then hand the remainders to whoever fits, so a five-type tower does not lose a tenth of a plate to rounding.',
         body2: 'The solve is heavier and separate. A heuristic tier nudges each candidate template into the delivered-area band and always returns. An exact tier enumerates the feasible floor templates and hands a mixed-integer model to HiGHS, under a budget that narrows the enumeration rung by rung until the model is affordable, and falls back to the heuristic when it is not. Both tiers live in the shared crate.',
         body3: 'The wizard imports a stacked massing straight from Rhino geometry, exports the plan as a workbook whose numbers are the solver’s own, and hands each zone to the demising solver next door.' },
-      { title: 'Unit Demising Calculation', subtitle: 'Dividing a floor plate into units, ranked, with reasons.', kind: 'Natalie', year: 2026, page: 53, pages: '53–58', role: 'Designer and developer', with: 'A shared solver crate, native in Rhino and wasm in the browser', status: 'Shipped inside Natalie', statusShort: 'shipped', stack: 'The plate as a metric shell-and-hole problem; a ring engine cutting demising walls; cells checked for entry, frontage, shape and area.', link: 'Not public. In use at SOM.', caption: 'One floor plate, three ranked demising candidates, the units hatched and tagged by type.', placeholder: 'Capture: ranked demising candidates on a plate',
+      { id: 'unit-demising-calculation', title: 'Unit Demising Calculation', subtitle: 'Dividing a floor plate into units, ranked, with reasons.', kind: 'Natalie', year: 2026, page: 53, pages: '53–58', role: 'Designer and developer', with: 'A shared solver crate, native in Rhino and wasm in the browser', status: 'Shipped inside Natalie', statusShort: 'shipped', stack: 'The plate as a metric shell-and-hole problem; a ring engine cutting demising walls; cells checked for entry, frontage, shape and area.', link: 'Not public. In use at SOM.', caption: 'The same solver in the browser: a parcel, a stack mix, and the plate coming back demised and laid out.', placeholder: 'Capture: ranked demising candidates on a plate',
+        hero: 'assets/unit-demising-calculation/hero.png', heroW: 1600, heroH: 902, video: 'assets/unit-demising-calculation/hero.mp4',
         why: 'Test-fitting a floor plate by hand takes a day per option. I wanted ranked demising layouts in seconds, and a reason on the days there are none.',
         margin: 'A mix that does not fit is refused, naming the constraint that refused it. The old solver scaled the units until they fit.',
         summary: 'The Residential PlanLayout tool. Given a floor-plate boundary, its corridor and its cores, plus the unit mix asked of it, the solver sweeps a ring between the outline and the core, cuts demising walls, and returns ranked candidate plans. Each is decoded into unit envelopes, hatched and tagged, and placed under synchronisation with the plate.',
         body1: 'The plate is read into a metric problem: the outline as the shell, the union of corridor and cores as the hole, both reduced at a physical resolution so the ring sweep does not search ninety facets in every fillet. A core that touches the outline pinches the leasable band, so a region author first decides how many components the plate has, one ring where the core sits clear and one continuation per open run where it does not.',
         body2: 'The engine, shared with the browser as wasm, sweeps the band, places demising walls, and validates each cell against entry width, facade frontage, rectangularity and the area band of its type. It returns up to a requested number of ranked candidates and, when it cannot, an honest failure list rather than a scaled plan. The area the mix panel budgets against is the same number the solver is asked to fill, measured once.',
         body3: 'A chosen candidate is baked as unit envelopes with hatches and tags, and the pair is put under sync so pushing the plate re-solves the demising. The stacking wizard calls the same path once per zone to turn a tower program into floor plans.' },
-      { title: 'Room Layout Solver', subtitle: 'Splitting a unit into rooms the way a planner does.', kind: 'Natalie', year: 2026, page: 59, pages: '59–68', role: 'Designer and developer', with: 'A recorded corpus of layouts as the oracle', status: 'Shipped inside Natalie', statusShort: 'shipped', stack: 'A boundary signed by corridor and exterior edges; a program of tokens and wires; recursive bisection in the crate, streamed a layout at a time.', link: 'Not public. In use at SOM.', caption: 'A unit boundary with its corridor and exterior edges named, the room mix set, and the solver streaming ranked layouts until one is accepted onto the plan.', placeholder: 'Capture: solved unit layouts in the thumbnail strip',
+      { id: 'room-layout-solver', title: 'Room Layout Solver', subtitle: 'Splitting a unit into rooms the way a planner does.', kind: 'Natalie', year: 2026, page: 59, pages: '59–68', role: 'Designer and developer', with: 'A recorded corpus of layouts as the oracle', status: 'Shipped inside Natalie', statusShort: 'shipped', stack: 'A boundary signed by corridor and exterior edges; a program of tokens and wires; recursive bisection in the crate, streamed a layout at a time.', link: 'Not public. In use at SOM.', caption: 'A unit boundary with its corridor and exterior edges named, the room mix set, and the solver streaming ranked layouts until one is accepted onto the plan.', placeholder: 'Capture: solved unit layouts in the thumbnail strip',
         hero: 'assets/room-layout-solver/hero.png', heroW: 1600, heroH: 938, video: 'assets/room-layout-solver/hero.mp4',
         why: 'The last room in a unit is always the wrong shape. I wanted a solver that splits the boundary the way a planner does, and shows its work.',
         margin: 'A suite is not a new solver. A placed suite rectangle with an entry edge is the input the solver already takes, so it solves itself.',
@@ -2061,14 +2122,14 @@
         body1: 'The input is small: a closed orthogonal boundary, which edges face the corridor and which the exterior, and a program of rooms. Adjacency is one algebra with five dimensions, a room touches or reaches another, for every subject or once, shared or matched one to one, required or forbidden, which is how a closet is kept off the facade and each bedroom gets its own bath without special cases.',
         body2: 'The search mutates one shared boundary tree and backtracks, which is why a solve is single-rooted and one runs at a time. It lives in the shared crate behind a handle and streams: the host blocks for the next layout, builds its graph, routes the hallways and renders a thumbnail while the search continues. A bedroom-and-bath suite is placed as one rectangle and then solved again inside, with the same solver.',
         body3: 'What the solver decides is pinned by a headless oracle: several hundred recorded cases replayed without Rhino and compared within a millimetre, plus a corpus harness that mass-tests layouts in a scripted Rhino. A reported wrong layout becomes a replayable case with one click, and a person records the verdict.' },
-      { title: 'Lattice', subtitle: 'A parametric façade toolkit that thinks in mullions, not meshes.', kind: 'Tooling', year: 2025, page: 69, pages: '69–78', role: 'Design lead, core engineer', with: 'Two engineers, one façade consultant', status: 'Shipped, in daily use', statusShort: 'shipped', stack: 'Rhino / Grasshopper plugin, C#, a small Rust solver, IFC export.', link: 'Release notes and documentation', caption: 'A curtain-wall study with every mullion still editable.', placeholder: 'Capture: façade study, elevation + axon',
+      { id: 'lattice', title: 'Lattice', subtitle: 'A parametric façade toolkit that thinks in mullions, not meshes.', kind: 'Tooling', year: 2025, page: 69, pages: '69–78', role: 'Design lead, core engineer', with: 'Two engineers, one façade consultant', status: 'Shipped, in daily use', statusShort: 'shipped', stack: 'Rhino / Grasshopper plugin, C#, a small Rust solver, IFC export.', link: 'Release notes and documentation', caption: 'A curtain-wall study with every mullion still editable.', placeholder: 'Capture: façade study, elevation + axon',
         why: 'A consultant kept a workbook of mullion spacings by hand. I wanted the drawing to write the workbook, not the other way round.',
         margin: 'Most façade tools optimise the geometry and then hand you a mesh. Lattice keeps the grammar: bays, transoms, joints. You can still argue with it afterwards.',
         summary: 'A plugin for façade designers that keeps the architectural grammar intact while it optimises. Bays stay bays; joints stay joints; the export still opens in the fabricator’s software without a phone call.',
         body1: 'Lattice began as a spreadsheet. A façade consultant I worked with kept a workbook of mullion spacings, glass sizes and thermal breaks, and every design change meant re-typing half of it. The first version simply read that workbook and drew it. The second version let you draw and wrote the workbook back.',
         body2: 'The part I am proudest of is what it refuses to do. It will not turn a façade into a triangulated surface. Every element it produces is something a fabricator can name, price and bolt to a slab. That constraint made the solver harder to write and the tool much easier to trust.',
         body3: 'It shipped in the spring of 2025 and is now used on four projects I know of, and probably several I do not. The documentation is longer than the code, which I take as a good sign.' },
-      { title: 'Plot Room', subtitle: 'Reviewing drawing sets the way editors review manuscripts.', kind: 'Tooling', year: 2024, page: 79, pages: '79–88', role: 'Designer and sole developer', with: 'A pilot studio of fourteen', status: 'Private beta', statusShort: 'beta', stack: 'Web app, PDF parsing, a redline layer, comments anchored to sheet coordinates.', link: 'A short film of a review session', caption: 'Sheet A-301 during a Tuesday review, redlines and all.', placeholder: 'Capture: drawing set under review',
+      { id: 'plot-room', title: 'Plot Room', subtitle: 'Reviewing drawing sets the way editors review manuscripts.', kind: 'Tooling', year: 2024, page: 79, pages: '79–88', role: 'Designer and sole developer', with: 'A pilot studio of fourteen', status: 'Private beta', statusShort: 'beta', stack: 'Web app, PDF parsing, a redline layer, comments anchored to sheet coordinates.', link: 'A short film of a review session', caption: 'Sheet A-301 during a Tuesday review, redlines and all.', placeholder: 'Capture: drawing set under review',
         why: 'Studios review sets by printing, redlining and scanning. I wanted the red pen without the printer, and notes that survive revisions.',
         margin: 'A drawing set is a book with a hundred authors. Plot Room gives it an editor’s desk.',
         summary: 'A web tool for reviewing construction drawing sets. Comments anchor to sheet coordinates, survive revisions, and read like margin notes rather than tickets.',
@@ -2112,7 +2173,7 @@
         summary: 'This proposal reinterprets Lever House’s legacy of transparency by transforming its symbolic floating podium into a true cantilevered structure. The modernist ground plane was conceived as an open, uninterrupted realm: a continuation of the street into the building. Along Park Avenue, Lever House’s levitating glass podium suggested a delicate hover, yet the space beneath was interrupted by columns. Canti-Lever House realizes this vision structurally, clearing the ground entirely. Three structural options are carried through one model of the podium: the 1952 frame, whose columns stand in the ground plane it opens; a Vierendeel truss, which clears the ground at three times the material and at the cost of clear height; and a load path generated by strut-and-tie optimization, which clears it with timber in compression and steel rods in tension, and reduces material quantities by thirty percent.',
         hero: 'assets/canti-lever-house/hero.jpg', heroW: 2000, heroH: 1125,
         paper: './content/canti-lever-house.js' },
-      { title: 'Timber Index', subtitle: 'A side project cataloguing mass-timber connections, one joint at a time.', kind: 'Side project', year: 2023, page: 182, pages: '182–189', role: 'Everything', with: 'Contributors, eventually', status: 'Live, growing slowly', statusShort: 'live', stack: 'A static site, hand-drawn axonometrics, a spreadsheet as the database.', link: 'The index, 212 joints and counting', caption: 'Joint 087: a CLT-to-glulam hanger, drawn at 1:5.', placeholder: 'Capture: axonometric of a timber joint',
+      { id: 'timber-index', title: 'Timber Index', subtitle: 'A side project cataloguing mass-timber connections, one joint at a time.', kind: 'Side project', year: 2023, page: 182, pages: '182–189', role: 'Everything', with: 'Contributors, eventually', status: 'Live, growing slowly', statusShort: 'live', stack: 'A static site, hand-drawn axonometrics, a spreadsheet as the database.', link: 'The index, 212 joints and counting', caption: 'Joint 087: a CLT-to-glulam hanger, drawn at 1:5.', placeholder: 'Capture: axonometric of a timber joint',
         why: 'I could not find a picture of a joint I needed that was not a manufacturer’s render. So I drew it, then the next one.',
         margin: 'It started because I could not find a picture of a joint I needed. It continues because other people could not either.',
         summary: 'A catalogue of mass-timber connection details, each redrawn to the same conventions. Started for myself; now used by people I have never met.',
@@ -2154,7 +2215,7 @@
         summary: 'Notra is a kerf-bent timber frame coffee table that serves as a small-scale prototype for a novel space frame system. It explores an integrated design and fabrication approach that blurs the boundary between nodes and bars in timber space frame structures. The system features curved nodal geometries fabricated from planar timber sheets using three-axis CNC milling and kerf-bending, eliminating the need for molds or custom components typically required for complex joints. Precisely calculated kerf cuts allow the elements to bend to their intended curvature without auxiliary tools. This approach reduces material waste, simplifies fabrication, and enhances accessibility for constructing geometrically intricate frames. Notra uses polyhedral graphic statics (PGS) as a form-finding method to generate a compression-dominant geometry. While demonstrated at the furniture scale, the workflow is applicable to larger structures, offering a material-efficient and cost-effective fabrication strategy.',
         hero: 'assets/notra/fig-01.jpg', heroW: 2000, heroH: 1333,
         paper: './content/notra.js' },
-      { title: 'Survey Pipeline', subtitle: 'From a muddy site to a usable model in a single afternoon.', kind: 'R&D', year: 2022, page: 214, pages: '214–221', role: 'Research engineer', with: 'A surveying firm and a very cold intern', status: 'Internal, in use', statusShort: 'internal', stack: 'Point-cloud processing, a plane-fitting heuristic, exports to the studio’s BIM.', link: 'Technical note', caption: 'A scanned barn, its walls found, its clutter politely ignored.', placeholder: 'Capture: point cloud with fitted planes',
+      { id: 'survey-pipeline', title: 'Survey Pipeline', subtitle: 'From a muddy site to a usable model in a single afternoon.', kind: 'R&D', year: 2022, page: 214, pages: '214–221', role: 'Research engineer', with: 'A surveying firm and a very cold intern', status: 'Internal, in use', statusShort: 'internal', stack: 'Point-cloud processing, a plane-fitting heuristic, exports to the studio’s BIM.', link: 'Technical note', caption: 'A scanned barn, its walls found, its clutter politely ignored.', placeholder: 'Capture: point cloud with fitted planes',
         why: 'Scans were easy; models you could draw over were not. I wanted the boring part done by evening.',
         margin: 'The hard part was never the scanning. It was deciding which of the six hundred million points were a wall.',
         summary: 'An internal pipeline that turns a morning’s laser scan into walls, floors and openings by evening. Less clever than it sounds and more useful than expected.',
@@ -2163,7 +2224,7 @@
         body3: 'It has been used on around thirty existing-building projects. Surveyors like it because it makes their scans useful; architects like it because it does not pretend to be finished.' },
       // The two tools of 2026, the first sheets in the register issued with their own screen captures.
       // Facts are read off the rhino-worktree-launcher and agent-usage-stat repositories.
-      { title: 'Rhino Worktree Launcher', subtitle: 'Run any branch of a Rhino plug-in, and know which one Rhino actually loaded.', kind: 'Tooling', year: 2026, page: 222, pages: '222–229', role: 'Designer and sole developer', with: 'Claude Code and Codex as the first users, over MCP', status: 'Released on GitHub', statusShort: 'released', stack: 'C# on .NET 8: a WPF desktop, an rwl command line and a stdio MCP server over one backend, with the Windows registry, MSBuild and process inspection doing the real work.', link: 'Source and releases on GitHub', href: 'https://github.com/yiliangs/rhino-worktree-launcher', linkBlank: true, caption: 'The launcher on an invented project: six worktrees, each with its launch mode, its uncommitted lines and its age.', placeholder: 'Capture: launcher window',
+      { id: 'rhino-worktree-launcher', title: 'Rhino Worktree Launcher', subtitle: 'Run any branch of a Rhino plug-in, and know which one Rhino actually loaded.', kind: 'Tooling', year: 2026, page: 222, pages: '222–229', role: 'Designer and sole developer', with: 'Claude Code and Codex as the first users, over MCP', status: 'Released on GitHub', statusShort: 'released', stack: 'C# on .NET 8: a WPF desktop, an rwl command line and a stdio MCP server over one backend, with the Windows registry, MSBuild and process inspection doing the real work.', link: 'Source and releases on GitHub', href: 'https://github.com/yiliangs/rhino-worktree-launcher', linkBlank: true, caption: 'The launcher on an invented project: six worktrees, each with its launch mode, its uncommitted lines and its age.', placeholder: 'Capture: launcher window',
         hero: 'assets/rhino-worktree-launcher/hero.png', heroW: 1080, heroH: 1500,
         why: 'Rhino loads a plug-in by its ID, once, from whichever file registered last. Six worktrees of one plug-in gave me six files and one ID.',
         margin: 'A plug-in can never witness its own loading. Something outside Rhino has to watch which file went in.',
@@ -2171,7 +2232,7 @@
         body1: 'Git worktrees let several branches of a plug-in sit on disk at once, and Rhino undoes that: it resolves a plug-in by one ID from one registration, so every launch after the first loaded yesterday’s build under today’s name. The launcher takes the registration over for the length of a launch. It journals both registry hives, writes the selected .rhp in as Rhino’s install seed, and restores them when Rhino exits.',
         body2: 'Success is not a process starting. The launcher polls the Rhino it started until that exact file is mapped in its address space. No code goes into the plug-in to report back, because a plug-in cannot see its own load. The rule was found the hard way, with an MCP server whose registry writes never reached the hive Rhino reads: every write now runs in a process the shell started, and is confirmed before Rhino starts.',
         body3: 'It ships as a self-contained payload: a desktop, an rwl command line and a stdio MCP server, all over one backend. Coding agents were the first customers. They can build a branch, wait for a verified load, and read a named failure code, without asking me to click anything.' },
-      { title: 'Agent Usage Stat', subtitle: 'I was never interested in how many tokens I spent. I wanted to see the pattern behind them.', kind: 'Side project', year: 2026, page: 230, pages: '230–237', role: 'Designer and developer', with: 'Grown from a script by Chris Hutchinson', status: 'Released, version 3.2', statusShort: 'released', stack: 'TypeScript and Electron: a headless helper hooked into each agent, a per-session JSON ledger that can live in a synced folder, and a portal of hand-drawn charts.', link: 'Source and releases on GitHub', href: 'https://github.com/yiliangs/agent-usage-stat', linkBlank: true, caption: 'One month of sessions as a wall-clock field: a column a day, a stripe per model family, shaded by token velocity.', placeholder: 'Capture: month timeline',
+      { id: 'agent-usage-stat', title: 'Agent Usage Stat', subtitle: 'I was never interested in how many tokens I spent. I wanted to see the pattern behind them.', kind: 'Side project', year: 2026, page: 230, pages: '230–237', role: 'Designer and developer', with: 'Grown from a script by Chris Hutchinson', status: 'Released, version 3.2', statusShort: 'released', stack: 'TypeScript and Electron: a headless helper hooked into each agent, a per-session JSON ledger that can live in a synced folder, and a portal of hand-drawn charts.', link: 'Source and releases on GitHub', href: 'https://github.com/yiliangs/agent-usage-stat', linkBlank: true, caption: 'One month of sessions as a wall-clock field: a column a day, a stripe per model family, shaded by token velocity.', placeholder: 'Capture: month timeline',
         hero: 'assets/agent-usage-stat/hero.png', heroW: 1920, heroH: 1088,
         detail: 'assets/agent-usage-stat/detail.png', detailW: 3092, detailH: 2758,
         detailCaption: 'The whole ledger folded onto the 168 hour-slots of a week, the clock and each project’s peak window. Names invented.',
@@ -2181,7 +2242,72 @@
         body1: 'I was not interested in how many tokens I spent. I wanted the pattern behind them: which projects pulled me in at which hours, whether a change of model moved the working day, where the concurrent sessions clustered. So the ledger records time, project, machine and model for every session, keeps no prompt or response text, and the portal draws the time axis first.',
         body2: 'The timeline is the view I built it for. A week is a dense wall-clock schedule with each session as a block. A month is thirty-one narrow days side by side, coloured by model family and shaded by token velocity, so a change of model or a run of late nights shows as a change of colour before anyone reads a number. The Pattern view folds the period onto the 168 hour-slots of a week.',
         body3: 'Capture is the unglamorous half. Agents tear down their exit hooks in about a second, so a small shim hands the transcript to a detached worker and gets out of the way. Four agents, two operating systems, one ledger folder, and no server anywhere: the renderer reads its own protocol.' },
+      // The corpus and the training campaign behind AI Layout, issued as its own sheet because neither
+      // the tool nor the paper shows them: the Natalie sheet runs the network and the ACADIA chapter
+      // states what it scored, and the making of the set it learned from appears in neither. Facts are
+      // read off the paper-siamese-gat repository: data/README.md for the corpus, rhino/massing color
+      // slicer.py for the pipeline the capture shows, docs/CAMPAIGN.md for the protocol, docs/RESULTS.md
+      // for the numbers and src/README.md for the harness.
+      { id: 'building-graph-neural-network', title: 'Building Graph Neural Network', subtitle: 'Compiling a corpus of labelled buildings, and the campaign that decided what the network was worth.', kind: 'R&D', year: 2026, page: 238, pages: '238–245', role: 'Designer and sole developer', with: 'A Rhino script as the annotator, one desktop GPU as the whole cluster', status: 'Trained; the network ships inside Natalie', statusShort: 'trained', stack: 'PyTorch and PyTorch Geometric on a single GPU, Rhino Python for the corpus, and a seeded, manifested harness that records its own split and refuses to start when the hash of the set has moved.', link: 'The ACADIA paper behind it', linkTo: 'prototype-to-massing', caption: 'The corpus compiling itself: massings contoured floor by floor, each panel labelled from the text dot nearest it.', placeholder: 'Capture: the labelled training corpus',
+        hero: 'assets/building-graph-neural-network/hero.png', heroW: 1600, heroH: 900, video: 'assets/building-graph-neural-network/hero.mp4',
+        why: 'A learned matcher is worth exactly what its split says it is, and my first split had a sibling of every validation building sitting in the training set.',
+        margin: 'The protocol was worth six points and the architecture half of one. The split is the experiment.',
+        summary: 'The dataset and the training campaign behind AI Layout. A Rhino script turns each authored massing into a labelled graph: contours at mid-floor heights, one panel per facade segment, a colour-coded text dot per label. 1,301 authored instances, augmented into 6,505 prototype-massing pairs and 971,736 labelled nodes, train a Siamese heterogeneous graph attention network, measured under a family-clean five-fold protocol that holds whole authoring families out of validation.',
+        body1: 'Everything the network knows about a facade it learned from a corpus that had to be made first. A Rhino script reads a massing as a solid, contours it at mid-floor heights, explodes each contour into one segment per facade sub-surface, extrudes it back into its own floor band, and gives it the label of the text dot nearest it. 1,301 authored massings, augmented, make 6,505 pairs and 971,736 labelled nodes.',
+        body2: 'A pair is two attributed graphs: a prototype of two to ninety-six nodes and a massing of sixteen to five hundred and ninety-two. Each node carries seven scaled features; the edges are typed, horizontal along a floor and vertical between floors. Both graphs pass through one attention encoder, which is what makes it Siamese, and a triplet margin against mined negatives pulls each node nearest its counterpart.',
+        body3: 'What took the longest was not the architecture. A random split scores 96.3 and 93.0 top-1 because augmented siblings of every validation pair sit in the training set; holding whole authoring families out scores 95.3 and 90.4, against a geometric baseline of 82.1 and 67.1.' },
     ];
+  
+    // Which sheets stand next to which. An entry names another by its id, and the pair is written once,
+    // in whichever direction reads as the sentence: the platform names its parts, a step of the
+    // residential pipeline names the step after it, a tool names the tool it grew out of. The graph the
+    // register reads is the symmetric closure of this table, so a backlink is derived rather than
+    // authored and the two can never disagree; writing the same pair twice, once each way, is an error
+    // rather than a duplicate. A plain literal like the placement tables, so tools/check-backlinks.mjs
+    // can read it without running this file.
+    //
+    // An edge may cross into the serif register, and one does: the Timber Index catalogue and the Notra
+    // frame are the same subject read twice. Such an edge is listed on the Development sheet and opens
+    // the chapter in place; it draws no line on the landing, because the chapter has no plate there.
+    //
+    // This first set is read off what the entries say about themselves and stands in until the real one
+    // replaces it. Nothing but this table has to change to redraw the whole graph.
+    LINKS = {
+      natalie: ['ai-layout', 'synchronisation-to-the-rhino-ecosystem', 'linkage-to-rhino-blocks',
+        'residential-program-responsive-facade-layout', 'unit-stack-calculation', 'unit-demising-calculation',
+        'room-layout-solver'],
+      'ai-layout': ['residential-program-responsive-facade-layout', 'lattice'],
+      'synchronisation-to-the-rhino-ecosystem': ['linkage-to-rhino-blocks', 'survey-pipeline'],
+      'linkage-to-rhino-blocks': ['lattice'],
+      'residential-program-responsive-facade-layout': ['unit-demising-calculation'],
+      'unit-stack-calculation': ['unit-demising-calculation'],
+      'unit-demising-calculation': ['room-layout-solver'],
+      lattice: ['plot-room'],
+      'timber-index': ['survey-pipeline', 'notra'],
+      'rhino-worktree-launcher': ['natalie', 'agent-usage-stat'],
+    };
+  
+    // The graph, closed and put in data order. Both readings of it take the same list in the same
+    // sequence: the sheet lists what it stands next to in the order the register runs, and the landing
+    // draws the same pairs. Built once per page load, because LINKS cannot change under it.
+    linkGraph() {
+      if (this.linkAdjacency) return this.linkAdjacency;
+      const order = new Map(this.data.map((d, i) => [d.id, i]));
+      const adj = new Map();
+      const edge = (a, b) => { if (!adj.has(a)) adj.set(a, new Set()); adj.get(a).add(b); };
+      for (const [from, list] of Object.entries(this.LINKS)) {
+        for (const to of list) { edge(from, to); edge(to, from); }
+      }
+      this.linkAdjacency = new Map([...adj].map(([id, set]) =>
+        [id, [...set].sort((a, b) => order.get(a) - order.get(b))]));
+      return this.linkAdjacency;
+    }
+    // the entries an entry stands next to, as indices into data
+    relatedTo(i) {
+      const d = this.data[i]; if (!d || !d.id) return [];
+      return (this.linkGraph().get(d.id) || []).map((id) => this.data.findIndex((x) => x.id === id)).filter((k) => k >= 0);
+    }
+  
     pages = {
       writing: { reg: 'serif', label: 'Research', kicker: 'Essays · Research', bio: 'I write about what happens when machines start drawing too, and I publish the research that keeps me honest. The tools live next door, in mono.', title: 'Drawings, tools, and other arguments.', byline: 'by Yiliang Shao', edition: 'Edition of one', stamp: 'MMXXVI',
         intro: 'I write about what happens when machines start drawing too, and I publish the research that keeps me honest. This is the bound half of the last seven years: the papers that survived review, one proposal that put them to work, and a few essays I still agree with. The tools live next door, in mono.',
@@ -2255,8 +2381,9 @@
       detailA:       { col: '1 / 12',  row: '46 / 55' },
       detailB:       { col: '12 / 23', row: '46 / 55' },
       detailCaption: { col: '1 / 23',  row: '55 / 56' },
-      navBack:       { col: '1 / 7',   row: '57 / 59' },
-      navNext:       { col: '11 / 23', row: '57 / 59' },
+      links:         { col: '1 / 23',  row: '57 / 59' },
+      navBack:       { col: '1 / 7',   row: '60 / 62' },
+      navNext:       { col: '11 / 23', row: '60 / 62' },
     };
     SHEET_NARROW = {
       back:          { col: '1 / 23',  row: '1 / 2' },
@@ -2276,8 +2403,9 @@
       detailA:       { col: '1 / 23',  row: '59 / 71' },
       detailB:       { col: '1 / 23',  row: '71 / 83' },
       detailCaption: { col: '1 / 23',  row: '83 / 85' },
-      navBack:       { col: '1 / 23',  row: '86 / 88' },
-      navNext:       { col: '1 / 23',  row: '89 / 91' },
+      links:         { col: '1 / 23',  row: '86 / 88' },
+      navBack:       { col: '1 / 23',  row: '89 / 91' },
+      navNext:       { col: '1 / 23',  row: '92 / 94' },
     };
   
     // The desktop Development landing is the same drawing grid run full bleed: 22 columns across the
@@ -3649,7 +3777,7 @@
         // entry of this site named by its id (linkTo, opened in place the way the index opens it), or
         // nothing public at all, in which case the aside states that in plain text rather than a dead anchor
         const linkIdx = d.linkTo ? this.data.findIndex((x) => x.id === d.linkTo) : -1;
-        return { ...d, numeral: this.num(i), kindLower: d.kind.toLowerCase(), figNo: String(i + 1).padStart(2, '0'), slug: this.slugOf(i), slotId: 'toc-' + i, plateSlotId: 'plate-' + i, heroSlotId: 'cover-' + i, detailSlotA: 'detail-a-' + i, detailSlotB: 'detail-b-' + i,
+        return { ...d, dataIdx: i, numeral: this.num(i), kindLower: d.kind.toLowerCase(), figNo: String(i + 1).padStart(2, '0'), slug: this.slugOf(i), slotId: 'toc-' + i, plateSlotId: 'plate-' + i, heroSlotId: 'cover-' + i, detailSlotA: 'detail-a-' + i, detailSlotB: 'detail-b-' + i,
           dropCap: (d.body1 || '')[0] || '', body1: (d.body1 || '').slice(1), body1Full: d.body1 || '', subtitleCover: this.cover(d.subtitle),
           // the plates under the account are captioned by the entry when it has something to say about
           // them, and by the sheet's own line when it has not; the kicker counts whatever is there
@@ -3739,9 +3867,41 @@
           row: spot.row === 'last' ? landingRows + ' / ' + (landingRows + 1)
             : spot.row === 'fit' ? '1 / ' + (1 + statementRows) : spot.row };
       }
+      // The graph, read as positions on this landing. relatedTo answers in data indices; the landing
+      // knows its plates by k, their place in the register, so the two are joined once here and the
+      // lines and the highlight both read the answer back.
+      const kByData = new Map(pageProjects.map((p, k) => [p.dataIdx, k]));
+      const linkedK = pageProjects.map((p) => this.relatedTo(p.dataIdx).map((j) => kByData.get(j)).filter((k) => k !== undefined));
+      // which plate the cursor is on, taken from the typewriter's own key rather than from state of its
+      // own: a plate is hovered exactly while it is typing its reason
+      const hoverMatch = /^card-(\d+)$/.exec(this.state.typingKey || '');
+      const hoverK = hoverMatch ? parseInt(hoverMatch[1], 10) : -1;
+      // A plate's cell is known here, before the browser lays the grid out, so the line between two
+      // linked plates is worked out rather than measured: x is a share of the sheet's width because the
+      // columns are 1fr, y is a count of rows because they are a fixed 44px. Each line runs centre to
+      // centre and the plates are opaque and paint above the overlay, so the plates themselves clip it
+      // back to the run between them and no line crosses a picture. Every line is drawn at rest and
+      // held at zero opacity, so revealing one is a transition rather than a remount.
+      const centreX = (b) => ((b.col - 1 + b.w / 2) * 100 / this.SHEET_COLS).toFixed(4) + '%';
+      const centreY = (b) => ((b.row - 1 + b.h / 2) * this.SHEET_ROW).toFixed(2);
+      const landingLines = [];
+      if (lay) {
+        for (let k = 0; k < linkedK.length; k++) {
+          for (const j of linkedK[k]) {
+            if (j <= k) continue; // the graph answers both ways round; one line per pair
+            const a = lay.plates[k], b = lay.plates[j];
+            if (!a || !b) continue;
+            landingLines.push({ x1: centreX(a), y1: centreY(a), x2: centreX(b), y2: centreY(b),
+              on: hoverK === k || hoverK === j ? '1' : '0' });
+          }
+        }
+      }
       const landingPlates = !lay ? [] : pageProjects.map((p, k) => {
         const b = lay.plates[k]; if (!b) return null;
         const on = this.state.typingKey === 'card-' + k;
+        // a plate the hovered one stands next to comes up to full ink with the line, so the pair reads
+        // as one statement rather than as a line ending somewhere
+        const lit = hoverK >= 0 && hoverK !== k && linkedK[k].includes(hoverK);
         const typed = on ? p.why.slice(0, this.state.typed || 0) : '';
         // the reason unrolls out of the plate rather than over it, so the picture and the title stay
         // readable while it types. It hangs below the plate on the top half of the sheet and above it on
@@ -3753,9 +3913,11 @@
           mod: 'plate.' + p.slug,
           whyTop: below ? '100%' : 'auto', whyBottom: below ? 'auto' : '100%',
           typed, whyOpacity: on ? '1' : '0', caretOpacity: on && typed.length < p.why.length ? '1' : '0',
+          frameInk: lit ? 'var(--color-text)' : 'var(--color-neutral-400)',
           // the hovered plate rises over its neighbours: a module's right and bottom hairlines are drawn
-          // outside its own box, so without this its lit frame would be covered on two sides
-          zIndex: on ? '30' : '1',
+          // outside its own box, so without this its lit frame would be covered on two sides. A plate
+          // lit by the graph rises for the same reason, but under the plate the cursor is on.
+          zIndex: on ? '30' : lit ? '20' : '1',
           type: () => { p.hover(); this.startTyping('card-' + k, p.why.length); }, untype: () => this.stopTyping() };
       }).filter(Boolean);
       const introChars = Array.from(page.intro);
@@ -3810,18 +3972,37 @@
         : detailFoot - detailTop;
       const grewDetail = detailRows - (detailFoot - detailTop);
   
-      // a module moves by whichever of the two plates above it grew
+      // The third module that measures rather than being written, and the only one that measures from
+      // the register rather than from a picture: the linked sheets module is one row of label and one
+      // row per sheet this one stands next to. Never fewer than two rows, because a sheet nothing links
+      // to says so on a row of its own instead of collapsing the module away, which is why the tables
+      // hold it at two and the growth is never negative.
+      const relatedIdx = this.relatedTo(idx);
+      const linksTop = at(place.links.row)[0];
+      const linkRows = 1 + Math.max(1, relatedIdx.length);
+      const grewLinks = linkRows - (at(place.links.row)[1] - linksTop);
+  
+      // a module moves by whichever of the two plates above it grew, and the issue line moves again by
+      // what the linked sheets took
       const heroMovesFrom = at(place.heroCaption.row)[0], detailMovesFrom = at(place.detailCaption.row)[0];
-      const shiftAt = (row) => (row >= heroMovesFrom ? grewHero : 0) + (row >= detailMovesFrom ? grewDetail : 0);
+      const linksMovesFrom = at(place.navBack.row)[0];
+      const shiftAt = (row) => (row >= heroMovesFrom ? grewHero : 0) + (row >= detailMovesFrom ? grewDetail : 0) +
+        (row >= linksMovesFrom ? grewLinks : 0);
       const sheet = {};
       for (const name of Object.keys(place)) {
         const span = at(place[name].row);
         const shift = shiftAt(span[0]);
         sheet[name] = {
           col: name === 'hero' && portrait ? '1 / ' + (1 + this.PORTRAIT_COLS) : place[name].col,
-          row: name === 'hero' ? span[0] + ' / ' + (span[0] + heroRows) : (span[0] + shift) + ' / ' + (span[1] + shift),
+          row: name === 'hero' ? span[0] + ' / ' + (span[0] + heroRows)
+            : name === 'links' ? (span[0] + shift) + ' / ' + (span[0] + shift + linkRows)
+            : (span[0] + shift) + ' / ' + (span[1] + shift),
           delay: ((span[0] + shift - 1) * this.PLOT_STEP) + 'ms' };
       }
+      // What the module lists: what this sheet names and what names it, in one sequence, each row
+      // opening the sheet it points at the way the index opens a chapter. An edge that crosses into the
+      // serif register is listed here too, and reads as the chapter it is.
+      const sheetLinks = relatedIdx.map((j) => projects[j]);
       // the single detail is not written in either table: it is the pair's columns, the pair's first
       // row, and its own row count, so a table that moves the pair moves it too
       const detailRow = detailTop + shiftAt(detailTop);
@@ -3848,7 +4029,8 @@
         cvReady: !!cvData, cvLoading: !cvData && !this.state.cvError, cvFailed: !cvData && !!this.state.cvError,
         cvEmail, cvMailto: 'mailto:' + cvEmail, cvGithub: cvLinks.github || this.CONTACT.github,
         isSerifPage: view === 'page' && page.reg === 'serif', isMonoPage: view === 'page' && page.reg === 'mono',
-        isLandingWide: landingWide, isLandingNarrow: !landingWide, land, landingPlates,
+        isLandingWide: landingWide, isLandingNarrow: !landingWide, land, landingPlates, landingLines,
+        sheetLinks, linksEmpty: !relatedIdx.length,
         isMono: view === 'chapter' && mono, isSerif: view === 'chapter' && !mono, chapterKey: R + '-' + idx,
         isPaper: view === 'chapter' && !mono && !!current.paper, isEssay: view === 'chapter' && !mono && !current.paper,
         paperBlocks, paperCaptions, paperTail, paperAsideRow: (paperMod && paperMod.__asideRow) || 'auto',
