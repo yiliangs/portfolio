@@ -197,14 +197,15 @@ if (geo) {
 // in #49 at -478px, against a gutter that is 280px at its widest on the pages the collage renders on,
 // and the freeze recorded it faithfully because a freeze records position, not visibility.
 
-const GUTTER_MIN = 280; // the hero grid's minmax(280px, 1fr); read off the template below
-
 if (geo) {
-  const templateGutter = /minmax\((\d+)px,\s*1fr\)/.exec(templateSrc);
-  if (!templateGutter) fail('the hero grid no longer sizes its gutters with minmax(<px>, 1fr), so the bound below is guesswork');
-  else if (Number(templateGutter[1]) !== GUTTER_MIN) {
-    fail('the gutters are at least ' + templateGutter[1] + 'px wide, not the ' + GUTTER_MIN + 'px this check bounds offsets by');
+  // the bound is the margin's own width, read off the logic class rather than kept here, and the
+  // template has to take its tracks from the same number or the two can drift apart again
+  const GUTTER = geo.LEAF_GUTTER;
+  if (!Number.isFinite(GUTTER)) fail('the logic class has no LEAF_GUTTER, so there is no width to bound an offset by');
+  if (!/grid-template-columns:\{\{ leafGutter \}\} minmax\(0,1fr\) \{\{ leafGutter \}\}/.test(templateSrc)) {
+    fail('the hero grid no longer takes its margins from leafGutter, so a margin can grow away from the offsets written against it');
   }
+  const GUTTER_MIN = GUTTER;
   // outward is negative in the left gutter and positive in the right one
   for (const side of ['left', 'right']) {
     const outward = side === 'left' ? -1 : 1;

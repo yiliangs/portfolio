@@ -181,7 +181,7 @@
           h("main", { key: "writing", "data-screen-label": "Research", style: {"maxWidth":"none","margin":"0","padding":"0 clamp(20px,3vw,56px)","backgroundImage":"radial-gradient(color-mix(in srgb, var(--color-text) 16%, transparent) 1px, transparent 1.1px)","backgroundSize":"44px 44px","backgroundPosition":"22px 22px"} },
             "\n\n    ",
             "\n    ",
-            h("section", { key: "2", ref: V.heroRef, style: {"position":"relative","textAlign":"center","margin":"0 calc(-1 * clamp(20px,3vw,56px))","padding":"28px clamp(20px,3vw,56px) 96px","perspective":"1200px","overflow":"hidden","height":"calc(100vh - 57px)","boxSizing":"border-box","display":"grid","gridTemplateColumns":"minmax(280px,1fr) minmax(0,900px) minmax(280px,1fr)","gap":"0 40px","alignItems":"center"} },
+            h("section", { key: "2", ref: V.heroRef, style: S(`position:relative; text-align:center; margin:0 calc(-1 * clamp(20px,3vw,56px)); padding:28px clamp(20px,3vw,56px) 96px; perspective:1200px; overflow:hidden; height:calc(100vh - 57px); box-sizing:border-box; display:grid; grid-template-columns:${V.leafGutter ?? ""} minmax(0,1fr) ${V.leafGutter ?? ""}; gap:0 40px; align-items:center;`) },
               "\n      ",
               "\n      ",
               "\n      ",
@@ -2521,6 +2521,13 @@
         { h: 39, w: 640, ratio: '3/2', maxW: '130px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-21px', py: '-13px', dur: '7.2s', delay: '-0.5s', offsetX: '0px', offsetY: '-24px', cover: 'https://picsum.photos/seed/halvorsen-11/900/600' },
       ],
     };
+    // The width of each margin, and the frame every tuned offset is written against. It is fixed rather
+    // than elastic because the two do not otherwise agree: the grid places a leaf in its slot and the
+    // offset then displaces it by a count of pixels, so a margin free to grow carries the slot away from
+    // an offset that stays where it was written. Held at one width, every offset means the same thing at
+    // every viewport, and the title column takes whatever the screen has over the composition's measure.
+    LEAF_GUTTER = 280;
+  
     // A gutter holds one leaf per spread row and two per pair row.
     leafCapacity(side, rows) { return 2 * rows - this.LEAF_SPREADS[side].length; }
     // Leaves alternate gutters, so a row is added only once the fuller of the two runs out of cells.
@@ -4030,6 +4037,7 @@
         subBrandDisplay: this.state.narrow ? 'none' : 'inline', indexCols: this.state.narrow ? 'minmax(0,1fr)' : 'minmax(0,7fr) minmax(0,5fr)', previewDisplay: this.state.narrow ? 'none' : 'block',
         parallax: Math.round((this.state.scrollY || 0) * 0.18) + 'px',
         hintOpacity: this.state.hintGone || this.state.usedKeys ? '0' : '1', bloomHintOpacity: this.state.bloomTouched ? '0' : '1',
+        leafGutter: this.LEAF_GUTTER + 'px',
         projects, pageProjects, leaves, leafRows, leftLeaves: leaves.filter((l) => l.side === 'left'), rightLeaves: leaves.filter((l) => l.side === 'right'), featured, current, next: projects[(idx + 1) % projects.length], hovered: hov, cv: cvViews.timeline,
         gridPlatesRow: gridRows.plates, gridAuthorRow: gridRows.author, gridColophonRow: gridRows.colophon, gridContactRow: gridRows.contact,
         sheet, sheetGridRef: this.sheetGridRef,
