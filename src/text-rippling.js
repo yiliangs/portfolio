@@ -918,13 +918,13 @@
   // coordinate boundary.
   //
   // The offset is cached rather than read at each crossing. Every consumer of
-  // it — the pointer handler on each coalesced sample, the frame context once
-  // per instance — asks for it after this frame's inline styles have been
-  // written, and window.scrollX against a dirty layout lays the whole document
-  // out again to answer. It changes only when the page scrolls, so it is read
-  // where a read is free: from a passive scroll listener, which the browser
-  // dispatches at a rendering opportunity with layout already clean, and from
-  // _measure, which forces layout anyway for its own rects.
+  // it asks for it after this frame's inline styles have been written (the
+  // pointer handler on each coalesced sample, the frame context once per
+  // instance), and window.scrollX against a dirty layout lays the whole
+  // document out again to answer. It changes only when the page scrolls, so it
+  // is read where a read is free: from a passive scroll listener, which the
+  // browser dispatches at a rendering opportunity with layout already clean,
+  // and from _measure, which forces layout anyway for its own rects.
   const pageOffset = { x: 0, y: 0 };
 
   function readPageOffset() {
