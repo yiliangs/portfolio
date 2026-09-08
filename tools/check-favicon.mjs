@@ -10,10 +10,12 @@
 // rebuild shows up before the page does.
 //
 // The asset rule is what the icon has to be. A tab renders it at 16 CSS pixels, where a shape either reads at
-// a glance or is noise, so the mark is one full-bleed disc: a square viewBox, a single circle centred in it
-// with the radius of its half-width, painted solid black. Anything inset, hollowed, tinted or accompanied is
-// a different mark and this check is where that gets said, because at 16px it is not something the eye
-// reliably catches on the page.
+// a glance or is noise, so the mark is one disc: a square viewBox, a single circle centred in it, painted
+// solid black, its radius held at DISC of the box half-width. That fraction is the whole of the drawing.
+// Carried to full bleed the disc stops reading as a mark and becomes the tile it is painted on, since a tab
+// slot is itself close to square; carried much below where it stands it is a dot with a margin. Hollowed,
+// tinted or accompanied is likewise a different mark, and this check is where all of it gets said, because
+// at 16px none of it is something the eye reliably catches on the page.
 //
 // Declaring the icon at all is the point of the exercise: with no rel="icon" in the head a browser falls back
 // to requesting /favicon.ico, which this site does not serve, and every page load takes a 404 for it.
@@ -25,6 +27,8 @@ import { JSDOM } from 'jsdom';
 
 const SRC = 'design/Portfolio.dc.html';
 const BUILT = 'index.html';
+// the disc's radius as a fraction of the box half-width: 15 percent off full bleed
+const DISC = 0.85;
 
 const failures = [];
 const fail = (msg) => failures.push(msg);
@@ -94,7 +98,7 @@ if (path && !existsSync(path)) {
     const box = (svg.getAttribute('viewBox') || '').trim().split(/[\s,]+/).map(Number);
 
     if (box.length !== 4 || box.some((n) => !Number.isFinite(n))) {
-      fail(path + ' has no usable viewBox, so what the disc is full-bleed against is undefined');
+      fail(path + ' has no usable viewBox, so what the disc is measured against is undefined');
     } else if (box[2] !== box[3]) {
       fail(path + ' has a ' + box[2] + ' by ' + box[3] + ' viewBox. A tab slot is square and a disc in a ' +
         'rectangle is scaled into it off-centre or short of the edges');
@@ -106,11 +110,13 @@ if (path && !existsSync(path)) {
       const disc = painted[0];
       const num = (name) => Number(disc.getAttribute(name));
       const [x, y, w] = box;
-      const want = { cx: x + w / 2, cy: y + w / 2, r: w / 2 };
+      const want = { cx: x + w / 2, cy: y + w / 2, r: (w / 2) * DISC };
       for (const [name, value] of Object.entries(want)) {
-        if (num(name) !== value) {
-          fail(path + ' has ' + name + '="' + disc.getAttribute(name) + '" where a disc filling a ' + w +
-            ' unit box wants ' + value + '. The mark is full bleed: at 16px an inset circle reads as a smudge');
+        if (Math.abs(num(name) - value) > 1e-6) {
+          fail(path + ' has ' + name + '="' + disc.getAttribute(name) + '" where a disc at ' + DISC * 100 +
+            '% of a ' + w + ' unit box wants ' + Number(value.toFixed(4)) + '. The disc is centred and inset ' +
+            'by a fixed fraction: full bleed reads as a tile rather than a mark, and the ring of clear space ' +
+            'is what makes it a drawn circle at 16px');
         }
       }
       // an absent fill is black by the SVG initial value, so only a stated one can be wrong
@@ -136,4 +142,5 @@ if (failures.length) {
   for (const f of failures) console.error('  - ' + f);
   process.exit(1);
 }
-console.log('check-favicon: the helmet and ' + BUILT + ' both declare ' + href + ', a solid black full-bleed disc');
+console.log('check-favicon: the helmet and ' + BUILT + ' both declare ' + href + ', a solid black disc at ' +
+  DISC * 100 + '% of its box');
