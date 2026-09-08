@@ -2853,7 +2853,7 @@
       clone.style.willChange = 'opacity'; clone.style.contain = 'paint';
       clone.querySelectorAll('[data-morph]').forEach((el) => { if (out.has(el.dataset.morph)) el.style.opacity = '0'; });
       if (this.slideLeaves) clone.querySelectorAll('[data-leaf]').forEach((el, i) => { const dir = el.dataset.leaf === 'left' ? -1 : 1; el.style.animation = 'none'; el.style.transition = 'none';
-        el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(' + dir * 110 + 'vw)' }], { duration: 640, delay: (i % 3) * 60, easing: 'cubic-bezier(.5,0,.85,.2)', fill: 'forwards' }); });
+        el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(' + dir * 110 + 'vw)' }], { duration: 640, delay: (i % 3) * 60, easing: 'cubic-bezier(.5,0,.85,.2)', fill: 'forwards' }).id = 'leaf-slide'; });
       wrap.appendChild(clone); out.snapshot = wrap;
       const layer = document.createElement('div');
       layer.style.cssText = 'position:fixed; inset:0; z-index:3; pointer-events:none; overflow:hidden;';
@@ -2873,8 +2873,10 @@
       const layer = olds.layer;
       if (olds.snapshot) { olds.snapshot.animate([{ opacity: 1 }, { opacity: 1, offset: this.slideLeaves ? 0.55 : 0 }, { opacity: 0 }], { duration: this.slideLeaves ? 820 : 560, easing: 'cubic-bezier(.4,0,.6,1)', fill: 'forwards' }); }
       main.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 520, delay: 160, easing: 'ease', fill: 'backwards' });
+      // named, so placeLeafText can tell a leaf still flying in from everything else the page has running and wait it
+      // out rather than measuring a caption where the slide happens to have carried it (see placeLeafText)
       if (this.slideLeaves) main.querySelectorAll('[data-leaf]').forEach((el, i) => { const dir = el.dataset.leaf === 'left' ? -1 : 1;
-        el.animate([{ transform: 'translateX(' + dir * 110 + 'vw)' }, { transform: 'translateX(0)' }], { duration: 760, delay: 220 + (i % 3) * 70, easing: 'cubic-bezier(.15,.8,.2,1)', fill: 'backwards' }); });
+        el.animate([{ transform: 'translateX(' + dir * 110 + 'vw)' }, { transform: 'translateX(0)' }], { duration: 760, delay: 220 + (i % 3) * 70, easing: 'cubic-bezier(.15,.8,.2,1)', fill: 'backwards' }).id = 'leaf-slide'; });
       const jobs = [], hidden = [], seen = new Set();
       main.querySelectorAll('[data-morph]').forEach((el) => {
         const name = el.dataset.morph, rc0 = el.getBoundingClientRect(); if (!rc0.width) return;
@@ -3063,6 +3065,9 @@
       if (this.cubeLead && pf) {
         // above the page-morph snapshot for the trip (as the roll does)
         if (layer.parentNode !== document.body) { document.body.appendChild(layer); layer.style.zIndex = '4'; }
+        // the one path that leaves home with the layer still up, so it says so rather than inheriting whatever the
+        // last exit left behind. Snapped, not faded: an exit fade caught a frame ago is undone without a flicker
+        layer.style.transition = 'none'; layer.style.opacity = '1';
         if (this.parch) this.home.setPlatformFrame(this.parch.platformFrame());
         // ink eases to paper alongside the ground darkening (snapping it would blank the cube on the still-light page)
         this.home.setInk('#f3f2f2'); this.home.setOpacity(1);
@@ -3075,6 +3080,12 @@
           layer.style.zIndex = '2'; if (this.home) this.home.setOpacity(0);
         }, this.CUBE_COLLAPSE_MS);
       } else {
+        // the layer is a full-viewport canvas standing over the page at z-index 2, so asking the model to fade is not
+        // enough to get the cube off a landing it does not belong to: that fade is a lerp taken once a frame, which is
+        // a frame count and not a length of time. Hide the layer itself, on the clock, the moment the view leaves home.
+        // The model fade still runs under it, and homeKillTimer is left to do the teardown it always did
+        layer.style.transition = 'opacity 220ms cubic-bezier(.65,0,.15,1)';
+        layer.style.opacity = '0';
         this.home.setOpacity(0);
       }
       if (!this.homeKillTimer) this.homeKillTimer = setTimeout(() => { this.homeKillTimer = null; if (this.state.view !== 'home' && this.home) { this.home.destroy(); this.home = null; } }, 2200);
@@ -3645,9 +3656,26 @@
     // bottom of a one-screen page it runs out of the hero. When there is no room below it flips above
     // the caption instead. It is measured rather than guessed because the height grows a character at
     // a time while the line types in.
+    //
+    // The measurement is of a box, and a register change slides every leaf in from off-page, so a render landing
+    // mid-slide measures a caption where the slide has carried it and writes a correction for a place it is only
+    // passing through. Nothing re-runs the pass when the slide ends, so that correction stands until some later
+    // render happens to fall after it: the fault shows as a caption cut off by the page edge, healed by the next
+    // glitch beat up to three seconds later. So a slide in flight is waited out and the captions are placed once,
+    // from where the leaves land. Only the slide holds the pass back. The leaves carry drifting transforms of their
+    // own that never finish, and waiting on those would mean never placing anything at all.
     placeLeafText() {
       const hero = this.heroRef.current;
       if (!hero) return;
+      const flying = hero.getAnimations ? hero.getAnimations({ subtree: true }).filter((a) => a.id === 'leaf-slide' && a.playState === 'running') : [];
+      if (flying.length) {
+        if (!this.leafPlaceWait) {
+          this.leafPlaceWait = true;
+          // a leaf taken off the page mid-slide has its animation cancelled, and a cancelled animation rejects
+          Promise.all(flying.map((a) => a.finished.catch(() => {}))).then(() => { this.leafPlaceWait = false; this.placeLeafText(); });
+        }
+        return;
+      }
       const box = hero.getBoundingClientRect(), pad = 14;
       hero.querySelectorAll('[data-leaf] [data-leaf-text]').forEach((text) => {
         text.style.transform = 'none';
