@@ -7,11 +7,13 @@
 // sheet would show as a twitch at the moment the cube hands over to it.
 //
 // The third check pins the flat sheet to the formula the platform was set out from, so its proportions cannot
-// drift while someone tunes the breath or the flutter.
+// drift while someone tunes the breath or the flutter. The fourth holds point() and pointInto() to each other:
+// what is on screen is filled through pointInto, everything that reads the shape reads it through point, and the
+// two are one piece of arithmetic written twice.
 //
 // Run with `npm run check`. Exits non-zero and prints every failure it found.
 
-import { point } from '../parchment.js';
+import { point, pointInto } from '../parchment.js';
 
 const W = 2.9, H = 1.55; // the roll's own sheet size, from mount()
 const TIMES = [0, 3.7, 11.2];
@@ -77,6 +79,32 @@ if (off > EXACT) {
     ' world units off x = -W/2 + uW, y = (v - 0.5)H, z = sag/4');
 }
 
+// ---------------------------------------------------------------- the buffer fill is the same shape
+
+// The sheet and the wire are refilled vertex by vertex every frame the roll is not flat, so the fill writes
+// straight into the position array through pointInto rather than returning a fresh pair of arrays per vertex.
+// point() is the same arithmetic with an array around it, and the two have to stay the same arithmetic: the
+// geometry builders and every check above read the shape through point, while what is on screen comes through
+// pointInto. Equality is per component and exact, because the two are meant to be one function.
+{
+  const buf = new Float64Array(3);
+  let apart = 0, apartAt = null;
+  for (let i = 0; i <= 40; i++) for (let j = 0; j <= 8; j++) {
+    // the curls at either end (u < 0.2, u > 0.8) are the branches worth naming; the sweep covers them and the span
+    const u = i / 40, v = j / 8;
+    for (const k of [0, 0.35, 1]) for (const t of TIMES) {
+      const a = point(u, v, W, H, k, t);
+      pointInto(u, v, W, H, k, t, buf, 0);
+      for (let c = 0; c < 3; c++) if (a[c] !== buf[c]) { apart++; if (!apartAt) apartAt = at(u, v, t) + ', k ' + k + ', component ' + c + ': ' + a[c] + ' against ' + buf[c]; }
+    }
+  }
+  if (apart) {
+    fail('the fill and the shape have come apart at ' + apart + ' components (first at ' + apartAt + '). What is ' +
+      'drawn comes through pointInto and everything that reads the roll comes through point; they are one piece ' +
+      'of arithmetic and have to agree to the last bit');
+  }
+}
+
 // ---------------------------------------------------------------- report
 
 if (failures.length) {
@@ -85,4 +113,5 @@ if (failures.length) {
   process.exit(1);
 }
 console.log('check-roll-motion: ' + moving + ' of ' + samples.length + ' samples move while the roll stands (up to ' +
-  most.toFixed(4) + ' world units), and the landed platform is identical at every t');
+  most.toFixed(4) + ' world units), the landed platform is identical at every t, and the buffer fill is the shape ' +
+  'to the last bit');
