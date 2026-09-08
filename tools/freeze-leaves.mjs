@@ -21,9 +21,9 @@ if (from < 0 || tail < 0 || to < 0) {
 const geo = new Function('return new (class {' + logicSrc.slice(from, to + 4) + '})()')();
 
 const KEYS = ['row', 'col', 'selfY', 'selfX', 'imgH', 'ratio', 'maxW', 'titleSize', 'dir',
-  'alignItems', 'align', 'px', 'py', 'dur', 'delay', 'offsetX', 'offsetY', 'bleedX', 'bleedY', 'stackH', 'beside'];
+  'alignItems', 'align', 'px', 'py', 'dur', 'delay', 'offsetX', 'offsetY', 'bleedX', 'bleedY', 'stackH', 'beside', 'edge'];
 
-// beside is a boolean, and quoting it would freeze the string "false" rather than the choice
+// beside and edge are booleans, and quoting one would freeze the string "false" rather than the choice
 const line = (s) => '    { ' + KEYS.filter((k) => s[k] !== undefined)
   .map((k) => k + ': ' + (typeof s[k] === 'boolean' ? String(s[k]) : "'" + s[k] + "'")).join(', ') + ' },';
 

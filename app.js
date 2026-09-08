@@ -174,8 +174,9 @@
           ),
           "\n  ") : null),
         "\n\n  ",
+        "\n\n  ",
         "\n  ",
-        (V.isSerifPage ? h(F,{key:15},
+        (V.isHeroWide ? h(F,{key:16},
           "\n  ",
           h("main", { key: "writing", "data-screen-label": "Research", style: {"maxWidth":"none","margin":"0","padding":"0 clamp(20px,3vw,56px)","backgroundImage":"radial-gradient(color-mix(in srgb, var(--color-text) 16%, transparent) 1px, transparent 1.1px)","backgroundSize":"44px 44px","backgroundPosition":"22px 22px"} },
             "\n\n    ",
@@ -237,7 +238,7 @@
               h("div", { key: "5", style: {"position":"relative","alignSelf":"stretch","padding":"0 0 24px","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center","gap":"clamp(8px, 1.8vh, 20px)","minHeight":"0"}, ref: V.heroTextRef },
                 "\n      ",
                 "\n      ",
-                h("div", { key: "2", ref: V.scriptRef, "aria-hidden": "true", style: {"position":"absolute","left":"50%","top":"50%","height":"min(max(calc(100% + 200px), 74vh), calc(100vh - 190px))","width":"auto","aspectRatio":"1/1.6","transform":"translate(-50%,-50%)","pointerEvents":"none"} }),
+                h("div", { key: "2", ref: V.scriptRef, "aria-hidden": "true", style: S(`position:absolute; left:50%; top:50%; height:${V.heroSheetH ?? ""}; width:auto; aspect-ratio:1/1.6; transform:translate(-50%,-50%); pointer-events:none;`) }),
                 "\n      ",
                 h("div", { key: "4", style: {"position":"relative"} },
                   "\n      ",
@@ -353,9 +354,124 @@
             "\n  "
           ),
           "\n  ") : null),
+        "\n\n  ",
+        "\n  ",
+        (V.isHeroNarrow ? h(F,{key:19},
+          "\n  ",
+          h("main", { key: "writing", "data-screen-label": "Research", style: {"maxWidth":"none","margin":"0","padding":"0 0 72px","backgroundImage":"radial-gradient(color-mix(in srgb, var(--color-text) 16%, transparent) 1px, transparent 1.1px)","backgroundSize":"44px 44px","backgroundPosition":"22px 22px"} },
+            "\n\n    ",
+            h("section", { key: "1", ref: V.heroRef, style: {"position":"relative","overflow":"hidden","padding":"0 clamp(20px,5vw,44px)"} },
+              "\n      ",
+              h("div", { key: "1", ref: V.heroTextRef, style: S(`position:relative; text-align:center; min-height:${V.heroBlockH ?? ""}; box-sizing:border-box; perspective:1200px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:clamp(10px,2.2vh,22px);`) },
+                "\n        ",
+                "\n        ",
+                h("div", { key: "2", ref: V.scriptRef, "aria-hidden": "true", style: S(`position:absolute; left:50%; top:50%; height:${V.heroSheetH ?? ""}; width:auto; aspect-ratio:1/1.6; transform:translate(-50%,-50%); pointer-events:none;`) }),
+                "\n        ",
+                h("div", { key: "4", style: {"position":"relative"} },
+                  "\n          ",
+                  h("p", { key: "1|17.1dagtdl", "data-morph": "kicker", style: {"position":"relative","margin":"0 0 12px","fontSize":"11px","lineHeight":"14px","letterSpacing":"0.14em","textTransform":"uppercase","color":"var(--color-accent-700)"} },
+                    h(F,{key:0},"",I(V.page?.kicker,1),"")
+                  ),
+                  "\n          ",
+                  h("h1", { key: "3|16.1908cg2", "data-tr": "title", "data-reg": "serif", "data-morph": "title", style: {"position":"relative","margin":"0 auto","fontFamily":"var(--font-heading)","fontWeight":"300","fontSize":"clamp(30px, 8vw, 58px)","lineHeight":"1.06","letterSpacing":"-0.015em","maxWidth":"13ch","textWrap":"balance"} },
+                    h(F,{key:0},"",I(V.page?.title,1),"")
+                  ),
+                  "\n          ",
+                  h("p", { key: "5|17.3x40kj", "data-morph": "byline", style: {"position":"relative","margin":"clamp(8px,1.6vh,18px) 0 0","fontFamily":"var(--font-heading)","fontStyle":"italic","fontSize":"18px","lineHeight":"24px","color":"var(--color-neutral-700)"} },
+                    h(F,{key:0},"",I(V.page?.byline,1),"")
+                  ),
+                  "\n        "
+                ),
+                "\n        ",
+                "\n        ",
+                h("div", { key: "7", style: {"position":"relative","maxWidth":"34ch","textAlign":"center","padding":"0 12px"} },
+                  "\n          ",
+                  h("p", { key: "1|5.l8mgja", "data-morph": "notes-kicker", style: {"margin":"0 0 10px","fontFamily":"var(--deco)","fontSize":"10px","letterSpacing":"0.12em","color":"var(--color-accent-700)"} },
+                    "— i —"
+                  ),
+                  "\n          ",
+                  h("p", { key: "3|14.y6bcd6", "data-tr": "wake", "data-reg": "serif", "data-morph": "intro", style: {"margin":"0","fontSize":"15px","lineHeight":"1.55","color":"var(--color-neutral-700)","textWrap":"pretty"} },
+                    h(F,{key:0},"",I(V.page?.bio,1),"")
+                  ),
+                  "\n        "
+                ),
+                "\n      "
+              ),
+              "\n    "
+            ),
+            "\n\n    ",
+            h("div", { key: "3", ref: V.contentsRef }),
+            "\n    ",
+            h(F,{key:5},L(V.serifBands).map(function(item,i){
+              var Vi = Object.assign({}, V, {"b": item, $index: i});
+              return h(F,{key:i},
+                "\n      ",
+                "\n      ",
+                h("section", { key: "2", onClick: Vi.b?.open, style: S(`display:flex; flex-direction:${Vi.b?.dir ?? ""}; align-items:center; gap:clamp(14px,3vw,34px); width:min(94%, 1040px); margin:clamp(40px,7vh,96px) ${Vi.b?.marginR ?? ""} 0 ${Vi.b?.marginL ?? ""}; cursor:pointer;`) },
+                  "\n        ",
+                  h("button", { key: "1", "data-shape": `leaf-${Vi.b?.cardNo ?? ""}`, "data-shape-alt": `frame-${Vi.b?.figNo ?? ""}`, onClick: Vi.b?.open, "aria-label": Vi.b?.title, style: S(`all:unset; cursor:pointer; display:block; flex:none; width:min(62%, 660px); aspect-ratio:${Vi.b?.ratio ?? ""}; overflow:hidden; background:var(--color-surface); filter:${Vi.b?.plateFilter ?? ""};`) },
+                    "\n          ",
+                    h("image-slot", { key: "1", id: Vi.b?.heroSlotId, src: Vi.b?.hero, shape: "rect", fit: "contain", placeholder: Vi.b?.placeholder, style: {"width":"100%","height":"100%","display":"block"} }),
+                    "\n        "
+                  ),
+                  "\n        ",
+                  h("div", { key: "3", style: S(`min-width:0; flex:1 1 auto; display:flex; flex-direction:column; gap:6px; text-align:${Vi.b?.align ?? ""};`) },
+                    "\n          ",
+                    h("p", { key: "1|14.1ssam4e", style: {"margin":"0","fontFamily":"var(--deco)","fontSize":"10px","letterSpacing":"0.1em","color":"var(--color-accent-700)"} },
+                      h(F,{key:0},"",I(Vi.b?.kicker,1),"")
+                    ),
+                    "\n          ",
+                    h("p", { key: "3|13.1v00nqf", "data-morph": Vi.b?.morphName, "data-morph-alt": `title-${Vi.b?.figNo ?? ""}`, style: {"margin":"0","fontFamily":"var(--font-heading)","fontWeight":"500","fontSize":"clamp(16px, 3.4vw, 26px)","lineHeight":"1.15","color":"var(--color-text)","textWrap":"balance"} },
+                      h(F,{key:0},"",I(Vi.b?.title,1),"")
+                    ),
+                    "\n          ",
+                    h("p", { key: "5|12.1ag6tqj", style: {"margin":"0","fontSize":"12px","lineHeight":"16px","color":"var(--color-neutral-600)"} },
+                      h(F,{key:0},"",I(Vi.b?.kind,1),"")
+                    ),
+                    "\n          ",
+                    h("p", { key: "7|14.4222bc", style: {"margin":"0","fontFamily":"var(--font-heading)","fontStyle":"italic","fontSize":"13px","lineHeight":"19px","color":"var(--color-neutral-700)","whiteSpace":"pre-wrap"} },
+                      h(F,{key:0},"",I(Vi.b?.detail,1),"")
+                    ),
+                    "\n        "
+                  ),
+                  "\n      "
+                ),
+                "\n    ");
+            })),
+            "\n\n    ",
+            "\n    ",
+            h("nav", { key: "8", "aria-label": "Contact", style: {"position":"relative","margin":"56px auto 0","width":"min(360px, 82vw)","height":"44px","fontFamily":"var(--font-heading)","fontSize":"14px","lineHeight":"20px"} },
+              "\n      ",
+              h("span", { key: "1", "aria-hidden": "true", style: {"position":"absolute","left":"0","right":"0","top":"7px","bottom":"7px","borderWidth":"1px","borderStyle":"solid","borderColor":"var(--color-accent)","boxSizing":"border-box"} }),
+              "\n      ",
+              h("span", { key: "3", "aria-hidden": "true", style: {"position":"absolute","left":"7px","right":"7px","top":"0","bottom":"0","borderWidth":"1px","borderStyle":"solid","borderColor":"var(--color-accent)","boxSizing":"border-box"} }),
+              "\n      ",
+              h("span", { key: "5", style: {"position":"absolute","inset":"0","display":"flex","alignItems":"center","justifyContent":"center","gap":"clamp(20px, 6vw, 44px)"} },
+                "\n        ",
+                h("a", { key: "1|5.3mzikt", href: V.cvMailto, style: {"fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1"} },
+                  "Email"
+                ),
+                "\n        ",
+                h("a", { key: "3|6.1e9lseg", href: V.cvGithub, style: {"fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1"} },
+                  "GitHub"
+                ),
+                "\n        ",
+                h("button", { key: "5|2.3hnb2", onClick: V.goCvSerif, style: {"all":"unset","cursor":"pointer","fontSize":"14px","fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","color":"var(--color-accent)","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1"} },
+                  "CV"
+                ),
+                "\n      "
+              ),
+              "\n    "
+            ),
+            "\n    ",
+            h("div", { key: "10", ref: V.platesRef }),
+            h("div", { key: "11", ref: V.notesRef }),
+            "\n  "
+          ),
+          "\n  ") : null),
         "\n\n\n\n  ",
         "\n  ",
-        (V.isMonoPage ? h(F,{key:18},
+        (V.isMonoPage ? h(F,{key:22},
           "\n\n  ",
           "\n  ",
           (V.isLandingNarrow ? h(F,{key:2},
@@ -609,7 +725,7 @@
           "\n\n  ") : null),
         "\n\n  ",
         "\n  ",
-        (V.isCvSerif ? h(F,{key:21},
+        (V.isCvSerif ? h(F,{key:25},
           "\n  ",
           h("main", { key: "cv", "data-screen-label": "CV", style: {"maxWidth":"min(1040px, 100% - 2 * clamp(24px, 5vw, 72px))","margin":"0 auto","padding":"clamp(32px,5vw,72px) 0","fontFamily":"var(--r-body)","fontSize":"16.5px","lineHeight":"1.7"} },
             "\n\n    ",
@@ -1020,7 +1136,7 @@
           "\n  ") : null),
         "\n\n  ",
         "\n  ",
-        (V.isCvMono ? h(F,{key:24},
+        (V.isCvMono ? h(F,{key:28},
           "\n  ",
           h("main", { key: "cv-mono", "data-screen-label": "CV mono", className: "cvm", style: {"maxWidth":"min(1040px, 100% - 2 * clamp(24px, 5vw, 72px))","margin":"0 auto","boxSizing":"border-box","padding":"clamp(32px,5vw,72px) 22px"} },
             "\n\n    ",
@@ -1430,7 +1546,7 @@
           "\n  ") : null),
         "\n\n  ",
         "\n  ",
-        (V.isSerif ? h(F,{key:27},
+        (V.isSerif ? h(F,{key:31},
           "\n  ",
           h("main", { key: V.chapterKey, "data-screen-label": "Chapter", style: {"maxWidth":"1200px","margin":"0 auto","padding":"0 clamp(20px,5vw,72px)","backgroundImage":"radial-gradient(color-mix(in srgb, var(--color-text) 16%, transparent) 1px, transparent 1.1px)","backgroundSize":"28px 28px"} },
             "\n\n    ",
@@ -1677,7 +1793,7 @@
           "\n  ") : null),
         "\n\n  ",
         "\n  ",
-        (V.isMono ? h(F,{key:30},
+        (V.isMono ? h(F,{key:34},
           "\n  ",
           h("main", { key: V.chapterKey, "data-screen-label": "Chapter", style: {"maxWidth":"1160px","margin":"0 auto","padding":"0 clamp(20px,4vw,48px) 88px","fontFamily":"var(--mono)","fontSize":"14px","lineHeight":"22px"} },
             "\n    ",
@@ -2323,12 +2439,27 @@
         titleSize: 'clamp(36px,5.2vw,76px)', titleTracking: '-0.03em', bylineSize: '15px', bodySize: '15px', smallBodySize: '14px', stampSize: '28px', h2Size: '32px', h3Size: '26px', cvSize: '18px', capLeadSize: '13px', marginSize: '13px', marginStyle: 'normal', marginPrefix: '// ' },
     };
     featuredFor = { writing: [10, 11], tooling: [0, 1] };
-    // narrow and landingRows decide which of the two Development landings renders and how many rows it
-    // is drawn on, so they are read from the window here rather than waiting for componentDidMount's
-    // first onResize: the first paint would otherwise be the wrong landing, replaced a frame later. The
-    // address bar is read the same way, so a deep link paints the view it names, not the home first.
+    // Whether the page is read as a column rather than as a desk. Every wide composition on this site is
+    // a one-screen drawing laid out across the width: the Research collage puts a margin of leaves either
+    // side of a title column, the Development landing and sheet rule 22 columns across the screen. A page
+    // that is not clearly landscape has no screen to give them, whatever its width in pixels.
+    //
+    // Two terms, because a page fails them in two ways. STACK_W is the width the Development landing has
+    // always stacked at: below it there is no room for two margins and a measure between them. STACK_RATIO
+    // is the proportion, and it is the term a portrait tablet fails while passing the first: at 1024 by
+    // 1366 the collage's gutters fall to their 280px minimum while the leaves' offsets, which are written
+    // in pixels and tuned on a landscape page, do not follow them in, so the margins land on the title
+    // column, on the roll and on the colophon. Measured at 1.2: 5:4 desktops and a landscape tablet keep
+    // the collage, a square page and anything taller than it is wide are read as a column.
+    STACK_W = 1000;
+    STACK_RATIO = 1.2;
+    isStacked(w = window.innerWidth, h = window.innerHeight) { return w < this.STACK_W || w < h * this.STACK_RATIO; }
+    // narrow and landingRows decide which composition renders and how many rows it is drawn on, so they
+    // are read from the window here rather than waiting for componentDidMount's first onResize: the first
+    // paint would otherwise be the wrong one, replaced a frame later. The address bar is read the same
+    // way, so a deep link paints the view it names, not the home first.
     state = { view: 'home', page: 'writing', cvReg: 'serif', idx: 10, hovered: 10, tab: { left: 0, width: 0 },
-      narrow: window.innerWidth < 1000, landingRows: this.visibleRows(), landingStatementRows: 12,
+      narrow: this.isStacked(), landingRows: this.visibleRows(), landingStatementRows: 12,
       ...this.routeState(this.parseRoute(location.hash)) };
   
     // Where every module of a Development sheet sits on the 22 column, 44px row drawing grid, as
@@ -2542,7 +2673,7 @@
       left: [
         { h: 105, w: 1650, ratio: '1/1', maxW: '350px', titleSize: '17px', dir: 'column', alignItems: 'flex-start', px: '-14px', py: '-8px', dur: '8s', delay: '-5s', offsetX: '336.667px', offsetY: '112px', cover: 'https://picsum.photos/seed/halvorsen-3/700/700' },
         { h: 39.342, w: 655.698, ratio: '5/4', maxW: '163.925px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-20px', py: '-9px', dur: '8.5s', delay: '-2s', offsetX: '-204.667px', offsetY: '27px', beside: true, cover: 'https://picsum.photos/seed/halvorsen-5/700/560' },
-        { h: 45.231, w: 719.064, ratio: '4/5', maxW: '148.452px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-17px', py: '-12px', dur: '7.8s', delay: '-6s', offsetX: '-478px', offsetY: '149.333px', cover: 'https://picsum.photos/seed/halvorsen-7/560/700' },
+        { h: 45.231, w: 719.064, ratio: '4/5', maxW: '148.452px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-17px', py: '-12px', dur: '7.8s', delay: '-6s', offsetX: '-72px', offsetY: '149.333px', edge: true, cover: 'https://picsum.photos/seed/halvorsen-7/560/700' },
         { h: 33, w: 560, ratio: '3/2', maxW: '140px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-12px', py: '-7px', dur: '9.2s', delay: '-1s', offsetX: '0px', offsetY: '18px', cover: 'https://picsum.photos/seed/halvorsen-9/900/600' },
       ],
       right: [
@@ -2581,6 +2712,16 @@
         // there, and the margins have width to spare. It reads outward, away from the page centre, so
         // the pair sits the way the two anchors already do.
         beside: !!st.beside,
+        // `edge` anchors a leaf to the page edge of its gutter rather than to the column the diagonal
+        // hands it. The gutters are fluid and the offsets are pixels, so a leaf in the inner column
+        // holds its distance from the title column and walks with it as the window grows; a leaf that
+        // was composed against the page edge has to be measured from there, or it slides in and out of
+        // the frame with the width. Such a leaf takes the whole gutter and is justified to the page
+        // side, as a spread is, and its offsetX is then a distance from the page edge. It is a choice
+        // made for the composed leaf alone: a register long enough to cycle the styles hands later
+        // leaves the same entry, and those keep the column the diagonal gave them, since two spans in
+        // one row would share a cell.
+        edge: !!st.edge && wrap === 0,
         ratio: st.ratio, maxW: st.maxW, titleSize: st.titleSize, dir: st.dir, alignItems: st.alignItems,
         px: st.px, py: st.py, dur: st.dur, delay: (parseFloat(st.delay) - 1.7 * wrap) + 's',
         // Two different moves, and conflating them is what pulled a plate off its own caption. The
@@ -2590,8 +2731,60 @@
         offsetX: st.offsetX || '0px', offsetY: st.offsetY || '0px',
         bleedX: st.bleedX || '0px', bleedY: st.bleedY || '0px', cover: st.cover });
       return [...spreads.map((st, i) => slot(st, st.row, 0, 0, 'spreads.' + side + '.' + i)),
-        ...[...diag, ...skipped].map((c, i) => slot(pairs[i % pairs.length], c.row, c.col, Math.floor(i / pairs.length), 'pairs.' + side + '.' + (i % pairs.length)))];
+        ...[...diag, ...skipped].map((c, i) => { const st = pairs[i % pairs.length], wrap = Math.floor(i / pairs.length);
+          return slot(st, c.row, st.edge && wrap === 0 ? 0 : c.col, wrap, 'pairs.' + side + '.' + (i % pairs.length)); })];
     }
+  
+    // ---- the stacked Research landing, the serif answer to a portrait screen ----------------------
+    //
+    // The collage above needs two margins and a title column between them, which a portrait screen has
+    // no room for. On any page isStacked calls a column rather than a desk, the register is read as one
+    // column instead: the headline with the roll behind it, then one full-bleed band per chapter.
+    //
+    // The band order is declared rather than taken from the register. The collage places a chapter by
+    // the shape of its plate, so the order it is fed in barely shows; a column is read top to bottom
+    // and the sequence is the composition. A chapter this list does not name follows the ones it does,
+    // in register order, so a new chapter appears at the end rather than disappearing.
+    BAND_ORDER = ['prototype-to-massing', 'floor-types', 'timber-stm', 'notra', 'canti-lever-house',
+      'the-paved-world', 'everything-was-a-cache', 'the-eyeball-line'];
+    bandOrder(entries) {
+      const rank = (p) => { const i = this.BAND_ORDER.indexOf(p.id); return i < 0 ? this.BAND_ORDER.length : i; };
+      return entries.map((p, i) => [p, i]).sort((a, b) => rank(a[0]) - rank(b[0]) || a[1] - b[1]).map(([p]) => p);
+    }
+    // A band is a loose leaf, not a cell. The collage's leaves are independent things adrift in a margin,
+    // and the column keeps that: each band is laid out on its own, takes the proportion of the picture it
+    // carries rather than a proportion the layout imposes, and is set against one edge of the page with
+    // slack left on the other. Nothing is ruled and nothing lines up between one band and the next, which
+    // is what stops the column reading as a table of two columns.
+    //
+    // The edge alternates, so a band hangs off the left, the next off the right, and the plate is the half
+    // that touches the edge: `dir` puts it first in the row or last. The caption reads toward the plate it
+    // belongs to, beginning against it on a left band and ending against it on a right one, so the two
+    // halves stay one block however much slack the band leaves.
+    bandSide(k) {
+      return k % 2 === 0
+        ? { dir: 'row', marginL: '0', marginR: 'auto', align: 'left' }
+        : { dir: 'row-reverse', marginL: 'auto', marginR: '0', align: 'right' };
+    }
+    // The sheet the roll is fitted to on the Research landing: parchment.js scales the model to whatever
+    // box setAnchor is handed, so this element's size is the scroll's size on screen. The expression is
+    // the one the page was composed with; the factor is what the scroll is read at. It stands at nine
+    // tenths everywhere, and the stacked page presses it a further fifth so the headline keeps the column.
+    // On the collage the sheet grows with the column standing on it: the `100% + 200px` term is the title
+    // column's own height, and the block is a whole screen tall whatever the sheet does, so the two never
+    // argue. Stacked, they do. The block is sized to hold the sheet and the sheet is sized off the block,
+    // so a tall block asks for a tall sheet and a tall sheet is then given a taller block: the column read
+    // as a screenful of empty paper with the headline adrift in the middle of it. The stacked sheet drops
+    // the content term and is measured off the viewport alone, which breaks the loop in the one direction
+    // that matters: the block follows the sheet, never the other way about.
+    HERO_SHEET = 'min(max(calc(100% + 200px), 74vh), calc(100vh - 190px))';
+    HERO_SHEET_STACKED = 'min(74vh, calc(100vh - 190px))';
+    heroSheetH(narrow) {
+      return 'calc(' + (narrow ? this.HERO_SHEET_STACKED : this.HERO_SHEET) + ' * ' + (narrow ? 0.72 : 0.9) + ')';
+    }
+    // the stacked headline's block: the sheet, and enough air around it that the paper reads as a plate
+    // behind the type rather than as the page itself
+    heroBlockH() { return 'calc(' + this.heroSheetH(true) + ' + clamp(36px, 6vh, 80px))'; }
   
     num(i) { return (this.props.numerals ?? 'roman') === 'roman' ? this.romans[i] : String(i + 1); }
     reg(i) { return /Research|Writing|Essay/.test(this.data[i].kind) ? 'serif' : 'mono'; }
@@ -2997,7 +3190,7 @@
       window.addEventListener('pointerdown', this.onDown); window.addEventListener('pointerup', this.onUp); window.addEventListener('pointercancel', this.onUp);
       this.onScroll = () => { this.syncParchment(); this.syncHome(); this.setState({ scrollY: window.scrollY }); clearTimeout(this.remeasureTimer); this.remeasureTimer = setTimeout(() => this.remeasureText(), 120); };
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => setTimeout(() => { this.remeasureText(); this.measureLandingStatement(); this.syncParchment(); }, 50));
-      this.onResize = () => { this.setState({ narrow: window.innerWidth < 1000, landingRows: this.visibleRows() }); this.measureTabs(); this.syncParchment(); this.syncHome(); };
+      this.onResize = () => { this.setState({ narrow: this.isStacked(), landingRows: this.visibleRows() }); this.measureTabs(); this.syncParchment(); this.syncHome(); };
       this.onKey = (e) => {
         const t = e.target; if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
         const n = this.data.length, { view, idx } = this.state;
@@ -3052,7 +3245,13 @@
       this.hintTimer = setTimeout(() => this.setState({ hintGone: true }), 9000);
       setTimeout(() => this.measureTabs(), 400);
     }
-    componentDidUpdate() { this.observeReveals(); this.mountTextEffects(); this.measureTabs(); this.measureLandingStatement(); this.syncParchment(); this.syncHome(); this.syncPaper(); }
+    // Everything measured off the DOM is re-measured after every render, because a render can swap the
+    // element it was measured from: a resize that crosses isStacked replaces the whole landing, and the
+    // roll's anchor with it. onResize syncs the roll before that render, so this is the sync that lands
+    // it on the new anchor. A window dragged across the threshold fires resize again and again and
+    // self-corrected by accident; one docked there with Win+arrow fires it once, and did not.
+    // The leaf detail grows by a character per tick while it types, so its placement runs here too.
+    componentDidUpdate() { this.observeReveals(); this.mountTextEffects(); this.measureTabs(); this.measureLandingStatement(); this.syncParchment(); this.syncHome(); this.syncPaper(); this.placeLeafText(); }
   
     // A chapter whose entry carries a `paper` gets its body from an ES module under content/, fetched
     // the first time that chapter is opened and then kept on the instance. Nothing is imported for the
@@ -3471,9 +3670,6 @@
       });
     }
   
-    // the detail grows by a character per tick while it types, so the pass runs on every update
-    componentDidUpdate() { this.placeLeafText(); }
-  
     componentWillUnmount() { this.dead = true; if (this.leafTuner) { this.leafTuner.destroy(); this.leafTuner = null; } if (this.gridTuner) { this.gridTuner.destroy(); this.gridTuner = null; } if (this.fog) { this.fog.destroy(); this.fog = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); window.removeEventListener('popstate', this.onPop); this.observer?.disconnect(); cancelAnimationFrame(this.cellRaf); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
     observeReveals() { document.querySelectorAll('[data-enter=""]').forEach((el) => this.observer.observe(el)); }
     // the cursor's cell on the sheet grid, sampled once a frame and only written when the cell actually
@@ -3795,6 +3991,20 @@
   
       // the margins only hold chapters that belong to this register
       const own = projects.filter((p) => this.pageOf(projects.indexOf(p)) === pageKey);
+      // The stacked Research landing. Built only when it is the one that renders, the way landingPlates
+      // is built only for the wide Development sheet. A band carries the chapter itself, its place in the
+      // declared order, and the side that place puts its plate on; nothing of the collage's geometry
+      // reaches it, because a column has none of it to place.
+      const heroNarrow = view === 'page' && page.reg === 'serif' && this.state.narrow;
+      const serifBands = !heroNarrow ? [] : this.bandOrder(own).map((p, k) => ({ ...p, ...this.bandSide(k),
+        cardNo: k + 1, morphName: 'row-' + k, kicker: 'Chapter ' + p.numeral + ' · ' + p.year,
+        // the plate is cut to the picture, so nothing is cropped and no two bands are the same shape
+        ratio: p.heroW && p.heroH ? p.heroW + '/' + p.heroH : '3/2',
+        // The collage types a leaf's colophon in under the cursor. A stacked page is read on a screen
+        // that has no cursor, so the band states it outright and nothing is hidden behind a hover.
+        detail: p.subtitle + '\n' + p.role + ' · ' + p.status + ' · pp. ' + p.pages,
+        // the sepia mat belongs to the stock photographs; a real render is shown as it is, as in the collage
+        plateFilter: p.hero ? 'none' : 'sepia(0.22) saturate(0.82) contrast(1.05)' }));
       // beyond the written chapters, forthcoming leaves hold the stage as placeholders. A thin register
       // still has to read as a composition, so the stage never falls below the six leaves the page was
       // tuned at; the shortfall is measured against that, not against a fixed number of slots.
@@ -4028,7 +4238,11 @@
         goCvSerif: () => this.goCv('serif'), goCvMono: () => this.goCv('mono'), cvDoc: cvViews.doc,
         cvReady: !!cvData, cvLoading: !cvData && !this.state.cvError, cvFailed: !cvData && !!this.state.cvError,
         cvEmail, cvMailto: 'mailto:' + cvEmail, cvGithub: cvLinks.github || this.CONTACT.github,
-        isSerifPage: view === 'page' && page.reg === 'serif', isMonoPage: view === 'page' && page.reg === 'mono',
+        // The Research landing has the two compositions the Development landing has, chosen off the same
+        // state.narrow: the collage on a landscape page, the stacked column on any other.
+        isHeroWide: view === 'page' && page.reg === 'serif' && !heroNarrow, isHeroNarrow: heroNarrow,
+        serifBands, heroSheetH: this.heroSheetH(this.state.narrow), heroBlockH: this.heroBlockH(),
+        isMonoPage: view === 'page' && page.reg === 'mono',
         isLandingWide: landingWide, isLandingNarrow: !landingWide, land, landingPlates, landingLines,
         sheetLinks, linksEmpty: !relatedIdx.length,
         isMono: view === 'chapter' && mono, isSerif: view === 'chapter' && !mono, chapterKey: R + '-' + idx,
