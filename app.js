@@ -190,17 +190,17 @@
                   var Vi = Object.assign({}, V, {"lf": item, $index: i});
                   return h(F,{key:i},
                     "\n        ",
-                    h("div", { key: "1", "data-leaf": Vi.lf?.side, style: S(`grid-column:${Vi.lf?.col ?? ""}; grid-row:${Vi.lf?.row ?? ""}; align-self:${Vi.lf?.selfY ?? ""}; justify-self:${Vi.lf?.selfX ?? ""}; min-width:0; max-width:100%; z-index:${Vi.lf?.zIndex ?? ""}; transform:translate(calc(var(--mx, 0) * ${Vi.lf?.px ?? ""}), calc(var(--my, 0) * ${Vi.lf?.py ?? ""} + ${Vi.lf?.bleedY ?? ""})); transition:transform 900ms cubic-bezier(.2,.7,.2,1);`) },
+                    h("div", { key: "1", "data-leaf": Vi.lf?.side, "data-slot": Vi.lf?.tune, style: S(`grid-column:${Vi.lf?.col ?? ""}; grid-row:${Vi.lf?.row ?? ""}; align-self:${Vi.lf?.selfY ?? ""}; justify-self:${Vi.lf?.selfX ?? ""}; min-width:0; max-width:100%; z-index:${Vi.lf?.zIndex ?? ""}; transform:translate(calc(var(--mx, 0) * ${Vi.lf?.px ?? ""} + ${Vi.lf?.offsetX ?? ""}), calc(var(--my, 0) * ${Vi.lf?.py ?? ""} + ${Vi.lf?.offsetY ?? ""})); transition:transform 900ms cubic-bezier(.2,.7,.2,1);`) },
                       "\n          ",
                       h("div", { key: "1", style: S(`animation:leaf-drift ${Vi.lf?.dur ?? ""} ease-in-out infinite alternate; animation-delay:${Vi.lf?.delay ?? ""}; display:flex; flex-direction:${Vi.lf?.dir ?? ""}; align-items:${Vi.lf?.alignItems ?? ""}; gap:12px 20px; width:100%;`) },
                         "\n            ",
-                        h("button", { key: "1", "data-shape": `leaf-${Vi.lf?.cardNo ?? ""}`, "data-shape-alt": `frame-${Vi.lf?.figNo ?? ""}`, onClick: Vi.lf?.open, onMouseEnter: Vi.lf?.hover, onMouseLeave: Vi.lf?.unhover, onFocus: Vi.lf?.hover, onBlur: Vi.lf?.unhover, style: S(`all:unset; cursor:${Vi.lf?.cursor ?? ""}; display:block; flex:none; height:${Vi.lf?.plateH ?? ""}; width:${Vi.lf?.plateW ?? ""}; max-width:${Vi.lf?.plateMaxW ?? ""}; aspect-ratio:${Vi.lf?.ratio ?? ""}; box-sizing:border-box; transform-origin:${Vi.lf?.origin ?? ""}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:${Vi.lf?.shadow ?? ""}; overflow:hidden; transform:translateX(${Vi.lf?.bleedX ?? ""}) translateY(${Vi.lf?.lift ?? ""}) scale(${Vi.lf?.scale ?? ""}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:${Vi.lf?.filter ?? ""};`), className: "scp3" },
+                        h("button", { key: "1", "data-shape": `leaf-${Vi.lf?.cardNo ?? ""}`, "data-shape-alt": `frame-${Vi.lf?.figNo ?? ""}`, onClick: Vi.lf?.open, onMouseEnter: Vi.lf?.hover, onMouseLeave: Vi.lf?.unhover, onFocus: Vi.lf?.hover, onBlur: Vi.lf?.unhover, style: S(`all:unset; cursor:${Vi.lf?.cursor ?? ""}; display:block; flex:none; height:${Vi.lf?.plateH ?? ""}; width:${Vi.lf?.plateW ?? ""}; max-width:${Vi.lf?.plateMaxW ?? ""}; aspect-ratio:${Vi.lf?.ratio ?? ""}; box-sizing:border-box; transform-origin:${Vi.lf?.origin ?? ""}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:${Vi.lf?.shadow ?? ""}; overflow:hidden; transform:translate(${Vi.lf?.bleedX ?? ""}, ${Vi.lf?.bleedY ?? ""}) translateY(${Vi.lf?.lift ?? ""}) scale(${Vi.lf?.scale ?? ""}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:${Vi.lf?.filter ?? ""};`), className: "scp3" },
                           "\n              ",
                           h("image-slot", { key: "1", id: Vi.lf?.coverSlotId, src: Vi.lf?.cover, shape: "rect", fit: "cover", placeholder: Vi.lf?.placeholder, style: {"width":"100%","height":"100%","display":"block","transform":"scale(1)","transition":"transform 620ms cubic-bezier(.2,.7,.2,1)"}, className: "scp4" }),
                           "\n            "
                         ),
                         "\n            ",
-                        h("div", { key: "3", style: S(`position:relative; z-index:5; min-width:12ch; flex:1 1 auto; text-align:${Vi.lf?.align ?? ""}; padding-bottom:2px;`) },
+                        h("div", { key: "3", "data-leaf-text": "", style: S(`position:relative; z-index:5; width:${Vi.lf?.textW ?? ""}; min-width:12ch; flex:${Vi.lf?.textFlex ?? ""}; text-align:${Vi.lf?.align ?? ""}; padding-bottom:2px;`) },
                           "\n              ",
                           h("p", { key: "1|15.mbtwb2", style: {"margin":"0","fontFamily":"var(--deco)","fontSize":"10px","letterSpacing":"0.1em","color":"var(--color-accent-700)","whiteSpace":"nowrap"} },
                             h(F,{key:0},"",I(Vi.lf?.kicker,1),"")
@@ -214,9 +214,14 @@
                             h(F,{key:0},"",I(Vi.lf?.kind,1),"")
                           ),
                           "\n              ",
-                          h("p", { key: "7|27.1o3ozxe", "aria-live": "polite", style: S(`position:absolute; top:100%; left:0; right:0; margin:8px 0 0; pointer-events:none; font-family:var(--font-heading); font-style:italic; font-size:15px; line-height:21px; color:var(--color-neutral-700); white-space:pre-wrap; max-width:30ch; opacity:${Vi.lf?.detailOpacity ?? ""}; transition:opacity 220ms ease;`) },
-                            h(F,{key:0},"",I(Vi.lf?.typed,1),""),
-                            h("span", { key: "1", "aria-hidden": "true", style: S(`display:inline-block; width:1px; height:0.9em; margin-left:2px; vertical-align:-0.1em; background:var(--color-accent); opacity:${Vi.lf?.caretOpacity ?? ""};`) })
+                          h("p", { key: "7|72.1yle4m", "aria-live": "polite", "data-leaf-detail": "", style: S(`position:absolute; top:100%; left:0; right:0; margin:8px -8px 0; padding:5px 8px 6px; box-sizing:border-box; background:color-mix(in srgb, var(--color-bg) 90%, transparent); backdrop-filter:blur(2px); pointer-events:none; font-family:var(--font-heading); font-style:italic; font-size:15px; line-height:21px; color:var(--color-neutral-700); white-space:pre-wrap; opacity:${Vi.lf?.detailOpacity ?? ""}; transition:opacity 220ms ease;`) },
+                            h("span", { key: "0|19.1a1ula3", "aria-hidden": "true", style: {"visibility":"hidden"} },
+                              h(F,{key:0},"",I(Vi.lf?.detailFull,1),"")
+                            ),
+                            h("span", { key: "1|27.1o3ozxe", style: {"position":"absolute","left":"8px","right":"8px","top":"5px"} },
+                              h(F,{key:0},"",I(Vi.lf?.typed,1),""),
+                              h("span", { key: "1", "aria-hidden": "true", style: S(`display:inline-block; width:1px; height:0.9em; margin-left:2px; vertical-align:-0.1em; background:var(--color-accent); opacity:${Vi.lf?.caretOpacity ?? ""};`) })
+                            )
                           ),
                           "\n            "
                         ),
@@ -296,17 +301,17 @@
                   var Vi = Object.assign({}, V, {"lf": item, $index: i});
                   return h(F,{key:i},
                     "\n        ",
-                    h("div", { key: "1", "data-leaf": Vi.lf?.side, style: S(`grid-column:${Vi.lf?.col ?? ""}; grid-row:${Vi.lf?.row ?? ""}; align-self:${Vi.lf?.selfY ?? ""}; justify-self:${Vi.lf?.selfX ?? ""}; min-width:0; max-width:100%; z-index:${Vi.lf?.zIndex ?? ""}; transform:translate(calc(var(--mx, 0) * ${Vi.lf?.px ?? ""}), calc(var(--my, 0) * ${Vi.lf?.py ?? ""} + ${Vi.lf?.bleedY ?? ""})); transition:transform 900ms cubic-bezier(.2,.7,.2,1);`) },
+                    h("div", { key: "1", "data-leaf": Vi.lf?.side, "data-slot": Vi.lf?.tune, style: S(`grid-column:${Vi.lf?.col ?? ""}; grid-row:${Vi.lf?.row ?? ""}; align-self:${Vi.lf?.selfY ?? ""}; justify-self:${Vi.lf?.selfX ?? ""}; min-width:0; max-width:100%; z-index:${Vi.lf?.zIndex ?? ""}; transform:translate(calc(var(--mx, 0) * ${Vi.lf?.px ?? ""} + ${Vi.lf?.offsetX ?? ""}), calc(var(--my, 0) * ${Vi.lf?.py ?? ""} + ${Vi.lf?.offsetY ?? ""})); transition:transform 900ms cubic-bezier(.2,.7,.2,1);`) },
                       "\n          ",
                       h("div", { key: "1", style: S(`animation:leaf-drift ${Vi.lf?.dur ?? ""} ease-in-out infinite alternate; animation-delay:${Vi.lf?.delay ?? ""}; display:flex; flex-direction:${Vi.lf?.dir ?? ""}; align-items:${Vi.lf?.alignItems ?? ""}; gap:12px 20px; width:100%;`) },
                         "\n            ",
-                        h("button", { key: "1", "data-shape": `leaf-${Vi.lf?.cardNo ?? ""}`, "data-shape-alt": `frame-${Vi.lf?.figNo ?? ""}`, onClick: Vi.lf?.open, onMouseEnter: Vi.lf?.hover, onMouseLeave: Vi.lf?.unhover, onFocus: Vi.lf?.hover, onBlur: Vi.lf?.unhover, style: S(`all:unset; cursor:${Vi.lf?.cursor ?? ""}; display:block; flex:none; height:${Vi.lf?.plateH ?? ""}; width:${Vi.lf?.plateW ?? ""}; max-width:${Vi.lf?.plateMaxW ?? ""}; aspect-ratio:${Vi.lf?.ratio ?? ""}; box-sizing:border-box; transform-origin:${Vi.lf?.origin ?? ""}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:${Vi.lf?.shadow ?? ""}; overflow:hidden; transform:translateX(${Vi.lf?.bleedX ?? ""}) translateY(${Vi.lf?.lift ?? ""}) scale(${Vi.lf?.scale ?? ""}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:${Vi.lf?.filter ?? ""};`), className: "scp3" },
+                        h("button", { key: "1", "data-shape": `leaf-${Vi.lf?.cardNo ?? ""}`, "data-shape-alt": `frame-${Vi.lf?.figNo ?? ""}`, onClick: Vi.lf?.open, onMouseEnter: Vi.lf?.hover, onMouseLeave: Vi.lf?.unhover, onFocus: Vi.lf?.hover, onBlur: Vi.lf?.unhover, style: S(`all:unset; cursor:${Vi.lf?.cursor ?? ""}; display:block; flex:none; height:${Vi.lf?.plateH ?? ""}; width:${Vi.lf?.plateW ?? ""}; max-width:${Vi.lf?.plateMaxW ?? ""}; aspect-ratio:${Vi.lf?.ratio ?? ""}; box-sizing:border-box; transform-origin:${Vi.lf?.origin ?? ""}; background:var(--color-surface); border:1px solid var(--color-divider); box-shadow:${Vi.lf?.shadow ?? ""}; overflow:hidden; transform:translate(${Vi.lf?.bleedX ?? ""}, ${Vi.lf?.bleedY ?? ""}) translateY(${Vi.lf?.lift ?? ""}) scale(${Vi.lf?.scale ?? ""}); transition:transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 520ms ease; position:relative; filter:${Vi.lf?.filter ?? ""};`), className: "scp3" },
                           "\n              ",
                           h("image-slot", { key: "1", id: Vi.lf?.coverSlotId, src: Vi.lf?.cover, shape: "rect", fit: "cover", placeholder: Vi.lf?.placeholder, style: {"width":"100%","height":"100%","display":"block","transform":"scale(1)","transition":"transform 620ms cubic-bezier(.2,.7,.2,1)"}, className: "scp4" }),
                           "\n            "
                         ),
                         "\n            ",
-                        h("div", { key: "3", style: S(`position:relative; z-index:5; min-width:12ch; flex:1 1 auto; text-align:${Vi.lf?.align ?? ""}; padding-bottom:2px;`) },
+                        h("div", { key: "3", "data-leaf-text": "", style: S(`position:relative; z-index:5; width:${Vi.lf?.textW ?? ""}; min-width:12ch; flex:${Vi.lf?.textFlex ?? ""}; text-align:${Vi.lf?.align ?? ""}; padding-bottom:2px;`) },
                           "\n              ",
                           h("p", { key: "1|15.mbtwb2", style: {"margin":"0","fontFamily":"var(--deco)","fontSize":"10px","letterSpacing":"0.1em","color":"var(--color-accent-700)","whiteSpace":"nowrap"} },
                             h(F,{key:0},"",I(Vi.lf?.kicker,1),"")
@@ -320,9 +325,14 @@
                             h(F,{key:0},"",I(Vi.lf?.kind,1),"")
                           ),
                           "\n              ",
-                          h("p", { key: "7|27.1o3ozxe", "aria-live": "polite", style: S(`position:absolute; top:100%; left:0; right:0; margin:8px 0 0; pointer-events:none; font-family:var(--font-heading); font-style:italic; font-size:15px; line-height:21px; color:var(--color-neutral-700); white-space:pre-wrap; max-width:30ch; opacity:${Vi.lf?.detailOpacity ?? ""}; transition:opacity 220ms ease;`) },
-                            h(F,{key:0},"",I(Vi.lf?.typed,1),""),
-                            h("span", { key: "1", "aria-hidden": "true", style: S(`display:inline-block; width:1px; height:0.9em; margin-left:2px; vertical-align:-0.1em; background:var(--color-accent); opacity:${Vi.lf?.caretOpacity ?? ""};`) })
+                          h("p", { key: "7|72.1yle4m", "aria-live": "polite", "data-leaf-detail": "", style: S(`position:absolute; top:100%; left:0; right:0; margin:8px -8px 0; padding:5px 8px 6px; box-sizing:border-box; background:color-mix(in srgb, var(--color-bg) 90%, transparent); backdrop-filter:blur(2px); pointer-events:none; font-family:var(--font-heading); font-style:italic; font-size:15px; line-height:21px; color:var(--color-neutral-700); white-space:pre-wrap; opacity:${Vi.lf?.detailOpacity ?? ""}; transition:opacity 220ms ease;`) },
+                            h("span", { key: "0|19.1a1ula3", "aria-hidden": "true", style: {"visibility":"hidden"} },
+                              h(F,{key:0},"",I(Vi.lf?.detailFull,1),"")
+                            ),
+                            h("span", { key: "1|27.1o3ozxe", style: {"position":"absolute","left":"8px","right":"8px","top":"5px"} },
+                              h(F,{key:0},"",I(Vi.lf?.typed,1),""),
+                              h("span", { key: "1", "aria-hidden": "true", style: S(`display:inline-block; width:1px; height:0.9em; margin-left:2px; vertical-align:-0.1em; background:var(--color-accent); opacity:${Vi.lf?.caretOpacity ?? ""};`) })
+                            )
                           ),
                           "\n            "
                         ),
@@ -2351,15 +2361,15 @@
     // instead of pushing the collage past the fold. `h` is the height in vh, `w` the px cap on it.
     LEAF_SPREADS = {
       left: [
-        { row: 1, h: 66, w: 990, ratio: '4/3', maxW: '280px', titleSize: '26px', dir: 'row', alignItems: 'flex-end', px: '-18px', py: '-10px', dur: '7.5s', delay: '0s', bleedX: '-56px', bleedY: '0px', cover: 'https://picsum.photos/seed/halvorsen-cuts/800/600' },
+        { row: 1, h: 165, w: 2475, ratio: '4/3', maxW: '700px', titleSize: '26px', dir: 'row', alignItems: 'flex-end', px: '-18px', py: '-10px', dur: '7.5s', delay: '0s', offsetX: '-66.667px', offsetY: '-3.334px', cover: 'https://picsum.photos/seed/halvorsen-cuts/800/600' },
       ],
       right: [
-        { row: 2, h: 72, w: 1080, ratio: '3/4', maxW: '280px', titleSize: '26px', dir: 'row-reverse', alignItems: 'flex-end', px: '-26px', py: '-14px', dur: '9s', delay: '-3s', bleedX: '56px', bleedY: '0px', cover: 'https://picsum.photos/seed/halvorsen-machines/600/800' },
+        { row: 2, h: 164.932, w: 2473.978, ratio: '3/4', maxW: '641.402px', titleSize: '26px', dir: 'row-reverse', alignItems: 'flex-end', px: '-26px', py: '-14px', dur: '9s', delay: '-3s', offsetX: '11.333px', offsetY: '23.334px', cover: 'https://picsum.photos/seed/halvorsen-machines/600/800' },
         // stackH and stackW: the height a declared plate may take here instead of h and w. This spread is
         // laid out as a row, its stock plate 18vh tall with the caption beside it; a declared plate stacks
         // its title underneath (see below), and at 18vh that stack runs out of the row into the anchor
         // plate in the row beneath. The other spreads are the anchors, whose stacks the page was tuned around.
-        { row: 1, h: 54, w: 780, stackH: 39, stackW: 360, ratio: '3/2', maxW: '270px', titleSize: '17px', dir: 'row-reverse', alignItems: 'flex-start', px: '-22px', py: '-12px', dur: '10s', delay: '-1.5s', bleedX: '0px', bleedY: '0px', cover: 'https://picsum.photos/seed/halvorsen-4/900/600' },
+        { row: 1, h: 68.468, w: 988.985, stackH: 49.449, stackW: 456.455, ratio: '3/2', maxW: '342.341px', titleSize: '17px', dir: 'row-reverse', alignItems: 'flex-start', px: '-22px', py: '-12px', dur: '10s', delay: '-1.5s', offsetX: '-512.667px', offsetY: '-36.667px', cover: 'https://picsum.photos/seed/halvorsen-4/900/600' },
       ],
     };
     // Pair styles, handed to a gutter's pair cells in order and cycled once they run out. A cycled style
@@ -2368,16 +2378,16 @@
     // viewport, so a pair in the second column lifts clear of it rather than settling onto it.
     LEAF_PAIRS = {
       left: [
-        { h: 42, w: 660, ratio: '1/1', maxW: '140px', titleSize: '17px', dir: 'column', alignItems: 'flex-start', px: '-14px', py: '-8px', dur: '8s', delay: '-5s', bleedX: '0px', bleedY: '52px', cover: 'https://picsum.photos/seed/halvorsen-3/700/700' },
-        { h: 36, w: 600, ratio: '5/4', maxW: '150px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-20px', py: '-9px', dur: '8.5s', delay: '-2s', bleedX: '0px', bleedY: '0px', cover: 'https://picsum.photos/seed/halvorsen-5/700/560' },
-        { h: 39, w: 620, ratio: '4/5', maxW: '128px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-17px', py: '-12px', dur: '7.8s', delay: '-6s', bleedX: '0px', bleedY: '-18px', cover: 'https://picsum.photos/seed/halvorsen-7/560/700' },
-        { h: 33, w: 560, ratio: '3/2', maxW: '140px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-12px', py: '-7px', dur: '9.2s', delay: '-1s', bleedX: '0px', bleedY: '18px', cover: 'https://picsum.photos/seed/halvorsen-9/900/600' },
+        { h: 105, w: 1650, ratio: '1/1', maxW: '350px', titleSize: '17px', dir: 'column', alignItems: 'flex-start', px: '-14px', py: '-8px', dur: '8s', delay: '-5s', offsetX: '336.667px', offsetY: '112px', cover: 'https://picsum.photos/seed/halvorsen-3/700/700' },
+        { h: 39.342, w: 655.698, ratio: '5/4', maxW: '163.925px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-20px', py: '-9px', dur: '8.5s', delay: '-2s', offsetX: '-204.667px', offsetY: '27px', beside: true, cover: 'https://picsum.photos/seed/halvorsen-5/700/560' },
+        { h: 45.231, w: 719.064, ratio: '4/5', maxW: '148.452px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-17px', py: '-12px', dur: '7.8s', delay: '-6s', offsetX: '-478px', offsetY: '149.333px', cover: 'https://picsum.photos/seed/halvorsen-7/560/700' },
+        { h: 33, w: 560, ratio: '3/2', maxW: '140px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-12px', py: '-7px', dur: '9.2s', delay: '-1s', offsetX: '0px', offsetY: '18px', cover: 'https://picsum.photos/seed/halvorsen-9/900/600' },
       ],
       right: [
-        { h: 45, w: 720, ratio: '2/3', maxW: '100px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-16px', py: '-11px', dur: '9.5s', delay: '-4s', bleedX: '-60px', bleedY: '0px', cover: 'https://picsum.photos/seed/halvorsen-6/600/900' },
-        { h: 36, w: 600, ratio: '1/1', maxW: '120px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-19px', py: '-10px', dur: '8.2s', delay: '-2.5s', bleedX: '0px', bleedY: '-12px', cover: 'https://picsum.photos/seed/halvorsen-8/700/700' },
-        { h: 30, w: 520, ratio: '4/5', maxW: '110px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-13px', py: '-6px', dur: '10.5s', delay: '-3.5s', bleedX: '0px', bleedY: '30px', cover: 'https://picsum.photos/seed/halvorsen-10/560/700' },
-        { h: 39, w: 640, ratio: '3/2', maxW: '130px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-21px', py: '-13px', dur: '7.2s', delay: '-0.5s', bleedX: '0px', bleedY: '-24px', cover: 'https://picsum.photos/seed/halvorsen-11/900/600' },
+        { h: 76.663, w: 1226.606, ratio: '2/3', maxW: '170.362px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-16px', py: '-11px', dur: '9.5s', delay: '-4s', offsetX: '-62.667px', offsetY: '-36.667px', cover: 'https://picsum.photos/seed/halvorsen-6/600/900' },
+        { h: 82.346, w: 1372.427, ratio: '1/1', maxW: '274.485px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-19px', py: '-10px', dur: '8.2s', delay: '-2.5s', offsetX: '-162.667px', offsetY: '62px', beside: true, cover: 'https://picsum.photos/seed/halvorsen-8/700/700' },
+        { h: 30, w: 520, ratio: '4/5', maxW: '110px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-13px', py: '-6px', dur: '10.5s', delay: '-3.5s', offsetX: '0px', offsetY: '30px', cover: 'https://picsum.photos/seed/halvorsen-10/560/700' },
+        { h: 39, w: 640, ratio: '3/2', maxW: '130px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-21px', py: '-13px', dur: '7.2s', delay: '-0.5s', offsetX: '0px', offsetY: '-24px', cover: 'https://picsum.photos/seed/halvorsen-11/900/600' },
       ],
     };
     // A gutter holds one leaf per spread row and two per pair row.
@@ -2398,15 +2408,27 @@
       const outer = side === 'left' ? 1 : 2, first = spreads.length + 1, diag = [], skipped = [];
       for (let r = first; r <= rows; r++) { const c = (r - first) % 2 === 0 ? outer : 3 - outer; diag.push({ row: r, col: c }); skipped.push({ row: r, col: 3 - c }); }
       const q = (n) => String(+(n / rows).toFixed(3)), size = (h, w) => 'min(' + q(h) + 'vh, ' + q(w) + 'px)';
-      const slot = (st, row, col, wrap) => ({ side, row: String(row), col: col ? String(col) : '1 / 3',
+      // `tune` names the entry this slot came out of, so the collage can say what placed each leaf.
+      // The tuning panel behind ?dev is its only reader; the page itself never looks at it.
+      const slot = (st, row, col, wrap, tune) => ({ side, tune, row: String(row), col: col ? String(col) : '1 / 3',
         selfY: row === 1 ? 'start' : row === rows ? 'end' : 'center',
         selfX: col ? (col === 1 ? 'start' : 'end') : (side === 'left' ? 'start' : 'end'),
         align: side, imgH: size(st.h, st.w), ...(st.stackH ? { stackH: size(st.stackH, st.stackW) } : {}),
+        // A caption normally stacks under a declared plate. `beside` puts it alongside instead, which
+        // is what a leaf near the bottom of the page needs: the stack wants height it does not have
+        // there, and the margins have width to spare. It reads outward, away from the page centre, so
+        // the pair sits the way the two anchors already do.
+        beside: !!st.beside,
         ratio: st.ratio, maxW: st.maxW, titleSize: st.titleSize, dir: st.dir, alignItems: st.alignItems,
         px: st.px, py: st.py, dur: st.dur, delay: (parseFloat(st.delay) - 1.7 * wrap) + 's',
-        bleedX: st.bleedX, bleedY: st.bleedY, cover: st.cover });
-      return [...spreads.map((st) => slot(st, st.row, 0, 0)),
-        ...[...diag, ...skipped].map((c, i) => slot(pairs[i % pairs.length], c.row, c.col, Math.floor(i / pairs.length)))];
+        // Two different moves, and conflating them is what pulled a plate off its own caption. The
+        // offset carries the whole leaf, plate and caption together, and is what a drag writes. The
+        // bleed carries the plate alone, which is how an anchor crosses the page edge while its title
+        // stays in the gutter. Either may be absent, and absent means nothing.
+        offsetX: st.offsetX || '0px', offsetY: st.offsetY || '0px',
+        bleedX: st.bleedX || '0px', bleedY: st.bleedY || '0px', cover: st.cover });
+      return [...spreads.map((st, i) => slot(st, st.row, 0, 0, 'spreads.' + side + '.' + i)),
+        ...[...diag, ...skipped].map((c, i) => slot(pairs[i % pairs.length], c.row, c.col, Math.floor(i / pairs.length), 'pairs.' + side + '.' + (i % pairs.length)))];
     }
   
     num(i) { return (this.props.numerals ?? 'roman') === 'roman' ? this.romans[i] : String(i + 1); }
@@ -2845,7 +2867,15 @@
           this.observer.unobserve(en.target);
         });
       }, { rootMargin: '100% 0px -8% 0px' });
-      this.observeReveals(); this.mountTextEffects(); this.syncParchment(); this.syncHome(); this.syncPaper();
+      // ?dev opens the Research margins in a tuning panel (leaves-dev.js), which adjusts the two style
+      // tables in place and re-renders. The flag is the only thing that fetches it, so the page ships
+      // nothing for it otherwise, the same arrangement field.js has for the home field.
+      if (new URLSearchParams(location.search).has('dev')) {
+        import('./leaves-dev.js')
+          .then((m) => { if (!this.dead) this.leafTuner = m.mount({ spreads: this.LEAF_SPREADS, pairs: this.LEAF_PAIRS, rerender: () => this.forceUpdate() }); })
+          .catch((e) => console.error('leaves-dev', e));
+      }
+      this.observeReveals(); this.mountTextEffects(); this.syncParchment(); this.syncHome(); this.syncPaper(); this.placeLeafText();
       this.hintTimer = setTimeout(() => this.setState({ hintGone: true }), 9000);
       setTimeout(() => this.measureTabs(), 400);
     }
@@ -3237,7 +3267,41 @@
       };
       this.parchRaf = requestAnimationFrame(tick);
     }
-    componentWillUnmount() { if (this.fog) { this.fog.destroy(); this.fog = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); window.removeEventListener('popstate', this.onPop); this.observer?.disconnect(); cancelAnimationFrame(this.cellRaf); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
+    // The margins are tuned by hand, and a leaf can be pushed past the page edge on purpose, so the
+    // text that belongs to it has to look after itself rather than trust where the leaf landed.
+    //
+    // A caption that would leave the hero is pulled back to its edge. That is the one case where the
+    // caption parts company with its plate, and it is the case where following the plate would mean
+    // being clipped away entirely: a plate may bleed off the page, a title may not.
+    //
+    // A hover detail hangs below the caption and is as tall as the text typed into it, so near the
+    // bottom of a one-screen page it runs out of the hero. When there is no room below it flips above
+    // the caption instead. It is measured rather than guessed because the height grows a character at
+    // a time while the line types in.
+    placeLeafText() {
+      const hero = this.heroRef.current;
+      if (!hero) return;
+      const box = hero.getBoundingClientRect(), pad = 14;
+      hero.querySelectorAll('[data-leaf] [data-leaf-text]').forEach((text) => {
+        text.style.transform = 'none';
+        const r = text.getBoundingClientRect();
+        let dx = 0;
+        if (r.left < box.left + pad) dx = box.left + pad - r.left;
+        else if (r.right > box.right - pad) dx = Math.min(0, box.right - pad - r.right);
+        if (dx) text.style.transform = 'translateX(' + Math.round(dx) + 'px)';
+  
+        const detail = text.querySelector('[data-leaf-detail]');
+        if (!detail) return;
+        detail.style.top = '100%'; detail.style.bottom = 'auto';
+        const d = detail.getBoundingClientRect();
+        if (d.height > 0 && d.bottom > box.bottom - pad) { detail.style.top = 'auto'; detail.style.bottom = '100%'; }
+      });
+    }
+  
+    // the detail grows by a character per tick while it types, so the pass runs on every update
+    componentDidUpdate() { this.placeLeafText(); }
+  
+    componentWillUnmount() { this.dead = true; if (this.leafTuner) { this.leafTuner.destroy(); this.leafTuner = null; } if (this.fog) { this.fog.destroy(); this.fog = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); window.removeEventListener('popstate', this.onPop); this.observer?.disconnect(); cancelAnimationFrame(this.cellRaf); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
     observeReveals() { document.querySelectorAll('[data-enter=""]').forEach((el) => this.observer.observe(el)); }
     // the cursor's cell on the sheet grid, sampled once a frame and only written when the cell actually
     // changes, so crossing a 48px column re-renders once rather than once per pixel of travel
@@ -3570,6 +3634,7 @@
       const leaves = stage.map((p, k) => { const real = own.includes(p), pi = real ? projects.indexOf(p) : -1 - k; const on = real && this.state.typingKey === 'leaf-' + pi; const pos = gutters[k % 2 === 0 ? 'left' : 'right'][Math.floor(k / 2)];
         const detail = real ? p.subtitle + '\n' + p.role + ' · ' + p.status + ' · pp. ' + p.pages : '';
         const typed = on ? detail.slice(0, this.state.typed || 0) : '';
+        // the finished line, kept behind the typed one so the box is its final size from the start
         // the plate is the chapter's hero, the same image the chapter opens on and the leaf morphs
         // into; a chapter without one falls back to the position's stock photograph.
         // The sepia mat belongs to those stock photographs: a real render is shown as it is.
@@ -3582,15 +3647,29 @@
         // ratio; and since a wide plate leaves no room beside it, its title stacks underneath,
         // aligned to whichever side of the page the leaf sits on.
         const declared = !!(real && p.hero && p.heroW && p.heroH);
+        // A stacked plate may take the shorter stack height the slot declares; one with its caption
+        // beside it never stacks, so it keeps its full height.
+        const beside = declared && pos.beside;
+        const plateH = beside ? pos.imgH : (pos.stackH || pos.imgH);
+        const plateW = declared ? 'min(' + pos.maxW + ', calc(' + plateH + ' * ' + p.heroW + ' / ' + p.heroH + '))' : 'auto';
         return { ...p, ...pos, cover: (real && p.hero) || pos.cover,
           filter: (real && p.hero) ? 'none' : 'sepia(0.22) saturate(0.82) contrast(1.05)',
           ratio: declared ? p.heroW + '/' + p.heroH : pos.ratio,
-          plateW: declared ? 'min(' + pos.maxW + ', calc(' + (pos.stackH || pos.imgH) + ' * ' + p.heroW + ' / ' + p.heroH + '))' : 'auto',
+          plateW,
           plateH: declared ? 'auto' : pos.imgH,
           plateMaxW: declared ? '100%' : 'none',
-          dir: declared ? 'column' : pos.dir,
-          alignItems: declared ? (pos.side === 'left' ? 'flex-start' : 'flex-end') : pos.alignItems,
-          idx: pi, cardNo: k + 1, typed, kicker: real ? 'Chapter ' + p.numeral + ' · ' + p.year : 'Forthcoming', detailDisplay: on ? 'block' : 'none', detailOpacity: on ? '1' : '0', caretOpacity: on && typed.length < detail.length ? '1' : '0', morphName: real ? 'row-' + k : 'leaf-' + k, figNo: real ? p.figNo : 'x' + k, placeholder: real ? p.placeholder : 'Plate: forthcoming', coverSlotId: real ? 'cover-' + pi : 'cover-next-' + k, open: real ? p.open : () => {}, zIndex: on ? 30 : Math.max(1, 12 - k), origin: (pos.selfX === 'start' ? 'left ' : 'right ') + (pos.selfY === 'start' ? 'top' : pos.selfY === 'end' ? 'bottom' : 'center'), cursor: real ? 'pointer' : 'default', lift: on ? '-10px' : '0px', scale: on ? '1.06' : '1', shadow: on ? '0 24px 48px -20px rgba(32,31,29,0.35), 0 2px 6px rgba(32,31,29,0.08)' : '0 8px 24px -16px rgba(32,31,29,0.25)',
+          dir: declared ? (beside ? (pos.side === 'left' ? 'row' : 'row-reverse') : 'column') : pos.dir,
+          // The caption sits under a declared plate and the hover detail is positioned inside it, so the
+          // block's width is the measure both of them wrap to. Sized to its contents it becomes as narrow
+          // as the title, and a two-word title left the description wrapping every few words. It takes
+          // the plate's width instead. A stock plate keeps its caption beside it, where filling would be wrong.
+          textW: declared ? (beside ? plateW : '100%') : 'auto',
+          // A caption beside a plate that already fills the cell would be shrunk back to its minimum by
+          // flex, losing the measure it was just given, so there it holds its width and overflows the
+          // cell the way every other part of the collage does.
+          textFlex: beside ? '0 0 auto' : '1 1 auto',
+          alignItems: declared ? (beside ? 'flex-end' : (pos.side === 'left' ? 'flex-start' : 'flex-end')) : pos.alignItems,
+          idx: pi, cardNo: k + 1, typed, detailFull: detail, kicker: real ? 'Chapter ' + p.numeral + ' · ' + p.year : 'Forthcoming', detailDisplay: on ? 'block' : 'none', detailOpacity: on ? '1' : '0', caretOpacity: on && typed.length < detail.length ? '1' : '0', morphName: real ? 'row-' + k : 'leaf-' + k, figNo: real ? p.figNo : 'x' + k, placeholder: real ? p.placeholder : 'Plate: forthcoming', coverSlotId: real ? 'cover-' + pi : 'cover-next-' + k, open: real ? p.open : () => {}, zIndex: on ? 30 : Math.max(1, 12 - k), origin: (pos.selfX === 'start' ? 'left ' : 'right ') + (pos.selfY === 'start' ? 'top' : pos.selfY === 'end' ? 'bottom' : 'center'), cursor: real ? 'pointer' : 'default', lift: on ? '-10px' : '0px', scale: on ? '1.06' : '1', shadow: on ? '0 24px 48px -20px rgba(32,31,29,0.35), 0 2px 6px rgba(32,31,29,0.08)' : '0 8px 24px -16px rgba(32,31,29,0.25)',
           hover: () => { if (real) this.startTyping('leaf-' + pi, detail.length, { hovered: pi }); }, unhover: () => { this.stopTyping(); } }; });
       // The morph engine pairs an outgoing element with an incoming one by matching data-shape and
       // data-morph names, so every name is a key in a shared namespace and two namespaces must never
