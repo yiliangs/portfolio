@@ -1648,9 +1648,9 @@
             "\n    ",
             (V.isPaper ? h(F,{key:12},
               "\n    ",
-              h("section", { key: "1", "data-paper-body": "", "data-enter": "", style: {"display":"grid","gridTemplateColumns":"minmax(0,8fr) minmax(0,4fr)","gap":"0 clamp(28px,5vw,80px)","padding":"calc(2.5*28px) 0","alignItems":"start"} },
+              h("section", { key: "1", "data-paper-body": "", "data-enter": "", style: S(`display:grid; grid-template-columns:${V.chapterCols ?? ""}; gap:0 clamp(28px,5vw,80px); padding:calc(2.5*28px) 0; align-items:start;`) },
                 h(F,{key:0},"\n      ",I(V.paperBlocks,1),"\n      ",I(V.paperCaptions,3),"\n      ",I(V.paperTail,5),"\n      "),
-                h("aside", { key: "1", style: S(`grid-column:2; grid-row:${V.paperAsideRow ?? ""}; align-self:start; display:flex; flex-direction:column; gap:28px; font-size:13px; line-height:20px; color:var(--color-neutral-700);`) },
+                h("aside", { key: "1", style: S(`grid-column:${V.paperAsideCol ?? ""}; grid-row:${V.paperAsideRow ?? ""}; align-self:start; display:flex; flex-direction:column; gap:28px; font-size:13px; line-height:20px; color:var(--color-neutral-700);`) },
                   "\n        ",
                   (V.marginalia ? h(F,{key:1},
                     "\n          ",
@@ -1692,9 +1692,9 @@
             "\n\n    ",
             (V.isEssay ? h(F,{key:14},
               "\n    ",
-              h("section", { key: "1", "data-enter": "", style: {"display":"grid","gridTemplateColumns":"minmax(0,8fr) minmax(0,4fr)","gap":"28px clamp(28px,5vw,80px)","padding":"calc(2.5*28px) 0","alignItems":"start"} },
+              h("section", { key: "1", "data-enter": "", style: S(`display:grid; grid-template-columns:${V.chapterCols ?? ""}; gap:28px clamp(28px,5vw,80px); padding:calc(2.5*28px) 0; align-items:start;`) },
                 "\n      ",
-                h("div", { key: "1", style: {"columns":"2","columnGap":"56px","columnRule":"1px solid var(--color-divider)","textAlign":"justify","hyphens":"auto","color":"color-mix(in srgb, var(--color-text) 84%, transparent)","fontSize":"16px","lineHeight":"28px"} },
+                h("div", { key: "1", style: S(`columns:${V.essayColumns ?? ""}; column-gap:56px; column-rule:1px solid var(--color-divider); text-align:justify; hyphens:auto; color:color-mix(in srgb, var(--color-text) 84%, transparent); font-size:16px; line-height:28px;`) },
                   "\n        ",
                   h("p", { key: "1|53.612egm", style: {"margin":"0 0 28px"} },
                     h("span", { key: "0|21.1c59rnz", style: {"float":"left","fontFamily":"var(--deco)","fontWeight":"400","fontSize":"64px","lineHeight":"56px","padding":"6px 12px 0 0","color":"var(--color-text)"} },
@@ -3420,15 +3420,26 @@
     // tallest item, so a one-row caption taller than the block beside it pushes the rest of the body
     // down by its own height, while a spanning one lays that height over the whole run of blocks it
     // stands beside and lifts nothing until it is taller than all of them together.
-    static planPaperRows(blocks) {
+    //
+    // On a phone there is no column 2 to hold any of that: 4fr of a 350px measure is 107px, which is a
+    // gutter with words falling out of it rather than a margin. So the same body is read as one column.
+    // The aside opens it on row 1, every block follows in document order, and a plate's caption takes
+    // the row directly under the plate rather than standing beside it. Nothing spans, because with one
+    // column a span is a stack and a wide figure is no wider than any other block. The two readings are
+    // one method because they are one ordering of one list, and tools/check-paper.mjs runs both over
+    // every module in content/.
+    static planPaperRows(blocks, phone) {
       const cells = [], caps = [];
       // the rows a wide block takes: it reaches across both columns, so column 2 is spoken for there
       const wideRows = [];
-      let row = 0, firstFigRow = 0;
-      const at = (wide) => { row++; if (wide) wideRows.push(row); return { gridRow: String(row), gridColumn: wide ? '1 / -1' : '1', minWidth: 0 }; };
+      // on a phone row 1 belongs to the aside and the blocks open under it
+      let row = phone ? 1 : 0, firstFigRow = 0;
+      const at = (wide) => { row++; if (wide && !phone) wideRows.push(row); return { gridRow: String(row), gridColumn: phone ? '1' : (wide ? '1 / -1' : '1'), minWidth: 0 }; };
       // two captions must never land in the same cell; the second one steps down a row
       const taken = new Set();
       const capRow = (r) => { while (taken.has(r)) r++; taken.add(r); return r; };
+      // beside the plate on a page with a margin, on the row under it on a phone
+      const cap = (r, figs) => caps.push(phone ? { row: ++row, end: row + 1, col: '1', figs } : { row: capRow(r), col: '2', figs });
       (blocks || []).forEach((b, i) => {
         const k = b && b.k;
         if (k === 'fig') {
@@ -3436,11 +3447,11 @@
           if (!firstFigRow) firstFigRow = row;
           // a wide plate already owns column 2 on its own row, so its caption drops to the next one,
           // where it sits beside the paragraph that follows the figure
-          caps.push({ row: capRow(b.wide ? row + 1 : row), figs: [b] });
+          cap(b.wide ? row + 1 : row, [b]);
         } else if (k === 'figrow') {
           cells[i] = at(false);
           if (!firstFigRow) firstFigRow = row;
-          caps.push({ row: capRow(row), figs: b.figs });
+          cap(row, b.figs);
         } else {
           // every block renderPaper draws takes a row of its own. A fold takes none: the tail carries
           // its own open and closed state, so renderPaperTail places it on the row this leaves free.
@@ -3456,20 +3467,22 @@
       // which is right, since nothing stands in column 2 there. A caption already standing on or
       // below where its span would end (a wide plate closing the body, whose caption has nowhere left
       // to drop) keeps the one row it has.
-      caps.forEach((c, i) => {
+      if (!phone) caps.forEach((c, i) => {
         const nextCap = i + 1 < caps.length ? caps[i + 1].row : tailRow + 1;
         const nextWide = wideRows.find((w) => w > c.row);
         const next = nextWide === undefined ? nextCap : Math.min(nextCap, nextWide);
         c.end = next > c.row ? next : c.row + 1;
       });
-      return { cells, caps, tailRow, asideRow: '1 / ' + (firstFigRow || tailRow) };
+      return { cells, caps, tailRow, asideRow: phone ? '1 / 2' : '1 / ' + (firstFigRow || tailRow) };
     }
     // The paper body, built once per loaded module and memoized on it. The app re-renders on every
     // scroll event and on the glitch timer; handing React the same element objects each time lets it
     // bail out of the whole subtree instead of rebuilding several hundred nodes a frame.
-    renderPaper(mod) {
+    renderPaper(mod, phone) {
       if (!mod) return null;
-      if (mod.__els) return mod.__els;
+      // the memo is keyed on which reading built it: the two put the same blocks on different rows and
+      // in different columns, so a resize across PHONE_W rebuilds rather than being handed the last one
+      if (mod.__els && mod.__phone === phone) return mod.__els;
       const e = React.createElement;
       const ink = 'color-mix(in srgb, var(--color-text) 84%, transparent)';
       // The panes this body can carry: a heading, the keywords line and an author's name are each one
@@ -3486,7 +3499,7 @@
       const folds = [];
       // every block's cell on the body grid, worked out ahead of the elements; this method owns no
       // row counter of its own, it only reads the plan back block by block
-      const plan = Component.planPaperRows(mod.blocks);
+      const plan = Component.planPaperRows(mod.blocks, phone);
       // The frame is the plate's own hairline, drawn on the image and nothing else. The design system's
       // .plate is a 6px surface mat plus a 1px outline that goes accent on hover; the mat is dropped so
       // the outline lands on the image edge, and its sepia (meant for placeholder photographs) with it.
@@ -3567,6 +3580,7 @@
             b.n ? e('span', { key: 'n', style: { position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--color-neutral-600)' } }, '(' + b.n + ')') : null));
         }
       });
+      mod.__phone = phone;
       mod.__els = els;
       mod.__caps = plan.caps;
       mod.__folds = folds;
@@ -3584,7 +3598,7 @@
       const e = React.createElement;
       const kicker = { margin: '0 0 6px', fontFamily: 'var(--deco)', fontSize: '10px', letterSpacing: '0.1em', color: 'var(--color-accent-700)', whiteSpace: 'nowrap' };
       const line = { margin: 0, fontFamily: "'Libre Baskerville', var(--font-heading), serif", fontStyle: 'italic', fontSize: '15px', lineHeight: '21px', color: 'var(--color-neutral-700)', whiteSpace: 'pre-wrap', maxWidth: '30ch' };
-      return mod.__caps.map((c) => e('div', { key: 'pc' + c.row, 'data-figcaps': '', style: { gridColumn: 2, gridRow: c.row + ' / ' + c.end, alignSelf: 'start', margin: '10px 0 0', display: 'flex', flexDirection: 'column', gap: '20px' } },
+      return mod.__caps.map((c) => e('div', { key: 'pc' + c.row, 'data-figcaps': '', style: { gridColumn: c.col, gridRow: c.row + ' / ' + c.end, alignSelf: 'start', margin: '10px 0 0', display: 'flex', flexDirection: 'column', gap: '20px' } },
         c.figs.map((f) => {
           const full = 'Fig. ' + f.n + '. ' + f.capText, typed = this.typedText('fig-' + f.n, full);
           return e('div', { key: f.n, 'data-figcap': String(f.n) },
@@ -4281,7 +4295,7 @@
       const featured = this.featuredFor[pageKey].map((i, k) => ({ ...projects[i], plateNumeral: this.num(k) }));
       const current = projects[idx];
       const paperMod = current.paper ? (this.papers || {})[idx] : null;
-      const paperBlocks = this.renderPaper(paperMod);
+      const paperBlocks = this.renderPaper(paperMod, this.state.phone);
       const paperCaptions = this.renderPaperCaptions(paperMod);
       const paperTail = this.renderPaperTail(paperMod, this.state.paperOpen || {});
       const hov = projects[hovered] && this.pageOf(hovered) === pageKey ? projects[hovered] : pageProjects[0];
@@ -4411,6 +4425,13 @@
         isMono: view === 'chapter' && mono, isSerif: view === 'chapter' && !mono, chapterKey: R + '-' + idx,
         isPaper: view === 'chapter' && !mono && !!current.paper, isEssay: view === 'chapter' && !mono && !current.paper,
         paperBlocks, paperCaptions, paperTail, paperAsideRow: (paperMod && paperMod.__asideRow) || 'auto',
+        // The chapter's body, in both readings. On a phone the grid loses its margin column, the
+        // essay's justified text becomes one column of type, and the aside comes in out of the margin
+        // to open the body. Where each block and each caption then stands is planPaperRows', off the
+        // same flag.
+        chapterCols: this.state.phone ? 'minmax(0,1fr)' : 'minmax(0,8fr) minmax(0,4fr)',
+        essayColumns: this.state.phone ? '1' : '2',
+        paperAsideCol: this.state.phone ? '1' : '2',
         heroImg: view === 'chapter' && !!current.hero, heroSlot: view === 'chapter' && !current.hero,
         // the Development sheet's hero plate: the video when the entry names one, the slot otherwise.
         // The serif chapter has no moving plate and keeps heroImg/heroSlot.

@@ -312,7 +312,9 @@ for (const [name, table] of [['SHEET_WIDE', wide], ['SHEET_NARROW', narrow]]) {
 
 if (serif) {
   const html = tight(serif.innerHTML);
-  if (!html.includes('columns:2')) fail('the Research chapter lost its two-column body (columns:2)');
+  // The essay body is still set in text columns, and the count comes off the model rather than the
+  // markup, since a phone reads it as one. tools/check-phone-layout.mjs holds the value itself.
+  if (!html.includes('columns:{{essayColumns}}')) fail('the Research chapter lost its multi-column body (columns:{{ essayColumns }})');
   if (html.includes('repeat(22,1fr)')) fail('the Research chapter grew the drawing grid; it keeps the prose layout');
 }
 

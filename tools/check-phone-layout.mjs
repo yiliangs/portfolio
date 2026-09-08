@@ -203,6 +203,21 @@ tier('homeCubeH', 'portrait', 'min(40vh,360px)');
   }
 }
 
+// The Research chapter is one column on a phone. The margin column is where the aside and every
+// figure caption stand; at 390px it is 107px wide, which is not a margin, it is a gutter with words
+// falling out of it.
+tier('chapterCols', 'phone', 'minmax(0,8fr) minmax(0,4fr)');
+tier('essayColumns', 'phone', '2');
+tier('paperAsideCol', 'phone', '2');
+{
+  const cols = arms(binding('chapterCols') || '');
+  if (!cols || /\s/.test(cols.on)) fail('the chapter body does not stand on one column on a phone: ' + JSON.stringify(cols && cols.on));
+  const essay = arms(binding('essayColumns') || '');
+  if (!essay || essay.on !== '1') fail('the essay body still sets more than one text column on a phone: ' + JSON.stringify(essay && essay.on));
+  const aside = arms(binding('paperAsideCol') || '');
+  if (!aside || aside.on !== '1') fail('the paper aside still stands in the margin column on a phone: ' + JSON.stringify(aside && aside.on));
+}
+
 // ---------------------------------------------------------------- the markup carries no phone values
 
 const branch = (cond) => [...tpl.content.querySelectorAll('sc-if')].find(
@@ -225,6 +240,29 @@ const branch = (cond) => [...tpl.content.querySelectorAll('sc-if')].find(
   }
 }
 
+{
+  const chapter = branch('isSerif');
+  if (!chapter) fail('no <sc-if value="{{ isSerif }}"> block: the Research chapter is gone');
+  else {
+    const bodies = [...chapter.querySelectorAll('section')].filter((el) => tight(el.getAttribute('style')).includes('display:grid'));
+    if (bodies.length !== 2) fail('expected the paper body and the essay body as the two grid sections of the chapter, found ' + bodies.length);
+    for (const b of bodies) {
+      if (!tight(b.getAttribute('style')).includes('grid-template-columns:{{chapterCols}}')) {
+        fail('a chapter body writes its own columns instead of reading chapterCols back: ' + String(b.getAttribute('style')).slice(0, 90));
+      }
+    }
+    const text = [...chapter.querySelectorAll('div')].find((el) => /(^|;)columns:/.test(tight(el.getAttribute('style'))));
+    if (!text) fail('the essay body is gone');
+    else if (!tight(text.getAttribute('style')).includes('columns:{{essayColumns}}')) {
+      fail('the essay body writes its own text column count instead of reading essayColumns back');
+    }
+    const aside = [...chapter.querySelectorAll('aside')].find((el) => tight(el.getAttribute('style')).includes('{{paperAsideRow}}'));
+    if (!aside) fail('the paper aside no longer reads paperAsideRow');
+    else if (!tight(aside.getAttribute('style')).includes('grid-column:{{paperAsideCol}}')) {
+      fail('the paper aside writes its own column instead of reading paperAsideCol back');
+    }
+  }
+}
 // ---------------------------------------------------------------- report
 
 if (failures.length) {
@@ -234,4 +272,5 @@ if (failures.length) {
 }
 console.log('check-phone-layout: the phone tier is a refinement of the stacked one over 10 viewports, both flags '
   + 'are written only from their predicates in both places state.narrow is written, and the home reads the '
-  + 'portrait tier back through a binding whose other arm is the composition the markup carried before');
+  + 'portrait tier back and the Research chapter the phone tier, each through a binding whose other arm is '
+  + 'the composition the markup carried before');
