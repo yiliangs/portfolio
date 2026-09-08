@@ -25,15 +25,19 @@ const CONT_HALF_W = 0.55;               // half a curve's width in px, so a line
 const CONT_A = 0.22;                    // ink weight of the curves on the standing roll, kept well under the word's
 // k = unroll 0..1: the rolled fraction a shrinks and the turns unwind, so the sheet genuinely unrolls rather than fading flat
 // t = seconds: the two curls breathe out of phase, so one is winding while the other unwinds
-function profile(u, W, k = 0, t = 0) {
+// Writes x and z into `out`, rather than returning a pair, because the sheet and the wire are rebuilt vertex by
+// vertex on every frame the roll is not flat: about 3700 of these a frame, and a pair of fresh arrays each was the
+// whole of what the roll asked the collector for.
+function profileInto(u, W, k, t, out) {
   const m = 1 - k;
   const aL = 0.17 * m * (1 + BREATH_A * m * Math.sin(t * BREATH_W)), aR = 0.17 * m * (1 + BREATH_A * m * Math.sin(t * BREATH_W + 1.9));
   const r0 = 0.085 * (1 - 0.35 * k) * (1 + BREATH_R * m * Math.sin(t * BREATH_W * 0.83 + 0.6));
   const turnsL = 1.35 * m * (1 + BREATH_T * m * Math.sin(t * BREATH_W + 0.4)), turnsR = 1.35 * m * (1 + BREATH_T * m * Math.sin(t * BREATH_W + 2.3));
-  if (aL >= 0.003 && u < aL) { const s = (aL - u) / aL, th = s * turnsL * Math.PI * 2, r = r0 * (1 - 0.32 * s); const x0 = -W / 2 + aL * W; return [x0 - Math.sin(th) * r, r - Math.cos(th) * r]; }
-  if (aR >= 0.003 && u > 1 - aR) { const s = (u - (1 - aR)) / aR, th = s * turnsR * Math.PI * 2, r = r0 * (1 - 0.32 * s); const x0 = W / 2 - aR * W; return [x0 + Math.sin(th) * r, r - Math.cos(th) * r]; }
-  return [-W / 2 + u * W, 0];
+  if (aL >= 0.003 && u < aL) { const s = (aL - u) / aL, th = s * turnsL * Math.PI * 2, r = r0 * (1 - 0.32 * s); const x0 = -W / 2 + aL * W; out[0] = x0 - Math.sin(th) * r; out[1] = r - Math.cos(th) * r; return; }
+  if (aR >= 0.003 && u > 1 - aR) { const s = (u - (1 - aR)) / aR, th = s * turnsR * Math.PI * 2, r = r0 * (1 - 0.32 * s); const x0 = W / 2 - aR * W; out[0] = x0 + Math.sin(th) * r; out[1] = r - Math.cos(th) * r; return; }
+  out[0] = -W / 2 + u * W; out[1] = 0;
 }
+const prof = [0, 0]; // one scratch pair for the whole roll; profileInto is never re-entered
 const sag = (u, v) => Math.sin(u * Math.PI) * 0.03 * Math.cos((v - 0.5) * Math.PI);
 // the draught on the open span: a wave travelling down the length plus a twist across the width, both pinned back to
 // nothing at the curls by sin(u * PI) so the sheet stays continuous with them
@@ -41,8 +45,27 @@ const draft = (u, v, t) => (FLUT_A * Math.sin(u * FLUT_K - t * FLUT_W) * Math.co
   + TWIST_A * (v - 0.5) * Math.sin(t * TWIST_W + u * 2)) * Math.sin(u * Math.PI);
 // k = unroll 0..1: 0 is the curled scroll, 1 a flat sheet (the curls straighten out, the sag settles). t = seconds,
 // and the whole of what it drives is scaled by 1 - k, so the flat sheet is the same sheet at every t
-export function point(u, v, W, H, k = 0, t = 0) { const [x, z] = profile(u, W, k, t); return [x, (v - 0.5) * H, z + sag(u, v) * (1 - 0.75 * k) + draft(u, v, t) * (1 - k)]; }
-function refill(geom, W, H, k, t) { const uv = geom.attributes.uv.array, p = geom.attributes.position.array; for (let i = 0, n = uv.length / 2; i < n; i++) { const q = point(uv[i * 2], uv[i * 2 + 1], W, H, k, t); p[i * 3] = q[0]; p[i * 3 + 1] = q[1]; p[i * 3 + 2] = q[2]; } geom.attributes.position.needsUpdate = true; geom.computeBoundingSphere(); }
+// how far the surface stands off the profile at (u, v): the settled sag plus the draught, both scaled away by the
+// unroll, so the flat platform is the profile itself
+const lift = (u, v, k, t, z0) => z0 + sag(u, v) * (1 - 0.75 * k) + draft(u, v, t) * (1 - k);
+// The vertex written straight into a position array at offset o, for the per-frame fill; and the same vertex as a
+// fresh array, for the two geometry builders and for tools/check-roll-motion.mjs, which read the shape rather than
+// fill a buffer with it. They are written out twice on purpose. Routing point() through pointInto() puts a plain
+// array and a Float32Array through the one keyed store, and the polymorphic store that leaves costs the fill more
+// than the allocation it saves: measured at 0.75ms a fill against 0.49ms for these two, and 0.53ms for the array
+// per vertex this replaced. check-roll-motion holds the pair equal component by component.
+export function pointInto(u, v, W, H, k, t, out, o) {
+  profileInto(u, W, k, t, prof);
+  out[o] = prof[0]; out[o + 1] = (v - 0.5) * H; out[o + 2] = lift(u, v, k, t, prof[1]);
+}
+export function point(u, v, W, H, k = 0, t = 0) {
+  profileInto(u, W, k, t, prof);
+  return [prof[0], (v - 0.5) * H, lift(u, v, k, t, prof[1])];
+}
+// The bounding sphere the roll used to recompute here was only ever read by the frustum test, and the roll is
+// placed on screen by fit() rather than left where the world puts it, so the test never had anything to cull.
+// Both meshes opt out of it at construction and the sphere goes with it (the cube meshes already do the same).
+function refill(geom, W, H, k, t) { const uv = geom.attributes.uv.array, p = geom.attributes.position.array; for (let i = 0, n = uv.length / 2; i < n; i++) pointInto(uv[i * 2], uv[i * 2 + 1], W, H, k, t, p, i * 3); geom.attributes.position.needsUpdate = true; }
 
 function sheetGeometry(W, H, nu, nv) {
   const pos = [], uv = [], idx = [];
@@ -187,6 +210,7 @@ export function mount(container) {
   const lineMat = new THREE.ShaderMaterial({ ...common, vertexShader: VERT_W, fragmentShader: FRAG_COMMON + `varying vec2 vUv; varying float vW; uniform float uIso; void main(){ float w = vW > 0.99 ? 1.0 : vW * uIso; vec4 c = shade(vUv, 0.62 * w); if (c.a < 0.002) discard; gl_FragColor = c; }` });
   const sheet = new THREE.Mesh(sheetGeometry(W, H, 110, 12), sheetMat);
   const wire = new THREE.LineSegments(edgeGeometry(W, H, 240, vLines, uLines), lineMat);
+  sheet.frustumCulled = wire.frustumCulled = false; // placed by fit(), so there is nothing off screen to cull
   const group = new THREE.Group(); group.add(sheet, wire); group.rotation.set(-0.12, 0, Math.PI / 2); scene.add(group);
   const GOLD = new THREE.Color(0xb68235), PAPER = new THREE.Color(0xf3f2f2);
   // ----- cubes: each cell is a column that cycles like a conveyor. Every few seconds the top cube dissolves, the cubes
@@ -321,6 +345,10 @@ export function mount(container) {
   let anchor = { x: 0, y: 0, w: 1, h: 1 }, ax = 0, ay = 0, as = 1;
 
   let over = false, tx = 0, ty = 0, cx = 0, cy = 0, raf, alive = true, last = performance.now(), t = 0;
+  // ms the layer has been faded out for, from the page's own inline opacity (an inline read, so no layout), and how
+  // long the roll goes on being drawn into it before the tick stops at the gate. See the tick.
+  const HIDDEN_AFTER = 500;
+  let hiddenSince = -1;
   // drag orbit on the platform: turn (about the sheet normal) and elevation offsets, with inertia, decaying back home
   let dTurn = 0, dTilt = 0, vTurn = 0, vTilt = 0, dragging = false;
   let sources = []; // [{u, v, w}] points sampled off the glowing glyphs' ink boxes; w = intensity 0..1
@@ -434,8 +462,23 @@ export function mount(container) {
     // once lit, the sheet burns to completion whether or not the glyphs stay hot; only a fully burned sheet rewinds
     if (!reversing && allGoneAt >= 0 && t - allGoneAt > HEAT.idleS) { reversing = true; rewindT = -1; for (let k = 0; k < GW * GH; k++) if (burnedAt[k] > rewindT) rewindT = burnedAt[k]; }
     if (reversing) { stepUnburn(dt); if (!reversing) { allGoneAt = -1; rewindMul = 1; } } else stepHeat(dt);
-    uploadHeat();
     cx += (tx - cx) * 0.06; cy += (ty - cy) * 0.06;
+    // let go: inertia carries on briefly, then the platform parks wherever it landed
+    // drag spins only about the sheet normal (the vertical axis); elevation stays at the home pose
+    if (!dragging) { const d = Math.exp(-2.5 * dt); vTurn *= d; dTurn += vTurn * dt; }
+    stepCubes(dt, now);
+    // Everything above this line is the sim's own clocks and runs whether or not the roll can be seen. Everything
+    // below it is the drawing, and on a chapter or the CV the page has faded this layer to nothing, so none of it
+    // is done there: no re-meshing of the sheet and the wire, no heat upload, no render. The clocks keep running
+    // because their state has to be right when the reader comes back: a sheet that burned away must have re-formed
+    // by then, the cursor easing and the drag inertia must have settled rather than arriving at the next landing
+    // holding the last one's value, and the cube columns must be where they would have been. The wait is there
+    // because the fade itself is drawn: the page's longest is 420ms, so the roll goes on being rendered through it
+    // and stops once it is gone. Any opacity but zero starts the frame afresh, so the first frame back is a full
+    // one and the roll is refilled and rendered before it is seen.
+    if (container.style.opacity === '0') { if (hiddenSince < 0) hiddenSince = now; } else hiddenSince = -1;
+    if (hiddenSince >= 0 && now - hiddenSince > HIDDEN_AFTER) return;
+    uploadHeat();
     uniforms.uT.value = t;
     const moved = unroll !== shownUnroll;
     // the curves belong to the standing roll: they are gone by the time it is the platform, so the Development page's
@@ -447,9 +490,6 @@ export function mount(container) {
     fit();
     const k = unroll, flat = 1 - k;
     group.scale.setScalar(as);
-    // let go: inertia carries on briefly, then the platform parks wherever it landed
-    // drag spins only about the sheet normal (the vertical axis); elevation stays at the home pose
-    if (!dragging) { const d = Math.exp(-2.5 * dt); vTurn *= d; dTurn += vTurn * dt; }
     dTilt = 0;
     // the platform never follows the cursor — only drag turns it; the standing roll keeps its cursor tilt
     const cxe = dragging ? 0 : cx * flat, cye = dragging ? 0 : cy * flat;
@@ -457,7 +497,6 @@ export function mount(container) {
     group.rotation.y = cxe * (0.9 - 0.75 * k) + Math.sin(now / 4200) * 0.03 * flat;
     group.rotation.x = -0.12 * flat + ISO_TILT * k + cye * (0.6 - 0.5 * k) + Math.cos(now / 5100) * 0.02 * flat;
     group.position.x = ax - cxe * (0.3 - 0.2 * k) * as; group.position.y = ay + (-cye * (0.2 - 0.14 * k) + Math.sin(now / 3600) * 0.012) * as;
-    stepCubes(dt, now);
     group.updateMatrixWorld(); { const n = new THREE.Vector3(0, 0, 1).transformDirection(group.matrixWorld); clipPlane.setFromNormalAndCoplanarPoint(n, group.position.clone().addScaledVector(n, 0.004 * as)); }
     renderer.render(scene, camera);
   };
@@ -472,6 +511,11 @@ export function mount(container) {
     isPlatform() { return unroll > 0.95; },
     // the platform's sheet size, column head-room and pose — so the home cube can land as this exact plate
     platformFrame() { return { W, H, stack: MAX_STACK + GAP, tilt: ISO_TILT, turn: ISO_TURN }; },
+    // the container the sources' fractions are taken against, in px, as the resize observer above last saw it.
+    // The page turns a glyph's viewport box into a fraction with it; reading the layer's rect instead would force
+    // a layout every frame, and these are the very numbers the projection in setSources maps back out of, so the
+    // two sides cannot drift apart the way a live rect and a stale aspect could.
+    layerSize() { return { w: vw, h: vh }; },
     // glyphs: [{x, y, w, h, glow}] — a lit glyph's ink box in container fractions (0..1) and its glow 0..1.
     // The page reports where the lit ink is and how bright; how finely a box is sampled is the sim's own business,
     // because it depends on the grid: a headline letterform spans several cells and is traced around its profile,

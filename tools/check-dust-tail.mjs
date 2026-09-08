@@ -1,5 +1,6 @@
-// Checks field.js's two pure helpers: the cut that gives every dust particle a tail of a set length, and the octave
-// weighting that gives the landscape a continuous amount of detail.
+// Checks field.js's pure helpers: the cut that gives every dust particle a tail of a set length, the octave
+// weighting that gives the landscape a continuous amount of detail, and the per-frame store the landscape's noise
+// is read out of.
 //
 // The tail used to be an accident of two settings: ink was left on the canvas and thinned a little each frame, so how
 // far back a trail reached depended on the fade rate, the frame rate and how fast that particle happened to be
@@ -15,7 +16,7 @@
 //
 // Run with `npm run check`. Exits non-zero and prints every failure it found.
 
-import { tailPath, octaveWeights } from '../field.js';
+import { tailPath, octaveWeights, newLattice, latticeFor, noiseOn, noiseDirect } from '../field.js';
 
 const EPS = 1e-9;
 const failures = [];
@@ -129,6 +130,75 @@ for (const tail of [9, 24, 200]) {
   }
 }
 
+// ---------------------------------------------------------------- the lattice is the landscape
+
+// The landscape is read four times per particle per frame, a finite difference either side in x and in y, and each
+// of those hashes eight lattice corners per octave with a sine. The corners a frame can reach number in the
+// hundreds and the reads number in the tens of thousands, so the frame hashes its corners once at the top and
+// every height is read out of that store. The store must be the landscape and not an approximation of it: hash()
+// is a pure function of three integers, so a corner read out of the store has to be the same double as a corner
+// hashed on the spot, and equality here is exact rather than within a tolerance.
+//
+// The band and the octave transforms are restated here rather than read out of mount(), which owns them in a
+// closure. That makes this a second copy of the rule, which is the point: the store is built from one and read
+// through the other, and if the two ever disagree the landscape quietly changes shape at the edges of the page.
+
+{
+  const E = 1.5;                      // the gradient's reach either side of a particle, from field()
+  const VW = 1480, VH = 940;          // a page, and the band a particle is kept inside
+  const xLo = -20 - E, xHi = VW + 20 + E, yLo = -20 - E, yHi = VH + 20 + E;
+  // scale, x offset, y offset, and the slice depth, per octave, as height() composes them
+  const OCT = [
+    (S, z) => [S, 0, 0, z],
+    (S, z) => [S * 2.1, 7.3, 3.1, z * 1.3 + 11],
+    (S, z) => [S * 4.3, 19, 5, z * 1.7 + 23],
+    (S, z) => [S * 8.7, 41, 13, z * 2.1 + 37],
+  ];
+
+  let rng = 20260907;
+  const rand = () => { rng = (rng * 1103515245 + 12345) & 0x7fffffff; return rng / 0x7fffffff; };
+  let apart = 0, apartAt = null, outside = 0, corners = 0;
+
+  for (const wavelength of [320, 60, 1200]) {
+    const S = 1 / wavelength;
+    for (const t of [0, 7.3, 411.5]) {
+      const z = t * 0.01;
+      for (let o = 0; o < OCT.length; o++) {
+        // the octave's own frame: the transform is monotonic in x and in y, so the band's corners bound it
+        const f = OCT[o], lat = latticeFor(newLattice(),
+          xLo * f(S, z)[0] + f(S, z)[1], xHi * f(S, z)[0] + f(S, z)[1],
+          yLo * f(S, z)[0] + f(S, z)[2], yHi * f(S, z)[0] + f(S, z)[2], f(S, z)[3]);
+        corners += lat.nx * lat.ny * 2;
+        const [scale, ox, oy, oz] = f(S, z);
+        for (let i = 0; i < 1200; i++) {
+          // half the points anywhere in the band, half of them pressed against its edges, where the store runs out
+          const edge = i % 2 === 0;
+          const x = edge ? (i % 4 === 0 ? xLo + rand() * E : xHi - rand() * E) : xLo + rand() * (xHi - xLo);
+          const y = edge ? (i % 8 < 4 ? yLo + rand() * E : yHi - rand() * E) : yLo + rand() * (yHi - yLo);
+          const nx = x * scale + ox, ny = y * scale + oy;
+          // the store has to hold this corner, or the fallback is quietly carrying the page
+          const ix = Math.floor(nx) - lat.x0, iy = Math.floor(ny) - lat.y0;
+          if (Math.floor(oz) !== lat.zi || ix < 0 || iy < 0 || ix + 1 >= lat.nx || iy + 1 >= lat.ny) outside++;
+          const a = noiseOn(lat, nx, ny, oz), b = noiseDirect(nx, ny, oz);
+          if (a !== b) { apart++; if (!apartAt) apartAt = 'octave ' + (o + 1) + ' at ' + nx + ', ' + ny + ', ' + oz + ': ' + a + ' against ' + b; }
+        }
+      }
+    }
+  }
+
+  if (apart) {
+    fail('the lattice-backed landscape came back different at ' + apart + ' points (first at ' + apartAt + '). ' +
+      'The store holds hash() of the same integers the direct read hashes, so every height it gives has to be the ' +
+      'same double, not a close one');
+  }
+  if (outside) {
+    fail(outside + ' points inside the band fell outside the frame\'s store and were hashed on the spot. The ' +
+      'answer is still right, but the store is not covering the page the particles live on, so the frame is ' +
+      'paying for both');
+  }
+  if (corners < 1) fail('the frame\'s store holds no corners at all');
+}
+
 // ---------------------------------------------------------------- report
 
 if (failures.length) {
@@ -137,5 +207,6 @@ if (failures.length) {
   process.exit(1);
 }
 console.log('check-dust-tail: an empty path draws nothing, a long path is cut to the tail length exactly, a short one ' +
-  'is drawn whole, the three bands meet at the thirds, and the octave weights match the old integer gates at every ' +
-  'whole number while blending between them');
+  'is drawn whole, the three bands meet at the thirds, the octave weights match the old integer gates at every ' +
+  'whole number while blending between them, and the frame\'s lattice covers the band and gives the landscape back ' +
+  'to the last bit');

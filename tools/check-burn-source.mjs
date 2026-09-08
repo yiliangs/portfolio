@@ -3,11 +3,18 @@
 // The roll standing behind the Research headline catches fire from the lit ink in front of it. Two rules make
 // that work, and they live on opposite sides of one seam.
 //
-// The page's rule is which ink counts. feedParchment() walks the hero column and reports every glyph the text
-// effect has lit, as an ink box in container fractions plus its glow. Every text pane in that column carries
-// data-tr and glows the same way, so all of them feed the roll: the headline and the note beneath it alike. A
-// query narrowed to one pane leaves the sheet under the others permanently cold, which is what this check exists
-// to catch, and nothing in the browser would say so.
+// The page's rule is which ink counts. feedParchment() asks every text effect standing in the hero column for the
+// glyphs it has lit and reports each as an ink box in container fractions plus its glow. Every text pane in that
+// column carries data-tr and glows the same way, so all of them feed the roll: the headline and the note beneath
+// it alike. A pass narrowed to one pane leaves the sheet under the others permanently cold, which is what this
+// check exists to catch, and nothing in the browser would say so.
+//
+// The lit glyphs come from the effects rather than out of the DOM, so the stand-ins below are effect instances
+// rather than spans of markup, and the box the fractions are taken against is the one the sim keeps for its own
+// projection rather than a rect measured off the layer. Both of those are cost decisions with a correctness edge:
+// a rect read here is a document laid out again every breathing frame, and the two obvious substitutes for it,
+// the layer's own rect and the viewport, are neither of them the box the sim projects out of. So the stand-in
+// roll's rect fails the check if it is read at all, and so does any reach for the window.
 //
 // The sim's rule is how finely a reported box is sampled. That is boxSamples() in parchment.js, and it is the sim's
 // business rather than the page's because it depends on the sim's grid. The heat kernel is an ellipse reaching
@@ -65,40 +72,73 @@ const rect = (el, x, y, w, h) => {
 };
 
 // the hero column as the Research landing builds it: a headline and the bio note under it, both mounted with the
-// serif glow effect, plus a byline that carries no data-tr and must stay out of the heat
+// serif glow effect, plus a byline that carries no effect and must stay out of the heat. The panes are stand-in
+// effect instances, because that is what feedParchment reads now: each one owns its element and reports the
+// glyphs it has lit, in viewport pixels, with the glow that lit them.
 const col = doc.createElement('div');
 col.innerHTML = '<div><h1 data-tr="title"></h1><p data-morph="byline"></p></div><div><p data-tr="wake"></p></div>';
-const lit = (parent, x, y, w, h, blur) => {
-  const s = doc.createElement('span');
-  // the browser serialises `0 0 Npx rgba(...)` back as `rgba(...) 0px 0px Npx`
-  s.setAttribute('style', 'color: rgb(182, 130, 53); text-shadow: rgba(182, 130, 53, 0.7) 0px 0px ' + blur + 'px');
-  parent.appendChild(s);
-  rect(s, x, y, w, h);
-  return s;
+const glyphs = (x, y, w, h, n, step, glow) => {
+  const out = [];
+  for (let i = 0; i < n; i++) out.push({ x: x + i * step, y, w, h, glow });
+  return out;
 };
+const pane = (el, lit) => ({ element: el, _destroyed: false, __lit: lit, litGlyphs(minGlow) { return lit.filter((g) => g.glow >= minGlow); } });
 
 const headline = col.querySelector('[data-tr="title"]');
 const byline = col.querySelector('[data-morph="byline"]');
 const note = col.querySelector('[data-tr="wake"]');
-const HEADLINE = [], NOTE = [];
-for (let i = 0; i < 4; i++) HEADLINE.push(lit(headline, 420 + i * 52, 300, 50, 86, 12.6));
-for (let i = 0; i < 6; i++) NOTE.push(lit(note, 500 + i * 9, 560, 8, 15, 11.9));
-// glyphs the cursor has left behind: the effect still writes a shadow, but too faint to be heat
-for (let i = 0; i < 3; i++) lit(note, 500 + i * 9, 600, 8, 15, 1.4);
-lit(byline, 480, 470, 40, 22, 13.0);
-rect(col, 0, 0, 1200, 800);
+const HEADLINE = glyphs(420, 300, 50, 86, 4, 52, 0.9);
+// the note's own lit glyphs, and behind them the ones the cursor has left: the effect still has a glow on them,
+// but too faint to be heat
+const NOTE = glyphs(500, 560, 8, 15, 6, 9, 0.85);
+const FAINT = glyphs(500, 600, 8, 15, 3, 9, 0.1);
 
+// a pane outside the hero column: its ink is lit the same way and must not reach the roll
+const outside = doc.createElement('p');
+doc.body.appendChild(outside);
+
+// a destroyed instance is still on the list until the next mount sweeps it, and its chars were measured against a
+// layout that has gone; it must not feed the roll either
+const stale = pane(byline, glyphs(480, 470, 40, 22, 1, 0, 0.93));
+stale._destroyed = true;
+
+const trInstances = [
+  pane(headline, HEADLINE),
+  pane(note, NOTE.concat(FAINT)),
+  stale,
+  pane(outside, glyphs(60, 60, 40, 22, 2, 44, 0.93)),
+];
+
+const VW = 1200, VH = 800;
+rect(col, 0, 0, VW, VH);
+
+// The box the ink boxes are fractions of is the one the sim keeps for its own projection, not one measured off
+// the layer here. It is deliberately not the layer's rect below, and not the viewport either: a fixed layer
+// inside the app root takes the root's box, so the two genuinely differ on the page, and a fraction taken
+// against the wrong one puts every source somewhere else on the sheet. Measuring the layer is also the layout
+// per frame this seam exists to avoid, so the rect is booby-trapped.
 const roll = doc.createElement('div');
-rect(roll, 0, 0, 1200, 800);
+roll.getBoundingClientRect = () => {
+  fail('feedParchment measured the roll layer. It runs every breathing frame, right after the text effect has ' +
+    'written its styles, so that rect lays the whole document out again; the sim already keeps the size and ' +
+    'hands it over for nothing');
+  return { x: 0, y: 0, width: 600, height: 400, left: 0, top: 0, right: 600, bottom: 400 };
+};
 
 let reported = null;
 const app = {
   parchLayerRef: { current: roll },
   heroTextRef: { current: col },
-  parch: { setSources(glyphs) { reported = glyphs; } },
+  trInstances,
+  parch: { layerSize: () => ({ w: VW, h: VH }), setSources(list) { reported = list; } },
 };
 try {
-  new Function(body).call(app);
+  // a window the method has no business reading, so that reaching for the viewport is caught here rather than
+  // in the browser, where a 15px error looks like nothing at all
+  const window = new Proxy({}, { get(_, k) { fail('feedParchment read window.' + String(k) + '. The layer is not ' +
+    'the viewport: it sits inside the app root and takes the root\'s box, so viewport pixels put every source ' +
+    'about one percent off across the sheet'); return 0; } });
+  new Function('window', body).call(app, window);
 } catch (e) {
   console.error('check-burn-source: feedParchment threw when run against a stand-in hero column: ' + e.message);
   process.exit(1);
@@ -107,20 +147,28 @@ try {
 if (reported === null) {
   fail('feedParchment never handed the roll any sources');
 } else {
-  // a source is attributed to the glyph whose span it falls inside. Extent is read defensively so that a source
+  // a source is attributed to the glyph whose box it falls inside. Extent is read defensively so that a source
   // reported without one is diagnosed as the missing box it is, rather than as a pane gone cold
-  const near = (box, el) => {
-    const b = el.getBoundingClientRect(), w = box.w > 0 ? box.w : 0, h = box.h > 0 ? box.h : 0;
-    return box.x * 1200 >= b.left - 1 && box.y * 800 >= b.top - 1 &&
-      (box.x + w) * 1200 <= b.right + 1 && (box.y + h) * 800 <= b.bottom + 1;
+  const near = (box, g) => {
+    const w = box.w > 0 ? box.w : 0, h = box.h > 0 ? box.h : 0;
+    return box.x * VW >= g.x - 1 && box.y * VH >= g.y - 1 &&
+      (box.x + w) * VW <= g.x + g.w + 1 && (box.y + h) * VH <= g.y + g.h + 1;
   };
-  const from = (els) => reported.filter((g) => els.some((el) => near(g, el)));
+  const from = (list) => reported.filter((box) => list.some((g) => near(box, g)));
   const fromHeadline = from(HEADLINE), fromNote = from(NOTE);
 
   if (!fromHeadline.length) fail('the headline feeds the roll no heat, so hovering the title no longer burns it');
   if (!fromNote.length) {
     fail('the note under the headline feeds the roll no heat: the sheet behind it stays cold however the cursor ' +
       'rakes it. Every [data-tr] pane in the hero column is lit ink and belongs to the heat source, not the title alone');
+  }
+  if (from(trInstances[trInstances.length - 1].__lit).length) {
+    fail('a text pane standing outside the hero column fed the roll. Every pane on the page is lit the same way, ' +
+      'so the sheet would take heat from ink that is nowhere near it');
+  }
+  if (from(stale.__lit).length) {
+    fail('a destroyed instance fed the roll. Its chars were measured against a layout that has gone, so the boxes ' +
+      'it reports land wherever that layout used to be');
   }
   if (reported.length !== HEADLINE.length + NOTE.length) {
     fail('feedParchment reported ' + reported.length + ' sources for ' + (HEADLINE.length + NOTE.length) +
