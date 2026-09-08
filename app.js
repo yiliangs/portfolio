@@ -157,15 +157,15 @@
             "\n    ",
             h("nav", { key: "3", "aria-label": "Contact", style: {"position":"absolute","left":"0","right":"0","bottom":"clamp(18px,4vh,40px)","display":"flex","justifyContent":"center","gap":"clamp(20px,3vw,44px)","fontFamily":"var(--deco)","fontSize":"12px"} },
               "\n      ",
-              h("a", { key: "1|5.3mzikt", href: V.cvMailto, style: {"color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp2" },
+              h("a", { key: "1|5.3mzikt", href: V.cvMailto, style: {"fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp2" },
                 "Email"
               ),
               "\n      ",
-              h("button", { key: "3|2.3hnb2", onClick: V.goCvSerif, style: {"all":"unset","cursor":"pointer","fontFamily":"var(--deco)","fontSize":"12px","color":"var(--color-accent)","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp2" },
+              h("button", { key: "3|2.3hnb2", onClick: V.goCvSerif, style: {"all":"unset","cursor":"pointer","fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","fontSize":"12px","color":"var(--color-accent)","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp2" },
                 "CV"
               ),
               "\n      ",
-              h("a", { key: "5|6.1e9lseg", href: V.cvGithub, style: {"color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp2" },
+              h("a", { key: "5|6.1e9lseg", href: V.cvGithub, style: {"fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp2" },
                 "GitHub"
               ),
               "\n    "
@@ -280,15 +280,15 @@
                 "\n        ",
                 h("span", { key: "5", style: {"position":"absolute","inset":"0","display":"flex","alignItems":"center","justifyContent":"center","gap":"clamp(20px, 3vw, 44px)"} },
                   "\n          ",
-                  h("a", { key: "1|5.3mzikt", href: V.cvMailto, style: {"fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp5" },
+                  h("a", { key: "1|5.3mzikt", href: V.cvMailto, style: {"fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp2" },
                     "Email"
                   ),
                   "\n          ",
-                  h("a", { key: "3|6.1e9lseg", href: V.cvGithub, style: {"fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp5" },
+                  h("a", { key: "3|6.1e9lseg", href: V.cvGithub, style: {"fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","color":"var(--color-accent)","textDecoration":"none","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp2" },
                     "GitHub"
                   ),
                   "\n          ",
-                  h("button", { key: "5|2.3hnb2", onClick: V.goCvSerif, style: {"all":"unset","cursor":"pointer","fontSize":"14px","fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","color":"var(--color-accent)","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp5" },
+                  h("button", { key: "5|2.3hnb2", onClick: V.goCvSerif, style: {"all":"unset","cursor":"pointer","fontSize":"14px","fontFamily":"'Cinzel Decorative', var(--deco)","textTransform":"lowercase","color":"var(--color-accent)","letterSpacing":"0.06em","display":"flex","alignItems":"center","lineHeight":"1","transition":"color 200ms ease, letter-spacing 200ms ease"}, className: "scp2" },
                     "CV"
                   ),
                   "\n        "
@@ -513,7 +513,7 @@
                   var Vi = Object.assign({}, V, {"p": item, $index: i});
                   return h(F,{key:i},
                     "\n      ",
-                    h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, onClick: Vi.p?.open, onMouseEnter: Vi.p?.hover, style: S(`grid-column:1 / 23; grid-row:${Vi.p?.cardRow ?? ""}; display:grid; grid-template-columns:repeat(22,1fr); cursor:pointer; color:var(--color-text); background:var(--color-bg); border-width:0; border-style:solid; border-color:var(--color-neutral-400); box-shadow:inset 1px 0 0 0 var(--color-neutral-400), inset 0 1px 0 0 var(--color-neutral-400), 1px 0 0 0 var(--color-neutral-400), 0 1px 0 0 var(--color-neutral-400); transition:box-shadow 240ms ease;`), className: "scp6" },
+                    h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, onClick: Vi.p?.open, onMouseEnter: Vi.p?.hover, style: S(`grid-column:1 / 23; grid-row:${Vi.p?.cardRow ?? ""}; display:grid; grid-template-columns:repeat(22,1fr); cursor:pointer; color:var(--color-text); background:var(--color-bg); border-width:0; border-style:solid; border-color:var(--color-neutral-400); box-shadow:inset 1px 0 0 0 var(--color-neutral-400), inset 0 1px 0 0 var(--color-neutral-400), 1px 0 0 0 var(--color-neutral-400), 0 1px 0 0 var(--color-neutral-400); transition:box-shadow 240ms ease;`), className: "scp5" },
                       "\n        ",
                       h("div", { key: "1", style: S(`grid-column:${Vi.p?.textCol ?? ""}; grid-row:1; min-width:0; padding:22px; box-sizing:border-box; align-self:end;`) },
                         "\n          ",
@@ -552,8 +552,8 @@
                     h(F,{key:0},"",I(V.page?.notesTitle,1),"")
                   ),
                   "\n      ",
-                  h("p", { key: "5|331.1a3pxw3", "data-morph": "notes-body", style: {"margin":"22px 0 0","color":"var(--color-neutral-700)","maxWidth":"44ch"} },
-                    "I spent my first years in practice drawing stair details and wondering why the software fought me. The next years were spent fixing that, first inside studios and then in research groups. I care about drawings as a language, about tools that stay out of the way, and about writing plainly on subjects that tempt people to be grand."
+                  h("p", { key: "5|413.b1i0wx", "data-morph": "notes-body", style: {"margin":"22px 0 0","color":"var(--color-neutral-700)","maxWidth":"44ch"} },
+                    "Five years of architecture school, then two in the Polyhedral Structures Laboratory at Penn, where structure stopped being something applied to a design after the fact. Since 2022 I have been at SOM in Chicago, building the platform its teams model in. I care about structure and design being one decision, about tools that stay out of the way, and about writing plainly on subjects that tempt people to be grand."
                   ),
                   "\n      ",
                   h("p", { key: "7", style: {"margin":"22px 0 0","display":"flex","gap":"20px","fontSize":"13px"} },
@@ -604,15 +604,15 @@
                 ),
                 "\n\n    ",
                 "\n    ",
-                h("a", { key: "22|5.49kwkt", href: V.cvMailto, style: S(`grid-column:1 / 3; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("a", { key: "22|5.49kwkt", href: V.cvMailto, style: S(`grid-column:1 / 3; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp6" },
                   "email"
                 ),
                 "\n    ",
-                h("a", { key: "24|6.1yz8dag", href: V.cvGithub, style: S(`grid-column:3 / 5; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("a", { key: "24|6.1yz8dag", href: V.cvGithub, style: S(`grid-column:3 / 5; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp6" },
                   "github"
                 ),
                 "\n    ",
-                h("button", { key: "26|2.3ho5a", onClick: V.goCvMono, style: S(`all:unset; grid-column:5 / 7; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("button", { key: "26|2.3ho5a", onClick: V.goCvMono, style: S(`all:unset; grid-column:5 / 7; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;`), className: "scp6" },
                   "cv"
                 ),
                 "\n    "
@@ -675,7 +675,7 @@
                   var Vi = Object.assign({}, V, {"p": item, $index: i});
                   return h(F,{key:i},
                     "\n      ",
-                    h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, "data-mod": Vi.p?.mod, onClick: Vi.p?.open, onMouseEnter: Vi.p?.type, onMouseLeave: Vi.p?.untype, onFocus: Vi.p?.type, onBlur: Vi.p?.untype, tabIndex: "0", "aria-label": Vi.p?.title, style: S(`grid-column:${Vi.p?.col ?? ""}; grid-row:${Vi.p?.row ?? ""}; position:relative; z-index:${Vi.p?.zIndex ?? ""}; display:grid; grid-template-rows:minmax(0,1fr) 44px; cursor:pointer; box-sizing:border-box; color:var(--color-text); background:var(--color-bg); box-shadow:inset 1px 0 0 0 ${Vi.p?.frameInk ?? ""}, inset 0 1px 0 0 ${Vi.p?.frameInk ?? ""}, 1px 0 0 0 ${Vi.p?.frameInk ?? ""}, 0 1px 0 0 ${Vi.p?.frameInk ?? ""}; transition:box-shadow 240ms ease;`), className: "scp8" },
+                    h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, "data-mod": Vi.p?.mod, onClick: Vi.p?.open, onMouseEnter: Vi.p?.type, onMouseLeave: Vi.p?.untype, onFocus: Vi.p?.type, onBlur: Vi.p?.untype, tabIndex: "0", "aria-label": Vi.p?.title, style: S(`grid-column:${Vi.p?.col ?? ""}; grid-row:${Vi.p?.row ?? ""}; position:relative; z-index:${Vi.p?.zIndex ?? ""}; display:grid; grid-template-rows:minmax(0,1fr) 44px; cursor:pointer; box-sizing:border-box; color:var(--color-text); background:var(--color-bg); box-shadow:inset 1px 0 0 0 ${Vi.p?.frameInk ?? ""}, inset 0 1px 0 0 ${Vi.p?.frameInk ?? ""}, 1px 0 0 0 ${Vi.p?.frameInk ?? ""}, 0 1px 0 0 ${Vi.p?.frameInk ?? ""}; transition:box-shadow 240ms ease;`), className: "scp7" },
                       "\n        ",
                       h("div", { key: "1", "data-shape": Vi.p?.frameShape, "data-shape-alt": `frame-${Vi.p?.figNo ?? ""}`, style: {"position":"relative","minHeight":"0","overflow":"hidden","boxShadow":"inset 0 -1px 0 0 var(--color-divider)"} },
                         "\n          ",
@@ -706,15 +706,15 @@
                 })),
                 "\n\n    ",
                 "\n    ",
-                h("a", { key: "19|5.49kwkt", href: V.cvMailto, "data-mod": "contactEmail", style: S(`grid-column:${V.land?.contactEmail?.col ?? ""}; grid-row:${V.land?.contactEmail?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("a", { key: "19|5.49kwkt", href: V.cvMailto, "data-mod": "contactEmail", style: S(`grid-column:${V.land?.contactEmail?.col ?? ""}; grid-row:${V.land?.contactEmail?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp6" },
                   "email"
                 ),
                 "\n    ",
-                h("a", { key: "21|6.1yz8dag", href: V.cvGithub, "data-mod": "contactGithub", style: S(`grid-column:${V.land?.contactGithub?.col ?? ""}; grid-row:${V.land?.contactGithub?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("a", { key: "21|6.1yz8dag", href: V.cvGithub, "data-mod": "contactGithub", style: S(`grid-column:${V.land?.contactGithub?.col ?? ""}; grid-row:${V.land?.contactGithub?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp6" },
                   "github"
                 ),
                 "\n    ",
-                h("button", { key: "23|2.3ho5a", onClick: V.goCvMono, "data-mod": "contactCv", style: S(`all:unset; grid-column:${V.land?.contactCv?.col ?? ""}; grid-row:${V.land?.contactCv?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("button", { key: "23|2.3ho5a", onClick: V.goCvMono, "data-mod": "contactCv", style: S(`all:unset; grid-column:${V.land?.contactCv?.col ?? ""}; grid-row:${V.land?.contactCv?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;`), className: "scp6" },
                   "cv"
                 ),
                 "\n    "
@@ -1140,7 +1140,7 @@
           "\n  ",
           h("main", { key: "cv-mono", "data-screen-label": "CV mono", className: "cvm", style: {"maxWidth":"min(1040px, 100% - 2 * clamp(24px, 5vw, 72px))","margin":"0 auto","boxSizing":"border-box","padding":"clamp(32px,5vw,72px) 22px"} },
             "\n\n    ",
-            h("button", { key: "1|10.buh750", onClick: V.goPageCurrent, style: {"all":"unset","cursor":"pointer","display":"inline-flex","alignItems":"center","margin":"0 0 28px","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)","transition":"color 200ms ease"}, className: "scp9" },
+            h("button", { key: "1|10.buh750", onClick: V.goPageCurrent, style: {"all":"unset","cursor":"pointer","display":"inline-flex","alignItems":"center","margin":"0 0 28px","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)","transition":"color 200ms ease"}, className: "scp8" },
               "<- back"
             ),
             "\n\n    ",
@@ -2420,13 +2420,13 @@
     }
   
     pages = {
-      writing: { reg: 'serif', label: 'Research', kicker: 'Essays · Research', bio: 'I write about what happens when machines start drawing too, and I publish the research that keeps me honest. The tools live next door, in mono.', title: 'Drawings, tools, and other arguments.', byline: 'by Yiliang Shao', edition: 'Edition of one', stamp: 'MMXXVI',
-        intro: 'I write about what happens when machines start drawing too, and I publish the research that keeps me honest. This is the bound half of the last seven years: the papers that survived review, one proposal that put them to work, and a few essays I still agree with. The tools live next door, in mono.',
+      writing: { reg: 'serif', label: 'Research', kicker: 'Essays · Research', bio: 'I model buildings rather than draw them, and computation is how I bridge structure and design. The essays are what I make of the AI era; the papers back the tools next door, in mono.', title: 'The reasoning behind the building.', byline: 'by Yiliang Shao', edition: 'Edition of one', stamp: 'MMXXVI',
+        intro: 'I model buildings rather than draw them. The research here is structural analysis and computational thinking put to one question: how a structure that stands and a design worth building can be made the same decision, with computation as the bridge between them. This is the bound half of the last seven years: the papers that survived review, one proposal that put them to work, and the essays where I work out what the AI era is doing to all of it. The tools the papers back live next door, in mono.',
         indexKicker: 'Contents', indexTitle: 'Eight chapters, hover to preview.', indexNote: 'Page numbers follow the bound edition. Chapters marked Research link to the published paper; the rest are written here in full.',
         platesKicker: 'Selected plates', platesTitle: 'Two pieces I would show first, if you only had ten minutes.', readWord: 'Read chapter', notesTitle: 'Trained as an architect. Stayed for the tooling.',
-        colophon: 'Set in Newsreader and Lora on a near-white ground. Photographs are matted as plates. Nothing here is generated; everything here was drawn, built, or written by hand, sometimes slowly.',
+        colophon: 'Set in Newsreader and Lora on a near-white ground. Photographs are matted as plates. Nothing here is generated; everything here was modelled, built, or written by hand, sometimes slowly.',
         titleSize: 'clamp(48px,7vw,104px)', titleTracking: '-0.01em', bylineSize: '26px', bodySize: '17px', smallBodySize: '15.5px', stampSize: '40px', h2Size: '40px', h3Size: '34px', cvSize: '22px', capLeadSize: '18px', marginSize: '19px', marginStyle: 'italic', marginPrefix: '' },
-      tooling: { reg: 'mono', label: 'Development', kicker: 'tooling · r+d · side projects', title: 'I build software for people who draw buildings, and I keep the drawings in charge.', byline: '>_ y.shao · oslo — this register is kept by hand and issued when something changes', edition: 'Rev 2026.09 · issued for review', stamp: 'SHT-00',
+      tooling: { reg: 'mono', label: 'Development', kicker: 'tooling · r+d · side projects', title: 'I build software for people who model buildings, and I take the boring part out of their way.', byline: '>_ y.shao · this register is kept by hand and issued when something changes', edition: 'Rev 2026.09 · issued for review', stamp: 'SHT-00',
         intro: 'Natalie first: the computing platform I own and build at SOM, issued as one sheet for the platform and seven for the parts of it I would show first, from a learned facade correspondence to a room layout solver. After it, six smaller things I made because I needed them in practice. Each is listed with the reason I built it, because the reason is usually the interesting part. The arguments about all this live next door, in serif.',
         indexKicker: 'natalie, then six things I made because I needed them', indexTitle: '', indexNote: 'sheet numbers are stable across revisions; rev is the year of the last issue. click a row for the full sheet.',
         platesKicker: 'Selected sheets', platesTitle: '', readWord: 'Open sheet', notesTitle: 'Trained as an architect. Stayed for the tooling.',
