@@ -34,8 +34,10 @@ const REQUIRED_SHEETS = ['Rhino Worktree Launcher', 'Agent Usage Stat'];
 const SHEET_FIELDS = ['title', 'subtitle', 'kind', 'year', 'page', 'pages', 'role', 'with', 'status',
   'stack', 'link', 'caption', 'placeholder', 'why', 'margin', 'body1', 'body2', 'body3'];
 
-// The plate fields, and the slot each one fills.
-const PLATE_FIELDS = ['hero', 'detailA', 'detailB'];
+// The plate fields. `hero` and `detail` are cut to their own proportion and so must state their
+// pixel size; the pair keeps the standard plate and states nothing.
+const PLATE_FIELDS = ['hero', 'detail', 'detailA', 'detailB'];
+const SIZED = { hero: ['heroW', 'heroH'], detail: ['detailW', 'detailH'] };
 
 const failures = [];
 const fail = (msg) => failures.push(msg);
@@ -100,21 +102,26 @@ function imageSize(path) {
 }
 
 for (const d of mono) {
-  const named = PLATE_FIELDS.filter((f) => d[f]);
-  for (const f of named) {
+  for (const f of PLATE_FIELDS.filter((x) => d[x])) {
     if (!existsSync(d[f])) { fail('the ' + d.title + ' sheet names ' + f + ' ' + d[f] + ', which is not in the repository'); continue; }
     const size = imageSize(d[f]);
     if (size.error) { fail(d[f] + ', named by the ' + d.title + ' sheet, cannot be measured: ' + size.error); continue; }
-    if (f !== 'hero') continue;
-    if (!d.heroW || !d.heroH) {
-      fail('the ' + d.title + ' sheet names a hero but no heroW/heroH, so its plate cannot be cut to the picture');
-    } else if (d.heroW !== size.w || d.heroH !== size.h) {
-      fail('the ' + d.title + ' sheet states its hero is ' + d.heroW + ' by ' + d.heroH +
+    const pair = SIZED[f];
+    if (!pair) continue;
+    if (!d[pair[0]] || !d[pair[1]]) {
+      fail('the ' + d.title + ' sheet names a ' + f + ' but no ' + pair.join('/') + ', so its plate cannot be cut to the picture');
+    } else if (d[pair[0]] !== size.w || d[pair[1]] !== size.h) {
+      fail('the ' + d.title + ' sheet states its ' + f + ' is ' + d[pair[0]] + ' by ' + d[pair[1]] +
         '; ' + d[f] + ' is really ' + size.w + ' by ' + size.h);
     }
   }
-  if (!d.hero && (d.heroW || d.heroH)) {
-    fail('the ' + d.title + ' sheet states a hero size but names no hero');
+  for (const [f, pair] of Object.entries(SIZED)) {
+    if (!d[f] && (d[pair[0]] || d[pair[1]])) fail('the ' + d.title + ' sheet states a ' + f + ' size but names no ' + f);
+  }
+  // one arrangement or the other under the account, never both: the two would be laid over the
+  // same cells, and the template would have to guess which the entry meant
+  if (d.detail && (d.detailA || d.detailB)) {
+    fail('the ' + d.title + ' sheet names both a single detail and the detailA/detailB pair; it may name one or the other');
   }
 }
 
@@ -124,113 +131,171 @@ if (!mono.some((d) => PLATE_FIELDS.every((f) => !d[f]))) {
   fail('every Development entry now names a plate, so nothing exercises the placeholder slot any more');
 }
 
-// ---------------------------------------------------------------- the portrait hero's plate
+// ---------------------------------------------------------------- the plates cut to their picture
 
-// A hero taller than it is wide is given a plate cut to its own proportion on the wide sheet: it
-// keeps the sheet's left edge, spans PORTRAIT_COLS of the twenty-two columns, and takes the rows
-// portraitRows() asks for, with every module from the hero caption down moving by the rows the plate
-// gained. The rule is written once, in the logic class; this reads it back rather than restating it,
-// then holds the table it produces to what check-sheet-grid holds the written tables to, plus the
-// two properties that are the point of the rule.
+// Two plates on the Development sheet are cut to their picture's own proportion rather than taking
+// the rows the placement table wrote for them: a hero taller than it is wide, which keeps the
+// sheet's left edge and spans PORTRAIT_COLS of the twenty-two columns, and a single detail, which
+// spans the columns the detailA/detailB pair spanned. Both take the rows rowsFor() asks for, and
+// every module under their caption moves down by the rows they gained.
+//
+// The rule is written once, in the logic class, as two plain expressions; this reads those back
+// rather than restating them, builds the table each entry produces at the widths the sheet is read
+// at, and holds it to what check-sheet-grid holds the written tables to, plus the properties that
+// are the point of the rule.
 const COLUMNS = 22;
-let portraitReport = 'none';
+// the wide sheet runs from the narrow threshold up; the narrow sheet runs below it. A long sheet
+// always carries a scrollbar, so the containing block is tested a scrollbar narrower than vw as well
+// as flush with it.
+const WIDE_AT = [1000, 1100, 1280, 1440, 1600, 1920, 2560];
+const NARROW_AT = [420, 600, 768, 900, 999];
+const SCROLLBAR = [0, 15];
+let plateReport = 'none';
 
-function readPortraitRule(logicSrc) {
-  const m = /\n\s*portraitRows\(w,\s*h\)\s*\{\s*return ([^;]+);\s*\}/.exec(logicSrc);
-  if (!m) throw new Error('the logic class has no portraitRows(w, h) rule');
+function readRule(logicSrc) {
+  const body = (name, args) => {
+    const m = new RegExp('\\n\\s*' + name + '\\(' + args + '\\)\\s*\\{\\s*return ([^;]+);\\s*\\}').exec(logicSrc);
+    if (!m) throw new Error('the logic class has no ' + name + '(' + args + ') rule');
+    return m[1].replace(/this\./g, 'self.');
+  };
   const self = {
     PORTRAIT_COLS: readNumber('PORTRAIT_COLS', logicSrc),
-    SHEET_COL: readNumber('SHEET_COL', logicSrc),
+    SHEET_COLS: readNumber('SHEET_COLS', logicSrc),
     SHEET_ROW: readNumber('SHEET_ROW', logicSrc),
+    SHEET_MAX: readNumber('SHEET_MAX', logicSrc),
   };
-  const rows = new Function('self', 'w', 'h', 'return ' + m[1].replace(/this\./g, 'self.'));
-  return { ...self, rows: (w, h) => rows(self, w, h) };
+  const colFn = new Function('self', 'vw', 'box', 'return ' + body('sheetCol', 'vw, box'));
+  self.sheetCol = (vw, box) => colFn(self, vw, box);
+  const rowsFn = new Function('self', 'window', 'document', 'cols', 'w', 'h', 'return ' + body('rowsFor', 'cols, w, h'));
+  return {
+    ...self,
+    rowsFor: (vw, box, cols, w, h) =>
+      rowsFn(self, { innerWidth: vw }, { documentElement: { clientWidth: box } }, cols, w, h),
+  };
 }
 
 const at = (s) => s.split('/').map((v) => parseInt(v, 10));
 
-// renderVals builds the wide sheet's table this way when the entry's hero is portrait.
-function portraitTable(table, rule, entry) {
+// renderVals builds a sheet's table this way. The two plates are independent: an entry may cut one,
+// the other, both or neither, and a module moves by whichever of them stands above it.
+function cutTable(table, rule, entry, vw, box, narrow) {
   const heroSpan = at(table.hero.row);
-  const heroRows = rule.rows(entry.heroW, entry.heroH);
-  const grew = heroRows - (heroSpan[1] - heroSpan[0]);
-  const movesFrom = at(table.heroCaption.row)[0];
+  const portrait = !narrow && entry.heroW > 0 && entry.heroH > entry.heroW;
+  const heroRows = portrait ? rule.rowsFor(vw, box, rule.PORTRAIT_COLS, entry.heroW, entry.heroH) : heroSpan[1] - heroSpan[0];
+  const grewHero = heroRows - (heroSpan[1] - heroSpan[0]);
+
+  const detailCol = [Math.min(at(table.detailA.col)[0], at(table.detailB.col)[0]),
+    Math.max(at(table.detailA.col)[1], at(table.detailB.col)[1])];
+  const detailTop = Math.min(at(table.detailA.row)[0], at(table.detailB.row)[0]);
+  const detailFoot = Math.max(at(table.detailA.row)[1], at(table.detailB.row)[1]);
+  const one = !!entry.detail && entry.detailW > 0 && entry.detailH > 0;
+  const detailRows = one ? rule.rowsFor(vw, box, detailCol[1] - detailCol[0], entry.detailW, entry.detailH) : detailFoot - detailTop;
+  const grewDetail = detailRows - (detailFoot - detailTop);
+
+  const heroFrom = at(table.heroCaption.row)[0], detailFrom = at(table.detailCaption.row)[0];
+  const shiftAt = (row) => (row >= heroFrom ? grewHero : 0) + (row >= detailFrom ? grewDetail : 0);
   const out = {};
   for (const [name, spot] of Object.entries(table)) {
+    if (one && (name === 'detailA' || name === 'detailB')) continue; // replaced by the single figure
     const span = at(spot.row);
-    const shift = span[0] >= movesFrom ? grew : 0;
+    const shift = shiftAt(span[0]);
     out[name] = {
-      col: name === 'hero' ? '1 / ' + (1 + rule.PORTRAIT_COLS) : spot.col,
+      col: name === 'hero' && portrait ? '1 / ' + (1 + rule.PORTRAIT_COLS) : spot.col,
       row: name === 'hero' ? span[0] + ' / ' + (span[0] + heroRows) : (span[0] + shift) + ' / ' + (span[1] + shift),
     };
   }
-  return { table: out, heroRows, grew, movesFrom };
+  if (one) {
+    const row = detailTop + shiftAt(detailTop);
+    out.detail = { col: detailCol[0] + ' / ' + detailCol[1], row: row + ' / ' + (row + detailRows) };
+  }
+  return { table: out, portrait, one, heroRows, grewHero, detailRows, grewDetail, detailCols: detailCol[1] - detailCol[0], shiftAt };
+}
+
+function checkCut(where, rule, laid, table, entry, vw, box) {
+  const { table: out, portrait, one } = laid;
+
+  // whole cells, on the grid, and nothing laid over anything
+  const boxes = [];
+  for (const [name, spot] of Object.entries(out)) {
+    const c = at(spot.col), r = at(spot.row);
+    if (![...c, ...r].every(Number.isInteger)) { fail(where + ' leaves ' + name + ' on a span this check cannot read: ' + spot.col + ' x ' + spot.row); continue; }
+    if (c[0] < 1 || c[1] > COLUMNS + 1 || c[0] >= c[1]) fail(where + ' puts ' + name + ' off the grid: columns ' + spot.col);
+    if (r[0] < 1 || r[0] >= r[1]) fail(where + ' puts ' + name + ' off the grid: rows ' + spot.row);
+    boxes.push([name, c, r]);
+  }
+  for (let i = 0; i < boxes.length; i++) {
+    for (let j = i + 1; j < boxes.length; j++) {
+      const [a, ac, ar] = boxes[i], [b, bc, br] = boxes[j];
+      if (ac[0] < bc[1] && bc[0] < ac[1] && ar[0] < br[1] && br[0] < ar[1]) fail(where + ' lays ' + a + ' and ' + b + ' over the same cells');
+    }
+  }
+
+  // a cut plate is the picture's proportion rounded up to whole rows: never shorter than the picture
+  // needs at that width, and never a whole empty row taller
+  const proportion = (name, cols, rows, w, h) => {
+    const needed = cols * rule.sheetCol(vw, box) * h / w;
+    const height = rows * rule.SHEET_ROW;
+    if (height < needed) fail(where + "'s " + name + ' is ' + height.toFixed(0) + 'px for a picture that needs ' + needed.toFixed(1) + 'px at that width');
+    if (height - needed >= rule.SHEET_ROW) fail(where + "'s " + name + ' is ' + (height - needed).toFixed(1) + 'px taller than the picture, which is a whole empty row or more');
+  };
+  if (portrait) {
+    proportion('hero plate', rule.PORTRAIT_COLS, laid.heroRows, entry.heroW, entry.heroH);
+    const c = at(out.hero.col);
+    if (c[0] !== 1 || c[1] !== 1 + rule.PORTRAIT_COLS) fail(where + ' does not keep column 1 and span ' + rule.PORTRAIT_COLS + ' columns for the hero: ' + out.hero.col);
+  }
+  if (one) {
+    proportion('detail plate', laid.detailCols, laid.detailRows, entry.detailW, entry.detailH);
+    // The single plate takes the columns the pair spanned, which is how it is derived, so that much
+    // is a construction rather than a claim. What is worth holding is that the pair spans the whole
+    // sheet: a table that narrowed it would quietly narrow this plate with it.
+    const c = at(out.detail.col);
+    if (c[0] !== 1 || c[1] !== COLUMNS + 1) {
+      fail(where + ' gives the single detail columns ' + out.detail.col + ', not the full width of the sheet: the pair it replaces runs ' + table.detailA.col + ' and ' + table.detailB.col);
+    }
+  }
+
+  // every module moved by exactly what stands above it, and nothing changed columns but the hero
+  for (const [name, spot] of Object.entries(table)) {
+    if (name === 'hero' || !out[name]) continue;
+    const was = at(spot.row), now = at(out[name].row), want = laid.shiftAt(was[0]);
+    if (now[0] - was[0] !== want || now[1] - was[1] !== want) fail(where + ' moves ' + name + ' by ' + (now[0] - was[0]) + ' rows, not ' + want);
+    if (spot.col !== out[name].col) fail(where + ' changes the columns of ' + name + ', which only the hero may do');
+  }
+  const heroWas = at(table.hero.row), heroNow = at(out.hero.row);
+  if (heroNow[0] !== heroWas[0]) fail(where + ' does not start the hero where the standard plate starts');
+  if (heroNow[1] - heroWas[1] !== laid.grewHero) fail(where + ' ends the hero ' + (heroNow[1] - heroWas[1]) + ' rows later, not ' + laid.grewHero);
 }
 
 try {
   const logicSrc = readLogicSource();
-  const rule = readPortraitRule(logicSrc);
-  const wide = readTable('SHEET_WIDE', logicSrc);
+  const rule = readRule(logicSrc);
+  const tables = { SHEET_WIDE: readTable('SHEET_WIDE', logicSrc), SHEET_NARROW: readTable('SHEET_NARROW', logicSrc) };
   if (rule.PORTRAIT_COLS < 1 || rule.PORTRAIT_COLS >= COLUMNS) {
     fail('PORTRAIT_COLS is ' + rule.PORTRAIT_COLS + ', which is not a span of the ' + COLUMNS + ' column grid');
   }
-  const sitters = mono.filter((d) => d.heroW > 0 && d.heroH > d.heroW);
-  for (const d of sitters) {
-    const { table, heroRows, grew } = portraitTable(wide, rule, d);
-    const where = 'the ' + d.title + " sheet's portrait plate";
-    if (!Number.isInteger(heroRows) || heroRows < 1) { fail(where + ' asks for ' + heroRows + ' rows, which is not a whole count of cells'); continue; }
-    if (grew < 0) fail(where + ' is shorter than the standard plate, so the rule is doing nothing for it');
+  if (rule.SHEET_COLS !== COLUMNS) fail('SHEET_COLS is ' + rule.SHEET_COLS + ', not the ' + COLUMNS + ' columns the sheet is drawn on');
 
-    // the plate is the picture's proportion, rounded up to whole rows: never shorter than the
-    // picture needs at that width, and never a whole row taller
-    const needed = rule.PORTRAIT_COLS * rule.SHEET_COL * d.heroH / d.heroW;
-    const height = heroRows * rule.SHEET_ROW;
-    if (height < needed) fail(where + ' is ' + height + 'px for a picture that needs ' + needed.toFixed(1) + 'px at that width');
-    if (height - needed >= rule.SHEET_ROW) fail(where + ' is ' + (height - needed).toFixed(1) + 'px taller than the picture, which is a whole empty row or more');
-
-    // whole cells, on the grid, and nothing laid over anything
-    const boxes = [];
-    for (const [name, spot] of Object.entries(table)) {
-      const c = at(spot.col), r = at(spot.row);
-      if (![...c, ...r].every(Number.isInteger)) { fail(where + ' leaves ' + name + ' on a span this check cannot read: ' + spot.col + ' x ' + spot.row); continue; }
-      if (c[0] < 1 || c[1] > COLUMNS + 1 || c[0] >= c[1]) fail(where + ' puts ' + name + ' off the grid: columns ' + spot.col);
-      if (r[0] < 1 || r[0] >= r[1]) fail(where + ' puts ' + name + ' off the grid: rows ' + spot.row);
-      boxes.push([name, c, r]);
-    }
-    for (let i = 0; i < boxes.length; i++) {
-      for (let j = i + 1; j < boxes.length; j++) {
-        const [a, ac, ar] = boxes[i], [b, bc, br] = boxes[j];
-        if (ac[0] < bc[1] && bc[0] < ac[1] && ar[0] < br[1] && br[0] < ar[1]) {
-          fail(where + ' lays ' + a + ' and ' + b + ' over the same cells');
+  const cut = mono.filter((d) => (d.heroW > 0 && d.heroH > d.heroW) || d.detail);
+  const seen = [];
+  for (const d of cut) {
+    for (const [name, table, widths, narrow] of [['SHEET_WIDE', tables.SHEET_WIDE, WIDE_AT, false],
+      ['SHEET_NARROW', tables.SHEET_NARROW, NARROW_AT, true]]) {
+      for (const vw of widths) {
+        for (const bar of SCROLLBAR) {
+          const laid = cutTable(table, rule, d, vw, vw - bar, narrow);
+          checkCut('the ' + d.title + ' sheet on ' + name + ' at ' + vw + 'px', rule, laid, table, d, vw, vw - bar);
+          if (vw === 1440 && bar === 15 && !narrow) {
+            seen.push(d.title + ': ' + (laid.portrait ? 'hero ' + rule.PORTRAIT_COLS + ' by ' + laid.heroRows : 'hero standard') +
+              ', ' + (laid.one ? 'detail ' + laid.detailCols + ' by ' + laid.detailRows : 'detail pair'));
+          }
         }
       }
     }
-
-    // the hero keeps the left edge and the span the rule gives it
-    const heroCol = at(table.hero.col);
-    if (heroCol[0] !== 1 || heroCol[1] !== 1 + rule.PORTRAIT_COLS) fail(where + ' does not keep column 1 and span ' + rule.PORTRAIT_COLS + ' columns: ' + table.hero.col);
-
-    // everything from the hero caption down moved by exactly the rows the plate gained, and nothing
-    // above it moved at all
-    const movesFrom = at(wide.heroCaption.row)[0];
-    for (const [name, spot] of Object.entries(wide)) {
-      if (name === 'hero') continue;
-      const was = at(spot.row), now = at(table[name].row);
-      const want = was[0] >= movesFrom ? grew : 0;
-      if (now[0] - was[0] !== want || now[1] - was[1] !== want) {
-        fail(where + ' moves ' + name + ' by ' + (now[0] - was[0]) + ' rows, not ' + want);
-      }
-      if (spot.col !== table[name].col) fail(where + ' changes the columns of ' + name + ', which only the hero may do');
-    }
-    const heroWas = at(wide.hero.row), heroNow = at(table.hero.row);
-    if (heroNow[0] !== heroWas[0]) fail(where + ' does not start where the standard plate starts');
-    if (heroNow[1] - heroWas[1] !== grew) fail(where + ' ends ' + (heroNow[1] - heroWas[1]) + ' rows later, not ' + grew);
   }
-  if (!sitters.length) fail('no Development entry has a portrait hero, so the portrait plate rule is never exercised');
-  portraitReport = sitters.map((d) => d.title + ' on ' + rule.PORTRAIT_COLS + ' columns by ' +
-    portraitTable(wide, rule, d).heroRows + ' rows').join(', ');
+  if (!cut.length) fail('no Development entry cuts a plate to its picture, so the rule is never exercised');
+  plateReport = seen.join('; ');
 } catch (e) {
-  fail('the portrait plate rule cannot be read back: ' + e.message);
+  fail('the cut plate rule cannot be read back: ' + e.message);
 }
 
 // ---------------------------------------------------------------- the slots in the template
@@ -278,14 +343,18 @@ const inSheetPlate = (el) => {
 const slots = [...tpl.content.querySelectorAll('image-slot')].filter((el) =>
   inSheetPlate(el) || branches(el).includes('isMonoPage'));
 
+// Each slot id and the fields it is allowed to show. detailSlotA carries two, because the single
+// detail figure reuses it: the morph and the cell readout then find the same slot whichever
+// arrangement the sheet is in.
 const EXPECTED = {
-  'current.heroSlotId': 'current.hero',
-  'current.detailSlotA': 'current.detailA',
-  'current.detailSlotB': 'current.detailB',
-  'p.plateSlotId': 'p.hero',
+  'current.heroSlotId': ['current.hero'],
+  'current.detailSlotA': ['current.detailA', 'current.detail'],
+  'current.detailSlotB': ['current.detailB'],
+  'p.plateSlotId': ['p.hero'],
 };
 
 const seen = new Set();
+const sources = new Set();
 for (const el of slots) {
   const id = whole(el, 'id');
   if (!id) { fail('a Development plate slot names no id, so it cannot be identified or persisted'); continue; }
@@ -294,13 +363,18 @@ for (const el of slots) {
   seen.add(id);
   const got = whole(el, 'src');
   if (!got) fail('the ' + id + ' slot passes no src as one whole binding, so a named plate cannot reach it');
-  else if (got !== want) fail('the ' + id + ' slot reads its picture from ' + got + ', not ' + want);
+  else if (!want.includes(got)) fail('the ' + id + ' slot reads its picture from ' + got + ', not ' + want.join(' or '));
+  else sources.add(got);
   // the two detail slots word their own placeholder, the rest take the entry's, so only its
   // presence is the invariant here
   if (!el.getAttribute('placeholder')) fail('the ' + id + ' slot lost its placeholder, so an entry with no picture would show an empty frame');
 }
 for (const id of Object.keys(EXPECTED)) {
   if (!seen.has(id)) fail('the template carries no Development plate slot for ' + id);
+}
+// every plate field an entry may name has a slot that shows it
+for (const want of Object.values(EXPECTED).flat()) {
+  if (!sources.has(want)) fail('no Development plate slot shows ' + want + ', so an entry naming it would go unread');
 }
 // The landing plate is written twice, once per landing, and both have to take the picture.
 const landing = slots.filter((el) => whole(el, 'id') === 'p.plateSlotId');
@@ -312,15 +386,17 @@ if (landing.length !== 2) fail('the Development landing plate is written ' + lan
 // enclosing scope object took ("V.current?.hero", "Vi.p?.hero"), so a path is matched rather than
 // spelled out. Everything before the style object's own brace is the slot's props.
 const built = readFileSync(BUILT, 'utf8');
-const jsPath = (p) => '[A-Za-z_$][\\w$]*\\.' + p.split('.').join('\\?\\.');
+// the trailing guard matters: without it "current?.detail" would also match "current?.detailA"
+const jsPath = (p) => '[A-Za-z_$][\\w$]*\\.' + p.split('.').join('\\?\\.') + '(?![\\w$])';
 const calls = [...built.matchAll(/"image-slot",\s*\{([^}]*)\}/g)].map((m) => m[1]);
-for (const [id, srcPath] of Object.entries(EXPECTED)) {
-  const want = new RegExp('src:\\s*' + jsPath(srcPath));
+for (const [id, srcPaths] of Object.entries(EXPECTED)) {
   const mine = calls.filter((c) => new RegExp('id:\\s*' + jsPath(id)).test(c));
   if (!mine.length) { fail(BUILT + ' has no compiled image-slot for ' + id + ', so it is behind ' + DC_SOURCE); continue; }
-  const filled = mine.filter((c) => want.test(c));
-  if (!filled.length) fail(BUILT + "'s " + id + ' slot does not pass src: ' + srcPath + ', so it is behind ' + DC_SOURCE);
-  for (const c of filled) if (!/placeholder:/.test(c)) fail(BUILT + "'s " + id + ' slot passes a src but no placeholder');
+  for (const srcPath of srcPaths) {
+    const filled = mine.filter((c) => new RegExp('src:\\s*' + jsPath(srcPath)).test(c));
+    if (!filled.length) fail(BUILT + "'s " + id + ' slot does not pass src: ' + srcPath + ', so it is behind ' + DC_SOURCE);
+    for (const c of filled) if (!/placeholder:/.test(c)) fail(BUILT + "'s " + id + ' slot passes a src but no placeholder');
+  }
 }
 
 // ---------------------------------------------------------------- report
@@ -332,4 +408,4 @@ if (failures.length) {
 }
 console.log('check-dev-plates: ' + mono.length + ' Development entries, ' +
   mono.filter((d) => d.hero).length + ' with a hero plate, ' + slots.length + ' slots checked; ' +
-  'portrait plate: ' + portraitReport);
+  'cut plates at 1440: ' + plateReport);

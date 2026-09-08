@@ -19,6 +19,11 @@ import { JSDOM } from 'jsdom';
 const SRC = 'design/Portfolio.dc.html';
 const COLUMNS = 22; // grid lines run 1..COLUMNS+1
 const RESERVED = ['guides', 'heroReadout', 'detailReadout']; // renderVals puts these on the same object
+// Modules the template names that no table places by hand: renderVals works each one out from the
+// modules it stands in for. `detail` is the single plate an entry may carry instead of the
+// detailA/detailB pair, and it takes the columns the pair spanned and the rows its picture needs.
+// tools/check-dev-plates.mjs holds the geometry that comes out; this file holds the relationship.
+const DERIVED = { detail: ['detailA', 'detailB'] };
 
 const failures = [];
 const fail = (msg) => failures.push(msg);
@@ -170,8 +175,19 @@ if (mono) {
       const name = mc ? mc[1] : mr ? mr[1] : null;
       if (name) {
         bound.add(name);
-        if (wide && !wide[name]) fail('the template binds sheet.' + name + ' but SHEET_WIDE has no entry for it');
-        if (narrow && !narrow[name]) fail('the template binds sheet.' + name + ' but SHEET_NARROW has no entry for it');
+        const from = DERIVED[name];
+        if (from) {
+          // a derived module is not placed by hand: renderVals works it out from the modules it
+          // stands in for, so it must not be in the tables and they must be
+          for (const table of [['SHEET_WIDE', wide], ['SHEET_NARROW', narrow]]) {
+            if (!table[1]) continue;
+            if (table[1][name]) fail(table[0] + ' places ' + name + ', which renderVals derives from ' + from.join(' and '));
+            for (const src of from) if (!table[1][src]) fail('the template binds the derived sheet.' + name + ' but ' + table[0] + ' has no ' + src + ' to derive it from');
+          }
+        } else {
+          if (wide && !wide[name]) fail('the template binds sheet.' + name + ' but SHEET_WIDE has no entry for it');
+          if (narrow && !narrow[name]) fail('the template binds sheet.' + name + ' but SHEET_NARROW has no entry for it');
+        }
       }
 
       const margin = declared(item, 'margin');
@@ -210,7 +226,7 @@ if (mono) {
       ['kicker', '{{ current.kickerWord }}'], ['title', '{{ current.title }}'], ['lede', '{{ current.subtitle }}'],
       ['spec sheet', '{{ current.ghost }}'], ['spec role', '{{ current.role }}'], ['spec with', '{{ current.with }}'],
       ['spec status', '{{ current.status }}'], ['spec rev', '{{ current.year }} · 1:1'],
-      ['hero caption', '{{ current.caption }}'], ['detail caption', 'Working states.'],
+      ['hero caption', '{{ current.caption }}'], ['detail caption', '{{ current.detailCaptionText }}'],
       ['note 01', '{{ current.body1Full }}'], ['note 02', '{{ current.body2 }}'], ['note 03', '{{ current.body3 }}'],
       ['marginalia', '{{ current.margin }}'], ['stack', '{{ current.stack }}'], ['status', '{{ current.status }}'],
       ['pages', '{{ current.pages }}'], ['link', '{{ current.link }}'], ['next title', '{{ next.title }}'],

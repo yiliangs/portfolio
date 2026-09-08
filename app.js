@@ -1854,42 +1854,62 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("figure", { key: "35", className: "plate sheet-mod sheet-plate", "data-enter": "", onMouseEnter: V.sheet?.detailA?.move, onMouseMove: V.sheet?.detailA?.move, onMouseLeave: V.sheet?.detailA?.leave, style: S(`grid-column:${V.sheet?.detailA?.col ?? ""}; grid-row:${V.sheet?.detailA?.row ?? ""}; --d:${V.sheet?.detailA?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
-                "\n      ",
-                h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
-                  "+"
+              (V.detailPair ? h(F,{key:35},
+                "\n    ",
+                h("figure", { key: "1", className: "plate sheet-mod sheet-plate", "data-enter": "", onMouseEnter: V.sheet?.detailA?.move, onMouseMove: V.sheet?.detailA?.move, onMouseLeave: V.sheet?.detailA?.leave, style: S(`grid-column:${V.sheet?.detailA?.col ?? ""}; grid-row:${V.sheet?.detailA?.row ?? ""}; --d:${V.sheet?.detailA?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
+                  "\n      ",
+                  h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
+                    "+"
+                  ),
+                  "\n      ",
+                  h("image-slot", { key: "3", id: V.current?.detailSlotA, src: V.current?.detailA, shape: "rect", fit: "contain", placeholder: "Detail: drawing or interface", style: {"width":"100%","height":"100%"} }),
+                  "\n      ",
+                  h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
+                    "+"
+                  ),
+                  "\n    "
                 ),
-                "\n      ",
-                h("image-slot", { key: "3", id: V.current?.detailSlotA, src: V.current?.detailA, shape: "rect", fit: "contain", placeholder: "Detail: drawing or interface", style: {"width":"100%","height":"100%"} }),
-                "\n      ",
-                h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
-                  "+"
+                "\n    ",
+                h("figure", { key: "3", className: "plate sheet-mod sheet-plate", "data-enter": "", onMouseEnter: V.sheet?.detailB?.move, onMouseMove: V.sheet?.detailB?.move, onMouseLeave: V.sheet?.detailB?.leave, style: S(`grid-column:${V.sheet?.detailB?.col ?? ""}; grid-row:${V.sheet?.detailB?.row ?? ""}; --d:${V.sheet?.detailB?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
+                  "\n      ",
+                  h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
+                    "+"
+                  ),
+                  "\n      ",
+                  h("image-slot", { key: "3", id: V.current?.detailSlotB, src: V.current?.detailB, shape: "rect", fit: "contain", placeholder: "Detail: process or site", style: {"width":"100%","height":"100%"} }),
+                  "\n      ",
+                  h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
+                    "+"
+                  ),
+                  "\n    "
                 ),
-                "\n    "
-              ),
+                "\n    ") : null),
               "\n    ",
-              h("figure", { key: "37", className: "plate sheet-mod sheet-plate", "data-enter": "", onMouseEnter: V.sheet?.detailB?.move, onMouseMove: V.sheet?.detailB?.move, onMouseLeave: V.sheet?.detailB?.leave, style: S(`grid-column:${V.sheet?.detailB?.col ?? ""}; grid-row:${V.sheet?.detailB?.row ?? ""}; --d:${V.sheet?.detailB?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
-                "\n      ",
-                h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
-                  "+"
+              (V.detailOne ? h(F,{key:37},
+                "\n    ",
+                h("figure", { key: "1", className: "plate sheet-mod sheet-plate", "data-enter": "", onMouseEnter: V.sheet?.detail?.move, onMouseMove: V.sheet?.detail?.move, onMouseLeave: V.sheet?.detail?.leave, style: S(`grid-column:${V.sheet?.detail?.col ?? ""}; grid-row:${V.sheet?.detail?.row ?? ""}; --d:${V.sheet?.detail?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
+                  "\n      ",
+                  h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
+                    "+"
+                  ),
+                  "\n      ",
+                  h("image-slot", { key: "3", id: V.current?.detailSlotA, src: V.current?.detail, shape: "rect", fit: "contain", placeholder: "Detail: drawing or interface", style: {"width":"100%","height":"100%"} }),
+                  "\n      ",
+                  h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
+                    "+"
+                  ),
+                  "\n    "
                 ),
-                "\n      ",
-                h("image-slot", { key: "3", id: V.current?.detailSlotB, src: V.current?.detailB, shape: "rect", fit: "contain", placeholder: "Detail: process or site", style: {"width":"100%","height":"100%"} }),
-                "\n      ",
-                h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
-                  "+"
-                ),
-                "\n    "
-              ),
+                "\n    ") : null),
               "\n    ",
-              h("p", { key: "39|161.w9e80", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.detailCaption?.col ?? ""}; grid-row:${V.sheet?.detailCaption?.row ?? ""}; --d:${V.sheet?.detailCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
-                h("span", { key: "0|110.1ln2gt0", style: {"minWidth":"0"} },
-                  h("span", { key: "0|10.bamrr4", style: {"color":"var(--color-accent)"} },
-                    "Figs. 1–2."
+              h("p", { key: "39|136.19o3fos", className: "sheet-mod", "data-enter": "", style: S(`grid-column:${V.sheet?.detailCaption?.col ?? ""}; grid-row:${V.sheet?.detailCaption?.row ?? ""}; --d:${V.sheet?.detailCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
+                h("span", { key: "0|85.yyckg0", style: {"minWidth":"0"} },
+                  h("span", { key: "0|27.1uoc6rv", style: {"color":"var(--color-accent)"} },
+                    h(F,{key:0},"",I(V.current?.detailFigWord,1),"")
                   ),
                   " ",
                   h("span", { key: `cap-detail-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono" },
-                    "Working states. Left, the drawing or interface; right, where it was made."
+                    h(F,{key:0},"",I(V.current?.detailCaptionText,1),"")
                   )
                 ),
                 h("span", { key: "1|25.ibc6df", style: {"flex":"none","color":"var(--color-neutral-600)","whiteSpace":"nowrap"} },
@@ -1958,11 +1978,14 @@
     // another entry can point at it with `linkTo`: the AI Layout sheet opens the ACADIA paper and the
     // Unit Stacking sheet opens the IJAC manuscript, in place, the way the index opens a chapter.
     // An entry may also name its pictures. `hero`, with its real pixel size in `heroW`/`heroH`, is the
-    // large plate: the serif chapter cuts its plate to that ratio, the Development sheet letterboxes
-    // it into the rows it was given, and both Development landings show it as a cropped teaser. A
-    // Development entry may add `detailA` and `detailB` for the pair of small plates under the
-    // account. Every one of them is optional and independent: a slot with no field named for it keeps
-    // the worded placeholder it has always had, which is how an unfinished sheet is issued next to a
+    // large plate: the serif chapter cuts its plate to that ratio, the Development sheet gives it a
+    // plate of its own proportion when it is portrait and letterboxes it into the standard rows when
+    // it is not, and both Development landings show it as a cropped teaser. Under the account a
+    // Development entry may either name `detailA` and `detailB` for the pair of small plates, or one
+    // `detail`, with `detailW`/`detailH`, for a single plate across the width the pair spanned; never
+    // both. `detailCaption` is the line under whichever of the two it is, and falls back to the
+    // sheet's own words. Every one of these is optional: a slot with no field named for it keeps the
+    // worded placeholder it has always had, which is how an unfinished sheet is issued next to a
     // finished one. tools/check-dev-plates.mjs holds the files and the stated sizes to the truth.
     data = [
       // The Natalie block: the platform first, then the seven parts of it issued as their own sheets.
@@ -2130,7 +2153,9 @@
         body2: 'Success is not a process starting. The launcher polls the Rhino it started until that exact file is mapped in its address space. No code goes into the plug-in to report back, because a plug-in cannot see its own load. The rule was found the hard way, with an MCP server whose registry writes never reached the hive Rhino reads: every write now runs in a process the shell started, and is confirmed before Rhino starts.',
         body3: 'It ships as a self-contained payload: a desktop, an rwl command line and a stdio MCP server, all over one backend. Coding agents were the first customers. They can build a branch, wait for a verified load, and read a named failure code, without asking me to click anything.' },
       { title: 'Agent Usage Stat', subtitle: 'I was never interested in how many tokens I spent. I wanted to see the pattern behind them.', kind: 'Side project', year: 2026, page: 230, pages: '230–237', role: 'Designer and developer', with: 'Grown from a script by Chris Hutchinson', status: 'Released, version 3.2', statusShort: 'released', stack: 'TypeScript and Electron: a headless helper hooked into each agent, a per-session JSON ledger that can live in a synced folder, and a portal of hand-drawn charts.', link: 'Source and releases on GitHub', href: 'https://github.com/yiliangs/agent-usage-stat', linkBlank: true, caption: 'One month of sessions as a wall-clock field: a column a day, a stripe per model family, shaded by token velocity.', placeholder: 'Capture: month timeline',
-        hero: 'assets/agent-usage-stat/hero.png', heroW: 1920, heroH: 1088, detailA: 'assets/agent-usage-stat/detail-a.png', detailB: 'assets/agent-usage-stat/detail-b.png',
+        hero: 'assets/agent-usage-stat/hero.png', heroW: 1920, heroH: 1088,
+        detail: 'assets/agent-usage-stat/detail.png', detailW: 3092, detailH: 2758,
+        detailCaption: 'The whole ledger folded onto the 168 hour-slots of a week, the clock and each project’s peak window. Names invented.',
         why: 'Every dashboard counted tokens. I was not interested in how many I had spent; I wanted to see the pattern behind the spending.',
         margin: 'Thirty evenings of work read as thirty events on a calendar. Fold them onto the clock and what survives is the habit.',
         summary: 'A private desktop atlas of my coding-agent sessions. Hooks capture each session as it ends, a local ledger keeps totals and never a prompt, and the views turn the ledger into rhythms: days, weeks, clocks, projects and model families, with the API-equivalent cost as one column among many.',
@@ -2165,17 +2190,23 @@
     // second of the first, whether that batch is the opening screenful or one module arriving on scroll.
     PLOT_STEP = 40;
     PLOT_CAP = 1000;
-    // The plate a portrait hero is given on the wide sheet: half the sheet's columns, and the rows that
-    // width needs at the picture's own ratio, rounded up so the plate is never shorter than the picture
-    // and the two thin bands land top and bottom rather than left and right. SHEET_COL is the sheet's
-    // column at its full measure, the 1160px main less its two 48px margins over 22 columns, so the
-    // count is a fact about the entry rather than about the window: a narrower window shrinks every
-    // column together and the plate keeps its cells. Written as plain literals and one expression so
-    // tools/check-dev-plates.mjs can read the rule back without running this class.
+    // A plate cut to its picture's own proportion is measured in cells, not pixels: it is given a
+    // number of the sheet's columns and takes as many whole rows as that width needs at the picture's
+    // ratio. One rule serves both plates that use it, the portrait hero and the single detail.
+    //
+    // sheetCol is the sheet's own column in pixels at the width the page is being read at, so the row
+    // count follows the sheet rather than a design width: the main is max-width:1160px with
+    // padding:0 clamp(20px,4vw,48px), and vw counts the scrollbar while the containing block does not,
+    // which is why the two widths are read separately. rowsFor rounds up, so the plate is never
+    // shorter than the picture and the two thin bands land top and bottom rather than left and right.
+    // Both are plain expressions so tools/check-dev-plates.mjs can read the rule back without running
+    // this class.
     PORTRAIT_COLS = 11;
-    SHEET_COL = (1160 - 96) / 22;
+    SHEET_COLS = 22;
     SHEET_ROW = 44;
-    portraitRows(w, h) { return Math.ceil(this.PORTRAIT_COLS * this.SHEET_COL * h / (w * this.SHEET_ROW)); }
+    SHEET_MAX = 1160;
+    sheetCol(vw, box) { return (Math.min(this.SHEET_MAX, box) - 2 * Math.min(48, Math.max(20, vw * 0.04))) / this.SHEET_COLS; }
+    rowsFor(cols, w, h) { return Math.ceil(cols * this.sheetCol(window.innerWidth, document.documentElement.clientWidth || window.innerWidth) * h / (w * this.SHEET_ROW)); }
     SHEET_WIDE = {
       back:          { col: '1 / 7',   row: '1 / 2' },
       header:        { col: '1 / 15',  row: '3 / 11' },
@@ -3373,6 +3404,10 @@
         const linkIdx = d.linkTo ? this.data.findIndex((x) => x.id === d.linkTo) : -1;
         return { ...d, numeral: this.num(i), kindLower: d.kind.toLowerCase(), figNo: String(i + 1).padStart(2, '0'), slotId: 'toc-' + i, plateSlotId: 'plate-' + i, heroSlotId: 'cover-' + i, detailSlotA: 'detail-a-' + i, detailSlotB: 'detail-b-' + i,
           dropCap: (d.body1 || '')[0] || '', body1: (d.body1 || '').slice(1), body1Full: d.body1 || '', subtitleCover: this.cover(d.subtitle),
+          // the plates under the account are captioned by the entry when it has something to say about
+          // them, and by the sheet's own line when it has not; the kicker counts whatever is there
+          detailFigWord: d.detail ? 'Fig. 1.' : 'Figs. 1–2.',
+          detailCaptionText: d.detailCaption || 'Working states. Left, the drawing or interface; right, where it was made.',
           hasLink: !!d.href || linkIdx >= 0, noLink: !d.href && linkIdx < 0, href: d.href || '#', linkTarget: d.linkBlank ? '_blank' : undefined, linkRel: d.linkBlank ? 'noopener' : undefined,
           linkClick: linkIdx >= 0 ? (e) => { e.preventDefault(); this.open(linkIdx); } : undefined,
           previewOpacity: hovered === i ? '1' : '0',
@@ -3496,36 +3531,60 @@
       // the sheet's modules, placed off whichever table the width calls for. The template names a module
       // and reads its span back; nothing about where a module sits is written in the markup.
       //
-      // One entry moves the table: a hero taller than it is wide. Contained in the standard plate, a
-      // portrait capture is a stripe of picture between two wide bands of nothing, so on the wide sheet
-      // it is given a plate cut to its own proportion instead. The plate keeps the sheet's left edge,
-      // takes PORTRAIT_COLS of the twenty-two columns and as many whole rows as that width needs at the
-      // picture's ratio, and every module from the hero caption down moves by the rows it gained. The
-      // cells to the right of the plate are left as drawn grid, the way they are beside the title. The
-      // narrow sheet is a single column of full-width modules and keeps its own table.
+      // Two entries can move the table, and both move it the same way: a plate cut to its picture's own
+      // proportion takes the rows that ratio needs, and everything under its caption moves down by the
+      // rows it gained. Nothing is ever taken away from an entry that names no picture.
+      //
+      // The first is a hero taller than it is wide. Contained in the standard plate a portrait capture
+      // is a stripe of picture between two wide bands of nothing, so on the wide sheet it is given
+      // PORTRAIT_COLS of the twenty-two columns, keeping the sheet's left edge, and the cells to its
+      // right are left as drawn grid the way they are beside the title. The narrow sheet is a single
+      // column of full-width modules, so the hero there keeps its table.
+      //
+      // The second is an entry that names one detail instead of the pair. The single figure takes the
+      // columns the pair spanned, from detailA's first to detailB's last, on both sheets.
       const place = this.state.narrow ? this.SHEET_NARROW : this.SHEET_WIDE;
       const at = (s) => s.split('/').map((v) => parseInt(v, 10));
+  
       const heroSpan = at(place.hero.row);
       const portrait = !this.state.narrow && current.heroW > 0 && current.heroH > current.heroW;
-      const heroRows = portrait ? this.portraitRows(current.heroW, current.heroH) : heroSpan[1] - heroSpan[0];
-      const grew = heroRows - (heroSpan[1] - heroSpan[0]);
-      const movesFrom = at(place.heroCaption.row)[0];
+      const heroRows = portrait ? this.rowsFor(this.PORTRAIT_COLS, current.heroW, current.heroH) : heroSpan[1] - heroSpan[0];
+      const grewHero = heroRows - (heroSpan[1] - heroSpan[0]);
+  
+      const detailCol = [Math.min(at(place.detailA.col)[0], at(place.detailB.col)[0]),
+        Math.max(at(place.detailA.col)[1], at(place.detailB.col)[1])];
+      const detailTop = Math.min(at(place.detailA.row)[0], at(place.detailB.row)[0]);
+      const detailFoot = Math.max(at(place.detailA.row)[1], at(place.detailB.row)[1]);
+      const oneDetail = !!current.detail && current.detailW > 0 && current.detailH > 0;
+      const detailRows = oneDetail
+        ? this.rowsFor(detailCol[1] - detailCol[0], current.detailW, current.detailH)
+        : detailFoot - detailTop;
+      const grewDetail = detailRows - (detailFoot - detailTop);
+  
+      // a module moves by whichever of the two plates above it grew
+      const heroMovesFrom = at(place.heroCaption.row)[0], detailMovesFrom = at(place.detailCaption.row)[0];
+      const shiftAt = (row) => (row >= heroMovesFrom ? grewHero : 0) + (row >= detailMovesFrom ? grewDetail : 0);
       const sheet = {};
       for (const name of Object.keys(place)) {
         const span = at(place[name].row);
-        const shift = span[0] >= movesFrom ? grew : 0;
+        const shift = shiftAt(span[0]);
         sheet[name] = {
           col: name === 'hero' && portrait ? '1 / ' + (1 + this.PORTRAIT_COLS) : place[name].col,
           row: name === 'hero' ? span[0] + ' / ' + (span[0] + heroRows) : (span[0] + shift) + ' / ' + (span[1] + shift),
           delay: ((span[0] + shift - 1) * this.PLOT_STEP) + 'ms' };
       }
+      // the single detail is not written in either table: it is the pair's columns, the pair's first
+      // row, and its own row count, so a table that moves the pair moves it too
+      const detailRow = detailTop + shiftAt(detailTop);
+      sheet.detail = { col: detailCol[0] + ' / ' + detailCol[1], row: detailRow + ' / ' + (detailRow + detailRows),
+        delay: ((detailRow - 1) * this.PLOT_STEP) + 'ms' };
       // hovering a plate reads the cursor's cell back into that plate's caption
       const cur = this.state.cell;
       const pad2 = (n) => String(n).padStart(2, '0');
       const readout = cur ? 'x ' + pad2(cur.x) + ' · y ' + pad2(cur.y) : '';
       sheet.heroReadout = cur && cur.plate === 'hero' ? readout : '';
       sheet.detailReadout = cur && cur.plate !== 'hero' ? readout : '';
-      for (const name of ['hero', 'detailA', 'detailB']) {
+      for (const name of ['hero', 'detailA', 'detailB', 'detail']) {
         sheet[name].move = (e) => this.onPlateMove(name, e);
         sheet[name].leave = () => this.onPlateLeave();
       }
@@ -3545,6 +3604,8 @@
         isPaper: view === 'chapter' && !mono && !!current.paper, isEssay: view === 'chapter' && !mono && !current.paper,
         paperBlocks, paperCaptions, paperTail, paperAsideRow: (paperMod && paperMod.__asideRow) || 'auto',
         heroImg: view === 'chapter' && !!current.hero, heroSlot: view === 'chapter' && !current.hero,
+        // one plate under the account, or the pair the sheet has always carried
+        detailOne: oneDetail, detailPair: !oneDetail,
         rBody: mono ? this.MONO : 'var(--font-body)', rAlign: mono ? 'left' : 'justify', rTracking: mono ? '-0.03em' : '0',
         brandChars: (this.state.brandAnim || Array.from(this.BRAND).map((ch) => ({ ch, reg: brandReg, swap: false }))).map((c) => ({
           ch: c.ch, font: c.reg === 'mono' ? this.MONO : 'var(--font-heading)', tracking: c.reg === 'mono' ? '-0.03em' : '0',
