@@ -8,6 +8,15 @@
 // is used at, reads the hand-placed corner blocks out of LANDING_WIDE, and holds the template to
 // carrying both landings.
 //
+// A plate answers to one of two authorities here, and which one is the whole of the difference
+// between a drawn plate and a pinned one. A drawn plate is the draw's to place and the draw's to
+// size, so it is held to the sizes the draw may choose from: PLATE_VOCAB, and FIRST_PLATE for the
+// platform's own plate. A pinned plate is held to its pin instead, all four numbers of it, position
+// and size alike. The vocabulary is deliberately not asked of a pin: LANDING_PINS is composed in the
+// tuning panel behind ?dev, a plate is resized there by dragging its handles, and what that writes is
+// the pin's own span. Holding a pin to the four drawn sizes would refuse every composition the panel
+// exists to make, while checking nothing the pin comparison does not already check.
+//
 // Run with `npm run check`. Exits non-zero and prints every failure it found.
 
 import { readFileSync } from 'node:fs';
@@ -166,8 +175,10 @@ for (const [w, h] of VIEWPORTS) {
     }
     checked++;
     const at = w + 'x' + h + ' statement ' + stRows + ' rows, seed ' + seed + ': ';
-    // a pin is a claim on cells, so a pinned plate that came back anywhere else is the whole point of
-    // pinning gone, not a near miss
+    // A pin is a claim on cells, so a pinned plate that came back anywhere else is the whole point of
+    // pinning gone, not a near miss. All four numbers are compared, size as well as position, and
+    // this is the only place a pinned plate's size is held to anything: its span is the whole of what
+    // that plate is allowed to be.
     for (const [i, p] of Object.entries(shipped)) {
       const got = out.plates[i];
       if (!got) { fail(at + 'plate ' + i + ' is pinned and was not placed at all'); continue; }
@@ -179,12 +190,18 @@ for (const [w, h] of VIEWPORTS) {
     if (out.rows < rows) fail(at + 'the placement returned fewer rows (' + out.rows + ') than the screen shows (' + rows + ')');
     worst = Math.max(worst, out.rows - rows);
     if (out.plates.length !== PLATES) fail(at + 'placed ' + out.plates.length + ' plates, not ' + PLATES);
+    // The vocabulary is what the draw may choose from, so it is asked only of the plates the draw
+    // placed. A pinned plate carries its own size on purpose: the tuning panel resizes a plate by
+    // dragging its handles, and what that writes is the pin's own span. Holding a pin to the four
+    // drawn sizes would refuse every composition made with the panel, which is the opposite of the
+    // point. The size of a pinned plate is checked all the same, against its pin, a few lines above.
     const [fw, fh] = FIRST_PLATE;
-    if (out.plates[0] && (out.plates[0].w !== fw || out.plates[0].h !== fh)) {
+    if (out.plates[0] && !out.plates[0].pinned && (out.plates[0].w !== fw || out.plates[0].h !== fh)) {
       fail(at + 'the first plate is ' + out.plates[0].w + 'x' + out.plates[0].h + ', not the ' + fw + 'x' + fh + ' the platform sheet takes');
     }
     for (let i = 1; i < out.plates.length; i++) {
       const p = out.plates[i];
+      if (p.pinned) continue;
       if (!PLATE_VOCAB.some(([vw, vh]) => vw === p.w && vh === p.h)) {
         fail(at + 'plate ' + i + ' is ' + p.w + 'x' + p.h + ', a size the vocabulary does not carry');
       }
