@@ -64,7 +64,7 @@ export function mount(api) {
   const baseOf = (key) => bind(key, initial.spreads, initial.pairs);
   const liveOf = (key) => bind(key, spreads, pairs);
 
-  let selected = null, rows = [], drag = null;
+  let selected = null, rows = [], drag = null, hidden = false;
 
   // ---------------------------------------------------------------- panel
   const root = el('div', `position:fixed; right:16px; bottom:16px; z-index:1000; width:340px; max-height:calc(100vh - 32px); overflow:auto; box-sizing:border-box; padding:4px 0 10px; background:rgba(28,27,26,0.94); color:${INK}; font:11px/1.5 'Geist Mono', ui-monospace, monospace; border-radius:6px; box-shadow:0 12px 40px rgba(0,0,0,0.35); user-select:none; pointer-events:auto;`);
@@ -91,7 +91,11 @@ export function mount(api) {
   // ---------------------------------------------------------------- the leaves on the page
   // Read fresh every time: the collage re-renders on hover and on any change made here, and a leaf's
   // element is replaced rather than mutated, so a held reference goes stale within one interaction.
-  const leaves = () => [...document.querySelectorAll('[data-leaf][data-slot]')].map((wrap) => ({
+  // Scoped to the page, never the document, for the reason the observer is: a register change lifts a
+  // clone of the outgoing view into a morph layer beside #dc-root and fades it out over the next
+  // second, and that clone carries every leaf the live view had.
+  const page = () => document.getElementById('dc-root') || document.body;
+  const leaves = () => [...page().querySelectorAll('[data-leaf][data-slot]')].map((wrap) => ({
     wrap, plate: wrap.querySelector('button'),
     key: wrap.dataset.slot,
     title: (wrap.querySelector('p[data-morph]') || {}).textContent || '?',
@@ -139,7 +143,10 @@ export function mount(api) {
     });
     if (!rows.length) list.appendChild(el('div', `padding:6px 14px; color:${DIM};`, 'no leaves on this view'));
   };
-  const refresh = () => { rows.forEach((r) => r.show()); };
+  // The panel is furniture for the collage, so it stands only where there is one to tune. The page
+  // carries a second panel for the Development grid, and two of them side by side, one of them with
+  // nothing to say, is two panels too many.
+  const refresh = () => { root.hidden = hidden || !rows.length; rows.forEach((r) => r.show()); };
   const rebuild = () => { build(); refresh(); };
 
   // ---------------------------------------------------------------- move
@@ -202,7 +209,7 @@ export function mount(api) {
     // d has to work wherever focus happens to be, or hiding the panel with its own button leaves
     // focus on that button and the key that brings it back is dead. Only a text field keeps its d.
     const t = ev.target, typing = t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
-    if (ev.key === 'd' && !typing) { ev.stopPropagation(); root.hidden = !root.hidden; return; }
+    if (ev.key === 'd' && !typing) { ev.stopPropagation(); hidden = !hidden; refresh(); return; }
     if (!selected) return;
     if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); selected = null; refresh(); return; }
     const step = ev.shiftKey ? 10 : 1;
@@ -255,7 +262,7 @@ export function mount(api) {
       }
       out.textContent = ''; rerender(); refresh();
     }, 'back to the values this panel was mounted with'),
-    button('hide', (ev) => { ev.currentTarget.blur(); root.hidden = true; }, 'hide; press d to show again'),
+    button('hide', (ev) => { ev.currentTarget.blur(); hidden = true; refresh(); }, 'hide; press d to show again'),
   );
   root.append(bar, out);
   // the page carries two of these now, so each says which it is: the panels park on opposite sides of
@@ -281,8 +288,8 @@ export function mount(api) {
   // An escape hatch for the console, so a hidden panel or a stuck session is never a dead end:
   // __leaves.show(), __leaves.dump() for the block as text, __leaves.tables for the live objects.
   window.__leaves = {
-    show: () => { root.hidden = false; return 'panel back'; },
-    hide: () => { root.hidden = true; },
+    show: () => { hidden = false; refresh(); return 'panel back'; },
+    hide: () => { hidden = true; refresh(); },
     dump: () => serialize(spreads, pairs),
     apply,
     tables: { spreads, pairs },

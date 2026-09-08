@@ -518,7 +518,7 @@
                 h("div", { key: "4", ref: V.notesRef, style: {"gridColumn":"1 / 2","gridRow":"1 / 2","height":"0"} }),
                 "\n\n    ",
                 "\n    ",
-                h("section", { key: "7", ref: V.landingStatementRef, style: S(`grid-column:${V.land?.statement?.col ?? ""}; grid-row:${V.land?.statement?.row ?? ""}; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); padding:22px; box-sizing:border-box; overflow:hidden;`) },
+                h("section", { key: "7", ref: V.landingStatementRef, "data-mod": "statement", style: S(`grid-column:${V.land?.statement?.col ?? ""}; grid-row:${V.land?.statement?.row ?? ""}; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); padding:22px; box-sizing:border-box; overflow:hidden;`) },
                   "\n      ",
                   h("p", { key: "1|17.1dagtdl", "data-morph": "kicker", style: {"margin":"0 0 22px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
                     h(F,{key:0},"",I(V.page?.kicker,1),"")
@@ -539,14 +539,14 @@
                 ),
                 "\n    ",
                 "\n    ",
-                h("div", { key: "10", ref: V.platformRef, "aria-hidden": "true", style: S(`grid-column:${V.land?.platform?.col ?? ""}; grid-row:${V.land?.platform?.row ?? ""}; min-height:0; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); cursor:grab; touch-action:none; user-select:none;`) }),
+                h("div", { key: "10", ref: V.platformRef, "aria-hidden": "true", "data-mod": "platform", style: S(`grid-column:${V.land?.platform?.col ?? ""}; grid-row:${V.land?.platform?.row ?? ""}; min-height:0; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); cursor:grab; touch-action:none; user-select:none;`) }),
                 "\n\n    ",
                 "\n    ",
                 h(F,{key:13},L(V.landingPlates).map(function(item,i){
                   var Vi = Object.assign({}, V, {"p": item, $index: i});
                   return h(F,{key:i},
                     "\n      ",
-                    h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, onClick: Vi.p?.open, onMouseEnter: Vi.p?.type, onMouseLeave: Vi.p?.untype, onFocus: Vi.p?.type, onBlur: Vi.p?.untype, tabIndex: "0", "aria-label": Vi.p?.title, style: S(`grid-column:${Vi.p?.col ?? ""}; grid-row:${Vi.p?.row ?? ""}; position:relative; z-index:${Vi.p?.zIndex ?? ""}; display:grid; grid-template-rows:minmax(0,1fr) 44px; cursor:pointer; box-sizing:border-box; color:var(--color-text); background:var(--color-bg); box-shadow:inset 1px 0 0 0 var(--color-neutral-400), inset 0 1px 0 0 var(--color-neutral-400), 1px 0 0 0 var(--color-neutral-400), 0 1px 0 0 var(--color-neutral-400); transition:box-shadow 240ms ease;`), className: "scp8" },
+                    h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, "data-mod": Vi.p?.mod, onClick: Vi.p?.open, onMouseEnter: Vi.p?.type, onMouseLeave: Vi.p?.untype, onFocus: Vi.p?.type, onBlur: Vi.p?.untype, tabIndex: "0", "aria-label": Vi.p?.title, style: S(`grid-column:${Vi.p?.col ?? ""}; grid-row:${Vi.p?.row ?? ""}; position:relative; z-index:${Vi.p?.zIndex ?? ""}; display:grid; grid-template-rows:minmax(0,1fr) 44px; cursor:pointer; box-sizing:border-box; color:var(--color-text); background:var(--color-bg); box-shadow:inset 1px 0 0 0 var(--color-neutral-400), inset 0 1px 0 0 var(--color-neutral-400), 1px 0 0 0 var(--color-neutral-400), 0 1px 0 0 var(--color-neutral-400); transition:box-shadow 240ms ease;`), className: "scp8" },
                       "\n        ",
                       h("div", { key: "1", "data-shape": Vi.p?.frameShape, "data-shape-alt": `frame-${Vi.p?.figNo ?? ""}`, style: {"position":"relative","minHeight":"0","overflow":"hidden","boxShadow":"inset 0 -1px 0 0 var(--color-divider)"} },
                         "\n          ",
@@ -577,15 +577,15 @@
                 })),
                 "\n\n    ",
                 "\n    ",
-                h("a", { key: "16|5.49kwkt", href: V.cvMailto, style: S(`grid-column:${V.land?.contactEmail?.col ?? ""}; grid-row:${V.land?.contactEmail?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("a", { key: "16|5.49kwkt", href: V.cvMailto, "data-mod": "contactEmail", style: S(`grid-column:${V.land?.contactEmail?.col ?? ""}; grid-row:${V.land?.contactEmail?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
                   "email"
                 ),
                 "\n    ",
-                h("a", { key: "18|6.1yz8dag", href: V.cvGithub, style: S(`grid-column:${V.land?.contactGithub?.col ?? ""}; grid-row:${V.land?.contactGithub?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("a", { key: "18|6.1yz8dag", href: V.cvGithub, "data-mod": "contactGithub", style: S(`grid-column:${V.land?.contactGithub?.col ?? ""}; grid-row:${V.land?.contactGithub?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
                   "github"
                 ),
                 "\n    ",
-                h("button", { key: "20|2.3ho5a", onClick: V.goCvMono, style: S(`all:unset; grid-column:${V.land?.contactCv?.col ?? ""}; grid-row:${V.land?.contactCv?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("button", { key: "20|2.3ho5a", onClick: V.goCvMono, "data-mod": "contactCv", style: S(`all:unset; grid-column:${V.land?.contactCv?.col ?? ""}; grid-row:${V.land?.contactCv?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;`), className: "scp7" },
                   "cv"
                 ),
                 "\n    "
@@ -2298,6 +2298,21 @@
       contactGithub: { col: '19 / 21', row: 'last' },
       contactCv:     { col: '21 / 23', row: 'last' },
     };
+    // The plates that are not left to the draw. A Development entry named here, by the slug its address
+    // uses, takes the cell this says and takes it exactly: landing-grid fills every pin in before it
+    // draws anything, so what the draw arranges is whatever is left of the sheet. An entry with no pin
+    // keeps the draw, which is how the register goes on placing a new tool the day it is added.
+    //
+    // Written the way the sheet tables are written, as spans of grid lines, so the tuning panel binds a
+    // pinned plate with the same machinery it binds a sheet module with. A pin is a claim on cells: two
+    // that overlap, or that touch with no empty cell between them, or that land on the statement block,
+    // are a composition nobody can draw, and placeLanding says so by name rather than growing the sheet
+    // eighty rows and giving up. Pins also take room away from the draw, so a sheet with too many of
+    // them in the wrong places is one the remaining plates cannot be fitted on at all;
+    // tools/check-landing-grid.mjs runs whatever is written here across every viewport and statement
+    // height it sweeps, which is the place that failure is meant to surface.
+    LANDING_PINS = {
+    };
     LANDING_PAD = 22; // the padding every module of the drawing grid is set in
     // one seed per page load, kept on the instance: hovering a plate, scrolling, or leaving for another
     // tab and coming back all re-render the same composition. Only the row count can redraw it.
@@ -2322,8 +2337,13 @@
     // The plate placement for the desktop landing. renderVals runs on every scroll frame and the draw
     // is not free, so it is memoised on everything it depends on. The module arrives by dynamic import
     // the way parchment.js does; until it lands the landing renders its corner blocks and no plates.
-    landingLayout(count, rows, statementRows) {
-      const key = this.landingSeed + '|' + count + '|' + rows + '|' + statementRows;
+    // slugs are the plates in the order the register lists them, which is the order landing-grid draws
+    // in and the order a pin names a plate by. The pins go into the cache key because the tuning panel
+    // behind ?dev edits LANDING_PINS in place and asks for a re-render: without them the panel would
+    // move a pin and get the previous composition back.
+    landingLayout(slugs, rows, statementRows) {
+      const count = slugs.length;
+      const key = this.landingSeed + '|' + count + '|' + rows + '|' + statementRows + '|' + JSON.stringify(this.LANDING_PINS);
       if (this.landingCache && this.landingCache.key === key) return this.landingCache.out;
       if (!this.landingMod) {
         if (!this.landingLoading && !this.landingFailed) {
@@ -2337,14 +2357,28 @@
       const at = (s) => s.split('/').map((v) => parseInt(v, 10));
       const sc = at(this.LANDING_WIDE.statement.col), pc = at(this.LANDING_WIDE.platform.col);
       const e0 = at(this.LANDING_WIDE.contactEmail.col), c1 = at(this.LANDING_WIDE.contactCv.col);
+      // a pin is written as spans of grid lines, the way every placement table here is; landing-grid
+      // counts cells, so the two halves of that translation live on this one line
+      const pins = {};
+      for (const [slug, spot] of Object.entries(this.LANDING_PINS)) {
+        const i = slugs.indexOf(slug); if (i < 0) continue;
+        const c = at(spot.col), r = at(spot.row);
+        pins[i] = { col: c[0], row: r[0], w: c[1] - c[0], h: r[1] - r[0] };
+      }
       let out = null;
       try {
-        out = this.landingMod.placeLanding({ seed: this.landingSeed, cols: 22, rows, count,
+        out = this.landingMod.placeLanding({ seed: this.landingSeed, cols: 22, rows, count, pins,
           // the statement and the platform are handed over as the one block they read as, so the plates
           // keep their empty cell from the pair rather than from each of them
           reserved: [{ col: sc[0], row: 1, w: pc[1] - sc[0], h: statementRows }],
           contact: { col: e0[0], w: c1[1] - e0[0] } });
-      } catch (e) { out = null; }
+        this.landingError = null;
+      } catch (e) {
+        // The landing renders no plates at all when the placement gives up, which on its own looks like
+        // a page that failed to load rather than like a pin in the wrong cell. The message is kept for
+        // the tuning panel to put in front of whoever put the pin there.
+        out = null; this.landingError = e.message;
+      }
       this.landingCache = { key, out };
       return out;
     }
@@ -2868,18 +2902,19 @@
         });
       }, { rootMargin: '100% 0px -8% 0px' });
       // ?dev opens the two compositions this page is tuned rather than written: the Research margins in
-      // leaves-dev.js, which adjusts the two style tables in place, and the Development sheet in
-      // sheet-dev.js, which adjusts the two placement tables. Both re-render through forceUpdate, and
-      // both park on their own side of the window so a session can carry either. The flag is the only
+      // leaves-dev.js, which adjusts the two style tables in place, and the Development drawing grid in
+      // grid-dev.js, which adjusts the four placement tables behind the landing and the sheet. Both
+      // re-render through forceUpdate, both park on their own side of the window, and each hides itself
+      // on a view it has nothing to tune, so only one ever stands on the page. The flag is the only
       // thing that fetches them, so the page ships nothing for them otherwise, the same arrangement
       // field.js has for the home field.
       if (new URLSearchParams(location.search).has('dev')) {
         import('./leaves-dev.js')
           .then((m) => { if (!this.dead) this.leafTuner = m.mount({ spreads: this.LEAF_SPREADS, pairs: this.LEAF_PAIRS, rerender: () => this.forceUpdate() }); })
           .catch((e) => console.error('leaves-dev', e));
-        import('./sheet-dev.js')
-          .then((m) => { if (!this.dead) this.sheetTuner = m.mount({ wide: this.SHEET_WIDE, narrow: this.SHEET_NARROW, liveName: () => (this.state.narrow ? 'SHEET_NARROW' : 'SHEET_WIDE'), rerender: () => this.forceUpdate() }); })
-          .catch((e) => console.error('sheet-dev', e));
+        import('./grid-dev.js')
+          .then((m) => { if (!this.dead) this.gridTuner = m.mount({ tables: { SHEET_WIDE: this.SHEET_WIDE, SHEET_NARROW: this.SHEET_NARROW, LANDING_WIDE: this.LANDING_WIDE, LANDING_PINS: this.LANDING_PINS }, sheetTable: () => (this.state.narrow ? 'SHEET_NARROW' : 'SHEET_WIDE'), landingError: () => this.landingError, rerender: () => { this.landingCache = null; this.forceUpdate(); } }); })
+          .catch((e) => console.error('grid-dev', e));
       }
       this.observeReveals(); this.mountTextEffects(); this.syncParchment(); this.syncHome(); this.syncPaper(); this.placeLeafText();
       this.hintTimer = setTimeout(() => this.setState({ hintGone: true }), 9000);
@@ -3307,7 +3342,7 @@
     // the detail grows by a character per tick while it types, so the pass runs on every update
     componentDidUpdate() { this.placeLeafText(); }
   
-    componentWillUnmount() { this.dead = true; if (this.leafTuner) { this.leafTuner.destroy(); this.leafTuner = null; } if (this.sheetTuner) { this.sheetTuner.destroy(); this.sheetTuner = null; } if (this.fog) { this.fog.destroy(); this.fog = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); window.removeEventListener('popstate', this.onPop); this.observer?.disconnect(); cancelAnimationFrame(this.cellRaf); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
+    componentWillUnmount() { this.dead = true; if (this.leafTuner) { this.leafTuner.destroy(); this.leafTuner = null; } if (this.gridTuner) { this.gridTuner.destroy(); this.gridTuner = null; } if (this.fog) { this.fog.destroy(); this.fog = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); window.removeEventListener('popstate', this.onPop); this.observer?.disconnect(); cancelAnimationFrame(this.cellRaf); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
     observeReveals() { document.querySelectorAll('[data-enter=""]').forEach((el) => this.observer.observe(el)); }
     // the cursor's cell on the sheet grid, sampled once a frame and only written when the cell actually
     // changes, so crossing a 48px column re-renders once rather than once per pixel of travel
@@ -3610,7 +3645,7 @@
         // entry of this site named by its id (linkTo, opened in place the way the index opens it), or
         // nothing public at all, in which case the aside states that in plain text rather than a dead anchor
         const linkIdx = d.linkTo ? this.data.findIndex((x) => x.id === d.linkTo) : -1;
-        return { ...d, numeral: this.num(i), kindLower: d.kind.toLowerCase(), figNo: String(i + 1).padStart(2, '0'), slotId: 'toc-' + i, plateSlotId: 'plate-' + i, heroSlotId: 'cover-' + i, detailSlotA: 'detail-a-' + i, detailSlotB: 'detail-b-' + i,
+        return { ...d, numeral: this.num(i), kindLower: d.kind.toLowerCase(), figNo: String(i + 1).padStart(2, '0'), slug: this.slugOf(i), slotId: 'toc-' + i, plateSlotId: 'plate-' + i, heroSlotId: 'cover-' + i, detailSlotA: 'detail-a-' + i, detailSlotB: 'detail-b-' + i,
           dropCap: (d.body1 || '')[0] || '', body1: (d.body1 || '').slice(1), body1Full: d.body1 || '', subtitleCover: this.cover(d.subtitle),
           // the plates under the account are captioned by the entry when it has something to say about
           // them, and by the sheet's own line when it has not; the kicker counts whatever is there
@@ -3692,7 +3727,7 @@
       // leaves' tempo, from the same typewriter.
       const landingWide = view === 'page' && page.reg === 'mono' && !this.state.narrow;
       const statementRows = this.state.landingStatementRows;
-      const lay = landingWide ? this.landingLayout(pageProjects.length, this.state.landingRows, statementRows) : null;
+      const lay = landingWide ? this.landingLayout(pageProjects.map((p) => p.slug), this.state.landingRows, statementRows) : null;
       const landingRows = lay ? lay.rows : this.state.landingRows;
       const land = {};
       for (const [name, spot] of Object.entries(this.LANDING_WIDE)) {
@@ -3709,6 +3744,9 @@
         // the bottom half, so it never runs off the end of the page
         const below = b.row <= lay.rows / 2;
         return { ...p, col: b.col + ' / ' + (b.col + b.w), row: b.row + ' / ' + (b.row + b.h),
+          // what the tuning panel binds a plate by: the entry's own address, which is what LANDING_PINS
+          // names a pin with, so the panel writes the pin for the plate under the cursor and no other
+          mod: 'plate.' + p.slug,
           whyTop: below ? '100%' : 'auto', whyBottom: below ? 'auto' : '100%',
           typed, whyOpacity: on ? '1' : '0', caretOpacity: on && typed.length < p.why.length ? '1' : '0',
           // the hovered plate rises over its neighbours: a module's right and bottom hairlines are drawn
