@@ -43,21 +43,33 @@
     .plate { transition: outline-color 300ms ease, filter 500ms ease; }
     .plate:hover { outline-color: var(--color-accent); }
     .tr-char-word, .tr-char { vertical-align: baseline; }
-    /* — the Development sheet: every module is a framed cell on the drawing grid.
+    /* — a module on the drawing grid: a framed cell. The Development register has three of these
+         grids, the two landings and the sheet, and one module means the same thing on all three.
+         The grid rules itself in --hair and a module frames itself in --frame, the heavier of the two
+         inks, so a boundary is never read as another cell edge; full var(--color-text) is the third
+         step and belongs to the cursor on a control or to a plate the graph has lit.
+         The frame is a layer of its own, drawn on ::after so it lands above whatever the module
+         holds. It has to be: an inset box-shadow on the module itself paints under the module's own
+         children, so a plate framed that way lost its left and top lines behind its picture and kept
+         only the two strokes it draws outside itself, which its neighbour then covered.
          Left and top lines are drawn inside the module, right and bottom outside, so two neighbours
          put their shared line in the same place. Only one of the two is ever seen, because the module
          further right or further down is later in the markup and its opaque ground covers its
          neighbour's outer stroke: keep the modules in reading order or the seams double.
-         The frame is a layer of its own so it lands above whatever the module holds, which is how a
-         plate keeps its left and top lines over a photograph. No z-index anywhere in here: painting
-         order alone gives content, then ground, then frame. — */
-    .sheet-mod { position: relative; box-sizing: border-box; background: var(--color-bg); }
-    .sheet-mod::after { content: ''; position: absolute; inset: 0; pointer-events: none;
-      box-shadow: inset 1px 0 0 0 var(--hair), inset 0 1px 0 0 var(--hair), 1px 0 0 0 var(--hair), 0 1px 0 0 var(--hair);
+         A module that clips its content clips this layer with it, and the two outer strokes go with
+         it. Such a module clips with overflow:clip and a 1px clip margin, which is exactly the width
+         they stand in. No z-index anywhere in here: painting order alone gives content, then ground,
+         then frame. — */
+    .mod { position: relative; box-sizing: border-box; background: var(--color-bg); }
+    .mod::after { content: ''; position: absolute; inset: 0; pointer-events: none;
+      box-shadow: inset 1px 0 0 0 var(--frame), inset 0 1px 0 0 var(--frame), 1px 0 0 0 var(--frame), 0 1px 0 0 var(--frame);
       transition: box-shadow 240ms ease; }
-    /* only a control brings its frame up to full ink. A module that did the same read as a button
-       and invited a click that does nothing; the sheet's text answers the cursor instead */
-    .sheet-ctl:hover::after { box-shadow: inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text); }
+    /* full ink is the third step, and it is answered rather than decorative: the cursor on a control,
+       or the graph on a plate standing next to the one the cursor is on. A plain module that lit up
+       read as a button and invited a click that does nothing; the sheet's text answers the cursor
+       instead. data-lit is written by the landing's own render, so the state is one attribute rather
+       than an ink string computed per plate. */
+    .mod-ctl:hover::after, .mod[data-lit]::after { box-shadow: inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text); }
     /* registration marks are real elements, not pseudos: the frame layer has the pseudos now, and a
        plate has to be able to brighten its own marks */
     .sheet-mark { position: absolute; line-height: 1; font-family: var(--mono); font-size: 14px; color: var(--color-accent); opacity: 0.6; pointer-events: none; transition: opacity 200ms ease; }
@@ -65,9 +77,10 @@
        Under the cursor a plate brings its own registration marks up instead */
     .sheet-plate:hover image-slot { transform: none; }
     .sheet-plate:hover .sheet-mark { opacity: 1; }
-    /* plot-in: the frame is drawn, then the ground it was drawn on lifts off the content. --d is the
-       module's stagger, read from the placement table; the IntersectionObserver flips data-enter to
-       "in" as each module comes into view, so a module below the fold plots itself when it arrives */
+    /* plot-in: what a sheet module adds to a module, and the only thing .sheet-mod carries. The frame
+       is drawn, then the ground it was drawn on lifts off the content. --d is the module's stagger,
+       read from the placement table; the IntersectionObserver flips data-enter to "in" as each module
+       comes into view, so a module below the fold plots itself when it arrives */
     .sheet-mod::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: var(--color-bg); opacity: 0; }
     .sheet-mod[data-enter] { opacity: 1; transform: none; }
     .sheet-mod[data-enter]::before { opacity: 1; }
@@ -155,7 +168,7 @@
   </style>
 </helmet>
 
-<div ref="{{ rootRef }}" style="position:relative; min-height:100vh; background:var(--color-bg); color:var(--color-text);  font-family:var(--r-body); font-size:17px; line-height:28px; --mono:'Geist Mono', ui-monospace, monospace; --sig-ok:#6cc48a; --sig-warn:#e0b04f; --sig-info:#79aed1; --font-heading:'Newsreader', 'Cormorant Garamond', Georgia, serif; --deco:'Cinzel', 'Cormorant Garamond', serif; --r-body:{{ rBody }}; --r-align:{{ rAlign }}; --r-tracking:{{ rTracking }}; --color-bg:{{ tBg }}; --color-surface:{{ tSurface }}; --color-text:{{ tText }}; --color-accent:{{ tAccent }}; --color-accent-600:{{ tAccent600 }}; --color-accent-700:{{ tAccent700 }}; --color-accent-800:{{ tAccent800 }}; --color-accent-100:{{ tAccent100 }}; --color-divider:{{ tDivider }}; --color-neutral-100:{{ tN100 }}; --color-neutral-400:{{ tN400 }}; --color-neutral-500:{{ tN500 }}; --color-neutral-600:{{ tN600 }}; --color-neutral-700:{{ tN700 }}; --color-neutral-800:{{ tN800 }};">
+<div ref="{{ rootRef }}" style="position:relative; min-height:100vh; background:var(--color-bg); color:var(--color-text);  font-family:var(--r-body); font-size:17px; line-height:28px; --mono:'Geist Mono', ui-monospace, monospace; --sig-ok:#6cc48a; --sig-warn:#e0b04f; --sig-info:#79aed1; --font-heading:'Newsreader', 'Cormorant Garamond', Georgia, serif; --deco:'Cinzel', 'Cormorant Garamond', serif; --r-body:{{ rBody }}; --r-align:{{ rAlign }}; --r-tracking:{{ rTracking }}; --color-bg:{{ tBg }}; --color-surface:{{ tSurface }}; --color-text:{{ tText }}; --color-accent:{{ tAccent }}; --color-accent-600:{{ tAccent600 }}; --color-accent-700:{{ tAccent700 }}; --color-accent-800:{{ tAccent800 }}; --color-accent-100:{{ tAccent100 }}; --color-divider:{{ tDivider }}; --color-neutral-100:{{ tN100 }}; --color-neutral-400:{{ tN400 }}; --color-neutral-500:{{ tN500 }}; --color-neutral-600:{{ tN600 }}; --color-neutral-700:{{ tN700 }}; --color-neutral-800:{{ tN800 }}; --hair:color-mix(in srgb, var(--color-text) 16%, transparent); --frame:color-mix(in srgb, var(--color-text) 55%, transparent);">
 
 
   <!-- running head: brand + two register tabs -->
@@ -356,43 +369,49 @@
        and is left exactly as it was; the desktop composition follows it. -->
   <sc-if value="{{ isLandingNarrow }}" hint-placeholder-val="{{ true }}">
   <main key="tooling" data-screen-label="Development" style="max-width:1160px; margin:0 auto; padding:0 clamp(20px,4vw,48px) 88px; font-family:var(--mono); font-size:14px; line-height:22px;">
-    <div style="margin-top:88px; display:grid; grid-template-columns:repeat(22,1fr); grid-auto-rows:44px; gap:0; border-right:1px solid color-mix(in srgb, var(--color-text) 16%, transparent); border-bottom:1px solid color-mix(in srgb, var(--color-text) 16%, transparent); background-image:linear-gradient(to right, color-mix(in srgb, var(--color-text) 16%, transparent) 0 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--color-text) 16%, transparent) 0 1px, transparent 1px); background-size:calc(100%/22) 44px;">
+    <div style="margin-top:88px; display:grid; grid-template-columns:repeat(22,1fr); grid-auto-rows:44px; gap:0; border-right:1px solid var(--hair); border-bottom:1px solid var(--hair); background-image:linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px); background-size:calc(100%/22) 44px;">
 
     <!-- statement -->
-    <section style="grid-column:1 / 15; grid-row:2 / 12; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); padding:22px; box-sizing:border-box;">
+    <section class="mod" style="grid-column:1 / 15; grid-row:2 / 12; padding:22px;">
       <p data-morph="kicker" style="margin:0 0 22px; font-size:12px; line-height:14px; letter-spacing:0.08em; color:var(--color-neutral-600);">{{ page.kicker }}</p>
       <h1 data-tr="title" data-reg="mono" data-morph="title" style="margin:0; font-family:var(--mono); font-weight:400; font-size:clamp(22px,2.6vw,32px); line-height:1.375; letter-spacing:-0.02em; max-width:34ch;">{{ page.title }}</h1>
       <p data-tr="wake" data-reg="mono" data-morph="intro" style="margin:22px 0 0; max-width:60ch; color:var(--color-neutral-700);">{{ page.intro }}</p>
       <p data-morph="byline" style="margin:22px 0 0; font-size:12px; color:var(--color-neutral-600);">{{ page.byline }}</p>
     </section>
     <!-- the platform takes the module the statement leaves off at, so no empty column stands between them -->
-    <div ref="{{ platformRef }}" aria-hidden="true" style="grid-column:15 / 23; grid-row:2 / 12; min-height:0; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); cursor:grab; touch-action:none; user-select:none;"></div>
+    <div ref="{{ platformRef }}" aria-hidden="true" class="mod" style="grid-column:15 / 23; grid-row:2 / 12; min-height:0; cursor:grab; touch-action:none; user-select:none;"></div>
 
     <!-- projects: one per band, alternating sides. The band's plate shows the entry's hero as a
          teaser: it is a slice of the card rather than the picture's own shape, so it takes fit
          cover here and contain on the sheet the card opens. An entry that names no hero keeps the
          placeholder slot, which is what an absent src leaves behind. -->
-    <p ref="{{ contentsRef }}" data-morph="index-kicker" style="grid-column:1 / 7; grid-row:14 / 15; margin:0; display:flex; align-items:center; padding:0 22px; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent);  font-size:12px; letter-spacing:0.08em; color:var(--color-neutral-600);">{{ page.indexKicker }}</p>
+    <p ref="{{ contentsRef }}" data-morph="index-kicker" class="mod" style="grid-column:1 / 7; grid-row:14 / 15; margin:0; display:flex; align-items:center; padding:0 22px; font-size:12px; letter-spacing:0.08em; color:var(--color-neutral-600);">{{ page.indexKicker }}</p>
     <sc-for list="{{ pageProjects }}" as="p" hint-placeholder-count="4">
-      <div data-shape="card-{{ p.shapeIdx }}" onClick="{{ p.open }}" onMouseEnter="{{ p.hover }}" style="grid-column:1 / 23; grid-row:{{ p.cardRow }}; display:grid; grid-template-columns:repeat(22,1fr); cursor:pointer; color:var(--color-text); background:var(--color-bg); border-width:0; border-style:solid; border-color:var(--color-neutral-400); box-shadow:inset 1px 0 0 0 var(--color-neutral-400), inset 0 1px 0 0 var(--color-neutral-400), 1px 0 0 0 var(--color-neutral-400), 0 1px 0 0 var(--color-neutral-400); transition:box-shadow 240ms ease;" style-hover="box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text);">
+      <div data-shape="card-{{ p.shapeIdx }}" onClick="{{ p.open }}" onMouseEnter="{{ p.hover }}" class="mod mod-ctl" style="grid-column:1 / 23; grid-row:{{ p.cardRow }}; display:grid; grid-template-columns:repeat(22,1fr); cursor:pointer; color:var(--color-text);">
         <div style="grid-column:{{ p.textCol }}; grid-row:1; min-width:0; padding:22px; box-sizing:border-box; align-self:end;">
           <p style="margin:0 0 22px; font-size:12px; color:var(--color-neutral-600);">{{ p.bandNo }} · {{ p.kindLower }} · {{ p.year }}</p>
           <p data-morph="{{ p.morphName }}" data-morph-alt="title-{{ p.figNo }}" style="margin:0; font-size:28px; line-height:34px; letter-spacing:-0.03em;">{{ p.title }}</p>
           <p data-morph="why-{{ p.figNo }}" data-morph-alt="lede-{{ p.figNo }}" style="margin:10px 0 0; color:var(--color-neutral-700); max-width:44ch;">{{ p.why }}</p>
         </div>
-        <div data-shape="{{ p.frameShape }}" data-shape-alt="frame-{{ p.figNo }}" style="grid-column:{{ p.plateCol }}; grid-row:1; height:100%; box-shadow:inset 1px 0 0 0 var(--color-divider), inset 0 1px 0 0 var(--color-divider), 1px 0 0 0 var(--color-divider), 0 1px 0 0 var(--color-divider); box-sizing:border-box; position:relative; overflow:hidden;"><image-slot id="{{ p.plateSlotId }}" src="{{ p.hero }}" shape="rect" fit="cover" placeholder="{{ p.placeholder }}" style="width:100%; height:100%;"></image-slot></div>
+        <!-- The picture keeps a frame of its own inside the card's, and the clip that crops it to the
+             band sits one level in, the way the desktop plate's does. The band is one auto row and the
+             text column is what sizes it; a slot left in that row's flow measures its own picture
+             instead and grows the row past the cells the card was given, which drops the text through
+             the card's bottom line. Out of flow it takes the frame's height rather than setting it, and
+             the frame stays free to draw its two outer strokes. -->
+        <div data-shape="{{ p.frameShape }}" data-shape-alt="frame-{{ p.figNo }}" class="mod" style="grid-column:{{ p.plateCol }}; grid-row:1;"><div style="position:absolute; inset:0; overflow:hidden;"><image-slot id="{{ p.plateSlotId }}" src="{{ p.hero }}" shape="rect" fit="cover" placeholder="{{ p.placeholder }}" style="width:100%; height:100%;"></image-slot></div></div>
       </div>
     </sc-for>
     <div ref="{{ platesRef }}" style="grid-column:1 / 2; grid-row:{{ gridPlatesRow }}; height:0;"></div>
 
     <!-- author -->
-    <section ref="{{ notesRef }}" style="grid-column:1 / 11; grid-row:{{ gridAuthorRow }}; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); padding:22px; box-sizing:border-box;">
+    <section ref="{{ notesRef }}" class="mod" style="grid-column:1 / 11; grid-row:{{ gridAuthorRow }}; padding:22px;">
       <p data-morph="notes-kicker" style="margin:0 0 22px; font-size:12px; letter-spacing:0.08em; color:var(--color-neutral-600);">who</p>
       <p data-morph="notes-title" style="margin:0; font-weight:500; letter-spacing:-0.02em;">{{ page.notesTitle }}</p>
       <p data-morph="notes-body" style="margin:22px 0 0; color:var(--color-neutral-700); max-width:44ch;">I spent my first years in practice drawing stair details and wondering why the software fought me. The next years were spent fixing that, first inside studios and then in research groups. I care about drawings as a language, about tools that stay out of the way, and about writing plainly on subjects that tempt people to be grand.</p>
       <p style="margin:22px 0 0; display:flex; gap:20px; font-size:13px;"><a href="{{ cvMailto }}" style="color:var(--color-text); text-decoration-color:var(--color-neutral-600);">mail</a><a href="{{ cvGithub }}" style="color:var(--color-text); text-decoration-color:var(--color-neutral-600);">github</a><button onClick="{{ goCvMono }}" style="all:unset; cursor:pointer; font-family:var(--mono); font-size:13px; color:var(--color-text); text-decoration:underline; text-decoration-color:var(--color-neutral-600); text-underline-offset:3px;">cv</button></p>
     </section>
-    <ol style="grid-column:12 / 23; grid-row:{{ gridAuthorRow }}; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); padding:22px; box-sizing:border-box; list-style:none; margin:0; font-feature-settings:'tnum' 1;">
+    <ol class="mod" style="grid-column:12 / 23; grid-row:{{ gridAuthorRow }}; padding:22px; list-style:none; margin:0; font-feature-settings:'tnum' 1;">
       <sc-for list="{{ cv }}" as="c" hint-placeholder-count="5">
         <li style="display:grid; grid-template-columns:9em minmax(0,1fr); gap:16px; padding:0 0 22px; align-items:baseline;">
           <span data-morph="cv-{{ $index }}-years" style="color:var(--color-neutral-600); font-size:13px;">{{ c.years }}</span>
@@ -401,7 +420,7 @@
       </sc-for>
     </ol>
 
-    <p data-morph="colophon" style="grid-column:1 / 16; grid-row:{{ gridColophonRow }}; margin:0; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent);  padding:22px; box-sizing:border-box; color:var(--color-neutral-600); font-size:12px; line-height:18px;">{{ page.colophon }}</p>
+    <p data-morph="colophon" class="mod" style="grid-column:1 / 16; grid-row:{{ gridColophonRow }}; margin:0; padding:22px; color:var(--color-neutral-600); font-size:12px; line-height:18px;">{{ page.colophon }}</p>
 
     <!-- contact: three small cells at the left of the sheet's last row, on the register's own frame.
          They are controls, so unlike a plain module they take their frame to full ink under the
@@ -410,9 +429,9 @@
          outside its own box, so a cell painting in flow order has two of its four lit edges covered
          by whichever neighbour comes after it. The placement comes from gridRows like every other
          module below the cards, so the sheet grows by the one row this band takes. -->
-    <a href="{{ cvMailto }}" style="grid-column:1 / 3; grid-row:{{ gridContactRow }}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;" style-hover="z-index:3; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text)">email</a>
-    <a href="{{ cvGithub }}" style="grid-column:3 / 5; grid-row:{{ gridContactRow }}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;" style-hover="z-index:3; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text)">github</a>
-    <button onClick="{{ goCvMono }}" style="all:unset; grid-column:5 / 7; grid-row:{{ gridContactRow }}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;" style-hover="z-index:3; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text)">cv</button>
+    <a href="{{ cvMailto }}" class="mod mod-ctl" style="grid-column:1 / 3; grid-row:{{ gridContactRow }}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;" style-hover="z-index:3; font-weight:700; text-transform:uppercase">email</a>
+    <a href="{{ cvGithub }}" class="mod mod-ctl" style="grid-column:3 / 5; grid-row:{{ gridContactRow }}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;" style-hover="z-index:3; font-weight:700; text-transform:uppercase">github</a>
+    <button onClick="{{ goCvMono }}" class="mod mod-ctl" style="all:unset; grid-column:5 / 7; grid-row:{{ gridContactRow }}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text);" style-hover="z-index:3; font-weight:700; text-transform:uppercase">cv</button>
     </div>
   </main>
   </sc-if>
@@ -426,7 +445,7 @@
        below names a placement entry or reads a plate's span back. -->
   <sc-if value="{{ isLandingWide }}" hint-placeholder-val="{{ false }}">
   <main key="tooling" data-screen-label="Development" style="max-width:none; margin:0; padding:0; font-family:var(--mono); font-size:14px; line-height:22px;">
-    <div style="display:grid; grid-template-columns:repeat(22,1fr); grid-auto-rows:44px; gap:0; position:relative; min-height:calc(100vh - 57px); box-sizing:border-box; border-right:1px solid color-mix(in srgb, var(--color-text) 16%, transparent); border-bottom:1px solid color-mix(in srgb, var(--color-text) 16%, transparent); background-image:linear-gradient(to right, color-mix(in srgb, var(--color-text) 16%, transparent) 0 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--color-text) 16%, transparent) 0 1px, transparent 1px); background-size:calc(100%/22) 44px;">
+    <div style="display:grid; grid-template-columns:repeat(22,1fr); grid-auto-rows:44px; gap:0; position:relative; min-height:calc(100vh - 57px); box-sizing:border-box; border-right:1px solid var(--hair); border-bottom:1px solid var(--hair); background-image:linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px); background-size:calc(100%/22) 44px;">
 
     <!-- the anchors the landing-to-sheet transitions and the in-page links reach for; the desktop sheet
          carries no index, plates band or author block for them to sit on, so they are kept as marks on the grid -->
@@ -437,8 +456,10 @@
          The kicker, the title and the byline are set whole; the description takes whatever rows are
          left, clamped to that many lines with an ellipsis on the last, and a click unfolds the module
          over the plates to show the rest. fitLandingStatement counts the lines, and the module keeps
-         its overflow guard so the frame is never overrun while that count is still being taken. -->
-    <section ref="{{ landingStatementRef }}" data-mod="statement" onClick="{{ landIntroToggle }}" style="grid-column:{{ land.statement.col }}; grid-row:{{ land.statement.row }}; position:relative; {{ landIntroBox }} background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); padding:22px; box-sizing:border-box; cursor:{{ landIntroCursor }};">
+         its overflow guard so the frame is never overrun while that count is still being taken. The
+         guard is in landIntroBox and clips with a 1px margin, so it does not take the two strokes the
+         frame draws outside the module with it. -->
+    <section ref="{{ landingStatementRef }}" data-mod="statement" class="mod" onClick="{{ landIntroToggle }}" style="grid-column:{{ land.statement.col }}; grid-row:{{ land.statement.row }}; {{ landIntroBox }} padding:22px; cursor:{{ landIntroCursor }};">
       <p data-morph="kicker" style="margin:0 0 22px; font-size:12px; line-height:14px; letter-spacing:0.08em; color:var(--color-neutral-600);">{{ page.kicker }}</p>
       <h1 data-tr="title" data-reg="mono" data-morph="title" style="margin:0; font-family:var(--mono); font-weight:400; font-size:clamp(22px,2.6vw,32px); line-height:1.375; letter-spacing:-0.02em;">{{ page.title }}</h1>
       <p data-landing-intro="1" data-tr="wake" data-reg="mono" data-morph="intro" style="margin:22px 0 0; color:var(--color-neutral-700); {{ landIntroClamp }}">{{ page.intro }}</p>
@@ -451,7 +472,7 @@
          them. It and the statement are positioned for the same reason the contact cells are, with the
          lines overlay added to it: an unpositioned module paints under the overlay, and a line
          crossing this corner would draw over the statement's own type. -->
-    <div ref="{{ platformRef }}" aria-hidden="true" data-mod="platform" style="grid-column:{{ land.platform.col }}; grid-row:{{ land.platform.row }}; position:relative; z-index:1; min-height:0; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); cursor:grab; touch-action:none; user-select:none;"></div>
+    <div ref="{{ platformRef }}" aria-hidden="true" data-mod="platform" class="mod" style="grid-column:{{ land.platform.col }}; grid-row:{{ land.platform.row }}; z-index:1; min-height:0; cursor:grab; touch-action:none; user-select:none;"></div>
 
     <!-- The graph, drawn. Every pair of linked plates carries a line at rest, held at nothing; the
          cursor on either plate brings that line up and the plate at its far end to full ink. The two
@@ -468,7 +489,7 @@
 
     <!-- the plates: one per project, wherever the draw pinned it -->
     <sc-for list="{{ landingPlates }}" as="p" hint-placeholder-count="6">
-      <div data-shape="card-{{ p.shapeIdx }}" data-mod="{{ p.mod }}" onClick="{{ p.open }}" onMouseEnter="{{ p.type }}" onMouseLeave="{{ p.untype }}" onFocus="{{ p.type }}" onBlur="{{ p.untype }}" tabIndex="0" aria-label="{{ p.title }}" style="grid-column:{{ p.col }}; grid-row:{{ p.row }}; position:relative; z-index:{{ p.zIndex }}; display:grid; grid-template-rows:minmax(0,1fr) 44px; cursor:pointer; box-sizing:border-box; color:var(--color-text); background:var(--color-bg); box-shadow:inset 1px 0 0 0 {{ p.frameInk }}, inset 0 1px 0 0 {{ p.frameInk }}, 1px 0 0 0 {{ p.frameInk }}, 0 1px 0 0 {{ p.frameInk }}; transition:box-shadow 240ms ease;" style-hover="z-index:30; box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text)">
+      <div data-shape="card-{{ p.shapeIdx }}" data-mod="{{ p.mod }}" data-lit="{{ p.lit }}" onClick="{{ p.open }}" onMouseEnter="{{ p.type }}" onMouseLeave="{{ p.untype }}" onFocus="{{ p.type }}" onBlur="{{ p.untype }}" tabIndex="0" aria-label="{{ p.title }}" class="mod mod-ctl" style="grid-column:{{ p.col }}; grid-row:{{ p.row }}; z-index:{{ p.zIndex }}; display:grid; grid-template-rows:minmax(0,1fr) 44px; cursor:pointer; color:var(--color-text);" style-hover="z-index:30">
         <div data-shape="{{ p.frameShape }}" data-shape-alt="frame-{{ p.figNo }}" style="position:relative; min-height:0; overflow:hidden; box-shadow:inset 0 -1px 0 0 var(--color-divider);">
           <image-slot id="{{ p.plateSlotId }}" src="{{ p.hero }}" shape="rect" fit="cover" placeholder="{{ p.placeholder }}" style="width:100%; height:100%;"></image-slot>
         </div>
@@ -485,8 +506,10 @@
              sheet's lede has no visible source to fly out of and enters on its own; a whole copy kept
              invisible for the morph to read would be an unpaired data-morph element, and the transition
              fades every one of those in for half a second, which on this landing meant every plate
-             reciting its paragraph over its own picture on the way in. -->
-        <p aria-live="polite" style="position:absolute; left:0; right:0; top:{{ p.whyTop }}; bottom:{{ p.whyBottom }}; margin:0; padding:10px; box-sizing:border-box; pointer-events:none; background:var(--color-bg); color:var(--color-neutral-700); font-size:12px; line-height:17px; white-space:pre-wrap; box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text); opacity:{{ p.whyOpacity }}; transition:opacity 220ms ease;">{{ p.typed }}<span aria-hidden="true" style="display:inline-block; width:1px; height:0.9em; margin-left:2px; vertical-align:-0.1em; background:var(--color-text); opacity:{{ p.caretOpacity }};"></span></p>
+             reciting its paragraph over its own picture on the way in. It is framed like any other
+             module and stands permanently on the ladder's top step, since it is only ever on screen
+             while the cursor is on the plate it belongs to. -->
+        <p aria-live="polite" class="mod" data-lit="" style="position:absolute; left:0; right:0; top:{{ p.whyTop }}; bottom:{{ p.whyBottom }}; margin:0; padding:10px; pointer-events:none; color:var(--color-neutral-700); font-size:12px; line-height:17px; white-space:pre-wrap; opacity:{{ p.whyOpacity }}; transition:opacity 220ms ease;">{{ p.typed }}<span aria-hidden="true" style="display:inline-block; width:1px; height:0.9em; margin-left:2px; vertical-align:-0.1em; background:var(--color-text); opacity:{{ p.caretOpacity }};"></span></p>
       </div>
     </sc-for>
 
@@ -494,9 +517,9 @@
          sheet. They are positioned and carry a z-index for the reason the stacked ones do: a module's
          right and bottom hairlines are drawn outside its own box, so a cell painting in flow order has two
          of its four lit edges covered by whichever neighbour comes after it. -->
-    <a href="{{ cvMailto }}" data-mod="contactEmail" style="grid-column:{{ land.contactEmail.col }}; grid-row:{{ land.contactEmail.row }}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;" style-hover="z-index:3; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text)">email</a>
-    <a href="{{ cvGithub }}" data-mod="contactGithub" style="grid-column:{{ land.contactGithub.col }}; grid-row:{{ land.contactGithub.row }}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;" style-hover="z-index:3; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text)">github</a>
-    <button onClick="{{ goCvMono }}" data-mod="contactCv" style="all:unset; grid-column:{{ land.contactCv.col }}; grid-row:{{ land.contactCv.row }}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;" style-hover="z-index:3; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text)">cv</button>
+    <a href="{{ cvMailto }}" data-mod="contactEmail" class="mod mod-ctl" style="grid-column:{{ land.contactEmail.col }}; grid-row:{{ land.contactEmail.row }}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;" style-hover="z-index:3; font-weight:700; text-transform:uppercase">email</a>
+    <a href="{{ cvGithub }}" data-mod="contactGithub" class="mod mod-ctl" style="grid-column:{{ land.contactGithub.col }}; grid-row:{{ land.contactGithub.row }}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;" style-hover="z-index:3; font-weight:700; text-transform:uppercase">github</a>
+    <button onClick="{{ goCvMono }}" data-mod="contactCv" class="mod mod-ctl" style="all:unset; grid-column:{{ land.contactCv.col }}; grid-row:{{ land.contactCv.row }}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text);" style-hover="z-index:3; font-weight:700; text-transform:uppercase">cv</button>
     </div>
   </main>
   </sc-if>
@@ -915,8 +938,9 @@
        as the Development landing. 44px rows, hairlines at 16% ink. No module names its own place: every span
        comes from the placement table in the logic class, so the wide sheet and the stacked narrow sheet are
        two readings of one drawing. Spacing is empty cells, never margins. Every module carries data-enter for
-       the plot-in and --d for its place in the stagger; the frame, the ground and the reveal live in
-       .sheet-mod in the root style block, and only the three controls carry .sheet-ctl for the hover.
+       the plot-in and --d for its place in the stagger; the frame and the ground live on .mod in the root
+       style block, the reveal on .sheet-mod beside it, and only the three controls carry .mod-ctl for the
+       hover.
        Every text pane carries data-tr so the cursor rakes the sheet's ink, keyed to the sheet so the effect
        is rebuilt when the sheet changes. TextRippling flattens the markup it is given, so a pane is only
        ever put on an element whose whole content is one colour. That colour has to be one the effect can
@@ -925,26 +949,26 @@
        their ink as rgb, which is what 88% of --color-text over --color-bg composites to. ============ -->
   <sc-if value="{{ isMono }}" hint-placeholder-val="{{ false }}">
   <main key="{{ chapterKey }}" data-screen-label="Chapter" style="max-width:1160px; margin:0 auto; padding:0 clamp(20px,4vw,48px) 88px; font-family:var(--mono); font-size:14px; line-height:22px;">
-    <div ref="{{ sheetGridRef }}" style="--hair:color-mix(in srgb, var(--color-text) 16%, transparent); position:relative; margin-top:88px; display:grid; grid-template-columns:repeat(22,1fr); grid-auto-rows:44px; gap:0; border-right:1px solid var(--hair); border-bottom:1px solid var(--hair); background-image:linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px); background-size:calc(100%/22) 44px;">
+    <div ref="{{ sheetGridRef }}" style="position:relative; margin-top:88px; display:grid; grid-template-columns:repeat(22,1fr); grid-auto-rows:44px; gap:0; border-right:1px solid var(--hair); border-bottom:1px solid var(--hair); background-image:linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px); background-size:calc(100%/22) 44px;">
 
     <!-- back to the sheet register -->
-    <button class="sheet-mod sheet-ctl" data-enter="" data-mod="back" onClick="{{ goPageCurrent }}" style="all:unset; position:relative; grid-column:{{ sheet.back.col }}; grid-row:{{ sheet.back.row }}; --d:{{ sheet.back.delay }}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);">← {{ current.backWord }}</button>
+    <button class="mod sheet-mod mod-ctl" data-enter="" data-mod="back" onClick="{{ goPageCurrent }}" style="all:unset; position:relative; grid-column:{{ sheet.back.col }}; grid-row:{{ sheet.back.row }}; --d:{{ sheet.back.delay }}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);">← {{ current.backWord }}</button>
 
     <!-- title block: the sheet number stands outlined in its own module, beside the heading -->
-    <section class="sheet-mod" data-enter="" data-mod="header" style="grid-column:{{ sheet.header.col }}; grid-row:{{ sheet.header.row }}; --d:{{ sheet.header.delay }}; padding:22px;">
+    <section class="mod sheet-mod" data-enter="" data-mod="header" style="grid-column:{{ sheet.header.col }}; grid-row:{{ sheet.header.row }}; --d:{{ sheet.header.delay }}; padding:22px;">
       <p key="kicker-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0 0 22px; font-size:12px; line-height:14px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-accent-700); font-feature-settings:'tnum' 1;">{{ current.kickerWord }} {{ current.numeral }} · {{ current.kind }} · {{ current.year }}</p>
       <h1 key="title-{{ current.figNo }}" data-morph="title-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-family:var(--mono); font-weight:400; font-size:clamp(36px,5vw,72px); line-height:1.04; letter-spacing:-0.03em; max-width:16ch;">{{ current.title }}</h1>
       <p key="lede-{{ current.figNo }}" data-morph="lede-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:22px 0 0; font-family:var(--mono); font-size:20px; line-height:26px; font-weight:400; max-width:52ch; color:var(--color-neutral-700);">{{ current.subtitle }}</p>
     </section>
-    <span class="sheet-mod" data-enter="" data-mod="ghost" aria-hidden="true" style="grid-column:{{ sheet.ghost.col }}; grid-row:{{ sheet.ghost.row }}; --d:{{ sheet.ghost.delay }}; display:flex; align-items:flex-end; justify-content:flex-end; padding:22px; font-family:'DM Mono', ui-monospace, monospace; font-weight:400; font-size:clamp(40px,5.5vw,84px); line-height:1; letter-spacing:-0.04em; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; user-select:none; font-feature-settings:'tnum' 1;">{{ current.ghost }}</span>
+    <span class="mod sheet-mod" data-enter="" data-mod="ghost" aria-hidden="true" style="grid-column:{{ sheet.ghost.col }}; grid-row:{{ sheet.ghost.row }}; --d:{{ sheet.ghost.delay }}; display:flex; align-items:flex-end; justify-content:flex-end; padding:22px; font-family:'DM Mono', ui-monospace, monospace; font-weight:400; font-size:clamp(40px,5.5vw,84px); line-height:1; letter-spacing:-0.04em; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; user-select:none; font-feature-settings:'tnum' 1;">{{ current.ghost }}</span>
 
     <!-- title-block strip: five fields across the sheet, three and two when it stacks. The labels are
          chrome and stay still; the values are the sheet's own text and answer the cursor -->
-    <div class="sheet-mod" data-enter="" data-mod="specSheet" style="grid-column:{{ sheet.specSheet.col }}; grid-row:{{ sheet.specSheet.row }}; --d:{{ sheet.specSheet.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Sheet</p><p key="spec-sheet-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px; color:var(--color-accent-700);">{{ current.ghost }}</p></div>
-    <div class="sheet-mod" data-enter="" data-mod="specRole" style="grid-column:{{ sheet.specRole.col }}; grid-row:{{ sheet.specRole.row }}; --d:{{ sheet.specRole.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Role</p><p key="spec-role-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px;">{{ current.role }}</p></div>
-    <div class="sheet-mod" data-enter="" data-mod="specWith" style="grid-column:{{ sheet.specWith.col }}; grid-row:{{ sheet.specWith.row }}; --d:{{ sheet.specWith.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">With</p><p key="spec-with-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px;">{{ current.with }}</p></div>
-    <div class="sheet-mod" data-enter="" data-mod="specStatus" style="grid-column:{{ sheet.specStatus.col }}; grid-row:{{ sheet.specStatus.row }}; --d:{{ sheet.specStatus.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Status</p><p key="spec-status-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px;">{{ current.status }}</p></div>
-    <div class="sheet-mod" data-enter="" data-mod="specRev" style="grid-column:{{ sheet.specRev.col }}; grid-row:{{ sheet.specRev.row }}; --d:{{ sheet.specRev.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Rev / Scale</p><p key="spec-rev-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px; font-feature-settings:'tnum' 1;">{{ current.year }} · 1:1</p></div>
+    <div class="mod sheet-mod" data-enter="" data-mod="specSheet" style="grid-column:{{ sheet.specSheet.col }}; grid-row:{{ sheet.specSheet.row }}; --d:{{ sheet.specSheet.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Sheet</p><p key="spec-sheet-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px; color:var(--color-accent-700);">{{ current.ghost }}</p></div>
+    <div class="mod sheet-mod" data-enter="" data-mod="specRole" style="grid-column:{{ sheet.specRole.col }}; grid-row:{{ sheet.specRole.row }}; --d:{{ sheet.specRole.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Role</p><p key="spec-role-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px;">{{ current.role }}</p></div>
+    <div class="mod sheet-mod" data-enter="" data-mod="specWith" style="grid-column:{{ sheet.specWith.col }}; grid-row:{{ sheet.specWith.row }}; --d:{{ sheet.specWith.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">With</p><p key="spec-with-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px;">{{ current.with }}</p></div>
+    <div class="mod sheet-mod" data-enter="" data-mod="specStatus" style="grid-column:{{ sheet.specStatus.col }}; grid-row:{{ sheet.specStatus.row }}; --d:{{ sheet.specStatus.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Status</p><p key="spec-status-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px;">{{ current.status }}</p></div>
+    <div class="mod sheet-mod" data-enter="" data-mod="specRev" style="grid-column:{{ sheet.specRev.col }}; grid-row:{{ sheet.specRev.row }}; --d:{{ sheet.specRev.delay }}; padding:11px 22px;"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Rev / Scale</p><p key="spec-rev-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px; font-feature-settings:'tnum' 1;">{{ current.year }} · 1:1</p></div>
 
     <!-- the figure's height is a row count, not a ratio. Under the cursor it throws its own edges
          across the sheet as guide lines and reads the cell back into its caption.
@@ -959,25 +983,25 @@
          with no sound and no controls, opening on the hero as its poster so the frame the reader
          arrives at is the one the landing card carried. Each playback attribute is a whole binding
          because a bare one compiles to an empty string, which React reads as false. -->
-    <figure class="plate sheet-mod sheet-plate" data-enter="" data-mod="hero" data-shape="frame-{{ current.figNo }}" onMouseEnter="{{ sheet.hero.move }}" onMouseMove="{{ sheet.hero.move }}" onMouseLeave="{{ sheet.hero.leave }}" style="grid-column:{{ sheet.hero.col }}; grid-row:{{ sheet.hero.row }}; --d:{{ sheet.hero.delay }}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;">
+    <figure class="plate mod sheet-mod sheet-plate" data-enter="" data-mod="hero" data-shape="frame-{{ current.figNo }}" onMouseEnter="{{ sheet.hero.move }}" onMouseMove="{{ sheet.hero.move }}" onMouseLeave="{{ sheet.hero.leave }}" style="grid-column:{{ sheet.hero.col }}; grid-row:{{ sheet.hero.row }}; --d:{{ sheet.hero.delay }}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;">
       <span class="sheet-mark" aria-hidden="true" style="left:8px; top:5px;">+</span>
       <sc-if value="{{ heroVideo }}" hint-placeholder-val="{{ false }}"><video src="{{ current.video }}" poster="{{ current.hero }}" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" preload="metadata" aria-label="{{ current.caption }}" style="width:100%; height:100%; display:block; object-fit:contain; background:var(--color-surface);"></video></sc-if>
       <sc-if value="{{ heroStill }}" hint-placeholder-val="{{ true }}"><image-slot id="{{ current.heroSlotId }}" src="{{ current.hero }}" shape="rect" fit="contain" placeholder="{{ current.placeholder }}" style="width:100%; height:100%;"></image-slot></sc-if>
       <span class="sheet-mark" aria-hidden="true" style="right:8px; bottom:5px;">+</span>
     </figure>
-    <p class="sheet-mod" data-enter="" data-mod="heroCaption" style="grid-column:{{ sheet.heroCaption.col }}; grid-row:{{ sheet.heroCaption.row }}; --d:{{ sheet.heroCaption.delay }}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="min-width:0;"><span style="color:var(--color-accent);">{{ current.figWord }} {{ current.numeral }}.</span> <span key="cap-hero-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.caption }}</span></span><span style="flex:none; color:var(--color-neutral-600); white-space:nowrap;">{{ sheet.heroReadout }}</span></p>
+    <p class="mod sheet-mod" data-enter="" data-mod="heroCaption" style="grid-column:{{ sheet.heroCaption.col }}; grid-row:{{ sheet.heroCaption.row }}; --d:{{ sheet.heroCaption.delay }}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="min-width:0;"><span style="color:var(--color-accent);">{{ current.figWord }} {{ current.numeral }}.</span> <span key="cap-hero-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.caption }}</span></span><span style="flex:none; color:var(--color-neutral-600); white-space:nowrap;">{{ sheet.heroReadout }}</span></p>
 
     <!-- the account: three numbered notes, each its own module, with the sheet's data beside them -->
-    <div class="sheet-mod" data-enter="" data-mod="body1" style="grid-column:{{ sheet.body1.col }}; grid-row:{{ sheet.body1.row }}; --d:{{ sheet.body1.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);">
+    <div class="mod sheet-mod" data-enter="" data-mod="body1" style="grid-column:{{ sheet.body1.col }}; grid-row:{{ sheet.body1.row }}; --d:{{ sheet.body1.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);">
       <span style="font-size:12px; line-height:26px; letter-spacing:0.08em; color:var(--color-accent-700);">01 //</span><p key="body1-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0;">{{ current.body1Full }}</p>
     </div>
-    <div class="sheet-mod" data-enter="" data-mod="body2" style="grid-column:{{ sheet.body2.col }}; grid-row:{{ sheet.body2.row }}; --d:{{ sheet.body2.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);">
+    <div class="mod sheet-mod" data-enter="" data-mod="body2" style="grid-column:{{ sheet.body2.col }}; grid-row:{{ sheet.body2.row }}; --d:{{ sheet.body2.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);">
       <span style="font-size:12px; line-height:26px; letter-spacing:0.08em; color:var(--color-accent-700);">02 //</span><p key="body2-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0;">{{ current.body2 }}</p>
     </div>
-    <div class="sheet-mod" data-enter="" data-mod="body3" style="grid-column:{{ sheet.body3.col }}; grid-row:{{ sheet.body3.row }}; --d:{{ sheet.body3.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);">
+    <div class="mod sheet-mod" data-enter="" data-mod="body3" style="grid-column:{{ sheet.body3.col }}; grid-row:{{ sheet.body3.row }}; --d:{{ sheet.body3.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);">
       <span style="font-size:12px; line-height:26px; letter-spacing:0.08em; color:var(--color-accent-700);">03 //</span><p key="body3-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0;">{{ current.body3 }}</p>
     </div>
-    <aside class="sheet-mod" data-enter="" data-mod="aside" style="grid-column:{{ sheet.aside.col }}; grid-row:{{ sheet.aside.row }}; --d:{{ sheet.aside.delay }}; display:flex; flex-direction:column; gap:20px; padding:22px; font-size:12.5px; line-height:20px; color:var(--color-neutral-700);">
+    <aside class="mod sheet-mod" data-enter="" data-mod="aside" style="grid-column:{{ sheet.aside.col }}; grid-row:{{ sheet.aside.row }}; --d:{{ sheet.aside.delay }}; display:flex; flex-direction:column; gap:20px; padding:22px; font-size:12.5px; line-height:20px; color:var(--color-neutral-700);">
       <sc-if value="{{ marginalia }}" hint-placeholder-val="{{ true }}">
         <p key="margin-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; padding-left:12px; border-left:1px solid var(--color-accent); color:var(--color-text);">// {{ current.margin }}</p>
       </sc-if>
@@ -997,34 +1021,34 @@
          the pair spanned, on the rows its own ratio needs. It keeps detailSlotA's id, so the morph
          and the cell readout find the same slot whichever arrangement the sheet is in. -->
     <sc-if value="{{ detailPair }}" hint-placeholder-val="{{ true }}">
-    <figure class="plate sheet-mod sheet-plate" data-enter="" data-mod="detailA" onMouseEnter="{{ sheet.detailA.move }}" onMouseMove="{{ sheet.detailA.move }}" onMouseLeave="{{ sheet.detailA.leave }}" style="grid-column:{{ sheet.detailA.col }}; grid-row:{{ sheet.detailA.row }}; --d:{{ sheet.detailA.delay }}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;">
+    <figure class="plate mod sheet-mod sheet-plate" data-enter="" data-mod="detailA" onMouseEnter="{{ sheet.detailA.move }}" onMouseMove="{{ sheet.detailA.move }}" onMouseLeave="{{ sheet.detailA.leave }}" style="grid-column:{{ sheet.detailA.col }}; grid-row:{{ sheet.detailA.row }}; --d:{{ sheet.detailA.delay }}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;">
       <span class="sheet-mark" aria-hidden="true" style="left:8px; top:5px;">+</span>
       <image-slot id="{{ current.detailSlotA }}" src="{{ current.detailA }}" shape="rect" fit="contain" placeholder="Detail: drawing or interface" style="width:100%; height:100%;"></image-slot>
       <span class="sheet-mark" aria-hidden="true" style="right:8px; bottom:5px;">+</span>
     </figure>
-    <figure class="plate sheet-mod sheet-plate" data-enter="" data-mod="detailB" onMouseEnter="{{ sheet.detailB.move }}" onMouseMove="{{ sheet.detailB.move }}" onMouseLeave="{{ sheet.detailB.leave }}" style="grid-column:{{ sheet.detailB.col }}; grid-row:{{ sheet.detailB.row }}; --d:{{ sheet.detailB.delay }}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;">
+    <figure class="plate mod sheet-mod sheet-plate" data-enter="" data-mod="detailB" onMouseEnter="{{ sheet.detailB.move }}" onMouseMove="{{ sheet.detailB.move }}" onMouseLeave="{{ sheet.detailB.leave }}" style="grid-column:{{ sheet.detailB.col }}; grid-row:{{ sheet.detailB.row }}; --d:{{ sheet.detailB.delay }}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;">
       <span class="sheet-mark" aria-hidden="true" style="left:8px; top:5px;">+</span>
       <image-slot id="{{ current.detailSlotB }}" src="{{ current.detailB }}" shape="rect" fit="contain" placeholder="Detail: process or site" style="width:100%; height:100%;"></image-slot>
       <span class="sheet-mark" aria-hidden="true" style="right:8px; bottom:5px;">+</span>
     </figure>
     </sc-if>
     <sc-if value="{{ detailOne }}" hint-placeholder-val="{{ false }}">
-    <figure class="plate sheet-mod sheet-plate" data-enter="" data-mod="detail" onMouseEnter="{{ sheet.detail.move }}" onMouseMove="{{ sheet.detail.move }}" onMouseLeave="{{ sheet.detail.leave }}" style="grid-column:{{ sheet.detail.col }}; grid-row:{{ sheet.detail.row }}; --d:{{ sheet.detail.delay }}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;">
+    <figure class="plate mod sheet-mod sheet-plate" data-enter="" data-mod="detail" onMouseEnter="{{ sheet.detail.move }}" onMouseMove="{{ sheet.detail.move }}" onMouseLeave="{{ sheet.detail.leave }}" style="grid-column:{{ sheet.detail.col }}; grid-row:{{ sheet.detail.row }}; --d:{{ sheet.detail.delay }}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;">
       <span class="sheet-mark" aria-hidden="true" style="left:8px; top:5px;">+</span>
       <image-slot id="{{ current.detailSlotA }}" src="{{ current.detail }}" shape="rect" fit="contain" placeholder="Detail: drawing or interface" style="width:100%; height:100%;"></image-slot>
       <span class="sheet-mark" aria-hidden="true" style="right:8px; bottom:5px;">+</span>
     </figure>
     </sc-if>
-    <p class="sheet-mod" data-enter="" data-mod="detailCaption" style="grid-column:{{ sheet.detailCaption.col }}; grid-row:{{ sheet.detailCaption.row }}; --d:{{ sheet.detailCaption.delay }}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="min-width:0;"><span style="color:var(--color-accent);">{{ current.detailFigWord }}</span> <span key="cap-detail-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.detailCaptionText }}</span></span><span style="flex:none; color:var(--color-neutral-600); white-space:nowrap;">{{ sheet.detailReadout }}</span></p>
+    <p class="mod sheet-mod" data-enter="" data-mod="detailCaption" style="grid-column:{{ sheet.detailCaption.col }}; grid-row:{{ sheet.detailCaption.row }}; --d:{{ sheet.detailCaption.delay }}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="min-width:0;"><span style="color:var(--color-accent);">{{ current.detailFigWord }}</span> <span key="cap-detail-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.detailCaptionText }}</span></span><span style="flex:none; color:var(--color-neutral-600); white-space:nowrap;">{{ sheet.detailReadout }}</span></p>
 
     <!-- Linked sheets: the other end of the graph the landing draws. What this sheet names and what
          names it are closed into one list in the logic class, so the module states the relation rather
          than the direction it happened to be written in. It is ruled on the sheet's own 44px row, one
          row of label and one per sheet, and its span follows that count: the issue line under it moves
          down by exactly what it took. A row is a control and lights its own type; the frame around the
-         whole module is the module's, which is why no row carries sheet-ctl. An edge may cross into
+         whole module is the module's, which is why no row carries mod-ctl. An edge may cross into
          the serif register, and a row that does says Chapter where the others say a sheet number. -->
-    <div class="sheet-mod" data-enter="" data-mod="links" style="grid-column:{{ sheet.links.col }}; grid-row:{{ sheet.links.row }}; --d:{{ sheet.links.delay }}; display:grid; grid-auto-rows:44px; align-content:start; overflow:hidden;">
+    <div class="mod sheet-mod" data-enter="" data-mod="links" style="grid-column:{{ sheet.links.col }}; grid-row:{{ sheet.links.row }}; --d:{{ sheet.links.delay }}; display:grid; grid-auto-rows:44px; align-content:start; overflow:clip; overflow-clip-margin:1px;">
       <p style="margin:0; display:flex; align-items:center; padding:0 22px; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Linked sheets</p>
       <sc-for list="{{ sheetLinks }}" as="l" hint-placeholder-count="3">
         <button onClick="{{ l.open }}" style="all:unset; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; gap:14px; padding:0 22px; font-family:var(--mono); font-size:13px; line-height:18px; color:var(--color-text); box-shadow:inset 0 1px 0 0 var(--hair); transition:color 200ms ease;" style-hover="color:var(--color-accent-700)">
@@ -1039,8 +1063,8 @@
     </div>
 
     <!-- issue line -->
-    <button class="sheet-mod sheet-ctl" data-enter="" data-mod="navBack" onClick="{{ goPageCurrent }}" style="all:unset; position:relative; grid-column:{{ sheet.navBack.col }}; grid-row:{{ sheet.navBack.row }}; --d:{{ sheet.navBack.delay }}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);">← {{ current.backWord }}</button>
-    <button class="sheet-mod sheet-ctl" data-enter="" data-mod="navNext" onClick="{{ openNext }}" style="all:unset; position:relative; grid-column:{{ sheet.navNext.col }}; grid-row:{{ sheet.navNext.row }}; --d:{{ sheet.navNext.delay }}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:11px 22px; text-align:right; color:var(--color-text); background:var(--color-bg);">
+    <button class="mod sheet-mod mod-ctl" data-enter="" data-mod="navBack" onClick="{{ goPageCurrent }}" style="all:unset; position:relative; grid-column:{{ sheet.navBack.col }}; grid-row:{{ sheet.navBack.row }}; --d:{{ sheet.navBack.delay }}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);">← {{ current.backWord }}</button>
+    <button class="mod sheet-mod mod-ctl" data-enter="" data-mod="navNext" onClick="{{ openNext }}" style="all:unset; position:relative; grid-column:{{ sheet.navNext.col }}; grid-row:{{ sheet.navNext.row }}; --d:{{ sheet.navNext.delay }}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:11px 22px; text-align:right; color:var(--color-text); background:var(--color-bg);">
       <span style="font-size:11px; line-height:14px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-neutral-600);">Next · {{ next.kickerWord }} {{ next.numeral }}</span>
       <span key="next-{{ next.figNo }}" data-tr="wake" data-reg="mono" style="font-family:var(--mono); font-size:24px; line-height:32px; font-weight:400; letter-spacing:-0.03em;">{{ next.title }} →</span>
     </button>
@@ -3106,7 +3130,9 @@ class Component extends DCLogic {
     const introOpen = this.state.landingIntroOpen, introCut = this.state.landingIntroCut;
     const landIntroClamp = introOpen || !this.state.landingIntroLines ? ''
       : 'display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:' + this.state.landingIntroLines + '; overflow:hidden;';
-    const landIntroBox = introOpen ? 'align-self:start; height:auto; min-height:100%; overflow:visible; z-index:35;' : 'overflow:hidden; z-index:1;';
+    // closed, the module clips its own type; the clip takes a 1px margin so it stops short of the two
+    // strokes .mod::after draws outside the module and the frame keeps all four sides
+    const landIntroBox = introOpen ? 'align-self:start; height:auto; min-height:100%; overflow:visible; z-index:35;' : 'overflow:clip; overflow-clip-margin:1px; z-index:1;';
     const landIntroMore = introOpen ? 'less' : introCut ? 'more' : '';
     const landIntroCursor = introOpen || introCut ? 'pointer' : 'default';
     const landIntroToggle = () => this.toggleLandingIntro();
@@ -3156,7 +3182,10 @@ class Component extends DCLogic {
         mod: 'plate.' + p.slug,
         whyTop: below ? '100%' : 'auto', whyBottom: below ? 'auto' : '100%',
         typed, whyOpacity: on ? '1' : '0', caretOpacity: on && typed.length < p.why.length ? '1' : '0',
-        frameInk: lit ? 'var(--color-text)' : 'var(--color-neutral-400)',
+        // the state, not the ink: .mod[data-lit] carries the full-ink frame, so the three steps of the
+        // ladder are all in one CSS rule and a plate says only which of them it is on. null rather than
+        // false, so React leaves the attribute off a plate that is not lit
+        lit: lit ? '' : null,
         // the hovered plate rises over its neighbours: a module's right and bottom hairlines are drawn
         // outside its own box, so without this its lit frame would be covered on two sides. A plate
         // lit by the graph rises for the same reason, but under the plate the cursor is on.
