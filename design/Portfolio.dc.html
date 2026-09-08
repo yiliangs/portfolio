@@ -177,9 +177,9 @@
   <div ref="{{ parchLayerRef }}" data-print="hide" aria-hidden="true" style="position:fixed; inset:0; pointer-events:none; z-index:1; opacity:0.8;"></div>
   <div ref="{{ homeLayerRef }}" data-print="hide" aria-hidden="true" style="position:fixed; inset:0; pointer-events:none; z-index:2;"></div>
   <header data-print="hide" style="position:sticky; top:0; z-index:5; border-bottom:1px solid var(--color-divider); background:var(--color-bg); transition:background-color 780ms cubic-bezier(.65,0,.15,1), border-color 780ms cubic-bezier(.65,0,.15,1), color 780ms cubic-bezier(.65,0,.15,1);">
-    <div ref="{{ headRef }}" style="position:relative; display:flex; align-items:stretch; justify-content:space-between; gap:var(--space-4); padding:0 clamp(20px,5vw,72px); height:56px; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; font-feature-settings:'tnum' 1;">
+    <div ref="{{ headRef }}" style="position:relative; display:flex; align-items:stretch; justify-content:space-between; gap:var(--space-4); padding:0 clamp(14px,5vw,72px); height:56px; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; font-feature-settings:'tnum' 1;">
       <button onClick="{{ goHome }}" style="all:unset; cursor:pointer; display:flex; gap:var(--space-3); align-items:center; color:var(--color-text); flex-shrink:0; white-space:nowrap; transition:color 780ms cubic-bezier(.65,0,.15,1);" style-hover="color:var(--color-accent-700)">
-        <span aria-label="Yiliang Shao" style="display:inline-flex; font-weight:600; font-size:18px; text-transform:none; line-height:20px; white-space:pre;">
+        <span aria-label="Yiliang Shao" style="display:inline-flex; font-weight:600; font-size:clamp(14px,3.9vw,18px); text-transform:none; line-height:20px; white-space:pre;">
           <sc-for list="{{ brandChars }}" as="c" hint-placeholder-count="12"><span style="font-family:{{ c.font }}; letter-spacing:{{ c.tracking }}; color:{{ c.color }};">{{ c.ch }}</span></sc-for>
         </span>
         <span style="color:var(--color-neutral-600); display:{{ subBrandDisplay }}; transition:color 780ms cubic-bezier(.65,0,.15,1);">Collected work · 2019–2026</span>
@@ -195,7 +195,7 @@
           <span style="display:inline-flex; white-space:pre;"><sc-for list="{{ devChars }}" as="c" hint-placeholder-count="11"><span style="display:inline-block; color:{{ c.color }};">{{ c.ch }}</span></sc-for><span aria-hidden="true" class="caret" style="display:inline-block; color:var(--color-accent);">_</span></span>
         </button>
         </span>
-        <span style="display:flex; align-items:center; justify-content:flex-end; width:130px; flex:none; font-family:var(--mono); font-size:11px; letter-spacing:0.08em; color:var(--color-neutral-600); white-space:nowrap; opacity:{{ hintOpacity }}; transition:opacity 400ms ease, color 780ms cubic-bezier(.65,0,.15,1);">t / e · ← → · esc</span>
+        <span style="display:{{ hintDisplay }}; align-items:center; justify-content:flex-end; width:130px; flex:none; font-family:var(--mono); font-size:11px; letter-spacing:0.08em; color:var(--color-neutral-600); white-space:nowrap; opacity:{{ hintOpacity }}; transition:opacity 400ms ease, color 780ms cubic-bezier(.65,0,.15,1);">t / e · ← → · esc</span>
       </nav>
       <span aria-hidden="true" style="position:absolute; bottom:-1px; height:3px; background:var(--color-accent); left:{{ tabLeft }}; width:{{ tabWidth }}; transition:left 420ms cubic-bezier(.7,0,.3,1), width 420ms cubic-bezier(.7,0,.3,1);"></span>
       </sc-if>
@@ -3418,6 +3418,12 @@ class Component extends DCLogic {
       subBrandDisplay: this.state.narrow ? 'none' : 'inline', indexCols: this.state.narrow ? 'minmax(0,1fr)' : 'minmax(0,7fr) minmax(0,5fr)', previewDisplay: this.state.narrow ? 'none' : 'block',
       parallax: Math.round((this.state.scrollY || 0) * 0.18) + 'px',
       hintOpacity: this.state.hintGone || this.state.usedKeys ? '0' : '1', bloomHintOpacity: this.state.bloomTouched ? '0' : '1',
+      // The keyboard hint is a 130px slot, and a 360px page gives the running head 305px of content
+      // box to put the brand and both tabs in. It is also the one thing on the bar a phone has no use
+      // for, since there is no keyboard to hint at. So it is taken off rather than shrunk, and the
+      // brand and the bar's own padding carry phone floors beside it; measureTabs re-reads the
+      // underline off the tab's own box, so nothing here moves the mark.
+      hintDisplay: this.state.phone ? 'none' : 'flex',
       projects, pageProjects, leaves, leafRows, leftLeaves: leaves.filter((l) => l.side === 'left'), rightLeaves: leaves.filter((l) => l.side === 'right'), featured, current, next: projects[(idx + 1) % projects.length], hovered: hov, cv: cvViews.timeline,
       gridPlatesRow: gridRows.plates, gridAuthorRow: gridRows.author, gridColophonRow: gridRows.colophon, gridContactRow: gridRows.contact,
       sheet, sheetGridRef: this.sheetGridRef,

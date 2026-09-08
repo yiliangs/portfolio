@@ -61,11 +61,11 @@
         "\n  ",
         h("header", { key: "9", "data-print": "hide", style: {"position":"sticky","top":"0","zIndex":"5","borderBottom":"1px solid var(--color-divider)","background":"var(--color-bg)","transition":"background-color 780ms cubic-bezier(.65,0,.15,1), border-color 780ms cubic-bezier(.65,0,.15,1), color 780ms cubic-bezier(.65,0,.15,1)"} },
           "\n    ",
-          h("div", { key: "1", ref: V.headRef, style: {"position":"relative","display":"flex","alignItems":"stretch","justifyContent":"space-between","gap":"var(--space-4)","padding":"0 clamp(20px,5vw,72px)","height":"56px","fontSize":"12px","letterSpacing":"0.1em","textTransform":"uppercase","fontFeatureSettings":"'tnum' 1"} },
+          h("div", { key: "1", ref: V.headRef, style: {"position":"relative","display":"flex","alignItems":"stretch","justifyContent":"space-between","gap":"var(--space-4)","padding":"0 clamp(14px,5vw,72px)","height":"56px","fontSize":"12px","letterSpacing":"0.1em","textTransform":"uppercase","fontFeatureSettings":"'tnum' 1"} },
             "\n      ",
             h("button", { key: "1", onClick: V.goHome, style: {"all":"unset","cursor":"pointer","display":"flex","gap":"var(--space-3)","alignItems":"center","color":"var(--color-text)","flexShrink":"0","whiteSpace":"nowrap","transition":"color 780ms cubic-bezier(.65,0,.15,1)"}, className: "scp0" },
               "\n        ",
-              h("span", { key: "1", "aria-label": "Yiliang Shao", style: {"display":"inline-flex","fontWeight":"600","fontSize":"18px","textTransform":"none","lineHeight":"20px","whiteSpace":"pre"} },
+              h("span", { key: "1", "aria-label": "Yiliang Shao", style: {"display":"inline-flex","fontWeight":"600","fontSize":"clamp(14px,3.9vw,18px)","textTransform":"none","lineHeight":"20px","whiteSpace":"pre"} },
                 "\n          ",
                 h(F,{key:1},L(V.brandChars).map(function(item,i){
                   var Vi = Object.assign({}, V, {"c": item, $index: i});
@@ -122,7 +122,7 @@
                   "\n        "
                 ),
                 "\n        ",
-                h("span", { key: "3|17.1ju7vqw", style: S(`display:flex; align-items:center; justify-content:flex-end; width:130px; flex:none; font-family:var(--mono); font-size:11px; letter-spacing:0.08em; color:var(--color-neutral-600); white-space:nowrap; opacity:${V.hintOpacity ?? ""}; transition:opacity 400ms ease, color 780ms cubic-bezier(.65,0,.15,1);`) },
+                h("span", { key: "3|17.1ju7vqw", style: S(`display:${V.hintDisplay ?? ""}; align-items:center; justify-content:flex-end; width:130px; flex:none; font-family:var(--mono); font-size:11px; letter-spacing:0.08em; color:var(--color-neutral-600); white-space:nowrap; opacity:${V.hintOpacity ?? ""}; transition:opacity 400ms ease, color 780ms cubic-bezier(.65,0,.15,1);`) },
                   "t / e · ← → · esc"
                 ),
                 "\n      "
@@ -4458,6 +4458,12 @@
         subBrandDisplay: this.state.narrow ? 'none' : 'inline', indexCols: this.state.narrow ? 'minmax(0,1fr)' : 'minmax(0,7fr) minmax(0,5fr)', previewDisplay: this.state.narrow ? 'none' : 'block',
         parallax: Math.round((this.state.scrollY || 0) * 0.18) + 'px',
         hintOpacity: this.state.hintGone || this.state.usedKeys ? '0' : '1', bloomHintOpacity: this.state.bloomTouched ? '0' : '1',
+        // The keyboard hint is a 130px slot, and a 360px page gives the running head 305px of content
+        // box to put the brand and both tabs in. It is also the one thing on the bar a phone has no use
+        // for, since there is no keyboard to hint at. So it is taken off rather than shrunk, and the
+        // brand and the bar's own padding carry phone floors beside it; measureTabs re-reads the
+        // underline off the tab's own box, so nothing here moves the mark.
+        hintDisplay: this.state.phone ? 'none' : 'flex',
         projects, pageProjects, leaves, leafRows, leftLeaves: leaves.filter((l) => l.side === 'left'), rightLeaves: leaves.filter((l) => l.side === 'right'), featured, current, next: projects[(idx + 1) % projects.length], hovered: hov, cv: cvViews.timeline,
         gridPlatesRow: gridRows.plates, gridAuthorRow: gridRows.author, gridColophonRow: gridRows.colophon, gridContactRow: gridRows.contact,
         sheet, sheetGridRef: this.sheetGridRef,

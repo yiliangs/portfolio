@@ -218,6 +218,15 @@ tier('paperAsideCol', 'phone', '2');
   if (!aside || aside.on !== '1') fail('the paper aside still stands in the margin column on a phone: ' + JSON.stringify(aside && aside.on));
 }
 
+// The running head. The keyboard hint is a 130px slot in a bar that has 305px of content box at
+// 360, so it is the one thing on the header a phone cannot carry; there is no keyboard to hint at
+// on one either.
+tier('hintDisplay', 'phone', 'flex');
+{
+  const hint = arms(binding('hintDisplay') || '');
+  if (!hint || hint.on !== 'none') fail('the keyboard hint is not taken off the running head on a phone: ' + JSON.stringify(hint && hint.on));
+}
+
 // ---------------------------------------------------------------- the markup carries no phone values
 
 const branch = (cond) => [...tpl.content.querySelectorAll('sc-if')].find(
@@ -260,6 +269,31 @@ const branch = (cond) => [...tpl.content.querySelectorAll('sc-if')].find(
     if (!aside) fail('the paper aside no longer reads paperAsideRow');
     else if (!tight(aside.getAttribute('style')).includes('grid-column:{{paperAsideCol}}')) {
       fail('the paper aside writes its own column instead of reading paperAsideCol back');
+    }
+  }
+}
+{
+  const head = tpl.content.querySelector('header');
+  if (!head) fail('the running head is gone');
+  else {
+    const hint = [...head.querySelectorAll('span')].find((el) => /t \/ e/.test(el.textContent || ''));
+    if (!hint) fail('the running head no longer carries the keyboard hint');
+    else if (!tight(hint.getAttribute('style')).includes('display:{{hintDisplay}}')) {
+      fail('the keyboard hint writes its own display instead of reading hintDisplay back, so it cannot be taken off a phone');
+    }
+    // the brand and the bar's own side padding are clamps whose floor is a phone size and whose
+    // value from PHONE_W up is what the head carried before; a fixed 18px brand is 123px of the 305
+    // a 360px page has, and the head does not fit around it
+    const brand = [...head.querySelectorAll('span')].find((el) => el.getAttribute('aria-label') === 'Yiliang Shao');
+    if (!brand) fail('the running head no longer carries the brand');
+    else if (!/font-size:clamp\([^)]*18px\)/.test(tight(brand.getAttribute('style')))) {
+      fail('the brand sets a fixed size rather than a clamp that reaches 18px above a phone: ' + String(brand.getAttribute('style')).slice(0, 110));
+    }
+    const bar = head.firstElementChild;
+    if (!/padding:0clamp\((\d+)px,5vw,72px\)/.test(tight(bar && bar.getAttribute('style')))) {
+      fail('the running head bar no longer sets its side padding as a clamp of 5vw capped at 72px');
+    } else if (Number(/padding:0clamp\((\d+)px,5vw,72px\)/.exec(tight(bar.getAttribute('style')))[1]) >= 20) {
+      fail('the running head bar keeps a 20px padding floor, which is the tablet floor; a phone needs it lower');
     }
   }
 }
