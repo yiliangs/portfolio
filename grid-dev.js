@@ -16,11 +16,21 @@
 //   anything else  a module of the project sheet                    SHEET_WIDE or SHEET_NARROW
 //
 // A plate is the one that is not simply a table lookup. The landing's plates are drawn onto free
-// cells from a seed, so a plate normally has no entry at all; the first time one is moved or resized
-// it is pinned where it stands and the pin is what moves. Unpin gives it back to the draw. Pin all
-// claims every plate where the draw left it, which is the way to compose without the ground moving:
-// each pin takes cells away from the draw, so while any plate is still drawn, pinning one shuffles
-// the others.
+// cells from a seed, so a plate normally has no entry at all, and each pin takes cells away from that
+// draw: while any plate is still drawn, pinning one shuffles the others, and a composition made on
+// ground that moves is no composition. So the panel freezes the sheet before anything else. The first
+// time it finds plates drawn on the landing it claims every one of them where the draw has just left
+// it, which changes nothing on the page and takes the draw out of the session; from there nothing
+// moves but what is moved. Unpin gives one plate back to the draw and unpin all gives back the lot,
+// which reshuffles by design. Reset returns to the frozen composition, not to the empty table the
+// page was loaded with.
+//
+// The sheet being frozen is also why the page behind ?dev draws its landing loosely, placeLanding's
+// `strict: false`: a drag carries a pin across its neighbours on the way to wherever it is going, and
+// under the strict reading that composition is refused outright and every plate leaves the page,
+// including the one under the cursor. So plates may be laid over one another here. What that costs is
+// that the block this panel writes is not necessarily one the shipped page can draw, and the warning
+// line below names every overlap and every touch for exactly that reason.
 //
 // Some lines cannot be written, and the panel refuses them rather than recording a number the page
 // ignores. The statement and the platform are as deep as the statement's own type, measured off the
@@ -33,16 +43,21 @@
 // pins have left the remaining plates nowhere to go, which otherwise shows only as a landing with no
 // plates on it at all.
 //
-// Copy writes all four tables ready to paste into design/Portfolio.dc.html, and paste reads such a
-// block back, so a session survives a reload rather than living only in this tab. Reset returns to
-// the values it was mounted with. The s key hides and shows the panel, Escape drops the selection,
-// and the panel hides itself on a view it has nothing to tune.
+// Copy writes all four tables to the clipboard, ready to paste into design/Portfolio.dc.html, and
+// says how much it wrote rather than printing the block: the block is what the clipboard is holding,
+// and __grid.dump() is where to read it. Paste reads such a block back, so a session survives a
+// reload rather than living only in this tab.
 //
-// While the panel is up the plates hold their hover text. A landing plate unrolls the reason it was
+// Collapse folds the panel down to its header, which stays on the page and stays draggable: clicking
+// it, or pressing s, opens it again. Nothing here is ever taken off the page, since a panel that
+// vanishes reads as a panel that broke. Escape drops the selection, and the panel does hide itself on
+// a view it has nothing to tune, which is the one thing the reader never asked for.
+//
+// While the panel is open the plates hold their hover text. A landing plate unrolls the reason it was
 // built out of itself on hover, over its neighbours and over anything the panel has drawn on the
 // grid, and the cursor is on a plate for the whole of a move, so composing with it running means
-// composing behind a paragraph. Hiding the panel gives it back, and so does the box in the panel for
-// anyone who wants to see the two together.
+// composing behind a paragraph. Collapsing the panel gives it back, and so does the box in the panel
+// for anyone who wants to see the two together.
 //
 // mount(api) -> { destroy() }, where api is { tables, sheetTable, landingError, quiet, rerender }: the
 // four live tables off the logic class, mutated in place, a getter for which sheet table the width is
@@ -267,15 +282,17 @@ export function mount(api) {
   const { tables: T, sheetTable, landingError, quiet, rerender } = api;
   const initial = JSON.parse(JSON.stringify(T));
 
-  let selected = null, rows = [], drag = null, raf = 0, hidden = false, built = false;
+  let selected = null, rows = [], drag = null, raf = 0, collapsed = false, built = false;
+  // Whether the landing has been taken off the draw yet. Once, per mount: see freeze() below.
+  let frozen = false;
   // A landing plate unrolls its reason out of itself on hover, over its neighbours and over the mark,
   // and the cursor sits on a plate for the whole of a move. So the typewriter is held while the panel
-  // is up, and comes back the moment it is hidden or the view has no grid on it. The box below turns
-  // it back on without putting the panel away. `told` is the last value the page was given, since
+  // is open, and comes back the moment it is folded away or the view has no grid on it. The box below
+  // turns it back on without collapsing the panel. `told` is the last value the page was given, since
   // telling it again would re-render, and re-rendering is what calls this.
   let typewriter = false, told = null;
   const hold = () => {
-    const want = !typewriter && !hidden && !!surface();
+    const want = !typewriter && !collapsed && !!surface();
     if (want === told) return;
     told = want;
     if (quiet) quiet(want);
@@ -285,25 +302,40 @@ export function mount(api) {
   // The panel opens over the drawing's left columns, which is half of what it is for tuning, so its
   // header is a handle: drag it anywhere and it parks there for the rest of the session.
   const head = el('div', `margin:10px 14px 4px; padding-bottom:4px; border-bottom:1px solid ${RULE}; color:${GOLD}; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; cursor:move;`, 'development grid  ⠿');
+  // Collapsed, the handle is the whole panel, so the press that would have dragged it has to open it
+  // instead. Which of the two it was is a question of travel and not of intent: a press that moved is
+  // a drag, and one that did not is a click. Three pixels because a click on a trackpad is rarely
+  // still, and because parking the panel one pixel to the left is not a thing anyone is trying to do.
   head.onpointerdown = (ev) => {
     ev.preventDefault(); ev.stopPropagation();
     const b = root.getBoundingClientRect(), ox = ev.clientX - b.left, oy = ev.clientY - b.top;
+    let moved = false;
     const move = (e) => {
+      if (!moved && Math.abs(e.clientX - ev.clientX) + Math.abs(e.clientY - ev.clientY) <= 3) return;
+      moved = true;
       root.style.right = 'auto'; root.style.bottom = 'auto';
       root.style.left = Math.max(0, Math.min(window.innerWidth - b.width, e.clientX - ox)) + 'px';
       root.style.top = Math.max(0, Math.min(window.innerHeight - 40, e.clientY - oy)) + 'px';
     };
-    const up = () => { window.removeEventListener('pointermove', move, true); window.removeEventListener('pointerup', up, true); };
+    const up = () => {
+      window.removeEventListener('pointermove', move, true); window.removeEventListener('pointerup', up, true);
+      if (!moved && collapsed) { collapsed = false; refresh(); }
+    };
     window.addEventListener('pointermove', move, true);
     window.addEventListener('pointerup', up, true);
   };
+  // Everything but the handle, in one box, because collapsing is exactly hiding all of it: the panel
+  // folds to its header rather than leaving the page, and a single box is one display to switch
+  // rather than a display to remember for each of nine children, three of which are flex rows.
+  const body = el('div', '');
   const which = el('div', `margin:0 14px 4px; color:${GOLD}; font-size:10px;`);
-  const hint = el('div', `margin:0 14px 6px; color:${DIM}; font-size:10px;`, 'click a module, drag to move it, drag a handle to resize it, arrows to nudge, shift-arrows to grow or shrink, alt-arrows to move the near edge; s hides the panel and gives the plates their hover text back');
+  const hint = el('div', `margin:0 14px 6px; color:${DIM}; font-size:10px;`, 'click a module, drag to move it, drag a handle to resize it, arrows to nudge, shift-arrows to grow or shrink, alt-arrows to move the near edge; the landing is pinned where it was drawn, so nothing moves but what you move and plates may be laid over one another; s folds the panel to its handle and gives the plates their hover text back');
   const list = el('div', '');
   const sel = el('div', `margin:6px 14px 0; padding-top:6px; border-top:1px solid ${RULE};`);
   const bad = el('div', `margin:6px 14px 0; color:${WARN}; font-size:10px; white-space:pre-line;`);
   const out = el('pre', `margin:8px 14px 0; white-space:pre; color:${DIM}; font-size:10px; max-height:180px; overflow:auto; user-select:text;`);
-  root.append(head, which, hint, list, sel, bad);
+  body.append(which, hint, list, sel, bad);
+  root.append(head, body);
 
   // ---------------------------------------------------------------- the modules on the page
   // Read fresh every time: the drawing re-renders on hover and on any change made here, the tables
@@ -471,14 +503,30 @@ export function mount(api) {
     }
   };
 
+  // Folded, the panel is its header and nothing else: still on the page, still parked where it was
+  // dragged to, still the handle that opens it again. A panel that took itself off the page reads as
+  // a panel that crashed, and the key that would bring it back is a key nobody can see.
+  const fold = () => {
+    body.style.display = collapsed ? 'none' : 'block';
+    root.style.width = collapsed ? 'auto' : '370px';
+    root.style.padding = collapsed ? '0' : '4px 0 10px';
+    head.style.margin = collapsed ? '0' : '10px 14px 4px';
+    head.style.padding = collapsed ? '5px 12px' : '0 0 4px';
+    head.style.borderBottom = collapsed ? 'none' : '1px solid ' + RULE;
+    head.textContent = collapsed ? 'grid  ⠿' : 'development grid  ⠿';
+    head.title = collapsed ? 'click to open the grid panel, or press s' : 'drag to park the panel';
+  };
+
   const refresh = () => {
     const s = surface();
     which.textContent = s === 'landing' ? 'tuning LANDING_WIDE and LANDING_PINS  ·  the landing at ' + COLS + ' columns'
       : s === 'sheet' ? 'tuning ' + sheetTable() + '  ·  the sheet at ' + COLS + ' columns'
         : 'no drawing grid on this view';
     // the panel is furniture for the grid, so it stands only where there is one to tune, which is
-    // also what keeps it from standing beside the Research margins panel with nothing to say
-    root.hidden = hidden || !s;
+    // also what keeps it from standing beside the Research margins panel with nothing to say. Folding
+    // it away is the reader's business and not this line's: a folded panel is still on the page.
+    root.hidden = !s;
+    fold();
     pins.hidden = s !== 'landing';
     hold();
     rows.forEach((r) => r.show());
@@ -490,7 +538,36 @@ export function mount(api) {
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(placeMark);
   };
-  const rebuild = () => { build(); refresh(); };
+  // Claiming every plate exactly where the draw has just left it. The composition on the page does
+  // not change, and from there it is the pin that moves rather than the draw that reruns, which is
+  // the difference between composing and watching the sheet reshuffle under every edit.
+  const claimDrawn = () => {
+    let claimed = 0;
+    for (const node of modules()) {
+      const pl = PLATE.exec(node.dataset.mod); if (!pl) continue;
+      const b = liveBox(node); if (!b || T.LANDING_PINS[pl[1]]) continue;
+      T.LANDING_PINS[pl[1]] = { col: '', row: '' };
+      writeBox(T.LANDING_PINS[pl[1]], b);
+      claimed++;
+    }
+    return claimed;
+  };
+  // The same thing, once per mount, without being asked. A tuning session begins the moment the
+  // landing is on the screen, and beginning it on a sheet that is still being drawn means every
+  // change reshuffles every plate that has no pin yet: the thing being composed moves while it is
+  // composed. So the first sight of a drawn landing takes it off the draw. It waits for a landing
+  // whose plates have all been placed, because half a sheet frozen is a composition nobody made.
+  const freeze = () => {
+    if (frozen || surface() !== 'landing') return;
+    const plates = modules().filter((m) => PLATE.test(m.dataset.mod));
+    if (!plates.length || plates.some((m) => !liveBox(m))) return;
+    frozen = true;
+    if (claimDrawn()) rerender();
+    // and reset goes back to this composition rather than to the empty table the page was loaded
+    // with, since handing the sheet back to the draw is what unpin all is for
+    initial.LANDING_PINS = JSON.parse(JSON.stringify(T.LANDING_PINS));
+  };
+  const rebuild = () => { freeze(); build(); refresh(); };
   // The panel's own mark sits inside the drawing it watches, and moving it is a mutation of that
   // drawing. Records that come only from the mark are the panel's echo and are dropped, or the
   // observer would call rebuild in a loop and the page would never come back.
@@ -543,10 +620,10 @@ export function mount(api) {
   const NEAR = { ArrowLeft: 'left', ArrowRight: 'left', ArrowUp: 'top', ArrowDown: 'top' };
   const onKey = (ev) => {
     if (ev.metaKey || ev.ctrlKey) return;
-    // s has to work wherever focus happens to be, or hiding the panel with its own button leaves
-    // focus on that button and the key that brings it back is dead. Only a text field keeps its s.
+    // s has to work wherever focus happens to be, or folding the panel with its own button leaves
+    // focus on that button and the key that opens it again is dead. Only a text field keeps its s.
     const t = ev.target, typing = t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
-    if (ev.key === 's' && !typing && !ev.altKey) { ev.stopPropagation(); hidden = !hidden; refresh(); return; }
+    if (ev.key === 's' && !typing && !ev.altKey) { ev.stopPropagation(); collapsed = !collapsed; refresh(); return; }
     if (!selected || typing) return;
     if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); selected = null; refresh(); return; }
     if (!NUDGE[ev.key]) return;
@@ -561,9 +638,9 @@ export function mount(api) {
   const button = (text, fn, title, size2) => { const b = el('button', `all:unset; cursor:pointer; padding:4px 10px; border:1px solid rgba(243,242,242,0.25); border-radius:3px; color:${INK};${size2 ? ' font-size:10px;' : ''}`, text); b.onclick = fn; b.title = title; return b; };
 
   // Pinning takes cells away from the draw, so pinning one plate reshuffles every plate still drawn,
-  // and composing against ground that moves is no composing at all. Claiming them all at once, where
-  // the draw has just left them, is the way in: nothing moves, and from there every plate answers the
-  // cursor. Giving them all back is the way out.
+  // and composing against ground that moves is no composing at all. The panel therefore claims them
+  // all the moment it sees them, and this button is that same claim asked for by hand, which is what
+  // is wanted after an unpin or two. Giving them all back to the draw is the way out.
   const typeBox = el('label', `display:flex; align-items:center; gap:6px; margin:8px 14px 0; color:${DIM}; font-size:10px; cursor:pointer;`);
   const typeOn = el('input', `accent-color:${GOLD}; margin:0;`);
   typeOn.type = 'checkbox';
@@ -573,15 +650,8 @@ export function mount(api) {
 
   const pins = el('div', `display:flex; gap:6px; margin:8px 14px 0;`);
   pins.append(
-    button('pin all', () => {
-      for (const node of modules()) {
-        const pl = PLATE.exec(node.dataset.mod); if (!pl) continue;
-        const b = liveBox(node); if (!b || T.LANDING_PINS[pl[1]]) continue;
-        T.LANDING_PINS[pl[1]] = { col: '', row: '' };
-        writeBox(T.LANDING_PINS[pl[1]], b);
-      }
-      rerender(); rebuild();
-    }, 'claim every plate where the draw has left it, so nothing moves while you compose', true),
+    button('pin all', () => { claimDrawn(); rerender(); rebuild(); },
+      'claim every plate where the draw has left it, so nothing moves while you compose', true),
     button('unpin all', () => {
       for (const k of Object.keys(T.LANDING_PINS)) delete T.LANDING_PINS[k];
       rerender(); rebuild();
@@ -614,7 +684,15 @@ export function mount(api) {
 
   const bar = el('div', `display:flex; gap:6px; margin:10px 14px 0; padding-top:10px; border-top:1px solid ${RULE};`);
   bar.append(
-    button('copy', () => { const text = serialize(T); out.textContent = text; navigator.clipboard?.writeText(text).catch(() => {}); }, 'copy all four tables ready to paste into design/Portfolio.dc.html'),
+    // The block goes to the clipboard and the panel says how much of it went. Printing it here as
+    // well filled the panel with the one thing nobody needs to read at the moment they have just
+    // taken a copy of it, and __grid.dump() is still where to read it. A write that fails says so:
+    // swallowing it left a copy that never happened looking exactly like one that did.
+    button('copy', () => {
+      const text = serialize(T);
+      const failed = (e) => { out.textContent = 'copy failed: ' + ((e && e.message) || e); };
+      try { navigator.clipboard.writeText(text).then(() => { out.textContent = 'copied ' + text.length + ' characters'; }, failed); } catch (e) { failed(e); }
+    }, 'copy all four tables to the clipboard, ready to paste into design/Portfolio.dc.html'),
     button('paste', async () => {
       try { const text = (await navigator.clipboard.readText()) || ''; read(text); out.textContent = 'read ' + text.length + ' characters back in'; } catch (e) { out.textContent = 'paste failed: ' + e.message; }
     }, 'read a copied block back from the clipboard'),
@@ -624,9 +702,9 @@ export function mount(api) {
       for (const [k, v] of Object.entries(initial.LANDING_PINS)) T.LANDING_PINS[k] = { ...v };
       out.textContent = ''; rerender(); rebuild();
     }, 'back to the values this panel was mounted with'),
-    button('hide', (ev) => { ev.currentTarget.blur(); hidden = true; refresh(); }, 'hide; press s to show again'),
+    button('collapse', (ev) => { ev.currentTarget.blur(); collapsed = true; refresh(); }, 'collapse to the handle; click it or press s to open'),
   );
-  root.append(typeBox, pins, bar, out);
+  body.append(typeBox, pins, bar, out);
   // the page carries two of these now, so each says which it is: the panels park on opposite sides of
   // the window and their controls read alike, and nothing else tells them apart
   root.dataset.devPanel = 'grid';
@@ -647,12 +725,12 @@ export function mount(api) {
   observer.observe(document.getElementById('dc-root') || document.body, { childList: true, subtree: true });
   rebuild();
 
-  // An escape hatch for the console, so a hidden panel or a stuck session is never a dead end:
+  // An escape hatch for the console, so a folded panel or a stuck session is never a dead end:
   // __grid.show(), __grid.dump() for the block as text, __grid.problems() for what would go wrong,
   // __grid.tables for the live objects.
   window.__grid = {
-    show: () => { hidden = false; refresh(); return 'panel back'; },
-    hide: () => { hidden = true; refresh(); },
+    show: () => { collapsed = false; refresh(); return 'panel back'; },
+    collapse: () => { collapsed = true; refresh(); },
     dump: () => serialize(T),
     problems: () => (surface() === 'landing' ? landingProblems(T, cornerBox()) : surface() === 'sheet' ? sheetProblems(T[sheetTable()]) : []),
     read,

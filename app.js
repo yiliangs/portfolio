@@ -2565,9 +2565,22 @@
     // them in the wrong places is one the remaining plates cannot be fitted on at all;
     // tools/check-landing-grid.mjs runs whatever is written here across every viewport and statement
     // height it sweeps, which is the place that failure is meant to surface.
+    //
+    // That is the reading a visitor gets. The page behind ?dev gets the other one, `strict: false` in
+    // landingLayout below: the panel pins every plate where the draw left it as soon as it mounts, so
+    // that a composition holds still while it is being made, and from there a drag is one pin crossing
+    // its neighbours. Refusing that composition would take every plate off the sheet mid-move, so
+    // while the panel is up the pins are drawn as written and the overlaps are named in the panel's own
+    // warning line instead. What is pasted back here therefore still has to be a composition the strict
+    // reading accepts, and the check above is where it is held to that.
     LANDING_PINS = {
     };
     LANDING_PAD = 22; // the padding every module of the drawing grid is set in
+    // Whether this page is being tuned rather than read, off the URL, once: the flag decides both which
+    // modules are fetched at all, in componentDidMount, and how the landing draws, just below. Read on
+    // the instance rather than at each of them, since a page where the two disagreed would either ship
+    // the panels or refuse the compositions made with them.
+    dev = new URLSearchParams(location.search).has('dev');
     // one seed per page load, kept on the instance: hovering a plate, scrolling, or leaving for another
     // tab and coming back all re-render the same composition. Only the row count can redraw it.
     landingSeed = (Math.random() * 4294967296) >>> 0;
@@ -2622,6 +2635,10 @@
       let out = null;
       try {
         out = this.landingMod.placeLanding({ seed: this.landingSeed, cols: 22, rows, count, pins,
+          // The panel pins every plate the moment it mounts and a drag then carries one across its
+          // neighbours, so a sheet being tuned is asked for as written, overlaps and all. Refusing it
+          // would take the whole landing off the page, the plate under the cursor included.
+          strict: !this.dev,
           // the statement and the platform are handed over as the one block they read as, so the plates
           // keep their empty cell from the pair rather than from each of them
           reserved: [{ col: sc[0], row: 1, w: pc[1] - sc[0], h: statementRows }],
@@ -3228,7 +3245,7 @@
       // on a view it has nothing to tune, so only one ever stands on the page. The flag is the only
       // thing that fetches them, so the page ships nothing for them otherwise, the same arrangement
       // field.js has for the home field.
-      if (new URLSearchParams(location.search).has('dev')) {
+      if (this.dev) {
         import('./leaves-dev.js')
           .then((m) => { if (!this.dead) this.leafTuner = m.mount({ spreads: this.LEAF_SPREADS, pairs: this.LEAF_PAIRS, rerender: () => this.forceUpdate() }); })
           .catch((e) => console.error('leaves-dev', e));

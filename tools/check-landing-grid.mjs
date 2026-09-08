@@ -292,6 +292,71 @@ for (const [w, h] of VIEWPORTS) {
   }
 }
 
+// ---------------------------------------------------------------- dev mode: a frozen sheet
+
+// The tuning panel behind ?dev pins every plate where the draw has just left it, the moment it
+// mounts, so that composing moves the pin and nothing else on the sheet. From there a drag crosses a
+// neighbour on the way to wherever it is going, and under the strict reading that is a composition
+// nobody can draw: placeLanding throws, the landing renders no plates, and the plate under the cursor
+// disappears mid-move. So the page asks for strict: false while it is being tuned. A pin is still
+// read for what is true of any pin, whole cells and on the grid, and is then taken as written,
+// overlaps and all. The licence stops there: the plates still left to the draw keep their empty cell
+// from everything already on the sheet.
+{
+  const rows = Math.max(6, Math.floor((900 - HEADER) / ROW));
+  const held = [cornerAt(12)];
+  reserved = held;
+  // plate 5 lies over plate 2, and plate 9 touches plate 7 with no empty cell between them: the two
+  // shapes the strict reading refuses by name
+  const crossed = {
+    2: { col: 2, row: 15, w: 3, h: 3 },
+    5: { col: 3, row: 16, w: 3, h: 3 },
+    7: { col: 8, row: 15, w: 4, h: 3 },
+    9: { col: 12, row: 15, w: 3, h: 3 },
+  };
+  const args = { seed: 7, cols: COLUMNS, rows, count: PLATES, reserved: held, contact: contactSpec, pins: crossed };
+  try {
+    placeLanding({ ...args });
+    fail('dev mode: the strict reading took four crossed pins without complaint');
+  } catch (e) {
+    if (!e.message.includes('claim the same cells')) {
+      fail('dev mode: the strict reading refused four crossed pins with "' + e.message + '", which does not name the overlap');
+    }
+  }
+  let loose = null;
+  try { loose = placeLanding({ ...args, strict: false }); } catch (e) {
+    fail('dev mode: strict: false still refused the crossed pins (' + e.message + '), so the landing goes blank under the panel');
+  }
+  if (loose) {
+    for (const [i, p] of Object.entries(crossed)) {
+      const got = loose.plates[i];
+      if (!got || got.col !== p.col || got.row !== p.row || got.w !== p.w || got.h !== p.h || !got.pinned) {
+        fail('dev mode: plate ' + i + ' was pinned to ' + p.col + ',' + p.row + ' and came back as ' + JSON.stringify(got));
+      }
+    }
+    if (loose.plates.length !== PLATES || loose.plates.some((p) => !p)) {
+      fail('dev mode: ' + loose.plates.filter(Boolean).length + ' of ' + PLATES + ' plates came back around four crossed pins');
+    }
+    const drawn = loose.plates.map((p, i) => ['plate ' + i, p]).filter(([, p]) => !p.pinned);
+    const rest = [...loose.plates.filter((p) => p.pinned), ...held];
+    for (const [name, a] of drawn) {
+      for (const b of [...rest, ...drawn.map(([, x]) => x).filter((x) => x !== a)]) {
+        if (!gapped(a, b)) fail('dev mode: ' + name + ' was drawn onto a cell something else already holds');
+      }
+    }
+  }
+  // strict: false is a licence to overlap and not a licence to write nonsense, so a pin off the grid
+  // is refused either way: the panel can show that message, and cannot show a pin it cannot reach
+  try {
+    placeLanding({ ...args, strict: false, pins: { 2: { col: 21, row: 15, w: 4, h: 3 } } });
+    fail('dev mode: strict: false took a pin running off the right edge');
+  } catch (e) {
+    if (!e.message.includes('off the ' + COLUMNS + ' column grid')) {
+      fail('dev mode: strict: false refused an off-grid pin with "' + e.message + '", which does not name the edge');
+    }
+  }
+}
+
 // ---------------------------------------------------------------- the two landings
 
 const dom = new JSDOM('<!doctype html><body></body>');
@@ -439,4 +504,5 @@ if (failures.length) {
 console.log('check-landing-grid: ' + checked + ' placements over ' + VIEWPORTS.length + ' viewports, ' +
   STATEMENT_ROWS.length + ' statement heights and ' + SEEDS.length + ' seeds hold the grid (worst growth ' +
   worst + ' rows), ' + Object.keys(shipped).length + ' of ' + PLATES + ' plates pinned, a pin is honoured to the cell ' +
-  'and five ways of writing a bad one are refused by name, and both landings are in the template');
+  'and five ways of writing a bad one are refused by name, crossed pins are drawn as written under ' +
+  'strict: false and refused without it, and both landings are in the template');
