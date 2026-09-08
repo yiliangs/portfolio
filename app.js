@@ -3072,7 +3072,13 @@
       this.hintTimer = setTimeout(() => this.setState({ hintGone: true }), 9000);
       setTimeout(() => this.measureTabs(), 400);
     }
-    componentDidUpdate() { this.observeReveals(); this.mountTextEffects(); this.measureTabs(); this.measureLandingStatement(); this.syncParchment(); this.syncHome(); this.syncPaper(); }
+    // Everything measured off the DOM is re-measured after every render, because a render can swap the
+    // element it was measured from: a resize that crosses isStacked replaces the whole landing, and the
+    // roll's anchor with it. onResize syncs the roll before that render, so this is the sync that lands
+    // it on the new anchor. A window dragged across the threshold fires resize again and again and
+    // self-corrected by accident; one docked there with Win+arrow fires it once, and did not.
+    // The leaf detail grows by a character per tick while it types, so its placement runs here too.
+    componentDidUpdate() { this.observeReveals(); this.mountTextEffects(); this.measureTabs(); this.measureLandingStatement(); this.syncParchment(); this.syncHome(); this.syncPaper(); this.placeLeafText(); }
   
     // A chapter whose entry carries a `paper` gets its body from an ES module under content/, fetched
     // the first time that chapter is opened and then kept on the instance. Nothing is imported for the
@@ -3490,9 +3496,6 @@
         if (d.height > 0 && d.bottom > box.bottom - pad) { detail.style.top = 'auto'; detail.style.bottom = '100%'; }
       });
     }
-  
-    // the detail grows by a character per tick while it types, so the pass runs on every update
-    componentDidUpdate() { this.placeLeafText(); }
   
     componentWillUnmount() { this.dead = true; if (this.leafTuner) { this.leafTuner.destroy(); this.leafTuner = null; } if (this.fog) { this.fog.destroy(); this.fog = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); window.removeEventListener('popstate', this.onPop); this.observer?.disconnect(); cancelAnimationFrame(this.cellRaf); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
     observeReveals() { document.querySelectorAll('[data-enter=""]').forEach((el) => this.observer.observe(el)); }
