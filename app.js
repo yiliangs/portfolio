@@ -200,7 +200,7 @@
                           "\n            "
                         ),
                         "\n            ",
-                        h("div", { key: "3", "data-leaf-text": "", style: S(`position:relative; z-index:5; min-width:12ch; flex:1 1 auto; text-align:${Vi.lf?.align ?? ""}; padding-bottom:2px;`) },
+                        h("div", { key: "3", "data-leaf-text": "", style: S(`position:relative; z-index:5; width:${Vi.lf?.textW ?? ""}; min-width:12ch; flex:1 1 auto; text-align:${Vi.lf?.align ?? ""}; padding-bottom:2px;`) },
                           "\n              ",
                           h("p", { key: "1|15.mbtwb2", style: {"margin":"0","fontFamily":"var(--deco)","fontSize":"10px","letterSpacing":"0.1em","color":"var(--color-accent-700)","whiteSpace":"nowrap"} },
                             h(F,{key:0},"",I(Vi.lf?.kicker,1),"")
@@ -306,7 +306,7 @@
                           "\n            "
                         ),
                         "\n            ",
-                        h("div", { key: "3", "data-leaf-text": "", style: S(`position:relative; z-index:5; min-width:12ch; flex:1 1 auto; text-align:${Vi.lf?.align ?? ""}; padding-bottom:2px;`) },
+                        h("div", { key: "3", "data-leaf-text": "", style: S(`position:relative; z-index:5; width:${Vi.lf?.textW ?? ""}; min-width:12ch; flex:1 1 auto; text-align:${Vi.lf?.align ?? ""}; padding-bottom:2px;`) },
                           "\n              ",
                           h("p", { key: "1|15.mbtwb2", style: {"margin":"0","fontFamily":"var(--deco)","fontSize":"10px","letterSpacing":"0.1em","color":"var(--color-accent-700)","whiteSpace":"nowrap"} },
                             h(F,{key:0},"",I(Vi.lf?.kicker,1),"")
@@ -2354,12 +2354,12 @@
         { row: 1, h: 165, w: 2475, ratio: '4/3', maxW: '700px', titleSize: '26px', dir: 'row', alignItems: 'flex-end', px: '-18px', py: '-10px', dur: '7.5s', delay: '0s', offsetX: '-66.667px', offsetY: '-3.334px', cover: 'https://picsum.photos/seed/halvorsen-cuts/800/600' },
       ],
       right: [
-        { row: 2, h: 164.932, w: 2473.978, ratio: '3/4', maxW: '641.402px', titleSize: '26px', dir: 'row-reverse', alignItems: 'flex-end', px: '-26px', py: '-14px', dur: '9s', delay: '-3s', offsetX: '69.333px', offsetY: '14.667px', cover: 'https://picsum.photos/seed/halvorsen-machines/600/800' },
+        { row: 2, h: 164.932, w: 2473.978, ratio: '3/4', maxW: '641.402px', titleSize: '26px', dir: 'row-reverse', alignItems: 'flex-end', px: '-26px', py: '-14px', dur: '9s', delay: '-3s', offsetX: '11.333px', offsetY: '23.334px', cover: 'https://picsum.photos/seed/halvorsen-machines/600/800' },
         // stackH and stackW: the height a declared plate may take here instead of h and w. This spread is
         // laid out as a row, its stock plate 18vh tall with the caption beside it; a declared plate stacks
         // its title underneath (see below), and at 18vh that stack runs out of the row into the anchor
         // plate in the row beneath. The other spreads are the anchors, whose stacks the page was tuned around.
-        { row: 1, h: 68.468, w: 988.985, stackH: 49.449, stackW: 456.455, ratio: '3/2', maxW: '342.341px', titleSize: '17px', dir: 'row-reverse', alignItems: 'flex-start', px: '-22px', py: '-12px', dur: '10s', delay: '-1.5s', offsetX: '-372px', offsetY: '-26px', cover: 'https://picsum.photos/seed/halvorsen-4/900/600' },
+        { row: 1, h: 68.468, w: 988.985, stackH: 49.449, stackW: 456.455, ratio: '3/2', maxW: '342.341px', titleSize: '17px', dir: 'row-reverse', alignItems: 'flex-start', px: '-22px', py: '-12px', dur: '10s', delay: '-1.5s', offsetX: '-512.667px', offsetY: '-36.667px', cover: 'https://picsum.photos/seed/halvorsen-4/900/600' },
       ],
     };
     // Pair styles, handed to a gutter's pair cells in order and cycled once they run out. A cycled style
@@ -2368,13 +2368,13 @@
     // viewport, so a pair in the second column lifts clear of it rather than settling onto it.
     LEAF_PAIRS = {
       left: [
-        { h: 105, w: 1650, ratio: '1/1', maxW: '350px', titleSize: '17px', dir: 'column', alignItems: 'flex-start', px: '-14px', py: '-8px', dur: '8s', delay: '-5s', offsetX: '321.334px', offsetY: '224.667px', cover: 'https://picsum.photos/seed/halvorsen-3/700/700' },
+        { h: 105, w: 1650, ratio: '1/1', maxW: '350px', titleSize: '17px', dir: 'column', alignItems: 'flex-start', px: '-14px', py: '-8px', dur: '8s', delay: '-5s', offsetX: '336.667px', offsetY: '112px', cover: 'https://picsum.photos/seed/halvorsen-3/700/700' },
         { h: 39.342, w: 655.698, ratio: '5/4', maxW: '163.925px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-20px', py: '-9px', dur: '8.5s', delay: '-2s', offsetX: '-204.667px', offsetY: '112px', cover: 'https://picsum.photos/seed/halvorsen-5/700/560' },
-        { h: 45.231, w: 719.064, ratio: '4/5', maxW: '148.452px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-17px', py: '-12px', dur: '7.8s', delay: '-6s', offsetX: '-458px', offsetY: '91.333px', cover: 'https://picsum.photos/seed/halvorsen-7/560/700' },
+        { h: 45.231, w: 719.064, ratio: '4/5', maxW: '148.452px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-17px', py: '-12px', dur: '7.8s', delay: '-6s', offsetX: '-478px', offsetY: '149.333px', cover: 'https://picsum.photos/seed/halvorsen-7/560/700' },
         { h: 33, w: 560, ratio: '3/2', maxW: '140px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-12px', py: '-7px', dur: '9.2s', delay: '-1s', offsetX: '0px', offsetY: '18px', cover: 'https://picsum.photos/seed/halvorsen-9/900/600' },
       ],
       right: [
-        { h: 76.663, w: 1226.606, ratio: '2/3', maxW: '170.362px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-16px', py: '-11px', dur: '9.5s', delay: '-4s', offsetX: '-60px', offsetY: '0px', cover: 'https://picsum.photos/seed/halvorsen-6/600/900' },
+        { h: 76.663, w: 1226.606, ratio: '2/3', maxW: '170.362px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-16px', py: '-11px', dur: '9.5s', delay: '-4s', offsetX: '-62.667px', offsetY: '-36.667px', cover: 'https://picsum.photos/seed/halvorsen-6/600/900' },
         { h: 82.346, w: 1372.427, ratio: '1/1', maxW: '274.485px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-19px', py: '-10px', dur: '8.2s', delay: '-2.5s', offsetX: '-162.667px', offsetY: '148px', cover: 'https://picsum.photos/seed/halvorsen-8/700/700' },
         { h: 30, w: 520, ratio: '4/5', maxW: '110px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-13px', py: '-6px', dur: '10.5s', delay: '-3.5s', offsetX: '0px', offsetY: '30px', cover: 'https://picsum.photos/seed/halvorsen-10/560/700' },
         { h: 39, w: 640, ratio: '3/2', maxW: '130px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-21px', py: '-13px', dur: '7.2s', delay: '-0.5s', offsetX: '0px', offsetY: '-24px', cover: 'https://picsum.photos/seed/halvorsen-11/900/600' },
@@ -3638,6 +3638,11 @@
           plateH: declared ? 'auto' : pos.imgH,
           plateMaxW: declared ? '100%' : 'none',
           dir: declared ? 'column' : pos.dir,
+          // The caption sits under a declared plate and the hover detail is positioned inside it, so the
+          // block's width is the measure both of them wrap to. Sized to its contents it becomes as narrow
+          // as the title, and a two-word title left the description wrapping every few words. It takes
+          // the plate's width instead. A stock plate keeps its caption beside it, where filling would be wrong.
+          textW: declared ? '100%' : 'auto',
           alignItems: declared ? (pos.side === 'left' ? 'flex-start' : 'flex-end') : pos.alignItems,
           idx: pi, cardNo: k + 1, typed, kicker: real ? 'Chapter ' + p.numeral + ' · ' + p.year : 'Forthcoming', detailDisplay: on ? 'block' : 'none', detailOpacity: on ? '1' : '0', caretOpacity: on && typed.length < detail.length ? '1' : '0', morphName: real ? 'row-' + k : 'leaf-' + k, figNo: real ? p.figNo : 'x' + k, placeholder: real ? p.placeholder : 'Plate: forthcoming', coverSlotId: real ? 'cover-' + pi : 'cover-next-' + k, open: real ? p.open : () => {}, zIndex: on ? 30 : Math.max(1, 12 - k), origin: (pos.selfX === 'start' ? 'left ' : 'right ') + (pos.selfY === 'start' ? 'top' : pos.selfY === 'end' ? 'bottom' : 'center'), cursor: real ? 'pointer' : 'default', lift: on ? '-10px' : '0px', scale: on ? '1.06' : '1', shadow: on ? '0 24px 48px -20px rgba(32,31,29,0.35), 0 2px 6px rgba(32,31,29,0.08)' : '0 8px 24px -16px rgba(32,31,29,0.25)',
           hover: () => { if (real) this.startTyping('leaf-' + pi, detail.length, { hovered: pi }); }, unhover: () => { this.stopTyping(); } }; });
