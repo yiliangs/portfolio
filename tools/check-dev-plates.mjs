@@ -31,9 +31,19 @@ import { DC_SOURCE, readLogicSource, readEntries, readTable, readNumber, registe
 
 const BUILT = 'app.js';
 
-// The two sheets issue #40 records. They are named here because their absence is the one failure
-// this file cannot infer from anything else in the repository.
-const REQUIRED_SHEETS = ['Rhino Worktree Launcher', 'Agent Usage Stat'];
+// The two sheets issue #40 records, and the one issue #48 adds. They are named here because their
+// absence is the one failure this file cannot infer from anything else in the repository.
+const REQUIRED_SHEETS = ['Rhino Worktree Launcher', 'Agent Usage Stat', 'Building Graph Neural Network'];
+
+// The whole Natalie block is issued with a moving plate: three of its sheets took one under #44 and
+// the five that still stood on a worded placeholder took theirs under #51. Naming them is the same
+// kind of statement REQUIRED_SHEETS makes. An entry that names no plate at all is a legitimate state
+// and has to stay one, because the placeholder path is exercised nowhere else, so a plate quietly
+// dropped from one of these eight reads to this file as an ordinary unillustrated sheet unless the
+// register says which sheets are supposed to move.
+const MOVING_SHEETS = ['Natalie', 'AI Layout', 'Synchronisation to the Rhino Ecosystem',
+  'Linkage to Rhino Blocks', 'Residential Program-responsive Facade Layout',
+  'Unit Stack Calculation', 'Unit Demising Calculation', 'Room Layout Solver'];
 
 // Every field the mono sheet or the Development landing reads off an entry. `summary` and
 // `statusShort` are carried by the data and read by neither, so they are not required here.
@@ -63,6 +73,12 @@ const mono = entries.filter((d) => registerOf(d) === 'mono');
 
 for (const title of REQUIRED_SHEETS) {
   if (!mono.some((d) => d.title === title)) fail('the Development register has no ' + title + ' sheet');
+}
+
+for (const title of MOVING_SHEETS) {
+  const sheet = mono.find((d) => d.title === title);
+  if (!sheet) fail('the Development register has no ' + title + ' sheet to carry a moving plate');
+  else if (!sheet.video) fail('the ' + title + ' sheet is issued with a moving plate but names no video');
 }
 
 for (const d of mono) {
