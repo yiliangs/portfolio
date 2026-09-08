@@ -1832,7 +1832,7 @@ class Component extends DCLogic {
   // the photo a framed element is showing, as a URL (image-slot keeps its <img> in shadow DOM).
   // A moving plate answers with its poster, which is the same still the landing card carries, so the
   // photograph that flies between the two is one picture whether the plate it lands in moves or not
-  slotSrc(el) { const v = el.matches('video') ? el : el.querySelector('video'); if (v) return v.poster || ''; const s = el.matches('image-slot') ? el : el.querySelector('image-slot'); if (!s) return ''; const im = s.shadowRoot && s.shadowRoot.querySelector('img'); return (im && im.currentSrc) || s.getAttribute('src') || ''; }
+  slotSrc(el) { const v = el.matches('video') ? el : el.querySelector('video'); if (v) return v.poster || ''; const s = el.matches('image-slot') ? el : el.querySelector('image-slot'); if (!s) { const pl = el.matches('img') ? el : el.querySelector('img'); return pl ? (pl.currentSrc || pl.getAttribute('src') || '') : ''; } const im = s.shadowRoot && s.shadowRoot.querySelector('img'); return (im && im.currentSrc) || s.getAttribute('src') || ''; }
   textStyle(el) { const c = getComputedStyle(el); return { fontFamily: c.fontFamily, fontSize: c.fontSize, fontWeight: c.fontWeight, fontStyle: c.fontStyle, letterSpacing: c.letterSpacing, lineHeight: c.lineHeight, textTransform: c.textTransform, textAlign: c.textAlign, textWrap: c.textWrap, color: c.color, hyphens: c.hyphens, WebkitTextStroke: c.webkitTextStroke }; }
   textRect(el, fallback) { try { const rg = document.createRange(); rg.selectNodeContents(el); const rc = rg.getBoundingClientRect(); return rc.width ? rc : fallback; } catch (e) { return fallback; } }
   captureTexts() {
@@ -1939,12 +1939,14 @@ class Component extends DCLogic {
       const g = document.createElement('div'); g.style.cssText = 'position:absolute; box-sizing:border-box; border-style:solid; border-width:0; overflow:hidden; background-size:cover; background-position:center;'; layer.appendChild(g);
       const delay = Math.min(160, Math.max(0, rc.top) / vh * 160);
       // the photograph travels inside the frame: paint the captured plate on the flying box and
-      // keep the destination blank until the box lands on it, whether that is a slot or a video
+      // keep the destination blank until the box lands on it, whether that is a slot, a video or
+      // the plain <img> the serif chapter shows its hero in (a plain img is not a slot: the query
+      // must name it, or the picture sits waiting at the destination under the one flying to it)
       const photo = old.img || this.slotSrc(el);
       if (photo) {
         g.style.backgroundImage = 'url("' + photo + '")';
         g.animate([{ filter: old.filter && old.filter !== 'none' ? old.filter : 'none' }, { filter: c.filter && c.filter !== 'none' ? c.filter : 'none' }], { duration: dur, delay, easing, fill: 'both' });
-        const slot = el.matches('image-slot, video') ? el : el.querySelector('image-slot, video');
+        const slot = el.matches('image-slot, video, img') ? el : el.querySelector('image-slot, video, img');
         if (slot) { const prev = slot.style.opacity; slot.style.opacity = '0'; setTimeout(() => { slot.style.transition = 'opacity 200ms ease'; slot.style.opacity = prev || '1'; setTimeout(() => { slot.style.transition = ''; }, 240); }, dur + delay); }
       }
       const w0 = old.isRule ? '1px 0 0 0' : '1px', w1 = isRule ? '1px 0 0 0' : '1px';
