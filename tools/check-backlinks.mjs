@@ -278,16 +278,19 @@ else {
         }
       }
     }
-    // Hovering a plate brings the plates it links to up to full ink as well as revealing the lines,
-    // so a plate's resting frame is the model's call rather than a colour written into the markup.
+    // Hovering a plate brings the plates it links to up to full ink as well as revealing the lines, so
+    // whether a plate is lit is the model's call. It says so as a state rather than as a colour: the
+    // three inks of a frame live in one CSS rule (see .mod in the style block) and a plate carries
+    // data-lit or does not.
     const plate = [...grid.querySelectorAll('sc-for')].find((el) => tight(el.getAttribute('list') || '') === '{{landingPlates}}');
     if (!plate) fail('the desktop landing has no plates to join');
     else {
-      if (!plate.outerHTML.includes('{{ p.frameInk }}')) {
-        fail('a plate does not read its frame ink back from the model, so hovering one cannot bring the plates it links to up to full ink');
+      if (!plate.outerHTML.includes('data-lit="{{ p.lit }}"')) {
+        fail('a plate does not read data-lit="{{ p.lit }}" back from the model, so hovering one cannot bring the plates it links to up to full ink');
       }
-      if (/--color-neutral-400/.test(plate.outerHTML)) {
-        fail('a plate still writes its resting frame ink into the markup, so the model cannot light the plates a hovered one links to');
+      const box = plate.firstElementChild;
+      if (box && /box-shadow/.test(box.getAttribute('style') || '')) {
+        fail('a plate writes a frame into its own style attribute, so the model cannot light the plates a hovered one links to: the frame is .mod::after and the lit state is data-lit');
       }
     }
   }

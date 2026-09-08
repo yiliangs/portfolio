@@ -66,7 +66,7 @@ for (const [name, at] of seen) {
 // expressed as markup: the underline under the current tab, the parchment roll's pose, the home cube's layer,
 // the captions pulled back inside the hero, the text effects, the reveal observers, the paper, the statement.
 const OWED = ['measureTabs', 'syncParchment', 'syncHome', 'placeLeafText', 'mountTextEffects', 'observeReveals',
-  'syncPaper', 'measureLandingStatement'];
+  'syncPaper', 'fitLandingStatement'];
 
 // the last definition is the one that survives, so that is the body to read
 const declAt = logicSrc.lastIndexOf('\n  componentDidUpdate(');

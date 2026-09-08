@@ -146,9 +146,15 @@ const imports = [...src.matchAll(/import\((['"])\.\/leaves-dev\.js\1\)/g)];
 if (imports.length !== 1) {
   fail('expected exactly one import of ' + MODULE + ' in the design source, found ' + imports.length);
 } else {
-  const before = src.slice(Math.max(0, imports[0].index - 400), imports[0].index);
-  if (!/URLSearchParams\(location\.search\)\.has\('dev'\)/.test(before)) {
+  const before = src.slice(Math.max(0, imports[0].index - 900), imports[0].index);
+  // The flag is read once onto the instance now, because the landing reads it too. So the import may
+  // be guarded by the field rather than by the URL, as long as the field is that same reading of the
+  // URL and nothing else. This is the clause check-grid-tuner holds over the panel next to it.
+  if (!/URLSearchParams\(location\.search\)\.has\('dev'\)/.test(before) && !/if \(this\.dev\)/.test(before)) {
     fail(MODULE + ' is imported without the ?dev flag guarding it, so the panel ships to every visitor');
+  }
+  if (!/\n  dev = new URLSearchParams\(location\.search\)\.has\('dev'\);/.test(logicSrc)) {
+    fail('the ?dev flag is not read once onto the instance, so the two panels can disagree about whether the page is being tuned');
   }
 }
 if (!/this\.leafTuner\.destroy\(\)/.test(logicSrc)) {
