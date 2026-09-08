@@ -1423,8 +1423,10 @@
           // any length is hundreds of these, and a compositor layer each means
           // hundreds of layers rebuilt and committed every frame while nothing
           // moves, and a repaint and a rasterisation of its own for every
-          // colour and shadow write. The transform animates without it, inside
-          // the layer the pane already has.
+          // colour and shadow write. The promotion belongs one level up, on the
+          // pane, where one layer holds every character of it: the constructor
+          // sets it there and destroy() puts it back. The transform animates
+          // inside that layer as well as it did inside its own.
 
           const textEl = document.createElement('span');
           textEl.className = opts.className + '-text';
@@ -2009,6 +2011,16 @@
       this.element = element;
       this.options = Object.assign({}, DEFAULTS, options || {});
       this._originalHTML = element.innerHTML;
+      // The pane is the compositor layer, one for however many characters it
+      // holds. It has to be a layer of some kind: this effect rewrites the
+      // colour and the shadow of individual characters every frame, and left in
+      // the page's own layer that repaint re-records the display list of
+      // everything around them, which on a chapter is thousands of split spans
+      // standing under a header that animates. Promoting the characters instead
+      // is the same thought at the wrong granularity and costs a layer each; see
+      // the Splitter banner. Restored, like the markup, by destroy().
+      this._originalWillChange = element.style.willChange;
+      element.style.willChange = 'transform';
       this._chars = Splitter.split(element, this.options);
       this._ro = null;
       this._destroyed = false;
@@ -2043,6 +2055,7 @@
       if (this._ro) { this._ro.disconnect(); this._ro = null; }
       this._engine.release();
       this.element.innerHTML = this._originalHTML;
+      this.element.style.willChange = this._originalWillChange;
       this._chars = [];
     }
 

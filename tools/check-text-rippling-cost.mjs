@@ -16,8 +16,11 @@
 //   2. Every character span used to ask for will-change: transform, which promotes it to a compositor
 //      layer of its own. A chapter's panes run to hundreds of glyphs, so the compositor rebuilt
 //      hundreds of layers every frame while nothing moved, and every colour write repainted and
-//      rasterised its own layer. The transform animates as well without it, inside the layer its
-//      parent already has.
+//      rasterised its own layer. The promotion belongs one level up: the pane is one layer for every
+//      character it holds, and it has to be a layer of some kind, because the effect rewrites a
+//      character's colour and shadow every frame and in the page's own layer that repaint re-records
+//      the display list of everything standing near it. It is the effect's promotion, so destroy()
+//      gives the element back whatever will-change it had.
 //
 //   3. The parchment roll behind the Research headline burns where the ink in front of it is lit, so
 //      the page reads which glyphs are lit, how brightly, and where, once a frame. It used to read
@@ -128,15 +131,48 @@ if (stamps.length !== before + 1) {
   }
 }
 
-// ---------------------------------------------------------------- 2. a glyph is not a compositor layer
+// ---------------------------------------------------------------- 2. the pane is the layer, not the glyph
 
-const promoted = Array.from(inst.element.querySelectorAll('span'))
-  .filter((s) => /will-change/i.test(s.getAttribute('style') || ''));
-if (promoted.length) {
-  fail(promoted.length + ' of the ' + inst.element.querySelectorAll('span').length + ' spans under one text ' +
-    'pane ask for will-change, so each is a compositor layer of its own. A chapter carries hundreds of them ' +
-    'and the compositor rebuilds every one of them every frame while nothing moves. The transform animates ' +
-    'inside the layer the pane already has');
+{
+  const promoted = Array.from(inst.element.querySelectorAll('span'))
+    .filter((s) => /will-change/i.test(s.getAttribute('style') || ''));
+  if (promoted.length) {
+    fail(promoted.length + ' of the ' + inst.element.querySelectorAll('span').length + ' spans under one text ' +
+      'pane ask for will-change, so each is a compositor layer of its own. A chapter carries hundreds of them ' +
+      'and the compositor rebuilds every one of them every frame while nothing moves');
+  }
+  if (inst.element.style.willChange !== 'transform') {
+    fail('the mounted pane asks for will-change ' + JSON.stringify(inst.element.style.willChange) + ' rather than ' +
+      '"transform", so it is not a layer of its own. The effect rewrites a character\'s colour and shadow every ' +
+      'frame, and in the page\'s own layer that repaint re-records the display list of everything standing near ' +
+      'it, which on a chapter is thousands of split spans under an animating header');
+  }
+}
+
+// The promotion is the effect's, so it goes when the effect does: a pane left promoted after destroy holds a
+// compositor layer for text that no longer moves, and one whose author asked for a will-change of their own gets
+// it back rather than ours.
+{
+  const el = doc.createElement('p');
+  el.style.willChange = 'opacity';
+  el.textContent = 'borrowed and returned';
+  doc.body.appendChild(el);
+  const borrowed = new TextRippling(el, {});
+  if (el.style.willChange !== 'transform') fail('a pane that already asked for a will-change did not take the effect\'s');
+  borrowed.destroy();
+  if (el.style.willChange !== 'opacity') {
+    fail('after destroy the pane\'s will-change is ' + JSON.stringify(el.style.willChange) + ' rather than the ' +
+      '"opacity" it carried before the effect was mounted on it');
+  }
+  const plain = doc.createElement('p');
+  plain.textContent = 'nothing borrowed';
+  doc.body.appendChild(plain);
+  const onPlain = new TextRippling(plain, {});
+  onPlain.destroy();
+  if (plain.style.willChange !== '') {
+    fail('after destroy a pane that carried no will-change is left asking for ' + JSON.stringify(plain.style.willChange) +
+      ', so the page keeps a compositor layer for text that no longer moves');
+  }
 }
 
 // ---------------------------------------------------------------- 3. the lit ink is readable without the DOM
@@ -326,5 +362,6 @@ if (failures.length) {
   process.exit(1);
 }
 console.log('check-text-rippling-cost: the page offset is cached across pointer events and frames and follows a ' +
-  'scroll, no glyph asks for a compositor layer, the lit ink reads back without a rect, and the ripple rejects a ' +
-  'far stamp without a square root and returns the same wake it did');
+  'scroll, the pane is the compositor layer and no glyph is, the promotion is handed back on destroy, the lit ink ' +
+  'reads back without a rect, and the ripple rejects a far stamp without a square root and returns the same wake ' +
+  'it did');
