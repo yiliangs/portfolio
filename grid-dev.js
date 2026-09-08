@@ -38,10 +38,17 @@
 // the values it was mounted with. The s key hides and shows the panel, Escape drops the selection,
 // and the panel hides itself on a view it has nothing to tune.
 //
-// mount(api) -> { destroy() }, where api is { tables, sheetTable, landingError, rerender }: the four
-// live tables off the logic class, mutated in place, a getter for which sheet table the width is
-// rendering, a getter for the placement's last complaint, and the component's re-render. serialize()
-// is pure and exported on its own so the paste-back path can be checked without a DOM.
+// While the panel is up the plates hold their hover text. A landing plate unrolls the reason it was
+// built out of itself on hover, over its neighbours and over anything the panel has drawn on the
+// grid, and the cursor is on a plate for the whole of a move, so composing with it running means
+// composing behind a paragraph. Hiding the panel gives it back, and so does the box in the panel for
+// anyone who wants to see the two together.
+//
+// mount(api) -> { destroy() }, where api is { tables, sheetTable, landingError, quiet, rerender }: the
+// four live tables off the logic class, mutated in place, a getter for which sheet table the width is
+// rendering, a getter for the placement's last complaint, a setter for holding the typewriter, and
+// the component's re-render. serialize() is pure and exported on its own so the paste-back path can
+// be checked without a DOM.
 
 const INK = '#f3f2f2', DIM = '#a8a4a0', GOLD = '#b68235', WARN = '#e07a5f', RULE = 'rgba(243,242,242,0.12)';
 const el = (tag, css, text) => { const e = document.createElement(tag); if (css) e.style.cssText = css; if (text != null) e.textContent = text; return e; };
@@ -257,10 +264,22 @@ const landingProblems = (T, corner) => {
 // ---------------------------------------------------------------- the panel
 
 export function mount(api) {
-  const { tables: T, sheetTable, landingError, rerender } = api;
+  const { tables: T, sheetTable, landingError, quiet, rerender } = api;
   const initial = JSON.parse(JSON.stringify(T));
 
   let selected = null, rows = [], drag = null, raf = 0, hidden = false, built = false;
+  // A landing plate unrolls its reason out of itself on hover, over its neighbours and over the mark,
+  // and the cursor sits on a plate for the whole of a move. So the typewriter is held while the panel
+  // is up, and comes back the moment it is hidden or the view has no grid on it. The box below turns
+  // it back on without putting the panel away. `told` is the last value the page was given, since
+  // telling it again would re-render, and re-rendering is what calls this.
+  let typewriter = false, told = null;
+  const hold = () => {
+    const want = !typewriter && !hidden && !!surface();
+    if (want === told) return;
+    told = want;
+    if (quiet) quiet(want);
+  };
 
   const root = el('div', `position:fixed; left:16px; bottom:16px; z-index:1000; width:370px; max-height:calc(100vh - 32px); overflow:auto; box-sizing:border-box; padding:4px 0 10px; background:rgba(28,27,26,0.94); color:${INK}; font:11px/1.5 'Geist Mono', ui-monospace, monospace; border-radius:6px; box-shadow:0 12px 40px rgba(0,0,0,0.35); user-select:none; pointer-events:auto;`);
   // The panel opens over the drawing's left columns, which is half of what it is for tuning, so its
@@ -279,7 +298,7 @@ export function mount(api) {
     window.addEventListener('pointerup', up, true);
   };
   const which = el('div', `margin:0 14px 4px; color:${GOLD}; font-size:10px;`);
-  const hint = el('div', `margin:0 14px 6px; color:${DIM}; font-size:10px;`, 'click a module, drag to move it, drag a handle to resize it, arrows to nudge, shift-arrows to grow or shrink, alt-arrows to move the near edge; s hides the panel');
+  const hint = el('div', `margin:0 14px 6px; color:${DIM}; font-size:10px;`, 'click a module, drag to move it, drag a handle to resize it, arrows to nudge, shift-arrows to grow or shrink, alt-arrows to move the near edge; s hides the panel and gives the plates their hover text back');
   const list = el('div', '');
   const sel = el('div', `margin:6px 14px 0; padding-top:6px; border-top:1px solid ${RULE};`);
   const bad = el('div', `margin:6px 14px 0; color:${WARN}; font-size:10px; white-space:pre-line;`);
@@ -334,7 +353,11 @@ export function mount(api) {
   // A box over the selected module carrying the handles that resize it. It lives in the grid, which is
   // positioned, so it needs no scroll handling: it travels with the drawing. Nothing but the handles
   // takes the pointer, so a plate under the mark still answers the cursor.
-  const mark = el('div', `position:absolute; pointer-events:none; outline:1px solid ${GOLD}; outline-offset:-1px; background:rgba(182,130,53,0.10); display:none;`);
+  // z-index 40 and not the auto it would otherwise take: a landing plate is positioned and carries
+  // z-index 1, which paints it over anything at auto in the same stacking context, so the mark was
+  // drawn under the very module it was marking and only its overhang was visible. The sheet declares
+  // no z-index anywhere, so 40 is above everything on either drawing.
+  const mark = el('div', `position:absolute; z-index:40; pointer-events:none; outline:1px solid ${GOLD}; outline-offset:-1px; background:rgba(182,130,53,0.10); display:none;`);
   for (const [name, x, y, cur] of [['left', '0', '50%', 'ew-resize'], ['right', '100%', '50%', 'ew-resize'], ['top', '50%', '0', 'ns-resize'], ['bottom', '50%', '100%', 'ns-resize']]) {
     const h = el('div', `position:absolute; left:${x}; top:${y}; transform:translate(-50%,-50%); width:13px; height:13px; box-sizing:border-box; border:1px solid ${GOLD}; background:#1c1b1a; border-radius:2px; pointer-events:auto; cursor:${cur};`);
     h.dataset.handle = name;
@@ -457,6 +480,7 @@ export function mount(api) {
     // also what keeps it from standing beside the Research margins panel with nothing to say
     root.hidden = hidden || !s;
     pins.hidden = s !== 'landing';
+    hold();
     rows.forEach((r) => r.show());
     buildSel(); showSel();
     const p = s === 'landing' ? landingProblems(T, cornerBox()) : s === 'sheet' ? sheetProblems(T[sheetTable()]) : [];
@@ -540,6 +564,13 @@ export function mount(api) {
   // and composing against ground that moves is no composing at all. Claiming them all at once, where
   // the draw has just left them, is the way in: nothing moves, and from there every plate answers the
   // cursor. Giving them all back is the way out.
+  const typeBox = el('label', `display:flex; align-items:center; gap:6px; margin:8px 14px 0; color:${DIM}; font-size:10px; cursor:pointer;`);
+  const typeOn = el('input', `accent-color:${GOLD}; margin:0;`);
+  typeOn.type = 'checkbox';
+  typeOn.onchange = () => { typewriter = typeOn.checked; refresh(); };
+  typeOn.onpointerdown = (ev) => ev.stopPropagation();
+  typeBox.append(typeOn, el('span', '', 'let the plates type on hover'));
+
   const pins = el('div', `display:flex; gap:6px; margin:8px 14px 0;`);
   pins.append(
     button('pin all', () => {
@@ -595,7 +626,7 @@ export function mount(api) {
     }, 'back to the values this panel was mounted with'),
     button('hide', (ev) => { ev.currentTarget.blur(); hidden = true; refresh(); }, 'hide; press s to show again'),
   );
-  root.append(pins, bar, out);
+  root.append(typeBox, pins, bar, out);
   // the page carries two of these now, so each says which it is: the panels park on opposite sides of
   // the window and their controls read alike, and nothing else tells them apart
   root.dataset.devPanel = 'grid';
@@ -631,6 +662,8 @@ export function mount(api) {
   return {
     destroy() {
       if (window.__grid && window.__grid.tables === T) delete window.__grid;
+      // the page keeps its typewriter, so the panel gives it back rather than leaving it held
+      if (quiet && told) quiet(false);
       observer.disconnect();
       cancelAnimationFrame(raf);
       window.removeEventListener('pointerdown', onDown, true);

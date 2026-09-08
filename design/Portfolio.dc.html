@@ -1666,7 +1666,11 @@ class Component extends DCLogic {
   // One typewriter serves whatever is being hovered: a Research leaf ('leaf-<idx>') or a figure in a
   // paper chapter ('fig-<n>'). typingKey says whose text state.typed belongs to, so only that one
   // element reads it. `patch` carries anything else the hover means, such as the leaves' `hovered`.
-  startTyping(key, len, patch) { this.stopTyping(); this.setState({ ...(patch || {}), typingKey: key, typed: 0 }); this.typeTimer = setInterval(() => { this.setState((st) => { if (st.typed >= len) { clearInterval(this.typeTimer); return null; } return { typed: st.typed + 6 }; }); }, 22); }
+  // devQuiet holds the typewriter while a tuning panel is up. A landing plate unrolls its reason out
+  // of itself on hover, over its neighbours and over whatever the panel has drawn on the grid, and
+  // the cursor is on a plate the whole time a plate is being moved. Nothing else about the hover
+  // changes: the plate still takes the hovered state, so the rest of the page reads it the way it did.
+  startTyping(key, len, patch) { if (this.devQuiet) return; this.stopTyping(); this.setState({ ...(patch || {}), typingKey: key, typed: 0 }); this.typeTimer = setInterval(() => { this.setState((st) => { if (st.typed >= len) { clearInterval(this.typeTimer); return null; } return { typed: st.typed + 6 }; }); }, 22); }
   stopTyping() { clearInterval(this.typeTimer); this.setState({ typingKey: null, typed: 0 }); }
   typedText(key, text) { return this.state.typingKey === key ? text.slice(0, this.state.typed || 0) : ''; }
   goHome() {
@@ -1894,7 +1898,7 @@ class Component extends DCLogic {
         .then((m) => { if (!this.dead) this.leafTuner = m.mount({ spreads: this.LEAF_SPREADS, pairs: this.LEAF_PAIRS, rerender: () => this.forceUpdate() }); })
         .catch((e) => console.error('leaves-dev', e));
       import('./grid-dev.js')
-        .then((m) => { if (!this.dead) this.gridTuner = m.mount({ tables: { SHEET_WIDE: this.SHEET_WIDE, SHEET_NARROW: this.SHEET_NARROW, LANDING_WIDE: this.LANDING_WIDE, LANDING_PINS: this.LANDING_PINS }, sheetTable: () => (this.state.narrow ? 'SHEET_NARROW' : 'SHEET_WIDE'), landingError: () => this.landingError, rerender: () => { this.landingCache = null; this.forceUpdate(); } }); })
+        .then((m) => { if (!this.dead) this.gridTuner = m.mount({ tables: { SHEET_WIDE: this.SHEET_WIDE, SHEET_NARROW: this.SHEET_NARROW, LANDING_WIDE: this.LANDING_WIDE, LANDING_PINS: this.LANDING_PINS }, sheetTable: () => (this.state.narrow ? 'SHEET_NARROW' : 'SHEET_WIDE'), landingError: () => this.landingError, quiet: (on) => { this.devQuiet = on; if (on) this.stopTyping(); else this.forceUpdate(); }, rerender: () => { this.landingCache = null; this.forceUpdate(); } }); })
         .catch((e) => console.error('grid-dev', e));
     }
     this.observeReveals(); this.mountTextEffects(); this.syncParchment(); this.syncHome(); this.syncPaper(); this.placeLeafText();

@@ -222,6 +222,26 @@ if (!/rerender: \(\) => \{ this\.landingCache = null;/.test(logicSrc)) {
 if (!/landingError: \(\) => this\.landingError/.test(logicSrc)) {
   fail("the panel is not handed the placement's last complaint, so pins that leave the draw nowhere to go would show only as a landing with no plates");
 }
+// A landing plate types the reason it was built out of itself on hover, over its neighbours and over
+// the panel's own mark, and the cursor is on a plate for the whole of a move. The panel holds that
+// while it is up, through the one choke point both the plates and the Research leaves start from.
+if (!/quiet: \(on\) => \{ this\.devQuiet = on;/.test(logicSrc)) {
+  fail('the panel cannot hold the typewriter, so a plate types over the box being dragged');
+}
+if (!/startTyping\(key, len, patch\) \{ if \(this\.devQuiet\) return;/.test(logicSrc)) {
+  fail('startTyping does not read devQuiet, so holding the typewriter would hold nothing');
+}
+{
+  const mod = readFileSync('grid-dev.js', 'utf8');
+  // a landing plate is positioned and carries z-index 1, so a mark left at auto is painted under the
+  // very module it marks and only its overhang shows
+  if (!/const mark = el\('div', `position:absolute; z-index:\d+;/.test(mod)) {
+    fail('the selection mark takes no z-index, so the landing plates paint over the box being dragged');
+  }
+  if (!/typeOn\.onchange = \(\) => \{ typewriter = typeOn\.checked;/.test(mod)) {
+    fail('the panel offers no way to let the plates type again while it is up');
+  }
+}
 
 // ---------------------------------------------------------------- two panels, one page
 
