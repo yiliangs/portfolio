@@ -13,12 +13,13 @@
 import { readFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
 import { placeLanding, PLATE_VOCAB, FIRST_PLATE } from '../landing-grid.js';
+import { monoEntries } from './dc-data.mjs';
 
 const SRC = 'design/Portfolio.dc.html';
 const COLUMNS = 22; // grid lines run 1..COLUMNS+1
 const HEADER = 57; // the sticky header, so the first visible row starts under it
 const ROW = 44;
-const PLATES = 12; // the entries that route to the mono register
+const PLATES = monoEntries().length; // the entries that route to the mono register
 
 const failures = [];
 const fail = (msg) => failures.push(msg);
