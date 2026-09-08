@@ -481,7 +481,7 @@
               h("div", { key: "1", style: {"marginTop":"88px","display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","borderRight":"1px solid var(--hair)","borderBottom":"1px solid var(--hair)","backgroundImage":"linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
                 "\n\n    ",
                 "\n    ",
-                h("section", { key: "2", className: "mod", style: {"gridColumn":"1 / 15","gridRow":"2 / 12","padding":"22px"} },
+                h("section", { key: "2", className: "mod", style: S(`grid-column:${V.stack?.statement?.col ?? ""}; grid-row:${V.stack?.statement?.row ?? ""}; padding:clamp(14px,3.7vw,22px);`) },
                   "\n      ",
                   h("p", { key: "1|17.1dagtdl", "data-morph": "kicker", style: {"margin":"0 0 22px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
                     h(F,{key:0},"",I(V.page?.kicker,1),"")
@@ -502,10 +502,10 @@
                 ),
                 "\n    ",
                 "\n    ",
-                h("div", { key: "5", ref: V.platformRef, "aria-hidden": "true", className: "mod", style: {"gridColumn":"15 / 23","gridRow":"2 / 12","minHeight":"0","cursor":"grab","touchAction":"none","userSelect":"none"} }),
+                h("div", { key: "5", ref: V.platformRef, "aria-hidden": "true", className: "mod", style: S(`grid-column:${V.stack?.platform?.col ?? ""}; grid-row:${V.stack?.platform?.row ?? ""}; min-height:0; cursor:grab; touch-action:none; user-select:none;`) }),
                 "\n\n    ",
                 "\n    ",
-                h("p", { key: "8|22.11u5osx", ref: V.contentsRef, "data-morph": "index-kicker", className: "mod", style: {"gridColumn":"1 / 7","gridRow":"14 / 15","margin":"0","display":"flex","alignItems":"center","padding":"0 22px","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
+                h("p", { key: "8|22.11u5osx", ref: V.contentsRef, "data-morph": "index-kicker", className: "mod", style: S(`grid-column:${V.stack?.contents?.col ?? ""}; grid-row:${V.stack?.contents?.row ?? ""}; margin:0; display:flex; align-items:center; padding:0 clamp(14px,3.7vw,22px); font-size:12px; letter-spacing:0.08em; color:var(--color-neutral-600);`) },
                   h(F,{key:0},"",I(V.page?.indexKicker,1),"")
                 ),
                 "\n    ",
@@ -513,15 +513,15 @@
                   var Vi = Object.assign({}, V, {"p": item, $index: i});
                   return h(F,{key:i},
                     "\n      ",
-                    h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, onClick: Vi.p?.open, onMouseEnter: Vi.p?.hover, className: "mod mod-ctl", style: S(`grid-column:1 / 23; grid-row:${Vi.p?.cardRow ?? ""}; display:grid; grid-template-columns:repeat(22,1fr); cursor:pointer; color:var(--color-text);`) },
+                    h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, onClick: Vi.p?.open, onMouseEnter: Vi.p?.hover, className: "mod mod-ctl", style: S(`grid-column:${Vi.stack?.cards?.col ?? ""}; grid-row:${Vi.p?.cardRow ?? ""}; display:grid; grid-template-columns:repeat(22,1fr); grid-template-rows:${Vi.p?.cardGrid ?? ""}; cursor:pointer; color:var(--color-text);`) },
                       "\n        ",
-                      h("div", { key: "1", style: S(`grid-column:${Vi.p?.textCol ?? ""}; grid-row:1; min-width:0; padding:22px; box-sizing:border-box; align-self:end;`) },
+                      h("div", { key: "1", style: S(`grid-column:${Vi.p?.textCol ?? ""}; grid-row:${Vi.p?.textRow ?? ""}; min-width:0; padding:clamp(14px,3.7vw,22px); box-sizing:border-box; align-self:end;`) },
                         "\n          ",
                         h("p", { key: "1|49.14srs4v", style: {"margin":"0 0 22px","fontSize":"12px","color":"var(--color-neutral-600)"} },
                           h(F,{key:0},"",I(Vi.p?.bandNo,1)," · ",I(Vi.p?.kindLower,3)," · ",I(Vi.p?.year,5),"")
                         ),
                         "\n          ",
-                        h("p", { key: "3|13.bo1o1h", "data-morph": Vi.p?.morphName, "data-morph-alt": `title-${Vi.p?.figNo ?? ""}`, style: {"margin":"0","fontSize":"28px","lineHeight":"34px","letterSpacing":"-0.03em"} },
+                        h("p", { key: "3|13.bo1o1h", "data-morph": Vi.p?.morphName, "data-morph-alt": `title-${Vi.p?.figNo ?? ""}`, style: {"margin":"0","fontSize":"clamp(22px,5.6vw,28px)","lineHeight":"clamp(28px,6.8vw,34px)","letterSpacing":"-0.03em"} },
                           h(F,{key:0},"",I(Vi.p?.title,1),"")
                         ),
                         "\n          ",
@@ -532,7 +532,7 @@
                       ),
                       "\n        ",
                       "\n        ",
-                      h("div", { key: "4", "data-shape": Vi.p?.frameShape, "data-shape-alt": `frame-${Vi.p?.figNo ?? ""}`, className: "mod", style: S(`grid-column:${Vi.p?.plateCol ?? ""}; grid-row:1;`) },
+                      h("div", { key: "4", "data-shape": Vi.p?.frameShape, "data-shape-alt": `frame-${Vi.p?.figNo ?? ""}`, className: "mod", style: S(`grid-column:${Vi.p?.plateCol ?? ""}; grid-row:${Vi.p?.plateRow ?? ""};`) },
                         h("div", { key: "0", style: {"position":"absolute","inset":"0","overflow":"hidden"} },
                           h("image-slot", { key: "0", id: Vi.p?.plateSlotId, src: Vi.p?.hero, shape: "rect", fit: "cover", placeholder: Vi.p?.placeholder, style: {"width":"100%","height":"100%"} })
                         )
@@ -542,10 +542,10 @@
                     "\n    ");
                 })),
                 "\n    ",
-                h("div", { key: "12", ref: V.platesRef, style: S(`grid-column:1 / 2; grid-row:${V.gridPlatesRow ?? ""}; height:0;`) }),
+                h("div", { key: "12", ref: V.platesRef, style: S(`grid-column:${V.stack?.plates?.col ?? ""}; grid-row:${V.stack?.plates?.row ?? ""}; height:0;`) }),
                 "\n\n    ",
                 "\n    ",
-                h("section", { key: "15", ref: V.notesRef, className: "mod", style: S(`grid-column:1 / 11; grid-row:${V.gridAuthorRow ?? ""}; padding:22px;`) },
+                h("section", { key: "15", ref: V.notesRef, className: "mod", style: S(`grid-column:${V.stack?.author?.col ?? ""}; grid-row:${V.stack?.author?.row ?? ""}; padding:clamp(14px,3.7vw,22px);`) },
                   "\n      ",
                   h("p", { key: "1|3.377ldf", "data-morph": "notes-kicker", style: {"margin":"0 0 22px","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
                     "who"
@@ -573,7 +573,7 @@
                   "\n    "
                 ),
                 "\n    ",
-                h("ol", { key: "17", className: "mod", style: S(`grid-column:12 / 23; grid-row:${V.gridAuthorRow ?? ""}; padding:22px; list-style:none; margin:0; font-feature-settings:'tnum' 1;`) },
+                h("ol", { key: "17", className: "mod", style: S(`grid-column:${V.stack?.cv?.col ?? ""}; grid-row:${V.stack?.cv?.row ?? ""}; padding:clamp(14px,3.7vw,22px); list-style:none; margin:0; font-feature-settings:'tnum' 1;`) },
                   "\n      ",
                   h(F,{key:1},L(V.cv).map(function(item,i){
                     var Vi = Object.assign({}, V, {"c": item, $index: i});
@@ -602,20 +602,20 @@
                   "\n    "
                 ),
                 "\n\n    ",
-                h("p", { key: "19|19.19w1nxe", "data-morph": "colophon", className: "mod", style: S(`grid-column:1 / 16; grid-row:${V.gridColophonRow ?? ""}; margin:0; padding:22px; color:var(--color-neutral-600); font-size:12px; line-height:18px;`) },
+                h("p", { key: "19|19.19w1nxe", "data-morph": "colophon", className: "mod", style: S(`grid-column:${V.stack?.colophon?.col ?? ""}; grid-row:${V.stack?.colophon?.row ?? ""}; margin:0; padding:clamp(14px,3.7vw,22px); color:var(--color-neutral-600); font-size:12px; line-height:18px;`) },
                   h(F,{key:0},"",I(V.page?.colophon,1),"")
                 ),
                 "\n\n    ",
                 "\n    ",
-                h("a", { key: "22|5.49kwkt", href: V.cvMailto, className: C("mod mod-ctl","scp5"), style: S(`grid-column:1 / 3; grid-row:${V.gridContactRow ?? ""}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;`) },
+                h("a", { key: "22|5.49kwkt", href: V.cvMailto, className: C("mod mod-ctl","scp5"), style: S(`grid-column:${V.stack?.contactEmail?.col ?? ""}; grid-row:${V.stack?.contactEmail?.row ?? ""}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;`) },
                   "email"
                 ),
                 "\n    ",
-                h("a", { key: "24|6.1yz8dag", href: V.cvGithub, className: C("mod mod-ctl","scp5"), style: S(`grid-column:3 / 5; grid-row:${V.gridContactRow ?? ""}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;`) },
+                h("a", { key: "24|6.1yz8dag", href: V.cvGithub, className: C("mod mod-ctl","scp5"), style: S(`grid-column:${V.stack?.contactGithub?.col ?? ""}; grid-row:${V.stack?.contactGithub?.row ?? ""}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;`) },
                   "github"
                 ),
                 "\n    ",
-                h("button", { key: "26|2.3ho5a", onClick: V.goCvMono, className: C("mod mod-ctl","scp5"), style: S(`all:unset; grid-column:5 / 7; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text);`) },
+                h("button", { key: "26|2.3ho5a", onClick: V.goCvMono, className: C("mod mod-ctl","scp5"), style: S(`all:unset; grid-column:${V.stack?.contactCv?.col ?? ""}; grid-row:${V.stack?.contactCv?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text);`) },
                   "cv"
                 ),
                 "\n    "
@@ -2604,6 +2604,61 @@
       'building-graph-neural-network':                { col: '6 / 10',  row: '10 / 16' },
     };
     LANDING_PAD = 22; // the padding every module of the drawing grid is set in
+    // Where every module of the STACKED Development landing sits, on the same 22 column, 44px row
+    // drawing grid. Below 1000px the landing is not drawn but read top to bottom, and these are its
+    // two readings: the tablet column, which is the composition the markup used to carry inline, and
+    // the phone column, where nothing stands beside anything. Chosen off state.phone, and plain
+    // literals like the sheet tables so tools/check-landing-grid.mjs can read them without running
+    // this file.
+    //
+    // Three kinds of row, because unlike the sheet this drawing grows with the register:
+    //
+    //   * a pair of grid lines, for the corner above the cards, which is a fixed shape
+    //   * cards, the first card's own band. The drawing leaves two empty rows between two modules, so
+    //     that band is the step as well as the size: every card after the first opens two rows below
+    //     where the one before it closed
+    //   * a pair written with a leading +, for everything under the cards: rows counted from the line
+    //     the last card closes on, which is known only once the entries are counted
+    //
+    // cardTextA / cardPlateA and their B pair are not on this grid at all. They are on the card's own
+    // inner grid, which is 22 columns like the sheet and as many 44px rows as the card's band, and A
+    // takes the even bands while B takes the odd ones. That alternation is the whole of what makes the
+    // tablet column read plate-left then plate-right; on a phone both pairs are the same, because a
+    // card there is its text over its plate and there is no side for either to be on.
+    LANDING_NARROW = {
+      statement:     { col: '1 / 15',  row: '2 / 12' },
+      platform:      { col: '15 / 23', row: '2 / 12' },
+      contents:      { col: '1 / 7',   row: '14 / 15' },
+      cards:         { col: '1 / 23',  row: '16 / 23' },
+      cardTextA:     { col: '1 / 11',  row: '1 / 8' },
+      cardPlateA:    { col: '11 / 23', row: '1 / 8' },
+      cardTextB:     { col: '13 / 23', row: '1 / 8' },
+      cardPlateB:    { col: '1 / 13',  row: '1 / 8' },
+      plates:        { col: '1 / 2',   row: '+0 / +1' },
+      author:        { col: '1 / 11',  row: '+2 / +18' },
+      cv:            { col: '12 / 23', row: '+2 / +18' },
+      colophon:      { col: '1 / 16',  row: '+20 / +23' },
+      contactEmail:  { col: '1 / 3',   row: '+25 / +26' },
+      contactGithub: { col: '3 / 5',   row: '+25 / +26' },
+      contactCv:     { col: '5 / 7',   row: '+25 / +26' },
+    };
+    LANDING_PHONE = {
+      statement:     { col: '1 / 23',  row: '2 / 18' },
+      platform:      { col: '1 / 23',  row: '19 / 27' },
+      contents:      { col: '1 / 23',  row: '28 / 29' },
+      cards:         { col: '1 / 23',  row: '30 / 44' },
+      cardTextA:     { col: '1 / 23',  row: '1 / 8' },
+      cardPlateA:    { col: '1 / 23',  row: '8 / 15' },
+      cardTextB:     { col: '1 / 23',  row: '1 / 8' },
+      cardPlateB:    { col: '1 / 23',  row: '8 / 15' },
+      plates:        { col: '1 / 2',   row: '+0 / +1' },
+      author:        { col: '1 / 23',  row: '+2 / +16' },
+      cv:            { col: '1 / 23',  row: '+17 / +43' },
+      colophon:      { col: '1 / 23',  row: '+44 / +48' },
+      contactEmail:  { col: '1 / 9',   row: '+49 / +50' },
+      contactGithub: { col: '9 / 16',  row: '+49 / +50' },
+      contactCv:     { col: '16 / 23', row: '+49 / +50' },
+    };
     // Whether this page is being tuned rather than read, off the URL, once: the flag decides both which
     // modules are fetched at all, in componentDidMount, and how the landing draws, just below. Read on
     // the instance rather than at each of them, since a page where the two disagreed would either ship
@@ -4198,7 +4253,23 @@
       // zero-padded to two digits. Those are different numbers, so the frame name is kept out of the
       // 'frame-<figNo>' namespace the chapters use and out of the 'card-' one the engine keeps its own
       // fallback bucket in. The entry-to-chapter pairing is the plate's data-shape-alt, frame-<figNo>.
-      const pageProjects = projects.filter((p) => this.pageOf(projects.indexOf(p)) === pageKey).map((p, k) => ({ ...p, shapeIdx: k + 1, dir: k % 2 ? 'rtl' : 'ltr', textCol: k % 2 ? '13 / 23' : '1 / 11', plateCol: k % 2 ? '1 / 13' : '11 / 23', cardRow: (16 + 9 * k) + ' / ' + (23 + 9 * k), bandNo: String(k + 1).padStart(2, '0'), morphName: k < 2 ? 'row-' + k : 'feat-' + (k - 2) + '-title', frameShape: 'plate-frame-' + k }));
+      // The stacked Development landing, off whichever of its two tables the width calls for. Every
+      // span the markup used to carry inline is read back from there now, the way the sheet reads its
+      // own, so the tablet column and the phone column are two readings of one drawing rather than one
+      // composition with the other nowhere.
+      const at = (s) => s.split('/').map((v) => parseInt(v, 10));
+      const stackPlace = this.state.phone ? this.LANDING_PHONE : this.LANDING_NARROW;
+      // a card's band is its size and its step both: the drawing leaves two empty rows between two
+      // modules, so the next card opens that far below where the last one closed
+      const cardBand = at(stackPlace.cards.row), cardRows = cardBand[1] - cardBand[0], cardStep = cardRows + 2;
+      // the card's own inner grid is ruled on the same 44px module as the sheet it stands on, so a
+      // cell of it lands on the drawing's own lines rather than on a share of the card's height
+      const cardGrid = 'repeat(' + cardRows + ', ' + this.SHEET_ROW + 'px)';
+      const cardCell = (k, part) => stackPlace['card' + part + (k % 2 ? 'B' : 'A')];
+      const pageProjects = projects.filter((p) => this.pageOf(projects.indexOf(p)) === pageKey).map((p, k) => ({ ...p, shapeIdx: k + 1, dir: k % 2 ? 'rtl' : 'ltr',
+        textCol: cardCell(k, 'Text').col, textRow: cardCell(k, 'Text').row, plateCol: cardCell(k, 'Plate').col, plateRow: cardCell(k, 'Plate').row,
+        cardRow: (cardBand[0] + cardStep * k) + ' / ' + (cardBand[1] + cardStep * k), cardGrid,
+        bandNo: String(k + 1).padStart(2, '0'), morphName: k < 2 ? 'row-' + k : 'feat-' + (k - 2) + '-title', frameShape: 'plate-frame-' + k }));
       // The desktop Development landing. Its statement, platform and contact cells come off
       // LANDING_WIDE; every project is a plate pinned to a cell by landing-grid.js, and the grid ends on
       // whatever row that placement needed, so the contact band closes the sheet however far it grew.
@@ -4287,10 +4358,15 @@
       }).filter(Boolean);
       const introChars = Array.from(page.intro);
       page.dropCap = introChars[0]; page.introRest = introChars.slice(1).join('');
-      // the Development page is placed on a 44px module: cards are 7 rows with two blank rows between
-      const lastCardEnd = 23 + 9 * Math.max(0, pageProjects.length - 1);
-      // the contact band closes the sheet: one row, after the same two-row gap the colophon takes
-      const gridRows = { plates: lastCardEnd + ' / ' + (lastCardEnd + 1), author: (lastCardEnd + 2) + ' / ' + (lastCardEnd + 18), colophon: (lastCardEnd + 20) + ' / ' + (lastCardEnd + 23), contact: (lastCardEnd + 25) + ' / ' + (lastCardEnd + 26) };
+      // Where the last card closes, and with it every module the table placed under the cards. Those
+      // rows are written in the table with a leading +, because how far down this line falls is a fact
+      // about how many entries the register carries rather than about the drawing.
+      const lastCardEnd = cardBand[1] + cardStep * Math.max(0, pageProjects.length - 1);
+      const stack = {};
+      for (const [name, spot] of Object.entries(stackPlace)) {
+        const after = /^\+(\d+) \/ \+(\d+)$/.exec(spot.row);
+        stack[name] = { col: spot.col, row: after ? (lastCardEnd + +after[1]) + ' / ' + (lastCardEnd + +after[2]) : spot.row };
+      }
       const pad = (n) => String(n).padStart(2, '0');
       const featured = this.featuredFor[pageKey].map((i, k) => ({ ...projects[i], plateNumeral: this.num(k) }));
       const current = projects[idx];
@@ -4320,7 +4396,6 @@
       // The second is an entry that names one detail instead of the pair. The single figure takes the
       // columns the pair spanned, from detailA's first to detailB's last, on both sheets.
       const place = this.state.narrow ? this.SHEET_NARROW : this.SHEET_WIDE;
-      const at = (s) => s.split('/').map((v) => parseInt(v, 10));
   
       const heroSpan = at(place.hero.row);
       const portrait = !this.state.narrow && current.heroW > 0 && current.heroH > current.heroW;
@@ -4465,7 +4540,7 @@
         // underline off the tab's own box, so nothing here moves the mark.
         hintDisplay: this.state.phone ? 'none' : 'flex',
         projects, pageProjects, leaves, leafRows, leftLeaves: leaves.filter((l) => l.side === 'left'), rightLeaves: leaves.filter((l) => l.side === 'right'), featured, current, next: projects[(idx + 1) % projects.length], hovered: hov, cv: cvViews.timeline,
-        gridPlatesRow: gridRows.plates, gridAuthorRow: gridRows.author, gridColophonRow: gridRows.colophon, gridContactRow: gridRows.contact,
+        stack,
         sheet, sheetGridRef: this.sheetGridRef,
         contentsRef: this.contentsRef, platesRef: this.platesRef, notesRef: this.notesRef, landingStatementRef: this.landingStatementRef, headRef: this.headRef, tabToolingRef: this.tabToolingRef, tabWritingRef: this.tabWritingRef,
         goTooling: () => this.goPage('tooling'), goWriting: () => this.goPage('writing'),

@@ -71,7 +71,7 @@ test('each register is opened from its own side of the site', () => {
   assert.doesNotMatch(landing.innerHTML, /\{\{ goCvSerif \}\}/, 'the Development landing opens the serif CV');
 
   // the contact row is placed from renderVals like every other module below the cards
-  const contact = [...landing.querySelectorAll('[style*="gridContactRow"]')];
+  const contact = [...landing.querySelectorAll('[style*="stack.contact"]')];
   assert.equal(contact.length, 3, 'expected three cells on the contact row, found ' + contact.length);
   assert.deepEqual(contact.map((el) => el.textContent.trim()), ['email', 'github', 'cv']);
 });

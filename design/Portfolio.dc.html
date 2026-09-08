@@ -369,32 +369,34 @@
   <sc-if value="{{ isMonoPage }}" hint-placeholder-val="{{ false }}">
 
   <!-- On a page that is not landscape the register is the stacked sheet: a centred column, the statement
-       and the platform at the top, then one full-width band per project. It reads well on a vertical tablet
-       and is left exactly as it was; the desktop composition follows it. -->
+       and the platform at the top, then one full-width band per project. Two readings of it, LANDING_NARROW
+       and LANDING_PHONE in the logic class: the tablet column it has always been, and a phone column where
+       the statement stands over the platform and each card stands its text over its plate. No module below
+       names its own place; every one of them reads a span back from whichever table the width chose. -->
   <sc-if value="{{ isLandingNarrow }}" hint-placeholder-val="{{ true }}">
   <main key="tooling" data-screen-label="Development" style="max-width:1160px; margin:0 auto; padding:0 clamp(20px,4vw,48px) 88px; font-family:var(--mono); font-size:14px; line-height:22px;">
     <div style="margin-top:88px; display:grid; grid-template-columns:repeat(22,1fr); grid-auto-rows:44px; gap:0; border-right:1px solid var(--hair); border-bottom:1px solid var(--hair); background-image:linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px); background-size:calc(100%/22) 44px;">
 
     <!-- statement -->
-    <section class="mod" style="grid-column:1 / 15; grid-row:2 / 12; padding:22px;">
+    <section class="mod" style="grid-column:{{ stack.statement.col }}; grid-row:{{ stack.statement.row }}; padding:clamp(14px,3.7vw,22px);">
       <p data-morph="kicker" style="margin:0 0 22px; font-size:12px; line-height:14px; letter-spacing:0.08em; color:var(--color-neutral-600);">{{ page.kicker }}</p>
       <h1 data-tr="title" data-reg="mono" data-morph="title" style="margin:0; font-family:var(--mono); font-weight:400; font-size:clamp(22px,2.6vw,32px); line-height:1.375; letter-spacing:-0.02em; max-width:34ch;">{{ page.title }}</h1>
       <p data-tr="wake" data-reg="mono" data-morph="intro" style="margin:22px 0 0; max-width:60ch; color:var(--color-neutral-700);">{{ page.intro }}</p>
       <p data-morph="byline" style="margin:22px 0 0; font-size:12px; color:var(--color-neutral-600);">{{ page.byline }}</p>
     </section>
     <!-- the platform takes the module the statement leaves off at, so no empty column stands between them -->
-    <div ref="{{ platformRef }}" aria-hidden="true" class="mod" style="grid-column:15 / 23; grid-row:2 / 12; min-height:0; cursor:grab; touch-action:none; user-select:none;"></div>
+    <div ref="{{ platformRef }}" aria-hidden="true" class="mod" style="grid-column:{{ stack.platform.col }}; grid-row:{{ stack.platform.row }}; min-height:0; cursor:grab; touch-action:none; user-select:none;"></div>
 
     <!-- projects: one per band, alternating sides. The band's plate shows the entry's hero as a
          teaser: it is a slice of the card rather than the picture's own shape, so it takes fit
          cover here and contain on the sheet the card opens. An entry that names no hero keeps the
          placeholder slot, which is what an absent src leaves behind. -->
-    <p ref="{{ contentsRef }}" data-morph="index-kicker" class="mod" style="grid-column:1 / 7; grid-row:14 / 15; margin:0; display:flex; align-items:center; padding:0 22px; font-size:12px; letter-spacing:0.08em; color:var(--color-neutral-600);">{{ page.indexKicker }}</p>
+    <p ref="{{ contentsRef }}" data-morph="index-kicker" class="mod" style="grid-column:{{ stack.contents.col }}; grid-row:{{ stack.contents.row }}; margin:0; display:flex; align-items:center; padding:0 clamp(14px,3.7vw,22px); font-size:12px; letter-spacing:0.08em; color:var(--color-neutral-600);">{{ page.indexKicker }}</p>
     <sc-for list="{{ pageProjects }}" as="p" hint-placeholder-count="4">
-      <div data-shape="card-{{ p.shapeIdx }}" onClick="{{ p.open }}" onMouseEnter="{{ p.hover }}" class="mod mod-ctl" style="grid-column:1 / 23; grid-row:{{ p.cardRow }}; display:grid; grid-template-columns:repeat(22,1fr); cursor:pointer; color:var(--color-text);">
-        <div style="grid-column:{{ p.textCol }}; grid-row:1; min-width:0; padding:22px; box-sizing:border-box; align-self:end;">
+      <div data-shape="card-{{ p.shapeIdx }}" onClick="{{ p.open }}" onMouseEnter="{{ p.hover }}" class="mod mod-ctl" style="grid-column:{{ stack.cards.col }}; grid-row:{{ p.cardRow }}; display:grid; grid-template-columns:repeat(22,1fr); grid-template-rows:{{ p.cardGrid }}; cursor:pointer; color:var(--color-text);">
+        <div style="grid-column:{{ p.textCol }}; grid-row:{{ p.textRow }}; min-width:0; padding:clamp(14px,3.7vw,22px); box-sizing:border-box; align-self:end;">
           <p style="margin:0 0 22px; font-size:12px; color:var(--color-neutral-600);">{{ p.bandNo }} · {{ p.kindLower }} · {{ p.year }}</p>
-          <p data-morph="{{ p.morphName }}" data-morph-alt="title-{{ p.figNo }}" style="margin:0; font-size:28px; line-height:34px; letter-spacing:-0.03em;">{{ p.title }}</p>
+          <p data-morph="{{ p.morphName }}" data-morph-alt="title-{{ p.figNo }}" style="margin:0; font-size:clamp(22px,5.6vw,28px); line-height:clamp(28px,6.8vw,34px); letter-spacing:-0.03em;">{{ p.title }}</p>
           <p data-morph="why-{{ p.figNo }}" data-morph-alt="lede-{{ p.figNo }}" style="margin:10px 0 0; color:var(--color-neutral-700); max-width:44ch;">{{ p.why }}</p>
         </div>
         <!-- The picture keeps a frame of its own inside the card's, and the clip that crops it to the
@@ -403,19 +405,19 @@
              instead and grows the row past the cells the card was given, which drops the text through
              the card's bottom line. Out of flow it takes the frame's height rather than setting it, and
              the frame stays free to draw its two outer strokes. -->
-        <div data-shape="{{ p.frameShape }}" data-shape-alt="frame-{{ p.figNo }}" class="mod" style="grid-column:{{ p.plateCol }}; grid-row:1;"><div style="position:absolute; inset:0; overflow:hidden;"><image-slot id="{{ p.plateSlotId }}" src="{{ p.hero }}" shape="rect" fit="cover" placeholder="{{ p.placeholder }}" style="width:100%; height:100%;"></image-slot></div></div>
+        <div data-shape="{{ p.frameShape }}" data-shape-alt="frame-{{ p.figNo }}" class="mod" style="grid-column:{{ p.plateCol }}; grid-row:{{ p.plateRow }};"><div style="position:absolute; inset:0; overflow:hidden;"><image-slot id="{{ p.plateSlotId }}" src="{{ p.hero }}" shape="rect" fit="cover" placeholder="{{ p.placeholder }}" style="width:100%; height:100%;"></image-slot></div></div>
       </div>
     </sc-for>
-    <div ref="{{ platesRef }}" style="grid-column:1 / 2; grid-row:{{ gridPlatesRow }}; height:0;"></div>
+    <div ref="{{ platesRef }}" style="grid-column:{{ stack.plates.col }}; grid-row:{{ stack.plates.row }}; height:0;"></div>
 
     <!-- author -->
-    <section ref="{{ notesRef }}" class="mod" style="grid-column:1 / 11; grid-row:{{ gridAuthorRow }}; padding:22px;">
+    <section ref="{{ notesRef }}" class="mod" style="grid-column:{{ stack.author.col }}; grid-row:{{ stack.author.row }}; padding:clamp(14px,3.7vw,22px);">
       <p data-morph="notes-kicker" style="margin:0 0 22px; font-size:12px; letter-spacing:0.08em; color:var(--color-neutral-600);">who</p>
       <p data-morph="notes-title" style="margin:0; font-weight:500; letter-spacing:-0.02em;">{{ page.notesTitle }}</p>
       <p data-morph="notes-body" style="margin:22px 0 0; color:var(--color-neutral-700); max-width:44ch;">Five years of architecture school, then two in the Polyhedral Structures Laboratory at Penn, where structure stopped being something applied to a design after the fact. Since 2022 I have been at SOM in Chicago, building the platform its teams model in. I care about structure and design being one decision, about tools that stay out of the way, and about writing plainly on subjects that tempt people to be grand.</p>
       <p style="margin:22px 0 0; display:flex; gap:20px; font-size:13px;"><a href="{{ cvMailto }}" style="color:var(--color-text); text-decoration-color:var(--color-neutral-600);">mail</a><a href="{{ cvGithub }}" style="color:var(--color-text); text-decoration-color:var(--color-neutral-600);">github</a><button onClick="{{ goCvMono }}" style="all:unset; cursor:pointer; font-family:var(--mono); font-size:13px; color:var(--color-text); text-decoration:underline; text-decoration-color:var(--color-neutral-600); text-underline-offset:3px;">cv</button></p>
     </section>
-    <ol class="mod" style="grid-column:12 / 23; grid-row:{{ gridAuthorRow }}; padding:22px; list-style:none; margin:0; font-feature-settings:'tnum' 1;">
+    <ol class="mod" style="grid-column:{{ stack.cv.col }}; grid-row:{{ stack.cv.row }}; padding:clamp(14px,3.7vw,22px); list-style:none; margin:0; font-feature-settings:'tnum' 1;">
       <sc-for list="{{ cv }}" as="c" hint-placeholder-count="5">
         <li style="display:grid; grid-template-columns:9em minmax(0,1fr); gap:16px; padding:0 0 22px; align-items:baseline;">
           <span data-morph="cv-{{ $index }}-years" style="color:var(--color-neutral-600); font-size:13px;">{{ c.years }}</span>
@@ -424,18 +426,19 @@
       </sc-for>
     </ol>
 
-    <p data-morph="colophon" class="mod" style="grid-column:1 / 16; grid-row:{{ gridColophonRow }}; margin:0; padding:22px; color:var(--color-neutral-600); font-size:12px; line-height:18px;">{{ page.colophon }}</p>
+    <p data-morph="colophon" class="mod" style="grid-column:{{ stack.colophon.col }}; grid-row:{{ stack.colophon.row }}; margin:0; padding:clamp(14px,3.7vw,22px); color:var(--color-neutral-600); font-size:12px; line-height:18px;">{{ page.colophon }}</p>
 
     <!-- contact: three small cells at the left of the sheet's last row, on the register's own frame.
          They are controls, so unlike a plain module they take their frame to full ink under the
          cursor and set their label in caps at 700. Each one is positioned and carries a z-index so
          the hovered cell rises over its neighbours: a module's right and bottom hairlines are drawn
          outside its own box, so a cell painting in flow order has two of its four lit edges covered
-         by whichever neighbour comes after it. The placement comes from gridRows like every other
-         module below the cards, so the sheet grows by the one row this band takes. -->
-    <a href="{{ cvMailto }}" class="mod mod-ctl" style="grid-column:1 / 3; grid-row:{{ gridContactRow }}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;" style-hover="z-index:3; font-weight:700; text-transform:uppercase">email</a>
-    <a href="{{ cvGithub }}" class="mod mod-ctl" style="grid-column:3 / 5; grid-row:{{ gridContactRow }}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;" style-hover="z-index:3; font-weight:700; text-transform:uppercase">github</a>
-    <button onClick="{{ goCvMono }}" class="mod mod-ctl" style="all:unset; grid-column:5 / 7; grid-row:{{ gridContactRow }}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text);" style-hover="z-index:3; font-weight:700; text-transform:uppercase">cv</button>
+         by whichever neighbour comes after it. The placement comes from the table like every
+         other module below the cards, whose rows are counted from the line the last card closes
+         on, so the sheet grows by the one row this band takes. -->
+    <a href="{{ cvMailto }}" class="mod mod-ctl" style="grid-column:{{ stack.contactEmail.col }}; grid-row:{{ stack.contactEmail.row }}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;" style-hover="z-index:3; font-weight:700; text-transform:uppercase">email</a>
+    <a href="{{ cvGithub }}" class="mod mod-ctl" style="grid-column:{{ stack.contactGithub.col }}; grid-row:{{ stack.contactGithub.row }}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;" style-hover="z-index:3; font-weight:700; text-transform:uppercase">github</a>
+    <button onClick="{{ goCvMono }}" class="mod mod-ctl" style="all:unset; grid-column:{{ stack.contactCv.col }}; grid-row:{{ stack.contactCv.row }}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text);" style-hover="z-index:3; font-weight:700; text-transform:uppercase">cv</button>
     </div>
   </main>
   </sc-if>
@@ -1564,6 +1567,61 @@ class Component extends DCLogic {
     'building-graph-neural-network':                { col: '6 / 10',  row: '10 / 16' },
   };
   LANDING_PAD = 22; // the padding every module of the drawing grid is set in
+  // Where every module of the STACKED Development landing sits, on the same 22 column, 44px row
+  // drawing grid. Below 1000px the landing is not drawn but read top to bottom, and these are its
+  // two readings: the tablet column, which is the composition the markup used to carry inline, and
+  // the phone column, where nothing stands beside anything. Chosen off state.phone, and plain
+  // literals like the sheet tables so tools/check-landing-grid.mjs can read them without running
+  // this file.
+  //
+  // Three kinds of row, because unlike the sheet this drawing grows with the register:
+  //
+  //   * a pair of grid lines, for the corner above the cards, which is a fixed shape
+  //   * cards, the first card's own band. The drawing leaves two empty rows between two modules, so
+  //     that band is the step as well as the size: every card after the first opens two rows below
+  //     where the one before it closed
+  //   * a pair written with a leading +, for everything under the cards: rows counted from the line
+  //     the last card closes on, which is known only once the entries are counted
+  //
+  // cardTextA / cardPlateA and their B pair are not on this grid at all. They are on the card's own
+  // inner grid, which is 22 columns like the sheet and as many 44px rows as the card's band, and A
+  // takes the even bands while B takes the odd ones. That alternation is the whole of what makes the
+  // tablet column read plate-left then plate-right; on a phone both pairs are the same, because a
+  // card there is its text over its plate and there is no side for either to be on.
+  LANDING_NARROW = {
+    statement:     { col: '1 / 15',  row: '2 / 12' },
+    platform:      { col: '15 / 23', row: '2 / 12' },
+    contents:      { col: '1 / 7',   row: '14 / 15' },
+    cards:         { col: '1 / 23',  row: '16 / 23' },
+    cardTextA:     { col: '1 / 11',  row: '1 / 8' },
+    cardPlateA:    { col: '11 / 23', row: '1 / 8' },
+    cardTextB:     { col: '13 / 23', row: '1 / 8' },
+    cardPlateB:    { col: '1 / 13',  row: '1 / 8' },
+    plates:        { col: '1 / 2',   row: '+0 / +1' },
+    author:        { col: '1 / 11',  row: '+2 / +18' },
+    cv:            { col: '12 / 23', row: '+2 / +18' },
+    colophon:      { col: '1 / 16',  row: '+20 / +23' },
+    contactEmail:  { col: '1 / 3',   row: '+25 / +26' },
+    contactGithub: { col: '3 / 5',   row: '+25 / +26' },
+    contactCv:     { col: '5 / 7',   row: '+25 / +26' },
+  };
+  LANDING_PHONE = {
+    statement:     { col: '1 / 23',  row: '2 / 18' },
+    platform:      { col: '1 / 23',  row: '19 / 27' },
+    contents:      { col: '1 / 23',  row: '28 / 29' },
+    cards:         { col: '1 / 23',  row: '30 / 44' },
+    cardTextA:     { col: '1 / 23',  row: '1 / 8' },
+    cardPlateA:    { col: '1 / 23',  row: '8 / 15' },
+    cardTextB:     { col: '1 / 23',  row: '1 / 8' },
+    cardPlateB:    { col: '1 / 23',  row: '8 / 15' },
+    plates:        { col: '1 / 2',   row: '+0 / +1' },
+    author:        { col: '1 / 23',  row: '+2 / +16' },
+    cv:            { col: '1 / 23',  row: '+17 / +43' },
+    colophon:      { col: '1 / 23',  row: '+44 / +48' },
+    contactEmail:  { col: '1 / 9',   row: '+49 / +50' },
+    contactGithub: { col: '9 / 16',  row: '+49 / +50' },
+    contactCv:     { col: '16 / 23', row: '+49 / +50' },
+  };
   // Whether this page is being tuned rather than read, off the URL, once: the flag decides both which
   // modules are fetched at all, in componentDidMount, and how the landing draws, just below. Read on
   // the instance rather than at each of them, since a page where the two disagreed would either ship
@@ -3158,7 +3216,23 @@ class Component extends DCLogic {
     // zero-padded to two digits. Those are different numbers, so the frame name is kept out of the
     // 'frame-<figNo>' namespace the chapters use and out of the 'card-' one the engine keeps its own
     // fallback bucket in. The entry-to-chapter pairing is the plate's data-shape-alt, frame-<figNo>.
-    const pageProjects = projects.filter((p) => this.pageOf(projects.indexOf(p)) === pageKey).map((p, k) => ({ ...p, shapeIdx: k + 1, dir: k % 2 ? 'rtl' : 'ltr', textCol: k % 2 ? '13 / 23' : '1 / 11', plateCol: k % 2 ? '1 / 13' : '11 / 23', cardRow: (16 + 9 * k) + ' / ' + (23 + 9 * k), bandNo: String(k + 1).padStart(2, '0'), morphName: k < 2 ? 'row-' + k : 'feat-' + (k - 2) + '-title', frameShape: 'plate-frame-' + k }));
+    // The stacked Development landing, off whichever of its two tables the width calls for. Every
+    // span the markup used to carry inline is read back from there now, the way the sheet reads its
+    // own, so the tablet column and the phone column are two readings of one drawing rather than one
+    // composition with the other nowhere.
+    const at = (s) => s.split('/').map((v) => parseInt(v, 10));
+    const stackPlace = this.state.phone ? this.LANDING_PHONE : this.LANDING_NARROW;
+    // a card's band is its size and its step both: the drawing leaves two empty rows between two
+    // modules, so the next card opens that far below where the last one closed
+    const cardBand = at(stackPlace.cards.row), cardRows = cardBand[1] - cardBand[0], cardStep = cardRows + 2;
+    // the card's own inner grid is ruled on the same 44px module as the sheet it stands on, so a
+    // cell of it lands on the drawing's own lines rather than on a share of the card's height
+    const cardGrid = 'repeat(' + cardRows + ', ' + this.SHEET_ROW + 'px)';
+    const cardCell = (k, part) => stackPlace['card' + part + (k % 2 ? 'B' : 'A')];
+    const pageProjects = projects.filter((p) => this.pageOf(projects.indexOf(p)) === pageKey).map((p, k) => ({ ...p, shapeIdx: k + 1, dir: k % 2 ? 'rtl' : 'ltr',
+      textCol: cardCell(k, 'Text').col, textRow: cardCell(k, 'Text').row, plateCol: cardCell(k, 'Plate').col, plateRow: cardCell(k, 'Plate').row,
+      cardRow: (cardBand[0] + cardStep * k) + ' / ' + (cardBand[1] + cardStep * k), cardGrid,
+      bandNo: String(k + 1).padStart(2, '0'), morphName: k < 2 ? 'row-' + k : 'feat-' + (k - 2) + '-title', frameShape: 'plate-frame-' + k }));
     // The desktop Development landing. Its statement, platform and contact cells come off
     // LANDING_WIDE; every project is a plate pinned to a cell by landing-grid.js, and the grid ends on
     // whatever row that placement needed, so the contact band closes the sheet however far it grew.
@@ -3247,10 +3321,15 @@ class Component extends DCLogic {
     }).filter(Boolean);
     const introChars = Array.from(page.intro);
     page.dropCap = introChars[0]; page.introRest = introChars.slice(1).join('');
-    // the Development page is placed on a 44px module: cards are 7 rows with two blank rows between
-    const lastCardEnd = 23 + 9 * Math.max(0, pageProjects.length - 1);
-    // the contact band closes the sheet: one row, after the same two-row gap the colophon takes
-    const gridRows = { plates: lastCardEnd + ' / ' + (lastCardEnd + 1), author: (lastCardEnd + 2) + ' / ' + (lastCardEnd + 18), colophon: (lastCardEnd + 20) + ' / ' + (lastCardEnd + 23), contact: (lastCardEnd + 25) + ' / ' + (lastCardEnd + 26) };
+    // Where the last card closes, and with it every module the table placed under the cards. Those
+    // rows are written in the table with a leading +, because how far down this line falls is a fact
+    // about how many entries the register carries rather than about the drawing.
+    const lastCardEnd = cardBand[1] + cardStep * Math.max(0, pageProjects.length - 1);
+    const stack = {};
+    for (const [name, spot] of Object.entries(stackPlace)) {
+      const after = /^\+(\d+) \/ \+(\d+)$/.exec(spot.row);
+      stack[name] = { col: spot.col, row: after ? (lastCardEnd + +after[1]) + ' / ' + (lastCardEnd + +after[2]) : spot.row };
+    }
     const pad = (n) => String(n).padStart(2, '0');
     const featured = this.featuredFor[pageKey].map((i, k) => ({ ...projects[i], plateNumeral: this.num(k) }));
     const current = projects[idx];
@@ -3280,7 +3359,6 @@ class Component extends DCLogic {
     // The second is an entry that names one detail instead of the pair. The single figure takes the
     // columns the pair spanned, from detailA's first to detailB's last, on both sheets.
     const place = this.state.narrow ? this.SHEET_NARROW : this.SHEET_WIDE;
-    const at = (s) => s.split('/').map((v) => parseInt(v, 10));
 
     const heroSpan = at(place.hero.row);
     const portrait = !this.state.narrow && current.heroW > 0 && current.heroH > current.heroW;
@@ -3425,7 +3503,7 @@ class Component extends DCLogic {
       // underline off the tab's own box, so nothing here moves the mark.
       hintDisplay: this.state.phone ? 'none' : 'flex',
       projects, pageProjects, leaves, leafRows, leftLeaves: leaves.filter((l) => l.side === 'left'), rightLeaves: leaves.filter((l) => l.side === 'right'), featured, current, next: projects[(idx + 1) % projects.length], hovered: hov, cv: cvViews.timeline,
-      gridPlatesRow: gridRows.plates, gridAuthorRow: gridRows.author, gridColophonRow: gridRows.colophon, gridContactRow: gridRows.contact,
+      stack,
       sheet, sheetGridRef: this.sheetGridRef,
       contentsRef: this.contentsRef, platesRef: this.platesRef, notesRef: this.notesRef, landingStatementRef: this.landingStatementRef, headRef: this.headRef, tabToolingRef: this.tabToolingRef, tabWritingRef: this.tabWritingRef,
       goTooling: () => this.goPage('tooling'), goWriting: () => this.goPage('writing'),

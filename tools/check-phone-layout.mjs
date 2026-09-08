@@ -227,6 +227,17 @@ tier('hintDisplay', 'phone', 'flex');
   if (!hint || hint.on !== 'none') fail('the keyboard hint is not taken off the running head on a phone: ' + JSON.stringify(hint && hint.on));
 }
 
+// The two Development drawings choose a placement table rather than carrying spans. The stacked
+// landing's tables are held to their own invariants in tools/check-landing-grid.mjs and the sheet's
+// in tools/check-sheet-grid.mjs; what is held here is only that the phone tier is what chooses.
+{
+  const stack = /const stackPlace = ([^;]+);/.exec(logicSrc);
+  if (!stack) fail('renderVals no longer chooses a table for the stacked Development landing');
+  else if (!/this\.state\.phone \? this\.LANDING_PHONE : this\.LANDING_NARROW/.test(stack[1])) {
+    fail('the stacked landing does not choose LANDING_PHONE off state.phone: ' + stack[1].trim());
+  }
+}
+
 // ---------------------------------------------------------------- the markup carries no phone values
 
 const branch = (cond) => [...tpl.content.querySelectorAll('sc-if')].find(
@@ -294,6 +305,43 @@ const branch = (cond) => [...tpl.content.querySelectorAll('sc-if')].find(
       fail('the running head bar no longer sets its side padding as a clamp of 5vw capped at 72px');
     } else if (Number(/padding:0clamp\((\d+)px,5vw,72px\)/.exec(tight(bar.getAttribute('style')))[1]) >= 20) {
       fail('the running head bar keeps a 20px padding floor, which is the tablet floor; a phone needs it lower');
+    }
+  }
+}
+{
+  const landing = branch('isLandingNarrow');
+  if (!landing) fail('no <sc-if value="{{ isLandingNarrow }}"> block: the stacked Development landing is gone');
+  else {
+    // every module of the stacked landing names a placement entry, the way the sheet modules do; a
+    // card's own band and the two cells inside it come off the same tables through the card model
+    const BIND = /^\{\{\s*(stack\.[A-Za-z_$][\w$]*\.(col|row)|p\.(cardRow|textCol|textRow|plateCol|plateRow))\s*\}\}$/;
+    const grid = [...landing.querySelectorAll('*')].find((el) => tight(el.getAttribute('style')).includes('repeat(22,1fr)'));
+    if (!grid) fail('the stacked Development landing has no 22-column grid');
+    else {
+      const items = [];
+      const collect = (parent) => {
+        for (const child of parent.children) {
+          const tag = child.tagName.toLowerCase();
+          if (tag === 'sc-if' || tag === 'sc-for') collect(child);
+          else items.push(child);
+        }
+      };
+      collect(grid);
+      if (!items.length) fail('the stacked Development landing grid has no modules');
+      for (const item of items) {
+        for (const el of [item, ...item.querySelectorAll('[style*="grid-column"]')]) {
+          const style = String(el.getAttribute('style') || '');
+          for (const axis of ['grid-column', 'grid-row']) {
+            const hit = style.split(';').map((d) => d.trim()).filter((d) => d.toLowerCase().startsWith(axis + ':')).pop();
+            if (!hit) continue;
+            const v = hit.slice(axis.length + 1).trim();
+            if (!BIND.test(v)) {
+              fail('a module of the stacked landing places itself instead of naming a placement entry: ' + axis
+                + ' is ' + JSON.stringify(v) + ' on ' + el.tagName.toLowerCase());
+            }
+          }
+        }
+      }
     }
   }
 }
