@@ -141,10 +141,6 @@ export function mount(api) {
   };
   const refresh = () => { rows.forEach((r) => r.show()); };
   const rebuild = () => { build(); refresh(); };
-  // The panel lives in the body alongside the collage it watches, and rebuilding it is itself a body
-  // mutation. Records that come only from inside the panel are its own echo and are dropped, or the
-  // observer would call rebuild in a loop and the page would never come back.
-  const ours = (records) => records.every((r) => root.contains(r.target));
 
   // ---------------------------------------------------------------- move
   // A drag or a nudge moves the card, so it writes the offset. Holding alt moves the plate alone
@@ -262,6 +258,9 @@ export function mount(api) {
     button('hide', (ev) => { ev.currentTarget.blur(); root.hidden = true; }, 'hide; press d to show again'),
   );
   root.append(bar, out);
+  // the page carries two of these now, so each says which it is: the panels park on opposite sides of
+  // the window and their controls read alike, and nothing else tells them apart
+  root.dataset.devPanel = 'leaves';
   document.body.appendChild(root);
 
   window.addEventListener('pointerdown', onDown, true);
@@ -270,9 +269,13 @@ export function mount(api) {
   window.addEventListener('click', onClick, true);
   window.addEventListener('wheel', onWheel, { capture: true, passive: false });
   window.addEventListener('keydown', onKey, true);
-  // the collage re-renders under the panel, so the rows are rebuilt when the leaves change
-  const observer = new MutationObserver((records) => { if (!drag && !ours(records)) rebuild(); });
-  observer.observe(document.body, { childList: true, subtree: true });
+  // The collage re-renders under the panel, so the rows are rebuilt when the leaves change. What is
+  // watched is the page, not the document: the panel parks outside the React root and writes nothing
+  // into it, so nothing it does can come back as a record. Two panels each watching the whole
+  // document would answer each other's redraws in a microtask loop that never lets the main thread
+  // go, which is what the Development sheet's panel beside this one would otherwise do.
+  const observer = new MutationObserver(() => { if (!drag) rebuild(); });
+  observer.observe(document.getElementById('dc-root') || document.body, { childList: true, subtree: true });
   rebuild();
 
   // An escape hatch for the console, so a hidden panel or a stuck session is never a dead end:
