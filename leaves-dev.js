@@ -9,7 +9,9 @@
 //
 // The grid cell a leaf sits in is derived from the register by leafSlots and is not tuned here. It
 // does not need to be: an offset of any magnitude moves a leaf anywhere on the page, which is how
-// the two anchor plates already cross the page edge.
+// the two anchor plates already cross the page edge. What is tuned is which line the offset is
+// measured from: a pair leaf normally holds its distance from the column the diagonal gave it, and
+// the `edge` switch anchors it to the page edge instead, for a leaf composed against that edge.
 //
 // mount(api) -> { destroy() }, where api is { spreads, pairs, rerender }: the two live tables off the
 // logic class, mutated in place, and the component's re-render. serialize() is pure and exported on
@@ -120,6 +122,7 @@ export function mount(api) {
           + '   bleed ' + cur.bleedX + ' ' + cur.bleedY + '   scale ' + scaleOf(cur, base).toFixed(2);
         range.value = String(scaleOf(cur, base));
         box.checked = !!cur.beside;
+        edgeBox.checked = !!cur.edge;
         row.style.borderLeftColor = selected && selected.key === leaf.key ? GOLD : 'transparent';
         row.style.background = selected && selected.key === leaf.key ? 'rgba(182,130,53,0.10)' : 'transparent';
       };
@@ -132,8 +135,16 @@ export function mount(api) {
       side.append(box, el('span', '', 'caption beside the plate'));
       box.onchange = () => { const cur = liveOf(leaf.key); if (box.checked) cur.beside = true; else delete cur.beside; rerender(); refresh(); };
       box.onpointerdown = (ev) => ev.stopPropagation();
+      // which line the offset is measured from is the same kind of choice: the column the diagonal
+      // gave the leaf by default, the page edge for a leaf composed against it. The offset is not
+      // rewritten when the anchor changes, so the leaf jumps and is dragged back into place.
+      const anchor = el('label', `display:flex; align-items:center; gap:6px; margin:3px 0 0; color:${DIM}; font-size:10px; cursor:pointer;`);
+      const edgeBox = el('input', `accent-color:${GOLD}; margin:0;`); edgeBox.type = 'checkbox';
+      anchor.append(edgeBox, el('span', '', 'anchored to the page edge'));
+      edgeBox.onchange = () => { const cur = liveOf(leaf.key); if (edgeBox.checked) cur.edge = true; else delete cur.edge; rerender(); refresh(); };
+      edgeBox.onpointerdown = (ev) => ev.stopPropagation();
       row.onclick = () => { selected = { key: leaf.key }; refresh(); };
-      row.append(top, ...(shared ? [shared] : []), vals, range, side);
+      row.append(top, ...(shared ? [shared] : []), vals, range, side, anchor);
       list.appendChild(row);
       return { key: leaf.key, show };
     });

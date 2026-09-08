@@ -1441,7 +1441,7 @@ class Component extends DCLogic {
     left: [
       { h: 105, w: 1650, ratio: '1/1', maxW: '350px', titleSize: '17px', dir: 'column', alignItems: 'flex-start', px: '-14px', py: '-8px', dur: '8s', delay: '-5s', offsetX: '336.667px', offsetY: '112px', cover: 'https://picsum.photos/seed/halvorsen-3/700/700' },
       { h: 39.342, w: 655.698, ratio: '5/4', maxW: '163.925px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-20px', py: '-9px', dur: '8.5s', delay: '-2s', offsetX: '-204.667px', offsetY: '27px', beside: true, cover: 'https://picsum.photos/seed/halvorsen-5/700/560' },
-      { h: 45.231, w: 719.064, ratio: '4/5', maxW: '148.452px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-17px', py: '-12px', dur: '7.8s', delay: '-6s', offsetX: '-478px', offsetY: '149.333px', cover: 'https://picsum.photos/seed/halvorsen-7/560/700' },
+      { h: 45.231, w: 719.064, ratio: '4/5', maxW: '148.452px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-17px', py: '-12px', dur: '7.8s', delay: '-6s', offsetX: '-72px', offsetY: '149.333px', edge: true, cover: 'https://picsum.photos/seed/halvorsen-7/560/700' },
       { h: 33, w: 560, ratio: '3/2', maxW: '140px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-12px', py: '-7px', dur: '9.2s', delay: '-1s', offsetX: '0px', offsetY: '18px', cover: 'https://picsum.photos/seed/halvorsen-9/900/600' },
     ],
     right: [
@@ -1480,6 +1480,16 @@ class Component extends DCLogic {
       // there, and the margins have width to spare. It reads outward, away from the page centre, so
       // the pair sits the way the two anchors already do.
       beside: !!st.beside,
+      // `edge` anchors a leaf to the page edge of its gutter rather than to the column the diagonal
+      // hands it. The gutters are fluid and the offsets are pixels, so a leaf in the inner column
+      // holds its distance from the title column and walks with it as the window grows; a leaf that
+      // was composed against the page edge has to be measured from there, or it slides in and out of
+      // the frame with the width. Such a leaf takes the whole gutter and is justified to the page
+      // side, as a spread is, and its offsetX is then a distance from the page edge. It is a choice
+      // made for the composed leaf alone: a register long enough to cycle the styles hands later
+      // leaves the same entry, and those keep the column the diagonal gave them, since two spans in
+      // one row would share a cell.
+      edge: !!st.edge && wrap === 0,
       ratio: st.ratio, maxW: st.maxW, titleSize: st.titleSize, dir: st.dir, alignItems: st.alignItems,
       px: st.px, py: st.py, dur: st.dur, delay: (parseFloat(st.delay) - 1.7 * wrap) + 's',
       // Two different moves, and conflating them is what pulled a plate off its own caption. The
@@ -1489,7 +1499,8 @@ class Component extends DCLogic {
       offsetX: st.offsetX || '0px', offsetY: st.offsetY || '0px',
       bleedX: st.bleedX || '0px', bleedY: st.bleedY || '0px', cover: st.cover });
     return [...spreads.map((st, i) => slot(st, st.row, 0, 0, 'spreads.' + side + '.' + i)),
-      ...[...diag, ...skipped].map((c, i) => slot(pairs[i % pairs.length], c.row, c.col, Math.floor(i / pairs.length), 'pairs.' + side + '.' + (i % pairs.length)))];
+      ...[...diag, ...skipped].map((c, i) => { const st = pairs[i % pairs.length], wrap = Math.floor(i / pairs.length);
+        return slot(st, c.row, st.edge && wrap === 0 ? 0 : c.col, wrap, 'pairs.' + side + '.' + (i % pairs.length)); })];
   }
 
   // ---- the stacked Research landing, the serif answer to a portrait screen ----------------------
