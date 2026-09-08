@@ -209,6 +209,9 @@ tier('homeCubeH', 'portrait', 'min(40vh,360px)');
 tier('chapterCols', 'phone', 'minmax(0,8fr) minmax(0,4fr)');
 tier('essayColumns', 'phone', '2');
 tier('paperAsideCol', 'phone', '2');
+// the outlined chapter numeral: a watermark whose floor is the tablet's, which at 390 is wider
+// than the page it stands on
+tier('chapterGhost', 'phone', 'clamp(160px,22vw,320px)');
 {
   const cols = arms(binding('chapterCols') || '');
   if (!cols || /\s/.test(cols.on)) fail('the chapter body does not stand on one column on a phone: ' + JSON.stringify(cols && cols.on));

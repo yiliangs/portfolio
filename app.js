@@ -829,11 +829,11 @@
                           h(F,{key:0},L(Vi.job?.units).map(function(item,i){
                             var Vii = Object.assign({}, Vi, {"u": item, $index: i});
                             return h(F,{key:i},
-                              h("span", { key: "0|33.7n66lg", style: {"whiteSpace":"nowrap","fontWeight":"700"} },
-                                h(F,{key:0},"",I(Vii.u?.t,1),""),
-                                h("span", { key: "1|11.mxc9me", style: {"fontWeight":"400","color":"var(--color-neutral-700)"} },
-                                  h(F,{key:0},"",I(Vii.u?.loc,1),"")
-                                )
+                              h("span", { key: "0|9.97yq4s", style: {"whiteSpace":"nowrap","fontWeight":"700"} },
+                                h(F,{key:0},"",I(Vii.u?.t,1),"")
+                              ),
+                              h("span", { key: "1|11.mxc9me", style: {"fontWeight":"400","color":"var(--color-neutral-700)"} },
+                                h(F,{key:0},"",I(Vii.u?.loc,1),"")
                               ),
                               " ");
                           }))
@@ -1561,7 +1561,7 @@
             "\n\n    ",
             h("section", { key: "1", style: {"position":"relative","padding":"calc(3*28px) 0 calc(2*28px)"} },
               "\n      ",
-              h("span", { key: "1|19.1h99e0b", "aria-hidden": "true", style: S(`position:absolute; right:0; top:28px; font-family:var(--font-heading); font-weight:300; font-size:clamp(160px,22vw,320px); line-height:1; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; pointer-events:none; user-select:none; font-feature-settings:'tnum' 1; letter-spacing:0; transform:translateY(${V.parallax ?? ""}); will-change:transform;`) },
+              h("span", { key: "1|19.1h99e0b", "aria-hidden": "true", style: S(`position:absolute; right:0; top:28px; font-family:var(--font-heading); font-weight:300; font-size:${V.chapterGhost ?? ""}; line-height:1; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; pointer-events:none; user-select:none; font-feature-settings:'tnum' 1; letter-spacing:0; transform:translateY(${V.parallax ?? ""}); will-change:transform;`) },
                 h(F,{key:0},"",I(V.current?.ghost,1),"")
               ),
               "\n      ",
@@ -4533,6 +4533,11 @@
         // essay's justified text becomes one column of type, and the aside comes in out of the margin
         // to open the body. Where each block and each caption then stands is planPaperRows', off the
         // same flag.
+        // The outlined chapter numeral behind the head. It is set off the width so it always reads as a
+        // watermark rather than as a number, and its floor is the tablet's: XVIII at 160px is 375px wide
+        // and hangs 20px off the left edge of a 390px page. The phone arm reaches 160px at exactly
+        // PHONE_W, so the two are one continuous ramp rather than a step at the boundary.
+        chapterGhost: this.state.phone ? 'clamp(88px,26.7vw,160px)' : 'clamp(160px,22vw,320px)',
         chapterCols: this.state.phone ? 'minmax(0,1fr)' : 'minmax(0,8fr) minmax(0,4fr)',
         essayColumns: this.state.phone ? '1' : '2',
         paperAsideCol: this.state.phone ? '1' : '2',

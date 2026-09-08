@@ -581,10 +581,13 @@
       </div>
       <sc-for list="{{ cvDoc.jobs }}" as="job" hint-placeholder-count="2">
       <section class="cv-job">
-        <!-- tier 1: the employer heads the entry. Each org unit is one unbreakable run, so the name
-             wraps between entities and never mid-name; the location glues to the last unit, muted -->
+        <!-- tier 1: the employer heads the entry. The org name is one unbreakable run, so it wraps
+             between entities and never mid-name; the location is a run of its own beside it, glued to
+             its unit and muted, and breakable, so the city falls to the next line when the pair does not
+             fit. Held inside the name's own run it was unbreakable, and 'Skidmore, Owings & Merrill
+             (SOM), Chicago, IL' is 381px against the 297px measure a 360px page gives. -->
         <div class="cv-row">
-          <p style="margin:0; font-size:1.05em;"><sc-for list="{{ job.units }}" as="u" hint-placeholder-count="1"><span style="white-space:nowrap; font-weight:700;">{{ u.t }}<span style="font-weight:400; color:var(--color-neutral-700);">{{ u.loc }}</span></span> </sc-for></p>
+          <p style="margin:0; font-size:1.05em;"><sc-for list="{{ job.units }}" as="u" hint-placeholder-count="1"><span style="white-space:nowrap; font-weight:700;">{{ u.t }}</span><span style="font-weight:400; color:var(--color-neutral-700);">{{ u.loc }}</span> </sc-for></p>
           <span class="cv-date">{{ job.dates }}</span>
         </div>
         <!-- tier 2: the current title with its own dates, then one faint line of the prior ones -->
@@ -846,7 +849,7 @@
   <main key="{{ chapterKey }}" data-screen-label="Chapter" style="max-width:1200px; margin:0 auto; padding:0 clamp(20px,5vw,72px); background-image:radial-gradient(color-mix(in srgb, var(--color-text) 16%, transparent) 1px, transparent 1.1px); background-size:28px 28px;">
 
     <section style="position:relative; padding:calc(3*28px) 0 calc(2*28px);">
-      <span aria-hidden="true" style="position:absolute; right:0; top:28px; font-family:var(--font-heading); font-weight:300; font-size:clamp(160px,22vw,320px); line-height:1; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; pointer-events:none; user-select:none; font-feature-settings:'tnum' 1; letter-spacing:0; transform:translateY({{ parallax }}); will-change:transform;">{{ current.ghost }}</span>
+      <span aria-hidden="true" style="position:absolute; right:0; top:28px; font-family:var(--font-heading); font-weight:300; font-size:{{ chapterGhost }}; line-height:1; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; pointer-events:none; user-select:none; font-feature-settings:'tnum' 1; letter-spacing:0; transform:translateY({{ parallax }}); will-change:transform;">{{ current.ghost }}</span>
       <button class="btn btn-ghost" onClick="{{ goPageCurrent }}" style="white-space:nowrap; margin-left:calc(-1*var(--space-1)); font-family:var(--r-body);">← {{ current.backWord }}</button>
       <p key="kicker-{{ current.figNo }}" data-tr="wake" data-reg="serif" data-fx="ripple" style="margin:calc(2*28px) 0 14px; font-size:12px; line-height:14px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-accent-700); font-feature-settings:'tnum' 1;">{{ current.kickerWord }} {{ current.numeral }} · {{ current.kind }} · {{ current.year }}</p>
       <h1 key="title-{{ current.figNo }}" data-morph="title-{{ current.figNo }}" data-tr="wake" data-reg="serif" data-fx="ripple" style="margin:0 0 0 -0.042em; font-family:var(--font-heading); font-weight:400; font-size:clamp(44px,6vw,88px); line-height:1.04; letter-spacing:-0.01em; max-width:16ch;">{{ current.title }}</h1>
@@ -3496,6 +3499,11 @@ class Component extends DCLogic {
       // essay's justified text becomes one column of type, and the aside comes in out of the margin
       // to open the body. Where each block and each caption then stands is planPaperRows', off the
       // same flag.
+      // The outlined chapter numeral behind the head. It is set off the width so it always reads as a
+      // watermark rather than as a number, and its floor is the tablet's: XVIII at 160px is 375px wide
+      // and hangs 20px off the left edge of a 390px page. The phone arm reaches 160px at exactly
+      // PHONE_W, so the two are one continuous ramp rather than a step at the boundary.
+      chapterGhost: this.state.phone ? 'clamp(88px,26.7vw,160px)' : 'clamp(160px,22vw,320px)',
       chapterCols: this.state.phone ? 'minmax(0,1fr)' : 'minmax(0,8fr) minmax(0,4fr)',
       essayColumns: this.state.phone ? '1' : '2',
       paperAsideCol: this.state.phone ? '1' : '2',
