@@ -14,6 +14,9 @@
 //      it, and they answer the way the issue says over a table of real viewports.
 //   2. state.phone and state.portrait are written in both places state.narrow is written, the first
 //      paint and onResize, and only ever from the predicates.
+//   3. Every composition the issue names reads the flag back through a binding rather than carrying
+//      a phone value in the markup, and the value the binding hands back off a page that is not one
+//      is the value the markup carried before, so the tablet and the desk are untouched.
 //
 // Run with `npm run check`. Exits non-zero and prints every failure it found.
 
@@ -118,6 +121,110 @@ for (const m of logicSrc.matchAll(/\bportrait:\s*([^,\n}]+)/g)) {
   if (!/this\.isPortrait\(\)|state\.portrait/.test(m[1])) fail('state.portrait is written by hand rather than from isPortrait(): portrait: ' + m[1].trim());
 }
 
+// ---------------------------------------------------------------- what renderVals hands the template
+
+// Every value the phone tier moves is a binding, so the phone value and the value every wider page
+// keeps are written side by side in one expression rather than one being in the markup and the
+// other nowhere. What is read back here is that expression: that it asks the flag at all, and that
+// its other arm is the literal the markup carried before the tier existed.
+const renderVals = logicSrc.slice(logicSrc.indexOf('\n  renderVals('));
+// the expression a key is given, up to the comma that ends it: scanned rather than matched, since a
+// value here is a ternary holding quoted CSS with commas of its own
+function binding(name) {
+  const at = new RegExp('[,{\\s]' + name + ': ').exec(renderVals);
+  if (!at) return null;
+  let i = at.index + at[0].length, depth = 0, quote = null;
+  for (; i < renderVals.length; i++) {
+    const c = renderVals[i];
+    if (quote) { if (c === '\\') i++; else if (c === quote) quote = null; continue; }
+    if (c === "'" || c === '"' || c === '`') { quote = c; continue; }
+    if ('([{'.includes(c)) depth++;
+    else if (')]}'.includes(c)) { if (depth === 0) break; depth--; }
+    else if ((c === ',' || c === '\n') && depth === 0) break;
+  }
+  return renderVals.slice(at.index + at[0].length, i).trim();
+}
+// A two-armed choice split into its flag and its two arms. Scanned rather than matched for the
+// reason above: both arms are quoted CSS carrying colons of their own, so only the first ? and the
+// first : outside a quote or a bracket are the ones that divide the expression.
+function arms(expr) {
+  let depth = 0, quote = null, q = -1, colon = -1;
+  for (let i = 0; i < expr.length; i++) {
+    const c = expr[i];
+    if (quote) { if (c === '\\') i++; else if (c === quote) quote = null; continue; }
+    if (c === "'" || c === '"' || c === '`') { quote = c; continue; }
+    if ('([{'.includes(c)) depth++;
+    else if (')]}'.includes(c)) depth--;
+    else if (depth === 0 && c === '?' && q < 0) q = i;
+    else if (depth === 0 && c === ':' && q >= 0 && colon < 0) colon = i;
+  }
+  if (q < 0 || colon < 0) return null;
+  const lit = (s) => s.trim().replace(/^'([\s\S]*)'$/, '$1');
+  return { flag: expr.slice(0, q).trim(), on: lit(expr.slice(q + 1, colon)), off: lit(expr.slice(colon + 1)) };
+}
+function tier(name, flag, wide) {
+  const expr = binding(name);
+  if (expr === null) { fail('renderVals hands the template no ' + name + ', so the composition cannot read the ' + flag + ' tier back'); return null; }
+  if (!new RegExp('state\\.' + flag).test(expr)) { fail(name + ' does not read state.' + flag + ': ' + expr); return null; }
+  const two = arms(expr);
+  if (two === null) { fail(name + ' is not written as a two-armed choice this check can read: ' + expr); return null; }
+  if (two.off !== wide) fail(name + ' hands a page that is not a ' + flag + ' ' + JSON.stringify(two.off) + ', not the ' + JSON.stringify(wide) + ' the markup carried before');
+  return two;
+}
+
+// The home stacks in portrait and stands exactly one screen tall. Not a minimum: a minimum is what
+// lets a tall object grow the page, and the home is the one view that must never scroll.
+tier('homeMainBox', 'portrait', 'min-height:calc(100vh - 57px);');
+tier('homeGridCols', 'portrait', 'minmax(0,1.1fr) minmax(0,0.9fr)');
+tier('homeGridRows', 'portrait', 'none');
+tier('homeGridGap', 'portrait', 'clamp(16px,4vw,72px)');
+tier('homeRollH', 'portrait', 'min(44vh,400px)');
+tier('homeCubeH', 'portrait', 'min(40vh,360px)');
+{
+  const box = arms(binding('homeMainBox') || '');
+  const upright = box ? box.on : '';
+  if (!/100dvh/.test(upright)) fail('the home main does not stand on the dynamic viewport height in portrait, so the browser chrome pushes it off the screen: ' + JSON.stringify(upright));
+  if (!/overflow:hidden/.test(upright)) fail('the home main does not close over its own content in portrait, so the home scrolls: ' + JSON.stringify(upright));
+  if (/min-height/.test(upright)) fail('the home main takes a minimum rather than a height in portrait, so a tall object grows the page: ' + JSON.stringify(upright));
+}
+{
+  const rows = arms(binding('homeGridRows') || '');
+  if (!rows || !/1fr[\s\S]*1fr/.test(rows.on)) {
+    fail('the home grid does not stand its two objects on two rows in portrait: ' + JSON.stringify(rows && rows.on));
+  }
+  const cols = arms(binding('homeGridCols') || '');
+  if (!cols || /\s/.test(cols.on)) {
+    fail('the home grid does not stand on one column in portrait: ' + JSON.stringify(cols && cols.on));
+  }
+  // both objects are sized off the same viewport unit the main is, or the pair could outgrow it
+  for (const name of ['homeRollH', 'homeCubeH']) {
+    const h = arms(binding(name) || '');
+    if (!h || !/dvh/.test(h.on)) fail(name + ' does not size the object off the screen in portrait: ' + JSON.stringify(h && h.on));
+  }
+}
+
+// ---------------------------------------------------------------- the markup carries no phone values
+
+const branch = (cond) => [...tpl.content.querySelectorAll('sc-if')].find(
+  (el) => tight(el.getAttribute('value')) === '{{' + cond + '}}');
+
+{
+  const home = branch('isHome');
+  if (!home) fail('no <sc-if value="{{ isHome }}"> block: the home is gone');
+  else {
+    const main = home.querySelector('main[data-screen-label="Home"]');
+    if (!tight(main && main.getAttribute('style')).includes('{{homeMainBox}}')) fail('the home main writes its own height instead of reading homeMainBox back');
+    const grid = main && main.firstElementChild;
+    const gs = tight(grid && grid.getAttribute('style'));
+    if (!gs.includes('grid-template-columns:{{homeGridCols}}')) fail('the home grid writes its own columns instead of reading homeGridCols back');
+    if (!gs.includes('grid-template-rows:{{homeGridRows}}')) fail('the home grid writes its own rows instead of reading homeGridRows back');
+    if (!gs.includes('gap:{{homeGridGap}}')) fail('the home grid writes its own gap instead of reading homeGridGap back');
+    const btns = main ? [...main.querySelectorAll('button')] : [];
+    if (!tight(btns[0] && btns[0].getAttribute('style')).includes('height:{{homeRollH}}')) fail('the roll writes its own height instead of reading homeRollH back');
+    if (!tight(btns[1] && btns[1].getAttribute('style')).includes('height:{{homeCubeH}}')) fail('the cube writes its own height instead of reading homeCubeH back');
+  }
+}
+
 // ---------------------------------------------------------------- report
 
 if (failures.length) {
@@ -125,5 +232,6 @@ if (failures.length) {
   for (const f of failures) console.error('  - ' + f);
   process.exit(1);
 }
-console.log('check-phone-layout: the phone tier is a refinement of the stacked one over 10 viewports, and both flags '
-  + 'are written only from their predicates in both places state.narrow is written');
+console.log('check-phone-layout: the phone tier is a refinement of the stacked one over 10 viewports, both flags '
+  + 'are written only from their predicates in both places state.narrow is written, and the home reads the '
+  + 'portrait tier back through a binding whose other arm is the composition the markup carried before');

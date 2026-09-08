@@ -139,11 +139,11 @@
         (V.isHome ? h(F,{key:12},
           "\n  ",
           "\n  ",
-          h("main", { key: "home", "data-screen-label": "Home", style: {"position":"relative","padding":"0 clamp(20px,5vw,72px)","minHeight":"calc(100vh - 57px)","boxSizing":"border-box","display":"grid","gridTemplateRows":"minmax(0,1fr)"} },
+          h("main", { key: "home", "data-screen-label": "Home", style: S(`position:relative; padding:0 clamp(20px,5vw,72px); ${V.homeMainBox ?? ""} box-sizing:border-box; display:grid; grid-template-rows:minmax(0,1fr);`) },
             "\n    ",
-            h("div", { key: "1", style: {"display":"grid","gridTemplateColumns":"minmax(0,1.1fr) minmax(0,0.9fr)","alignItems":"center","gap":"clamp(16px,4vw,72px)"} },
+            h("div", { key: "1", style: S(`display:grid; grid-template-columns:${V.homeGridCols ?? ""}; grid-template-rows:${V.homeGridRows ?? ""}; align-items:center; justify-items:stretch; gap:${V.homeGridGap ?? ""};`) },
               "\n      ",
-              h("button", { key: "1|37.1kxyw0d", ref: V.homeRollRef, onClick: V.goWriting, style: {"all":"unset","cursor":"pointer","position":"relative","display":"flex","alignItems":"center","justifyContent":"center","height":"min(44vh,400px)","fontFamily":"var(--font-heading)"} },
+              h("button", { key: "1|37.1kxyw0d", ref: V.homeRollRef, onClick: V.goWriting, style: S(`all:unset; cursor:pointer; position:relative; display:flex; align-items:center; justify-content:center; height:${V.homeRollH ?? ""}; font-family:var(--font-heading);`) },
                 "\n        ",
                 h("span", { key: "1|8.171hb9u", className: "breathe", style: {"position":"relative","zIndex":"3","fontWeight":"300","fontSize":"clamp(26px,3.4vw,50px)","letterSpacing":"0.01em"} },
                   "Research"
@@ -151,7 +151,7 @@
                 "\n      "
               ),
               "\n      ",
-              h("button", { key: "3", ref: V.homeCubeRef, onClick: V.goToolingFromCube, onMouseEnter: V.homeCubeOn, onMouseLeave: V.homeCubeOff, onFocus: V.homeCubeOn, onBlur: V.homeCubeOff, "aria-label": "Development", style: {"all":"unset","cursor":"pointer","position":"relative","height":"min(40vh,360px)"} }),
+              h("button", { key: "3", ref: V.homeCubeRef, onClick: V.goToolingFromCube, onMouseEnter: V.homeCubeOn, onMouseLeave: V.homeCubeOff, onFocus: V.homeCubeOn, onBlur: V.homeCubeOff, "aria-label": "Development", style: S(`all:unset; cursor:pointer; position:relative; height:${V.homeCubeH ?? ""};`) }),
               "\n    "
             ),
             "\n    ",
@@ -4382,6 +4382,18 @@
         isHome: view === 'home', showTabs: view !== 'home', goHome: () => this.goHome(),
         homeLayerRef: this.homeLayerRef, homeRollRef: this.homeRollRef, homeCubeRef: this.homeCubeRef, fogLayerRef: this.fogLayerRef,
         goToolingFromCube: () => { this.goPage('tooling'); this.cubeLead = true; },
+        // The home in portrait. Two objects laid across a page need width, not a large width, so a phone
+        // and an upright tablet both read them down the page instead. The main takes the screen exactly:
+        // 100dvh follows the browser chrome as it retracts, where 100vh would leave the contact line under
+        // it, and a height rather than a minimum is what keeps the one view that must never scroll from
+        // scrolling. The two objects are then sized off dvh as well, so the pair plus the gap plus the
+        // pinned contact line always stand inside that height with room over.
+        homeMainBox: this.state.portrait ? 'height:calc(100dvh - 57px); overflow:hidden;' : 'min-height:calc(100vh - 57px);',
+        homeGridCols: this.state.portrait ? 'minmax(0,1fr)' : 'minmax(0,1.1fr) minmax(0,0.9fr)',
+        homeGridRows: this.state.portrait ? 'minmax(0,1fr) minmax(0,1fr)' : 'none',
+        homeGridGap: this.state.portrait ? 'clamp(8px,2vh,32px)' : 'clamp(16px,4vw,72px)',
+        homeRollH: this.state.portrait ? 'min(30dvh,300px)' : 'min(44vh,400px)',
+        homeCubeH: this.state.portrait ? 'min(28dvh,280px)' : 'min(40vh,360px)',
         homeCubeOn: () => { if (this.home) this.home.setHover(true); }, homeCubeOff: () => { if (this.home) this.home.setHover(false); },
         isPage: view === 'page', marginalia, page, pageReg: page.reg, pageKey: pageKey, pageLabel: page.label,
         isCvSerif: view === 'cv' && cvReg === 'serif', isCvMono: view === 'cv' && cvReg === 'mono',

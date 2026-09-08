@@ -206,13 +206,17 @@
   <!-- ============ HOME — two objects in the void: the roll and the cube ============ -->
   <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
   <!-- the objects sit on the page's exact vertical centre: the main is one full-height row and the footer
-       is pinned to its bottom edge rather than taking a row of its own -->
-  <main key="home" data-screen-label="Home" style="position:relative; padding:0 clamp(20px,5vw,72px); min-height:calc(100vh - 57px); box-sizing:border-box; display:grid; grid-template-rows:minmax(0,1fr);">
-    <div style="display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,0.9fr); align-items:center; gap:clamp(16px,4vw,72px);">
-      <button ref="{{ homeRollRef }}" onClick="{{ goWriting }}" style="all:unset; cursor:pointer; position:relative; display:flex; align-items:center; justify-content:center; height:min(44vh,400px); font-family:var(--font-heading);">
+       is pinned to its bottom edge rather than taking a row of its own.
+       On a page taller than it is wide the pair is read down instead of across: one column, two rows, and
+       the main takes the screen's own height exactly rather than a minimum, so nothing here can ever grow
+       the page. Every value below comes from renderVals, so the landscape composition is written beside
+       the portrait one rather than being the markup's own. -->
+  <main key="home" data-screen-label="Home" style="position:relative; padding:0 clamp(20px,5vw,72px); {{ homeMainBox }} box-sizing:border-box; display:grid; grid-template-rows:minmax(0,1fr);">
+    <div style="display:grid; grid-template-columns:{{ homeGridCols }}; grid-template-rows:{{ homeGridRows }}; align-items:center; justify-items:stretch; gap:{{ homeGridGap }};">
+      <button ref="{{ homeRollRef }}" onClick="{{ goWriting }}" style="all:unset; cursor:pointer; position:relative; display:flex; align-items:center; justify-content:center; height:{{ homeRollH }}; font-family:var(--font-heading);">
         <span class="breathe" style="position:relative; z-index:3; font-weight:300; font-size:clamp(26px,3.4vw,50px); letter-spacing:0.01em;">Research</span>
       </button>
-      <button ref="{{ homeCubeRef }}" onClick="{{ goToolingFromCube }}" onMouseEnter="{{ homeCubeOn }}" onMouseLeave="{{ homeCubeOff }}" onFocus="{{ homeCubeOn }}" onBlur="{{ homeCubeOff }}" aria-label="Development" style="all:unset; cursor:pointer; position:relative; height:min(40vh,360px);"></button>
+      <button ref="{{ homeCubeRef }}" onClick="{{ goToolingFromCube }}" onMouseEnter="{{ homeCubeOn }}" onMouseLeave="{{ homeCubeOff }}" onFocus="{{ homeCubeOn }}" onBlur="{{ homeCubeOff }}" aria-label="Development" style="all:unset; cursor:pointer; position:relative; height:{{ homeCubeH }};"></button>
     </div>
     <nav aria-label="Contact" style="position:absolute; left:0; right:0; bottom:clamp(18px,4vh,40px); display:flex; justify-content:center; gap:clamp(20px,3vw,44px); font-family:var(--deco); font-size:12px;">
       <a href="{{ cvMailto }}" style="font-family:'Cinzel Decorative', var(--deco); text-transform:lowercase; color:var(--color-accent); text-decoration:none; letter-spacing:0.06em; display:flex; align-items:center; line-height:1; transition:color 200ms ease, letter-spacing 200ms ease;" style-hover="text-transform:uppercase; color:var(--color-accent-700); letter-spacing:0.1em">Email</a>
@@ -3338,6 +3342,18 @@ class Component extends DCLogic {
       isHome: view === 'home', showTabs: view !== 'home', goHome: () => this.goHome(),
       homeLayerRef: this.homeLayerRef, homeRollRef: this.homeRollRef, homeCubeRef: this.homeCubeRef, fogLayerRef: this.fogLayerRef,
       goToolingFromCube: () => { this.goPage('tooling'); this.cubeLead = true; },
+      // The home in portrait. Two objects laid across a page need width, not a large width, so a phone
+      // and an upright tablet both read them down the page instead. The main takes the screen exactly:
+      // 100dvh follows the browser chrome as it retracts, where 100vh would leave the contact line under
+      // it, and a height rather than a minimum is what keeps the one view that must never scroll from
+      // scrolling. The two objects are then sized off dvh as well, so the pair plus the gap plus the
+      // pinned contact line always stand inside that height with room over.
+      homeMainBox: this.state.portrait ? 'height:calc(100dvh - 57px); overflow:hidden;' : 'min-height:calc(100vh - 57px);',
+      homeGridCols: this.state.portrait ? 'minmax(0,1fr)' : 'minmax(0,1.1fr) minmax(0,0.9fr)',
+      homeGridRows: this.state.portrait ? 'minmax(0,1fr) minmax(0,1fr)' : 'none',
+      homeGridGap: this.state.portrait ? 'clamp(8px,2vh,32px)' : 'clamp(16px,4vw,72px)',
+      homeRollH: this.state.portrait ? 'min(30dvh,300px)' : 'min(44vh,400px)',
+      homeCubeH: this.state.portrait ? 'min(28dvh,280px)' : 'min(40vh,360px)',
       homeCubeOn: () => { if (this.home) this.home.setHover(true); }, homeCubeOff: () => { if (this.home) this.home.setHover(false); },
       isPage: view === 'page', marginalia, page, pageReg: page.reg, pageKey: pageKey, pageLabel: page.label,
       isCvSerif: view === 'cv' && cvReg === 'serif', isCvMono: view === 'cv' && cvReg === 'mono',
