@@ -124,7 +124,9 @@ const readableByTheGridChecks = (text, note) => {
 };
 
 const SPAN = /^\d+ \/ \d+$/;
-const WORD = /^(fit|last)$/;
+// the one row on the landing nobody writes: the contact band closes the sheet on whatever row the
+// placement ended on. The corner block used to be a word too and is a span now.
+const WORD = /^last$/;
 
 function roundTrip(t, note) {
   let text, back;
@@ -150,7 +152,7 @@ if (ready) {
   tuned.SHEET_WIDE.ghost = { col: '9 / 10', row: '5 / 6' };
   tuned.SHEET_WIDE.aside = { col: '1 / 23', row: '120 / 148' };
   tuned.SHEET_NARROW.body1 = { col: '2 / 22', row: '33 / 41' };
-  tuned.LANDING_WIDE.platform = { col: '9 / 19', row: 'fit' };
+  tuned.LANDING_WIDE.platform = { col: '9 / 19', row: '1 / 11' };
   tuned.LANDING_PINS = {
     'rhino-worktree-launcher': { col: '3 / 7', row: '7 / 10' },
     'agent-usage-stat': { col: '14 / 18', row: '5 / 9' },
@@ -164,8 +166,8 @@ if (ready) {
   roundTrip(bare, 'the tables with nothing pinned');
 
   // a span is two grid lines and has to stay two, or grid-column is set to a string the browser drops
-  // and the module lands wherever auto-placement puts it. Two rows on the landing are words instead,
-  // because nobody chooses them: they are measured off the page.
+  // and the module lands wherever auto-placement puts it. Three rows on the landing are a word
+  // instead, because nobody chooses them: the contact band sits on whatever row the draw ended on.
   for (const name of NAMES) {
     for (const [mod, at] of Object.entries(tables[name])) {
       const rowIsWord = name === 'LANDING_WIDE';
@@ -202,9 +204,32 @@ if (imports.length !== 1) {
   fail('expected exactly one import of ' + MODULE + ' in the design source, found ' + imports.length);
 } else {
   const before = src.slice(Math.max(0, imports[0].index - 900), imports[0].index);
-  if (!/URLSearchParams\(location\.search\)\.has\('dev'\)/.test(before)) {
+  // The flag is read once onto the instance now, because the landing reads it too: it draws strictly
+  // for every visitor and loosely while the panel is up. So the import may be guarded by the field
+  // rather than by the URL, as long as the field is that same reading of the URL and nothing else.
+  if (!/URLSearchParams\(location\.search\)\.has\('dev'\)/.test(before) && !/if \(this\.dev\)/.test(before)) {
     fail(MODULE + ' is imported without the ?dev flag guarding it, so the panel ships to every visitor');
   }
+  if (!/\n  dev = new URLSearchParams\(location\.search\)\.has\('dev'\);/.test(logicSrc)) {
+    fail('the ?dev flag is not read once onto the instance, so the panel and the landing can disagree about whether the page is being tuned');
+  }
+}
+// The corner block was once as deep as the statement's own type, written 'fit' in LANDING_WIDE and
+// measured off the page after layout. It is a fixed span now, because a block whose depth is a fact
+// about the reader's browser is a block no pin can be composed against: a pin clear of it at one
+// width stands on it at the next, and the landing refuses the whole composition and renders nothing.
+// This is a grep and not a behaviour check. It holds that no reader of that word is left behind in
+// the page or the panel, since one that survived would answer 'fit' with NaN rows rather than loudly.
+for (const file of [['design/Portfolio.dc.html', logicSrc], ['grid-dev.js', readFileSync('grid-dev.js', 'utf8')]]) {
+  if (/'fit'/.test(file[1])) {
+    fail(file[0] + " still reads 'fit' as a row, which nothing writes any more: the corner block is a span");
+  }
+}
+// A tuning session pins every plate and then drags one over another, and the strict placement answers
+// that by refusing the whole composition: the landing renders nothing and the plate under the cursor
+// vanishes mid-move. The landing therefore draws loosely exactly while the panel is up.
+if (!/strict: !this\.dev/.test(logicSrc)) {
+  fail('the landing placement is not told whether the page is being tuned, so an overlap made with the panel takes every plate off the sheet');
 }
 if (!/this\.gridTuner\.destroy\(\)/.test(logicSrc)) {
   fail('componentWillUnmount never destroys the tuning panel, so its listeners outlive the component');
@@ -241,6 +266,28 @@ if (!/startTyping\(key, len, patch\) \{ if \(this\.devQuiet\) return;/.test(logi
   if (!/typeOn\.onchange = \(\) => \{ typewriter = typeOn\.checked;/.test(mod)) {
     fail('the panel offers no way to let the plates type again while it is up');
   }
+  // These three are greps and not behaviour: what they hold is that the code the browser check
+  // exercised is still the code in the file, since none of the three can be run without a page.
+  //
+  // The sheet is frozen once, on the first rebuild that finds plates drawn on the landing, by
+  // claiming every one of them where the draw left it. Without that, every pin reshuffles the plates
+  // that are still drawn and a composition can never settle.
+  if (!/frozen = true;/.test(mod) || !/initial\.LANDING_PINS = /.test(mod)) {
+    fail('the panel does not freeze the landing where the draw left it and make that its reset target, so the plates move under every change');
+  }
+  // hide used to take the whole panel off the page, which reads as a crash; it folds down to its
+  // handle instead, and the handle is what brings it back
+  if (!/button\('collapse',/.test(mod)) {
+    fail('the panel has no collapse button, so putting it out of the way means taking it off the page');
+  }
+  // copy writes the clipboard and says so. It used to print the whole block into the panel, which is
+  // the one thing nobody needs to see at the moment they have just taken a copy of it.
+  if (/out\.textContent = (?:text|serialize\()/.test(mod)) {
+    fail('copy prints the serialized block into the panel, which is what the clipboard is for; __grid.dump() is where to read it');
+  }
+  if (!/out\.textContent = 'copied ' \+/.test(mod)) {
+    fail('copy does not report what it put on the clipboard, so a failed write reads exactly like a successful one');
+  }
 }
 
 // ---------------------------------------------------------------- two panels, one page
@@ -251,6 +298,7 @@ if (!/startTyping\(key, len, patch\) \{ if \(this\.devQuiet\) return;/.test(logi
 // again. The page under #dc-root is what a panel tunes and all either has to watch; both park
 // outside it, so neither can see the other at all. And each hides itself where it has nothing to
 // tune, so only one ever stands on a view.
+const HIDES = { 'grid-dev.js': /root\.hidden = !s;/, 'leaves-dev.js': /root\.hidden = hidden \|\| !/ };
 for (const file of ['grid-dev.js', 'leaves-dev.js']) {
   const mod = readFileSync(file, 'utf8');
   if (/observer\.observe\(document\.body/.test(mod)) {
@@ -265,7 +313,11 @@ for (const file of ['grid-dev.js', 'leaves-dev.js']) {
   if (!/root\.dataset\.devPanel = '(grid|leaves)'/.test(mod)) {
     fail(file + ' does not say which panel it is, and with two on the page their controls are otherwise indistinguishable');
   }
-  if (!/root\.hidden = hidden \|\| !/.test(mod)) {
+  // The two panels put themselves away differently now and the line has to be read per file. The
+  // Research panel still hides outright on the key that puts it away; the grid panel folds down to
+  // its handle instead and so takes the view off that line, leaving it saying only what it always
+  // said: a panel stands where there is something to tune.
+  if (!HIDES[file].test(mod)) {
     fail(file + ' never hides itself on a view it has nothing to tune, so two panels stand side by side with one of them empty');
   }
   // A register change lifts a clone of the outgoing view into a morph layer beside #dc-root, and that

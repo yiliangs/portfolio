@@ -634,7 +634,7 @@
                 h("div", { key: "4", ref: V.notesRef, style: {"gridColumn":"1 / 2","gridRow":"1 / 2","height":"0"} }),
                 "\n\n    ",
                 "\n    ",
-                h("section", { key: "7", ref: V.landingStatementRef, "data-mod": "statement", style: S(`grid-column:${V.land?.statement?.col ?? ""}; grid-row:${V.land?.statement?.row ?? ""}; position:relative; z-index:1; background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); padding:22px; box-sizing:border-box; overflow:hidden;`) },
+                h("section", { key: "7", ref: V.landingStatementRef, "data-mod": "statement", onClick: V.landIntroToggle, style: S(`grid-column:${V.land?.statement?.col ?? ""}; grid-row:${V.land?.statement?.row ?? ""}; position:relative; ${V.landIntroBox ?? ""} background:var(--color-bg); box-shadow:inset 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), inset 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 1px 0 0 0 color-mix(in srgb, var(--color-text) 16%, transparent), 0 1px 0 0 color-mix(in srgb, var(--color-text) 16%, transparent); padding:22px; box-sizing:border-box; cursor:${V.landIntroCursor ?? ""};`) },
                   "\n      ",
                   h("p", { key: "1|17.1dagtdl", "data-morph": "kicker", style: {"margin":"0 0 22px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
                     h(F,{key:0},"",I(V.page?.kicker,1),"")
@@ -644,12 +644,18 @@
                     h(F,{key:0},"",I(V.page?.title,1),"")
                   ),
                   "\n      ",
-                  h("p", { key: "5|16.1y4952k", "data-tr": "wake", "data-reg": "mono", "data-morph": "intro", style: {"margin":"22px 0 0","color":"var(--color-neutral-700)"} },
+                  h("p", { key: "5|16.1y4952k", "data-landing-intro": "1", "data-tr": "wake", "data-reg": "mono", "data-morph": "intro", style: S(`margin:22px 0 0; color:var(--color-neutral-700); ${V.landIntroClamp ?? ""}`) },
                     h(F,{key:0},"",I(V.page?.intro,1),"")
                   ),
                   "\n      ",
-                  h("p", { key: "7|17.3x40kj", "data-morph": "byline", style: {"margin":"22px 0 0","fontSize":"12px","color":"var(--color-neutral-600)"} },
-                    h(F,{key:0},"",I(V.page?.byline,1),"")
+                  "\n      ",
+                  h("p", { key: "8|62.1nwiqyn", "data-landing-byline": "1", "data-morph": "byline", style: {"margin":"22px 0 0","fontSize":"12px","color":"var(--color-neutral-600)","display":"flex","justifyContent":"space-between","gap":"12px"} },
+                    h("span", { key: "0|17.3x40kj" },
+                      h(F,{key:0},"",I(V.page?.byline,1),"")
+                    ),
+                    h("span", { key: "1|19.k9j0z", "aria-hidden": "true", style: {"flex":"none","color":"var(--color-text)","letterSpacing":"0.08em"} },
+                      h(F,{key:0},"",I(V.landIntroMore,1),"")
+                    )
                   ),
                   "\n    "
                 ),
@@ -2454,7 +2460,11 @@
     // paint would otherwise be the wrong one, replaced a frame later. The address bar is read the same
     // way, so a deep link paints the view it names, not the home first.
     state = { view: 'home', page: 'writing', cvReg: 'serif', idx: 10, hovered: 10, tab: { left: 0, width: 0 },
-      narrow: this.isStacked(), landingRows: this.visibleRows(), landingStatementRows: 12,
+      narrow: this.isStacked(), landingRows: this.visibleRows(),
+      // the description's clamp, in lines, and whether it was cut: both read off the page after the
+      // first layout, since 0 lines means "not measured yet" and the module's overflow guard holds the
+      // one frame before the answer arrives
+      landingIntroLines: 0, landingIntroCut: false, landingIntroOpen: false,
       ...this.routeState(this.parseRoute(location.hash)) };
   
     // Where every module of a Development sheet sits on the 22 column, 44px row drawing grid, as
@@ -2537,17 +2547,22 @@
     // The desktop Development landing is the same drawing grid run full bleed: 22 columns across the
     // viewport, 44px rows, at least a screen tall. Only these five modules are placed by hand. The
     // statement opens the sheet at its first cell and the platform stands beside it on the same rows,
-    // taking the column the statement leaves off at, so no empty column falls between them. Only the
-    // columns are a decision: two of the five rows are measured rather than chosen. The statement and
-    // the platform read 'fit', which is the rows the statement's own type takes at this width, counted
-    // off the page after it is laid out; the three contact cells close the sheet in the bottom right
-    // corner and read 'last', which is the grid's final row, known only once landing-grid.js has grown
-    // the sheet to hold every plate. Everything else on the landing is a plate, pinned to a cell by the
-    // seeded draw rather than by a table. Plain literals like the sheet tables above, so
-    // tools/check-landing-grid.mjs can read them without running this file.
+    // taking the column the statement leaves off at, so no empty column falls between them. The corner
+    // block is eight rows, chosen the way every other span on this grid is chosen and written here like
+    // one: the block is a fixed shape and the type is fitted into it, rather than the block being cut
+    // to whatever the type happened to measure at this viewport. What does not fit is clamped to the
+    // lines that do and unfolds on a click. That is the whole of why the composition below can be
+    // composed at all: a corner that changes depth with the window is a corner every pin has to be
+    // clear of at every depth, and there is no such thing as a pin that is clear of a block whose
+    // height is a fact about the reader's browser.
+    //
+    // Only the three contact cells still read a word, 'last', which is the grid's final row, known only
+    // once landing-grid.js has grown the sheet to hold every plate. Everything else on the landing is a
+    // plate, pinned to a cell by the table below or by the seeded draw. Plain literals like the sheet
+    // tables above, so tools/check-landing-grid.mjs can read them without running this file.
     LANDING_WIDE = {
-      statement:     { col: '1 / 12',  row: 'fit' },
-      platform:      { col: '12 / 18', row: 'fit' },
+      statement:     { col: '1 / 12',  row: '1 / 9' },
+      platform:      { col: '12 / 18', row: '1 / 9' },
       contactEmail:  { col: '17 / 19', row: 'last' },
       contactGithub: { col: '19 / 21', row: 'last' },
       contactCv:     { col: '21 / 23', row: 'last' },
@@ -2565,28 +2580,81 @@
     // them in the wrong places is one the remaining plates cannot be fitted on at all;
     // tools/check-landing-grid.mjs runs whatever is written here across every viewport and statement
     // height it sweeps, which is the place that failure is meant to surface.
+    //
+    // That is the reading a visitor gets. The page behind ?dev gets the other one, `strict: false` in
+    // landingLayout below: the panel pins every plate where the draw left it as soon as it mounts, so
+    // that a composition holds still while it is being made, and from there a drag is one pin crossing
+    // its neighbours. Refusing that composition would take every plate off the sheet mid-move, so
+    // while the panel is up the pins are drawn as written and the overlaps are named in the panel's own
+    // warning line instead. What is pasted back here therefore still has to be a composition the strict
+    // reading accepts, and the check above is where it is held to that.
     LANDING_PINS = {
+      natalie:                                        { col: '8 / 15',  row: '19 / 22' },
+      'ai-layout':                                    { col: '2 / 5',   row: '18 / 22' },
+      'synchronisation-to-the-rhino-ecosystem':       { col: '1 / 4',   row: '10 / 15' },
+      'linkage-to-rhino-blocks':                      { col: '10 / 13', row: '24 / 28' },
+      'residential-program-responsive-facade-layout': { col: '1 / 4',   row: '24 / 29' },
+      'unit-stack-calculation':                       { col: '14 / 17', row: '11 / 17' },
+      'unit-demising-calculation':                    { col: '5 / 9',   row: '23 / 29' },
+      'room-layout-solver':                           { col: '19 / 22', row: '9 / 15' },
+      'long-mission-orchestrator':                    { col: '17 / 19', row: '20 / 27' },
+      'knowledge-ratchet':                            { col: '20 / 22', row: '18 / 26' },
+      'website-renovation-signpost':                  { col: '14 / 16', row: '24 / 28' },
+      'rhino-worktree-launcher':                      { col: '11 / 13', row: '10 / 18' },
+      'agent-usage-stat':                             { col: '19 / 22', row: '2 / 7' },
+      'building-graph-neural-network':                { col: '6 / 10',  row: '10 / 16' },
     };
     LANDING_PAD = 22; // the padding every module of the drawing grid is set in
+    // Whether this page is being tuned rather than read, off the URL, once: the flag decides both which
+    // modules are fetched at all, in componentDidMount, and how the landing draws, just below. Read on
+    // the instance rather than at each of them, since a page where the two disagreed would either ship
+    // the panels or refuse the compositions made with them.
+    dev = new URLSearchParams(location.search).has('dev');
     // one seed per page load, kept on the instance: hovering a plate, scrolling, or leaving for another
     // tab and coming back all re-render the same composition. Only the row count can redraw it.
     landingSeed = (Math.random() * 4294967296) >>> 0;
     // the rows a screen shows under the 57px header; the sheet starts here and grows from it
     visibleRows() { return Math.max(6, Math.floor((window.innerHeight - 57) / 44)); }
-    // The statement's module is as tall as its type and no taller. The type is set to the module's full
-    // width, so how many rows it takes is a fact about this viewport rather than a number anyone can
-    // write in the table: it is read off the page after layout, the way measureTabs reads the tab strip
-    // and remeasureText re-reads the ripple's glyphs. The read is of the children rather than of
-    // scrollHeight, which is clipped by the module's own overflow:hidden guard and disagrees between
-    // browsers about the bottom padding. Writing back only on a change keeps componentDidUpdate from
-    // chasing itself: the module's width does not depend on its row span, so the answer is stable.
-    measureLandingStatement() {
-      const el = this.landingStatementRef.current; if (!el || !el.children.length) return;
-      const top = el.getBoundingClientRect().top;
-      const last = el.children[el.children.length - 1].getBoundingClientRect().bottom;
-      if (!(last > top)) return; // mid-transition, or the module is not laid out yet
-      const rows = Math.max(8, Math.ceil((last - top + this.LANDING_PAD) / 44));
-      if (rows !== this.state.landingStatementRows) this.setState({ landingStatementRows: rows });
+    // The statement's module is a fixed eight rows, so what is measured here is the type rather than
+    // the grid: how many lines of the description fit in the room the module has left after the kicker,
+    // the title and the byline, all of which are set before it and none of which may be cut. The
+    // description is clamped to that many lines and the last of them ends in an ellipsis; the rest is a
+    // click away. At a wide viewport the whole paragraph fits and nothing is clamped at all.
+    //
+    // The room is worked out from the module's own bottom rather than by adding the pieces up, because
+    // the pieces carry collapsing margins and their sum is not the distance they occupy. It does not
+    // depend on the answer either: where the description starts is set by the kicker and the title
+    // above it, and the byline's height is its own, so a clamp of four lines and a clamp of five give
+    // the same room and componentDidUpdate cannot chase itself. Whether the text was actually cut is
+    // the one thing that has to be read after the clamp is on, which is what scrollHeight answers.
+    fitLandingStatement() {
+      const el = this.landingStatementRef.current;
+      // The module is gone, so an unfolded one is a flag nobody can see and nobody can put back: a
+      // reader who opens the statement, opens a sheet and comes back would find it still standing over
+      // the plates. This is the one place that knows the module has left, so it is the place that folds.
+      if (!el) { if (this.state.landingIntroOpen) this.setState({ landingIntroOpen: false }); return; }
+      const p = el.querySelector('[data-landing-intro]'); if (!p) return;
+      if (this.state.landingIntroOpen) return; // unfolded: the module is as tall as its type and nothing is cut
+      const box = el.getBoundingClientRect();
+      if (!(box.height > 0)) return; // mid-transition, or the module is not laid out yet
+      const cs = getComputedStyle(el), ps = getComputedStyle(p);
+      const by = el.querySelector('[data-landing-byline]');
+      const bs = by && getComputedStyle(by);
+      const below = by ? by.getBoundingClientRect().height + parseFloat(bs.marginTop) : 0;
+      const room = (box.bottom - parseFloat(cs.paddingBottom)) - p.getBoundingClientRect().top - below;
+      const line = parseFloat(ps.lineHeight) || 22;
+      const lines = Math.max(1, Math.floor(room / line));
+      const cut = p.scrollHeight > p.clientHeight + 1;
+      if (lines !== this.state.landingIntroLines || cut !== this.state.landingIntroCut) {
+        this.setState({ landingIntroLines: lines, landingIntroCut: cut });
+      }
+    }
+    // Unfolding is the whole of what the ellipsis promises, so it is one flag and the render reads it.
+    // Folding back is a second click, Escape, or leaving the view, since a module left standing open
+    // over the plates would still be open when the reader came back to the landing from a sheet.
+    toggleLandingIntro() {
+      if (!this.state.landingIntroCut && !this.state.landingIntroOpen) return;
+      this.setState({ landingIntroOpen: !this.state.landingIntroOpen });
     }
     // The plate placement for the desktop landing. renderVals runs on every scroll frame and the draw
     // is not free, so it is memoised on everything it depends on. The module arrives by dynamic import
@@ -2595,9 +2663,9 @@
     // in and the order a pin names a plate by. The pins go into the cache key because the tuning panel
     // behind ?dev edits LANDING_PINS in place and asks for a re-render: without them the panel would
     // move a pin and get the previous composition back.
-    landingLayout(slugs, rows, statementRows) {
+    landingLayout(slugs, rows) {
       const count = slugs.length;
-      const key = this.landingSeed + '|' + count + '|' + rows + '|' + statementRows + '|' + JSON.stringify(this.LANDING_PINS);
+      const key = this.landingSeed + '|' + count + '|' + rows + '|' + JSON.stringify(this.LANDING_WIDE.statement.row) + '|' + JSON.stringify(this.LANDING_PINS);
       if (this.landingCache && this.landingCache.key === key) return this.landingCache.out;
       if (!this.landingMod) {
         if (!this.landingLoading && !this.landingFailed) {
@@ -2610,6 +2678,7 @@
       }
       const at = (s) => s.split('/').map((v) => parseInt(v, 10));
       const sc = at(this.LANDING_WIDE.statement.col), pc = at(this.LANDING_WIDE.platform.col);
+      const sr = at(this.LANDING_WIDE.statement.row);
       const e0 = at(this.LANDING_WIDE.contactEmail.col), c1 = at(this.LANDING_WIDE.contactCv.col);
       // a pin is written as spans of grid lines, the way every placement table here is; landing-grid
       // counts cells, so the two halves of that translation live on this one line
@@ -2622,9 +2691,15 @@
       let out = null;
       try {
         out = this.landingMod.placeLanding({ seed: this.landingSeed, cols: 22, rows, count, pins,
+          // The panel pins every plate the moment it mounts and a drag then carries one across its
+          // neighbours, so a sheet being tuned is asked for as written, overlaps and all. Refusing it
+          // would take the whole landing off the page, the plate under the cursor included.
+          strict: !this.dev,
           // the statement and the platform are handed over as the one block they read as, so the plates
-          // keep their empty cell from the pair rather than from each of them
-          reserved: [{ col: sc[0], row: 1, w: pc[1] - sc[0], h: statementRows }],
+          // keep their empty cell from the pair rather than from each of them. Both are the same span,
+          // and it is a span now rather than a measurement, so the block a pin has to be clear of is the
+          // same block on every screen.
+          reserved: [{ col: sc[0], row: sr[0], w: pc[1] - sc[0], h: sr[1] - sr[0] }],
           contact: { col: e0[0], w: c1[1] - e0[0] } });
         this.landingError = null;
       } catch (e) {
@@ -3195,12 +3270,15 @@
       this.onUp = () => { if (!this.dragLast) return; this.dragLast = null; if (this.parch) this.parch.dragEnd(); const pf = this.platformRef.current; if (pf) pf.style.cursor = 'grab'; };
       window.addEventListener('pointerdown', this.onDown); window.addEventListener('pointerup', this.onUp); window.addEventListener('pointercancel', this.onUp);
       this.onScroll = () => { this.syncParchment(); this.syncHome(); this.setState({ scrollY: window.scrollY }); clearTimeout(this.remeasureTimer); this.remeasureTimer = setTimeout(() => this.remeasureText(), 120); };
-      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => setTimeout(() => { this.remeasureText(); this.measureLandingStatement(); this.syncParchment(); }, 50));
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => setTimeout(() => { this.remeasureText(); this.fitLandingStatement(); this.syncParchment(); }, 50));
       this.onResize = () => { this.setState({ narrow: this.isStacked(), landingRows: this.visibleRows() }); this.measureTabs(); this.syncParchment(); this.syncHome(); };
       this.onKey = (e) => {
         const t = e.target; if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
         const n = this.data.length, { view, idx } = this.state;
-        if (e.key === 'Escape') this.goPage(this.state.view === 'chapter' ? this.pageOf(idx) : this.state.page);
+        // an unfolded statement is the innermost thing Escape can close, so it takes the key first and
+        // the reader stays on the landing rather than being navigated off it
+        if (e.key === 'Escape' && this.state.landingIntroOpen) this.setState({ landingIntroOpen: false });
+        else if (e.key === 'Escape') this.goPage(this.state.view === 'chapter' ? this.pageOf(idx) : this.state.page);
         else if (e.key === 't' || e.key === 'T') this.goPage('tooling');
         else if (e.key === 'e' || e.key === 'E') this.goPage('writing');
         else if (e.key === 'ArrowRight') this.open(view === 'chapter' ? (idx + 1) % n : this.featuredFor[this.state.page][0]);
@@ -3209,7 +3287,7 @@
         else return;
         this.setState({ usedKeys: true });
       };
-      this.onResize(); this.measureLandingStatement(); window.addEventListener('resize', this.onResize);
+      this.onResize(); this.fitLandingStatement(); window.addEventListener('resize', this.onResize);
       window.addEventListener('scroll', this.onScroll, { passive: true });
       window.addEventListener('keydown', this.onKey);
       // the first entry gets the state behind its address, so a return to it restores the view as it was opened
@@ -3239,7 +3317,7 @@
       // on a view it has nothing to tune, so only one ever stands on the page. The flag is the only
       // thing that fetches them, so the page ships nothing for them otherwise, the same arrangement
       // field.js has for the home field.
-      if (new URLSearchParams(location.search).has('dev')) {
+      if (this.dev) {
         import('./leaves-dev.js')
           .then((m) => { if (!this.dead) this.leafTuner = m.mount({ spreads: this.LEAF_SPREADS, pairs: this.LEAF_PAIRS, rerender: () => this.forceUpdate() }); })
           .catch((e) => console.error('leaves-dev', e));
@@ -3257,7 +3335,7 @@
     // it on the new anchor. A window dragged across the threshold fires resize again and again and
     // self-corrected by accident; one docked there with Win+arrow fires it once, and did not.
     // The leaf detail grows by a character per tick while it types, so its placement runs here too.
-    componentDidUpdate() { this.observeReveals(); this.mountTextEffects(); this.measureTabs(); this.measureLandingStatement(); this.syncParchment(); this.syncHome(); this.syncPaper(); this.placeLeafText(); }
+    componentDidUpdate() { this.observeReveals(); this.mountTextEffects(); this.measureTabs(); this.fitLandingStatement(); this.syncParchment(); this.syncHome(); this.syncPaper(); this.placeLeafText(); }
   
     // A chapter whose entry carries a `paper` gets its body from an ES module under content/, fetched
     // the first time that chapter is opened and then kept on the instance. Nothing is imported for the
@@ -4091,15 +4169,28 @@
       // A plate shows its picture and its title at rest and types its reason in on hover, at the Research
       // leaves' tempo, from the same typewriter.
       const landingWide = view === 'page' && page.reg === 'mono' && !this.state.narrow;
-      const statementRows = this.state.landingStatementRows;
-      const lay = landingWide ? this.landingLayout(pageProjects.map((p) => p.slug), this.state.landingRows, statementRows) : null;
+      const lay = landingWide ? this.landingLayout(pageProjects.map((p) => p.slug), this.state.landingRows) : null;
       const landingRows = lay ? lay.rows : this.state.landingRows;
       const land = {};
       for (const [name, spot] of Object.entries(this.LANDING_WIDE)) {
+        // 'last' is the one row on this table nobody writes: the contact band closes the sheet on
+        // whatever row the placement ended on, which is known only once the plates are placed.
         land[name] = { col: spot.col,
-          row: spot.row === 'last' ? landingRows + ' / ' + (landingRows + 1)
-            : spot.row === 'fit' ? '1 / ' + (1 + statementRows) : spot.row };
+          row: spot.row === 'last' ? landingRows + ' / ' + (landingRows + 1) : spot.row };
       }
+      // The statement's module is a fixed block, so the description is clamped to the lines that fit in
+      // it and the rest is a click away. Four values carry that: the clamp, the word in the byline row
+      // that says there is more to read, the box the module takes while it is unfolded, and whether the
+      // module answers the cursor at all. Unfolded it is its own content height at a z-index above every
+      // plate, hovered ones included, and it keeps its own background, so what it grows over is covered
+      // rather than shown through. Nothing here is clickable when the whole paragraph already fits.
+      const introOpen = this.state.landingIntroOpen, introCut = this.state.landingIntroCut;
+      const landIntroClamp = introOpen || !this.state.landingIntroLines ? ''
+        : 'display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:' + this.state.landingIntroLines + '; overflow:hidden;';
+      const landIntroBox = introOpen ? 'align-self:start; height:auto; min-height:100%; overflow:visible; z-index:35;' : 'overflow:hidden; z-index:1;';
+      const landIntroMore = introOpen ? 'less' : introCut ? 'more' : '';
+      const landIntroCursor = introOpen || introCut ? 'pointer' : 'default';
+      const landIntroToggle = () => this.toggleLandingIntro();
       // The graph, read as positions on this landing. relatedTo answers in data indices; the landing
       // knows its plates by k, their place in the register, so the two are joined once here and the
       // lines and the highlight both read the answer back.
@@ -4267,6 +4358,7 @@
         serifBands, heroSheetH: this.heroSheetH(this.state.narrow), heroBlockH: this.heroBlockH(),
         isMonoPage: view === 'page' && page.reg === 'mono',
         isLandingWide: landingWide, isLandingNarrow: !landingWide, land, landingPlates, landingLines,
+        landIntroClamp, landIntroBox, landIntroMore, landIntroCursor, landIntroToggle,
         sheetLinks, linksEmpty: !relatedIdx.length,
         isMono: view === 'chapter' && mono, isSerif: view === 'chapter' && !mono, chapterKey: R + '-' + idx,
         isPaper: view === 'chapter' && !mono && !!current.paper, isEssay: view === 'chapter' && !mono && !current.paper,
