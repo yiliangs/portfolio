@@ -256,8 +256,13 @@ for (const main of landings) {
       fail('a landing module does not carry class="' + MOD + '", so it draws no frame: ' + where(item));
     }
     const clickable = item.hasAttribute('onclick') || item.hasAttribute('href');
-    if (clickable && !cls.includes(CTL)) {
-      fail('a landing module answers a click but does not carry ' + CTL + ', so it gives no hover feedback: ' + where(item));
+    // A link and a button are controls and nothing else, so a frame that stays dark under the cursor
+    // on one of those is a control with no feedback. A module of another tag may take a click as a
+    // second thing it does, the way the statement unfolds its own description, and put the affordance
+    // in its own type rather than in its frame.
+    const control = ['a', 'button'].includes(item.tagName.toLowerCase());
+    if (control && !cls.includes(CTL)) {
+      fail('a landing control does not carry ' + CTL + ', so its frame gives no hover feedback: ' + where(item));
     }
     if (!clickable && cls.includes(CTL)) {
       fail(CTL + ' brings the frame to full ink on hover, which invites a click: it belongs on a control, not on ' + where(item));

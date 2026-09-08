@@ -8,6 +8,15 @@
 // is used at, reads the hand-placed corner blocks out of LANDING_WIDE, and holds the template to
 // carrying both landings.
 //
+// A plate answers to one of two authorities here, and which one is the whole of the difference
+// between a drawn plate and a pinned one. A drawn plate is the draw's to place and the draw's to
+// size, so it is held to the sizes the draw may choose from: PLATE_VOCAB, and FIRST_PLATE for the
+// platform's own plate. A pinned plate is held to its pin instead, all four numbers of it, position
+// and size alike. The vocabulary is deliberately not asked of a pin: LANDING_PINS is composed in the
+// tuning panel behind ?dev, a plate is resized there by dragging its handles, and what that writes is
+// the pin's own span. Holding a pin to the four drawn sizes would refuse every composition the panel
+// exists to make, while checking nothing the pin comparison does not already check.
+//
 // Run with `npm run check`. Exits non-zero and prints every failure it found.
 
 import { readFileSync } from 'node:fs';
@@ -38,10 +47,9 @@ const logicSrc = src.slice(closeAt);
 // ---------------------------------------------------------------- the placement table
 
 // LANDING_WIDE is a plain literal for the same reason SHEET_WIDE is: it can be read without running
-// the logic class. Two of its rows are measured rather than chosen and so are written as words: the
-// statement and the platform read 'fit', the rows the statement's own type takes at this viewport
-// width, and the contact cells read 'last', the grid's final row, known only once the placement has
-// grown the sheet to hold every plate.
+// the logic class. One of its rows is not a span but a word: the three contact cells read 'last', the
+// grid's final row, known only once the placement has grown the sheet to hold every plate. Every
+// other row here is a span chosen like any other, the corner block included.
 function readTable(name) {
   const at = logicSrc.indexOf('  ' + name + ' = {');
   if (at < 0) { fail('the logic class has no ' + name + ' placement table'); return null; }
@@ -81,17 +89,29 @@ if (wide) {
   }
 
   // the corner blocks: the statement opens the sheet at its first cell and the platform stands
-  // beside it on the same rows, with no empty column between the two. Both take their height from the
-  // statement's measured type, so neither may write a row span of its own.
+  // beside it on the same rows, with no empty column between the two
   const st = wide.statement && span(wide.statement.col);
   const pf = wide.platform && span(wide.platform.col);
   if (st && st[0] !== 1) fail('the statement does not open the sheet at column 1: ' + wide.statement.col);
-  for (const name of ['statement', 'platform']) {
-    const e = wide[name];
-    if (e && e.row !== 'fit') fail('LANDING_WIDE.' + name + " takes a fixed row (" + e.row + "); the corner block is as tall as the statement's own type, written 'fit'");
+  // The corner block is a fixed span, and the two modules that make it are the same span: it opens at
+  // row 1 and it is as deep as the table says, on every screen. That is what a pin can be composed
+  // against. A depth measured off the reader's own type would be a different block per browser, and a
+  // pin clear of it on one screen would stand on it on the next.
+  const sr = wide.statement && span(wide.statement.row);
+  const pr = wide.platform && span(wide.platform.row);
+  for (const [name, r] of [['statement', sr], ['platform', pr]]) {
+    const e = wide[name]; if (!e) continue;
+    if (!r) fail('LANDING_WIDE.' + name + ' has a row span this check cannot read: ' + JSON.stringify(e.row) +
+      '; the corner block is a fixed span now, not a word the page measures');
+    else if (r[0] !== 1) fail('LANDING_WIDE.' + name + ' does not open the sheet at row 1: ' + e.row);
+    else if (r[1] <= r[0]) fail('LANDING_WIDE.' + name + ' has an empty or reversed row span: ' + e.row);
+  }
+  if (sr && pr && (sr[0] !== pr[0] || sr[1] !== pr[1])) {
+    fail('the statement and the platform are not the same depth (' + wide.statement.row + ' and ' + wide.platform.row +
+      '); they are one block to the placement and a plate keeps its empty cell from the pair');
   }
   if (st && pf && pf[0] !== st[1]) fail('the platform does not take the column the statement leaves off at: statement ends at ' + st[1] + ', platform starts at ' + pf[0]);
-  if (st && pf) corner = { col: st[0], w: pf[1] - st[0] };
+  if (st && pf && sr) corner = { col: st[0], w: pf[1] - st[0], row: sr[0], h: sr[1] - sr[0] };
 
   // the contact cells close the sheet in the bottom right corner, three two-column cells running to
   // the last grid line, each on the row the placement ends on
@@ -130,16 +150,18 @@ try {
 
 const VIEWPORTS = [[1000, 700], [1280, 720], [1366, 768], [1440, 900], [1920, 1080], [2560, 1440]];
 const SEEDS = Array.from({ length: 50 }, (_, i) => i);
-// the corner block's height is the statement's measured type, so the check runs the range that
-// measures out across the widths the page is used at, from the floor measureLandingStatement holds
-// to two rows past the tallest reading
-const STATEMENT_ROWS = [8, 10, 12, 14];
+// The corner block's depth is the span LANDING_WIDE writes, so there is one of it and this check runs
+// that one rather than a range. It used to be the statement's measured type, which is why there was a
+// range at all: the block was a different depth on every width, and the sweep had to cover every
+// depth it might measure out to. A fixed block is the same block everywhere, so the only thing left
+// varying across the viewports below is how many rows the screen shows.
+const STATEMENT_ROWS = corner ? corner.h : 8;
 
 const contactSpec = wide && wide.contactEmail && wide.contactCv
   ? { col: span(wide.contactEmail.col)[0], w: span(wide.contactCv.col)[1] - span(wide.contactEmail.col)[0] }
   : { col: 17, w: 6 };
-const cornerAt = (h) => (corner ? { col: corner.col, row: 1, w: corner.w, h } : { col: 1, row: 1, w: 17, h });
-let reserved = [cornerAt(12)];
+const cornerAt = (h) => (corner ? { col: corner.col, row: corner.row, w: corner.w, h } : { col: 1, row: 1, w: 17, h });
+let reserved = [cornerAt(STATEMENT_ROWS)];
 
 const boxes = (out) => {
   const all = out.plates.map((p, i) => ['plate ' + i, p]);
@@ -155,7 +177,7 @@ const overlaps = (a, b) =>
 let worst = 0, checked = 0;
 for (const [w, h] of VIEWPORTS) {
   const rows = Math.max(6, Math.floor((h - HEADER) / ROW));
-  for (const stRows of STATEMENT_ROWS) {
+  const stRows = STATEMENT_ROWS;
   reserved = [cornerAt(stRows)];
   for (const seed of SEEDS) {
     const args = { seed, cols: COLUMNS, rows, count: PLATES, reserved, contact: contactSpec, pins: shipped };
@@ -166,8 +188,10 @@ for (const [w, h] of VIEWPORTS) {
     }
     checked++;
     const at = w + 'x' + h + ' statement ' + stRows + ' rows, seed ' + seed + ': ';
-    // a pin is a claim on cells, so a pinned plate that came back anywhere else is the whole point of
-    // pinning gone, not a near miss
+    // A pin is a claim on cells, so a pinned plate that came back anywhere else is the whole point of
+    // pinning gone, not a near miss. All four numbers are compared, size as well as position, and
+    // this is the only place a pinned plate's size is held to anything: its span is the whole of what
+    // that plate is allowed to be.
     for (const [i, p] of Object.entries(shipped)) {
       const got = out.plates[i];
       if (!got) { fail(at + 'plate ' + i + ' is pinned and was not placed at all'); continue; }
@@ -179,12 +203,18 @@ for (const [w, h] of VIEWPORTS) {
     if (out.rows < rows) fail(at + 'the placement returned fewer rows (' + out.rows + ') than the screen shows (' + rows + ')');
     worst = Math.max(worst, out.rows - rows);
     if (out.plates.length !== PLATES) fail(at + 'placed ' + out.plates.length + ' plates, not ' + PLATES);
+    // The vocabulary is what the draw may choose from, so it is asked only of the plates the draw
+    // placed. A pinned plate carries its own size on purpose: the tuning panel resizes a plate by
+    // dragging its handles, and what that writes is the pin's own span. Holding a pin to the four
+    // drawn sizes would refuse every composition made with the panel, which is the opposite of the
+    // point. The size of a pinned plate is checked all the same, against its pin, a few lines above.
     const [fw, fh] = FIRST_PLATE;
-    if (out.plates[0] && (out.plates[0].w !== fw || out.plates[0].h !== fh)) {
+    if (out.plates[0] && !out.plates[0].pinned && (out.plates[0].w !== fw || out.plates[0].h !== fh)) {
       fail(at + 'the first plate is ' + out.plates[0].w + 'x' + out.plates[0].h + ', not the ' + fw + 'x' + fh + ' the platform sheet takes');
     }
     for (let i = 1; i < out.plates.length; i++) {
       const p = out.plates[i];
+      if (p.pinned) continue;
       if (!PLATE_VOCAB.some(([vw, vh]) => vw === p.w && vh === p.h)) {
         fail(at + 'plate ' + i + ' is ' + p.w + 'x' + p.h + ', a size the vocabulary does not carry');
       }
@@ -209,7 +239,6 @@ for (const [w, h] of VIEWPORTS) {
     const again = placeLanding(args);
     if (JSON.stringify(again) !== JSON.stringify(out)) fail(at + 'the placement is not deterministic: two runs of the same seed differ');
   }
-  }
 }
 
 // ---------------------------------------------------------------- pinning, exercised
@@ -224,7 +253,7 @@ for (const [w, h] of VIEWPORTS) {
   // boxes() reads the corner block off the same module-level `reserved` the sweep above was moving,
   // so this block sets it rather than keeping a second one: comparing a placement against a corner it
   // was not placed around reports touches that are not there
-  const held = [cornerAt(12)];
+  const held = [cornerAt(STATEMENT_ROWS)];
   reserved = held;
   const run = (pins, note) => {
     const args = { seed: 7, cols: COLUMNS, rows, count: PLATES, reserved: held, contact: contactSpec, pins };
@@ -288,6 +317,71 @@ for (const [w, h] of VIEWPORTS) {
       if (shape(again) !== shape(drawn)) fail('pinning: claiming every plate where the draw left it moved the composition');
       if (again.rows !== drawn.rows) fail('pinning: claiming every plate changed the sheet from ' + drawn.rows + ' rows to ' + again.rows);
       if (!again.plates.every((p) => p.pinned)) fail('pinning: a plate pinned to its own cell still came back from the draw');
+    }
+  }
+}
+
+// ---------------------------------------------------------------- dev mode: a frozen sheet
+
+// The tuning panel behind ?dev pins every plate where the draw has just left it, the moment it
+// mounts, so that composing moves the pin and nothing else on the sheet. From there a drag crosses a
+// neighbour on the way to wherever it is going, and under the strict reading that is a composition
+// nobody can draw: placeLanding throws, the landing renders no plates, and the plate under the cursor
+// disappears mid-move. So the page asks for strict: false while it is being tuned. A pin is still
+// read for what is true of any pin, whole cells and on the grid, and is then taken as written,
+// overlaps and all. The licence stops there: the plates still left to the draw keep their empty cell
+// from everything already on the sheet.
+{
+  const rows = Math.max(6, Math.floor((900 - HEADER) / ROW));
+  const held = [cornerAt(STATEMENT_ROWS)];
+  reserved = held;
+  // plate 5 lies over plate 2, and plate 9 touches plate 7 with no empty cell between them: the two
+  // shapes the strict reading refuses by name
+  const crossed = {
+    2: { col: 2, row: 15, w: 3, h: 3 },
+    5: { col: 3, row: 16, w: 3, h: 3 },
+    7: { col: 8, row: 15, w: 4, h: 3 },
+    9: { col: 12, row: 15, w: 3, h: 3 },
+  };
+  const args = { seed: 7, cols: COLUMNS, rows, count: PLATES, reserved: held, contact: contactSpec, pins: crossed };
+  try {
+    placeLanding({ ...args });
+    fail('dev mode: the strict reading took four crossed pins without complaint');
+  } catch (e) {
+    if (!e.message.includes('claim the same cells')) {
+      fail('dev mode: the strict reading refused four crossed pins with "' + e.message + '", which does not name the overlap');
+    }
+  }
+  let loose = null;
+  try { loose = placeLanding({ ...args, strict: false }); } catch (e) {
+    fail('dev mode: strict: false still refused the crossed pins (' + e.message + '), so the landing goes blank under the panel');
+  }
+  if (loose) {
+    for (const [i, p] of Object.entries(crossed)) {
+      const got = loose.plates[i];
+      if (!got || got.col !== p.col || got.row !== p.row || got.w !== p.w || got.h !== p.h || !got.pinned) {
+        fail('dev mode: plate ' + i + ' was pinned to ' + p.col + ',' + p.row + ' and came back as ' + JSON.stringify(got));
+      }
+    }
+    if (loose.plates.length !== PLATES || loose.plates.some((p) => !p)) {
+      fail('dev mode: ' + loose.plates.filter(Boolean).length + ' of ' + PLATES + ' plates came back around four crossed pins');
+    }
+    const drawn = loose.plates.map((p, i) => ['plate ' + i, p]).filter(([, p]) => !p.pinned);
+    const rest = [...loose.plates.filter((p) => p.pinned), ...held];
+    for (const [name, a] of drawn) {
+      for (const b of [...rest, ...drawn.map(([, x]) => x).filter((x) => x !== a)]) {
+        if (!gapped(a, b)) fail('dev mode: ' + name + ' was drawn onto a cell something else already holds');
+      }
+    }
+  }
+  // strict: false is a licence to overlap and not a licence to write nonsense, so a pin off the grid
+  // is refused either way: the panel can show that message, and cannot show a pin it cannot reach
+  try {
+    placeLanding({ ...args, strict: false, pins: { 2: { col: 21, row: 15, w: 4, h: 3 } } });
+    fail('dev mode: strict: false took a pin running off the right edge');
+  } catch (e) {
+    if (!e.message.includes('off the ' + COLUMNS + ' column grid')) {
+      fail('dev mode: strict: false refused an off-grid pin with "' + e.message + '", which does not name the edge');
     }
   }
 }
@@ -368,13 +462,14 @@ else {
     for (const [needle, label] of [['{{ platformRef }}', 'platform box'], ['{{ contentsRef }}', 'contents anchor'], ['{{ platesRef }}', 'plates anchor'], ['{{ notesRef }}', 'notes anchor'], ['{{ landingStatementRef }}', 'statement measuring ref']]) {
       if (!html.includes(needle)) fail('the desktop landing lost its ' + label + ' (' + needle + ')');
     }
-    // a measure cap would leave the block wider than its type while its rows are cut to that type,
-    // which is the empty half the 'fit' row was meant to remove
+    // The module is a fixed block and the type is fitted into it, so the type has to be able to use
+    // the whole of it: a measure cap would leave the block wider than its own type, and the lines
+    // that no longer fit would be clamped away to leave an empty column beside them.
     const statement = main.querySelector('section');
     if (statement) {
       for (const el of [statement, ...statement.querySelectorAll('*')]) {
         const s = tight(el.getAttribute('style') || '');
-        if (/max-width:\d/.test(s)) fail('the desktop statement caps its measure (' + el.tagName.toLowerCase() + ' has ' + /max-width:[^;]*/.exec(el.getAttribute('style'))[0] + '), so its type cannot fill the module its rows are measured from');
+        if (/max-width:\d/.test(s)) fail('the desktop statement caps its measure (' + el.tagName.toLowerCase() + ' has ' + /max-width:[^;]*/.exec(el.getAttribute('style'))[0] + '), so its type cannot fill the block it is fitted into');
       }
     }
   }
@@ -436,7 +531,8 @@ if (failures.length) {
   for (const f of failures) console.error('  - ' + f);
   process.exit(1);
 }
-console.log('check-landing-grid: ' + checked + ' placements over ' + VIEWPORTS.length + ' viewports, ' +
-  STATEMENT_ROWS.length + ' statement heights and ' + SEEDS.length + ' seeds hold the grid (worst growth ' +
+console.log('check-landing-grid: ' + checked + ' placements over ' + VIEWPORTS.length + ' viewports, a ' +
+  STATEMENT_ROWS + ' row corner block and ' + SEEDS.length + ' seeds hold the grid (worst growth ' +
   worst + ' rows), ' + Object.keys(shipped).length + ' of ' + PLATES + ' plates pinned, a pin is honoured to the cell ' +
-  'and five ways of writing a bad one are refused by name, and both landings are in the template');
+  'and five ways of writing a bad one are refused by name, crossed pins are drawn as written under ' +
+  'strict: false and refused without it, and both landings are in the template');
