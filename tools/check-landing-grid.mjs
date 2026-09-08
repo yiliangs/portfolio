@@ -47,10 +47,9 @@ const logicSrc = src.slice(closeAt);
 // ---------------------------------------------------------------- the placement table
 
 // LANDING_WIDE is a plain literal for the same reason SHEET_WIDE is: it can be read without running
-// the logic class. Two of its rows are measured rather than chosen and so are written as words: the
-// statement and the platform read 'fit', the rows the statement's own type takes at this viewport
-// width, and the contact cells read 'last', the grid's final row, known only once the placement has
-// grown the sheet to hold every plate.
+// the logic class. One of its rows is not a span but a word: the three contact cells read 'last', the
+// grid's final row, known only once the placement has grown the sheet to hold every plate. Every
+// other row here is a span chosen like any other, the corner block included.
 function readTable(name) {
   const at = logicSrc.indexOf('  ' + name + ' = {');
   if (at < 0) { fail('the logic class has no ' + name + ' placement table'); return null; }
@@ -90,17 +89,29 @@ if (wide) {
   }
 
   // the corner blocks: the statement opens the sheet at its first cell and the platform stands
-  // beside it on the same rows, with no empty column between the two. Both take their height from the
-  // statement's measured type, so neither may write a row span of its own.
+  // beside it on the same rows, with no empty column between the two
   const st = wide.statement && span(wide.statement.col);
   const pf = wide.platform && span(wide.platform.col);
   if (st && st[0] !== 1) fail('the statement does not open the sheet at column 1: ' + wide.statement.col);
-  for (const name of ['statement', 'platform']) {
-    const e = wide[name];
-    if (e && e.row !== 'fit') fail('LANDING_WIDE.' + name + " takes a fixed row (" + e.row + "); the corner block is as tall as the statement's own type, written 'fit'");
+  // The corner block is a fixed span, and the two modules that make it are the same span: it opens at
+  // row 1 and it is as deep as the table says, on every screen. That is what a pin can be composed
+  // against. A depth measured off the reader's own type would be a different block per browser, and a
+  // pin clear of it on one screen would stand on it on the next.
+  const sr = wide.statement && span(wide.statement.row);
+  const pr = wide.platform && span(wide.platform.row);
+  for (const [name, r] of [['statement', sr], ['platform', pr]]) {
+    const e = wide[name]; if (!e) continue;
+    if (!r) fail('LANDING_WIDE.' + name + ' has a row span this check cannot read: ' + JSON.stringify(e.row) +
+      '; the corner block is a fixed span now, not a word the page measures');
+    else if (r[0] !== 1) fail('LANDING_WIDE.' + name + ' does not open the sheet at row 1: ' + e.row);
+    else if (r[1] <= r[0]) fail('LANDING_WIDE.' + name + ' has an empty or reversed row span: ' + e.row);
+  }
+  if (sr && pr && (sr[0] !== pr[0] || sr[1] !== pr[1])) {
+    fail('the statement and the platform are not the same depth (' + wide.statement.row + ' and ' + wide.platform.row +
+      '); they are one block to the placement and a plate keeps its empty cell from the pair');
   }
   if (st && pf && pf[0] !== st[1]) fail('the platform does not take the column the statement leaves off at: statement ends at ' + st[1] + ', platform starts at ' + pf[0]);
-  if (st && pf) corner = { col: st[0], w: pf[1] - st[0] };
+  if (st && pf && sr) corner = { col: st[0], w: pf[1] - st[0], row: sr[0], h: sr[1] - sr[0] };
 
   // the contact cells close the sheet in the bottom right corner, three two-column cells running to
   // the last grid line, each on the row the placement ends on
@@ -139,16 +150,18 @@ try {
 
 const VIEWPORTS = [[1000, 700], [1280, 720], [1366, 768], [1440, 900], [1920, 1080], [2560, 1440]];
 const SEEDS = Array.from({ length: 50 }, (_, i) => i);
-// the corner block's height is the statement's measured type, so the check runs the range that
-// measures out across the widths the page is used at, from the floor measureLandingStatement holds
-// to two rows past the tallest reading
-const STATEMENT_ROWS = [8, 10, 12, 14];
+// The corner block's depth is the span LANDING_WIDE writes, so there is one of it and this check runs
+// that one rather than a range. It used to be the statement's measured type, which is why there was a
+// range at all: the block was a different depth on every width, and the sweep had to cover every
+// depth it might measure out to. A fixed block is the same block everywhere, so the only thing left
+// varying across the viewports below is how many rows the screen shows.
+const STATEMENT_ROWS = corner ? corner.h : 8;
 
 const contactSpec = wide && wide.contactEmail && wide.contactCv
   ? { col: span(wide.contactEmail.col)[0], w: span(wide.contactCv.col)[1] - span(wide.contactEmail.col)[0] }
   : { col: 17, w: 6 };
-const cornerAt = (h) => (corner ? { col: corner.col, row: 1, w: corner.w, h } : { col: 1, row: 1, w: 17, h });
-let reserved = [cornerAt(12)];
+const cornerAt = (h) => (corner ? { col: corner.col, row: corner.row, w: corner.w, h } : { col: 1, row: 1, w: 17, h });
+let reserved = [cornerAt(STATEMENT_ROWS)];
 
 const boxes = (out) => {
   const all = out.plates.map((p, i) => ['plate ' + i, p]);
@@ -164,7 +177,7 @@ const overlaps = (a, b) =>
 let worst = 0, checked = 0;
 for (const [w, h] of VIEWPORTS) {
   const rows = Math.max(6, Math.floor((h - HEADER) / ROW));
-  for (const stRows of STATEMENT_ROWS) {
+  const stRows = STATEMENT_ROWS;
   reserved = [cornerAt(stRows)];
   for (const seed of SEEDS) {
     const args = { seed, cols: COLUMNS, rows, count: PLATES, reserved, contact: contactSpec, pins: shipped };
@@ -226,7 +239,6 @@ for (const [w, h] of VIEWPORTS) {
     const again = placeLanding(args);
     if (JSON.stringify(again) !== JSON.stringify(out)) fail(at + 'the placement is not deterministic: two runs of the same seed differ');
   }
-  }
 }
 
 // ---------------------------------------------------------------- pinning, exercised
@@ -241,7 +253,7 @@ for (const [w, h] of VIEWPORTS) {
   // boxes() reads the corner block off the same module-level `reserved` the sweep above was moving,
   // so this block sets it rather than keeping a second one: comparing a placement against a corner it
   // was not placed around reports touches that are not there
-  const held = [cornerAt(12)];
+  const held = [cornerAt(STATEMENT_ROWS)];
   reserved = held;
   const run = (pins, note) => {
     const args = { seed: 7, cols: COLUMNS, rows, count: PLATES, reserved: held, contact: contactSpec, pins };
@@ -321,7 +333,7 @@ for (const [w, h] of VIEWPORTS) {
 // from everything already on the sheet.
 {
   const rows = Math.max(6, Math.floor((900 - HEADER) / ROW));
-  const held = [cornerAt(12)];
+  const held = [cornerAt(STATEMENT_ROWS)];
   reserved = held;
   // plate 5 lies over plate 2, and plate 9 touches plate 7 with no empty cell between them: the two
   // shapes the strict reading refuses by name
@@ -450,13 +462,14 @@ else {
     for (const [needle, label] of [['{{ platformRef }}', 'platform box'], ['{{ contentsRef }}', 'contents anchor'], ['{{ platesRef }}', 'plates anchor'], ['{{ notesRef }}', 'notes anchor'], ['{{ landingStatementRef }}', 'statement measuring ref']]) {
       if (!html.includes(needle)) fail('the desktop landing lost its ' + label + ' (' + needle + ')');
     }
-    // a measure cap would leave the block wider than its type while its rows are cut to that type,
-    // which is the empty half the 'fit' row was meant to remove
+    // The module is a fixed block and the type is fitted into it, so the type has to be able to use
+    // the whole of it: a measure cap would leave the block wider than its own type, and the lines
+    // that no longer fit would be clamped away to leave an empty column beside them.
     const statement = main.querySelector('section');
     if (statement) {
       for (const el of [statement, ...statement.querySelectorAll('*')]) {
         const s = tight(el.getAttribute('style') || '');
-        if (/max-width:\d/.test(s)) fail('the desktop statement caps its measure (' + el.tagName.toLowerCase() + ' has ' + /max-width:[^;]*/.exec(el.getAttribute('style'))[0] + '), so its type cannot fill the module its rows are measured from');
+        if (/max-width:\d/.test(s)) fail('the desktop statement caps its measure (' + el.tagName.toLowerCase() + ' has ' + /max-width:[^;]*/.exec(el.getAttribute('style'))[0] + '), so its type cannot fill the block it is fitted into');
       }
     }
   }
@@ -518,8 +531,8 @@ if (failures.length) {
   for (const f of failures) console.error('  - ' + f);
   process.exit(1);
 }
-console.log('check-landing-grid: ' + checked + ' placements over ' + VIEWPORTS.length + ' viewports, ' +
-  STATEMENT_ROWS.length + ' statement heights and ' + SEEDS.length + ' seeds hold the grid (worst growth ' +
+console.log('check-landing-grid: ' + checked + ' placements over ' + VIEWPORTS.length + ' viewports, a ' +
+  STATEMENT_ROWS + ' row corner block and ' + SEEDS.length + ' seeds hold the grid (worst growth ' +
   worst + ' rows), ' + Object.keys(shipped).length + ' of ' + PLATES + ' plates pinned, a pin is honoured to the cell ' +
   'and five ways of writing a bad one are refused by name, crossed pins are drawn as written under ' +
   'strict: false and refused without it, and both landings are in the template');

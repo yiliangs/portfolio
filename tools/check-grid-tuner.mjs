@@ -124,7 +124,9 @@ const readableByTheGridChecks = (text, note) => {
 };
 
 const SPAN = /^\d+ \/ \d+$/;
-const WORD = /^(fit|last)$/;
+// the one row on the landing nobody writes: the contact band closes the sheet on whatever row the
+// placement ended on. The corner block used to be a word too and is a span now.
+const WORD = /^last$/;
 
 function roundTrip(t, note) {
   let text, back;
@@ -150,7 +152,7 @@ if (ready) {
   tuned.SHEET_WIDE.ghost = { col: '9 / 10', row: '5 / 6' };
   tuned.SHEET_WIDE.aside = { col: '1 / 23', row: '120 / 148' };
   tuned.SHEET_NARROW.body1 = { col: '2 / 22', row: '33 / 41' };
-  tuned.LANDING_WIDE.platform = { col: '9 / 19', row: 'fit' };
+  tuned.LANDING_WIDE.platform = { col: '9 / 19', row: '1 / 11' };
   tuned.LANDING_PINS = {
     'rhino-worktree-launcher': { col: '3 / 7', row: '7 / 10' },
     'agent-usage-stat': { col: '14 / 18', row: '5 / 9' },
@@ -164,8 +166,8 @@ if (ready) {
   roundTrip(bare, 'the tables with nothing pinned');
 
   // a span is two grid lines and has to stay two, or grid-column is set to a string the browser drops
-  // and the module lands wherever auto-placement puts it. Two rows on the landing are words instead,
-  // because nobody chooses them: they are measured off the page.
+  // and the module lands wherever auto-placement puts it. Three rows on the landing are a word
+  // instead, because nobody chooses them: the contact band sits on whatever row the draw ended on.
   for (const name of NAMES) {
     for (const [mod, at] of Object.entries(tables[name])) {
       const rowIsWord = name === 'LANDING_WIDE';
@@ -210,6 +212,17 @@ if (imports.length !== 1) {
   }
   if (!/\n  dev = new URLSearchParams\(location\.search\)\.has\('dev'\);/.test(logicSrc)) {
     fail('the ?dev flag is not read once onto the instance, so the panel and the landing can disagree about whether the page is being tuned');
+  }
+}
+// The corner block was once as deep as the statement's own type, written 'fit' in LANDING_WIDE and
+// measured off the page after layout. It is a fixed span now, because a block whose depth is a fact
+// about the reader's browser is a block no pin can be composed against: a pin clear of it at one
+// width stands on it at the next, and the landing refuses the whole composition and renders nothing.
+// This is a grep and not a behaviour check. It holds that no reader of that word is left behind in
+// the page or the panel, since one that survived would answer 'fit' with NaN rows rather than loudly.
+for (const file of [['design/Portfolio.dc.html', logicSrc], ['grid-dev.js', readFileSync('grid-dev.js', 'utf8')]]) {
+  if (/'fit'/.test(file[1])) {
+    fail(file[0] + " still reads 'fit' as a row, which nothing writes any more: the corner block is a span");
   }
 }
 // A tuning session pins every plate and then drags one over another, and the strict placement answers

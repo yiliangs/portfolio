@@ -104,9 +104,9 @@ export function serialize(tables) {
 
 // ---------------------------------------------------------------- reading and writing one entry
 
-// A landing module's row is a word rather than a span: 'fit' for the depth of the statement's own
-// type, 'last' for the row the draw ended on. Only the column half of such an entry is writable, so
-// the two axes are handled apart all the way down rather than only at the top.
+// One landing module's row is a word rather than a span: 'last', the row the draw ended on, which the
+// three contact cells sit on. Only the column half of such an entry is writable, so the two axes are
+// handled apart all the way down rather than only at the top.
 const colOf = (e) => span(e.col);
 const rowOf = (e) => span(e.row);
 const setCol = (e, v) => { e.col = v[0] + ' / ' + v[1]; };
@@ -175,15 +175,22 @@ const binding = (name, T, sheetName, live) => {
     };
   }
 
+  // The statement and the platform are ordinary two-axis modules: their span is a decision written in
+  // the table like any other. The three contact cells are not, because the row they sit on is the row
+  // the placement ended on, so their row half is read off the page and cannot be written back.
   if (LANDING_KEYS.includes(name)) {
     const t = T.LANDING_WIDE, e = t[name], c = e && colOf(e);
     if (!c || !live) return null;
+    const drawnRow = e.row === 'last';
     return {
-      table: 'LANDING_WIDE', targets: [name], view: { c, r: live.r },
-      note: e.row === 'fit' ? "as deep as the statement's own type, measured off the page"
-        : "on the grid's last row, wherever the draw ended",
-      move: (dc) => colShift(e, dc),
-      edges: { left: (d) => colEdge(e, 0, d), right: (d) => colEdge(e, 1, d), top: null, bottom: null },
+      table: 'LANDING_WIDE', targets: [name], view: { c, r: drawnRow ? live.r : rowOf(e) },
+      note: drawnRow ? "on the grid's last row, wherever the draw ended" : '',
+      move: drawnRow ? (dc) => colShift(e, dc) : (dc, dr) => shift(e, dc, dr),
+      edges: {
+        left: (d) => colEdge(e, 0, d), right: (d) => colEdge(e, 1, d),
+        top: drawnRow ? null : (d) => rowEdge(e, 0, d),
+        bottom: drawnRow ? null : (d) => rowEdge(e, 1, d),
+      },
     };
   }
 
