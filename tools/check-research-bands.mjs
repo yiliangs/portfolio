@@ -1,11 +1,17 @@
 // Checks the stacked Research landing, the composition a portrait screen gets instead of the collage.
 //
 // The Research landing used to have one composition, the collage: a title column with a margin of loose
-// leaves either side. On a portrait screen the two margins are a few characters wide and the collage
-// stops reading as one. Below 1000px the register is now a single column instead, on the same
-// state.narrow the Development landing has always been chosen off.
+// leaves either side. It is a one-screen drawing laid out across the width, and a page that is not
+// landscape has no screen to lay it across: the gutters fall to their minimum while the leaves' offsets,
+// which are in pixels, do not follow them in, so the margins land on the title column and on the roll.
+// The register is now read as a single column there instead, on the same state.narrow the Development
+// landing has always been chosen off.
 //
-// Three things about that column are decisions rather than consequences, and each is guarded here.
+// Four things about that are decisions rather than consequences, and each is guarded here.
+//
+// The line between a column and a desk. Width alone does not draw it: an iPad Pro held upright is 1024
+// wide, clears the width threshold, and still has no screen for the collage. isStacked carries both
+// terms and both registers read it, so the two cannot part company.
 //
 // The order is declared. The collage places a chapter by the shape of its plate, so the sequence it is
 // fed in barely shows; a column is read top to bottom and the sequence is the composition. BAND_ORDER
@@ -45,26 +51,37 @@ const logicSrc = readLogicSource(DC_SOURCE);
 
 // ---------------------------------------------------------------- lift the band geometry and run it
 
-// BAND_ORDER through heroSheetH are consecutive in the class, from the first field to the close of
-// heroSheetH. Slicing them out and evaluating them is what makes this an executable check rather than
-// a reading of the source; if one of them is renamed or moved away from the others, it fails here
-// rather than in the browser.
-function loadGeometry() {
-  const from = logicSrc.indexOf('\n  BAND_ORDER = [');
-  if (from < 0) { fail('the logic class has no BAND_ORDER field, so the stacked landing is ordered by something this check cannot run'); return null; }
-  const tail = logicSrc.indexOf('\n  heroSheetH(narrow) {', from);
-  if (tail < 0) { fail('the logic class has no heroSheetH(narrow) method'); return null; }
+// Two runs of consecutive members, sliced out of the class and evaluated, which is what makes this an
+// executable check rather than a reading of the source. They are separate because they answer to
+// different things: isStacked belongs with the state it is written into, since it governs both
+// registers, and the band geometry belongs with the landing it lays out. If a member is renamed or
+// moved away from its neighbours, it fails here rather than in the browser.
+//
+// isStacked's parameters default to the window, which Node has none of; every call below passes both,
+// and a default is only evaluated for an argument that is missing.
+function slice(what, first, last, ...members) {
+  const from = logicSrc.indexOf('\n  ' + first);
+  if (from < 0) { fail('the logic class has no ' + first.replace(/[ =({].*/, '') + ', so ' + what + ' is decided by something this check cannot run'); return null; }
+  const tail = logicSrc.indexOf('\n  ' + last, from);
+  if (tail < 0) { fail('the logic class has no ' + last.replace(/[ =({].*/, '') + ' after ' + first.replace(/[ =({].*/, '')); return null; }
   const to = logicSrc.indexOf('\n', tail + 1);
-  if (to < 0) { fail('heroSheetH is not closed on its own line so it cannot be read'); return null; }
+  if (to < 0) { fail(last.replace(/[ =({].*/, '') + ' is not closed on its own line so it cannot be read'); return null; }
   const body = logicSrc.slice(from, to);
-  for (const name of ['bandOrder(entries)', 'bandSide(k)', 'HERO_SHEET']) {
-    if (!body.includes(name)) fail('the band geometry is missing ' + name + ', or it no longer sits with the others');
+  for (const name of members) {
+    if (!body.includes(name)) fail(what + ' is missing ' + name + ', or it no longer sits with the others');
   }
+  return body;
+}
+function loadGeometry() {
+  const stack = slice('which composition renders', 'STACK_W = ', 'isStacked(', 'STACK_RATIO');
+  const bands = slice('the stacked landing', 'BAND_ORDER = [', 'heroSheetH(narrow) {',
+    'bandOrder(entries)', 'bandSide(k)', 'HERO_SHEET');
+  if (!stack || !bands) return null;
   try {
     // eslint-disable-next-line no-new-func
-    return new Function('return new (class {' + body + '\n})()')();
+    return new Function('return new (class {' + stack + '\n' + bands + '\n})()')();
   } catch (e) {
-    fail('the band geometry does not evaluate on its own: ' + e.message);
+    fail('the geometry does not evaluate on its own: ' + e.message);
     return null;
   }
 }
@@ -176,9 +193,38 @@ if (blocks.isHeroWide && !blocks.isHeroWide.includes('{{ leftLeaves }}')) fail('
 // the two are complements of one state, so the Research page always has exactly one landing
 const vals = /isHeroWide: ([^,]+), isHeroNarrow: ([^,]+),/.exec(logicSrc);
 if (!vals) fail('renderVals does not hand the template isHeroWide and isHeroNarrow as one pair');
-const narrowAt = /narrow: window\.innerWidth < (\d+)/.exec(logicSrc);
-if (!narrowAt) fail('state.narrow is no longer read off window.innerWidth, so the two registers may part company');
-else if (Number(narrowAt[1]) !== NARROW_AT) fail('the landings switch at ' + narrowAt[1] + 'px, not the ' + NARROW_AT + 'px both registers share');
+
+// Both registers read one predicate, so neither can part company with the other, and state.narrow is
+// written from it in both places it is written: the first paint and every resize after it.
+const writes = logicSrc.match(/narrow: ([^,]+), landingRows:/g) || [];
+const byHand = writes.filter((w) => !w.includes('this.isStacked()'));
+if (writes.length < 2) fail('state.narrow is written in fewer than the two places it has to be, the first paint and onResize');
+if (byHand.length) fail('state.narrow is written by hand rather than from isStacked(): ' + byHand.join(' '));
+
+// The page is read as a column when it is too narrow for two margins and a measure, or when it is not
+// clearly landscape. The second term is what a portrait tablet fails while passing the first: 1024 by
+// 1366 is wider than the threshold and still has no screen to lay a one-screen drawing across.
+if (geo && typeof geo.isStacked === 'function') {
+  const cases = [
+    [1024, 1366, true, 'an iPad Pro held upright'],
+    [1030, 1310, true, 'the portrait page the collage was reported broken on'],
+    [820, 1180, true, 'a tablet held upright'],
+    [390, 844, true, 'a phone'],
+    [1200, 1200, true, 'a square page'],
+    [1280, 1024, false, 'a 5:4 desktop monitor'],
+    [1112, 834, false, 'an iPad Pro held on its side'],
+    [1440, 900, false, 'a laptop'],
+    [1366, 768, false, 'a small laptop'],
+    [1920, 1080, false, 'a desk monitor'],
+  ];
+  for (const [w, h, want, what] of cases) {
+    const got = geo.isStacked(w, h);
+    if (got !== want) fail(what + ' at ' + w + ' by ' + h + ' is read as ' + (got ? 'a column' : 'a desk') + ', not ' + (want ? 'a column' : 'a desk'));
+  }
+  if (geo.STACK_W !== NARROW_AT) fail('the width term is ' + geo.STACK_W + 'px, not the ' + NARROW_AT + 'px both registers share');
+} else if (geo) {
+  fail('the logic class has no isStacked(w, h), so the two compositions are chosen by something this check cannot run');
+}
 
 // ---------------------------------------------------------------- report
 

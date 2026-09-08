@@ -2315,12 +2315,27 @@
         titleSize: 'clamp(36px,5.2vw,76px)', titleTracking: '-0.03em', bylineSize: '15px', bodySize: '15px', smallBodySize: '14px', stampSize: '28px', h2Size: '32px', h3Size: '26px', cvSize: '18px', capLeadSize: '13px', marginSize: '13px', marginStyle: 'normal', marginPrefix: '// ' },
     };
     featuredFor = { writing: [10, 11], tooling: [0, 1] };
-    // narrow and landingRows decide which of the two Development landings renders and how many rows it
-    // is drawn on, so they are read from the window here rather than waiting for componentDidMount's
-    // first onResize: the first paint would otherwise be the wrong landing, replaced a frame later. The
-    // address bar is read the same way, so a deep link paints the view it names, not the home first.
+    // Whether the page is read as a column rather than as a desk. Every wide composition on this site is
+    // a one-screen drawing laid out across the width: the Research collage puts a margin of leaves either
+    // side of a title column, the Development landing and sheet rule 22 columns across the screen. A page
+    // that is not clearly landscape has no screen to give them, whatever its width in pixels.
+    //
+    // Two terms, because a page fails them in two ways. STACK_W is the width the Development landing has
+    // always stacked at: below it there is no room for two margins and a measure between them. STACK_RATIO
+    // is the proportion, and it is the term a portrait tablet fails while passing the first: at 1024 by
+    // 1366 the collage's gutters fall to their 280px minimum while the leaves' offsets, which are written
+    // in pixels and tuned on a landscape page, do not follow them in, so the margins land on the title
+    // column, on the roll and on the colophon. Measured at 1.2: 5:4 desktops and a landscape tablet keep
+    // the collage, a square page and anything taller than it is wide are read as a column.
+    STACK_W = 1000;
+    STACK_RATIO = 1.2;
+    isStacked(w = window.innerWidth, h = window.innerHeight) { return w < this.STACK_W || w < h * this.STACK_RATIO; }
+    // narrow and landingRows decide which composition renders and how many rows it is drawn on, so they
+    // are read from the window here rather than waiting for componentDidMount's first onResize: the first
+    // paint would otherwise be the wrong one, replaced a frame later. The address bar is read the same
+    // way, so a deep link paints the view it names, not the home first.
     state = { view: 'home', page: 'writing', cvReg: 'serif', idx: 10, hovered: 10, tab: { left: 0, width: 0 },
-      narrow: window.innerWidth < 1000, landingRows: this.visibleRows(), landingStatementRows: 12,
+      narrow: this.isStacked(), landingRows: this.visibleRows(), landingStatementRows: 12,
       ...this.routeState(this.parseRoute(location.hash)) };
   
     // Where every module of a Development sheet sits on the 22 column, 44px row drawing grid, as
@@ -2552,7 +2567,7 @@
     // ---- the stacked Research landing, the serif answer to a portrait screen ----------------------
     //
     // The collage above needs two margins and a title column between them, which a portrait screen has
-    // no room for. Below the same 1000px the Development landing stacks at, the register is read as one
+    // no room for. On any page isStacked calls a column rather than a desk, the register is read as one
     // column instead: the headline with the roll behind it, then one full-bleed band per chapter.
     //
     // The band order is declared rather than taken from the register. The collage places a chapter by
@@ -2983,7 +2998,7 @@
       window.addEventListener('pointerdown', this.onDown); window.addEventListener('pointerup', this.onUp); window.addEventListener('pointercancel', this.onUp);
       this.onScroll = () => { this.syncParchment(); this.syncHome(); this.setState({ scrollY: window.scrollY }); clearTimeout(this.remeasureTimer); this.remeasureTimer = setTimeout(() => this.remeasureText(), 120); };
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => setTimeout(() => { this.remeasureText(); this.measureLandingStatement(); this.syncParchment(); }, 50));
-      this.onResize = () => { this.setState({ narrow: window.innerWidth < 1000, landingRows: this.visibleRows() }); this.measureTabs(); this.syncParchment(); this.syncHome(); };
+      this.onResize = () => { this.setState({ narrow: this.isStacked(), landingRows: this.visibleRows() }); this.measureTabs(); this.syncParchment(); this.syncHome(); };
       this.onKey = (e) => {
         const t = e.target; if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
         const n = this.data.length, { view, idx } = this.state;
@@ -3964,7 +3979,7 @@
         cvReady: !!cvData, cvLoading: !cvData && !this.state.cvError, cvFailed: !cvData && !!this.state.cvError,
         cvEmail, cvMailto: 'mailto:' + cvEmail, cvGithub: cvLinks.github || this.CONTACT.github,
         // The Research landing has the two compositions the Development landing has, chosen off the same
-        // state.narrow: the collage above 1000px, the stacked column below it.
+        // state.narrow: the collage on a landscape page, the stacked column on any other.
         isHeroWide: view === 'page' && page.reg === 'serif' && !heroNarrow, isHeroNarrow: heroNarrow,
         serifBands, heroSheetH: this.heroSheetH(this.state.narrow),
         isMonoPage: view === 'page' && page.reg === 'mono',
