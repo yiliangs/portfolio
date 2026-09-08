@@ -31,9 +31,9 @@ import { DC_SOURCE, readLogicSource, readEntries, readTable, readNumber, registe
 
 const BUILT = 'app.js';
 
-// The two sheets issue #40 records. They are named here because their absence is the one failure
-// this file cannot infer from anything else in the repository.
-const REQUIRED_SHEETS = ['Rhino Worktree Launcher', 'Agent Usage Stat'];
+// The two sheets issue #40 records, and the one issue #48 adds. They are named here because their
+// absence is the one failure this file cannot infer from anything else in the repository.
+const REQUIRED_SHEETS = ['Rhino Worktree Launcher', 'Agent Usage Stat', 'Building Graph Neural Network'];
 
 // Every field the mono sheet or the Development landing reads off an entry. `summary` and
 // `statusShort` are carried by the data and read by neither, so they are not required here.
