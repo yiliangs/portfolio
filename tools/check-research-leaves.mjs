@@ -77,14 +77,16 @@ const geo = loadGeometry();
 // whole-leaf move is the 52px the left pair sits down by.
 const TUNED = {
   left: [
-    { row: '1', col: '1 / 3', selfY: 'start',  selfX: 'start', imgH: 'min(22vh, 330px)', ratio: '4/3', maxW: '280px', titleSize: '26px', dir: 'row',    alignItems: 'flex-end',   align: 'left', px: '-18px', py: '-10px', dur: '7.5s', delay: '0s',  bleedX: '-56px', bleedY: '0px', offsetX: '0px', offsetY: '0px' },
-    { row: '2', col: '1',     selfY: 'center', selfX: 'start', imgH: 'min(14vh, 220px)', ratio: '1/1', maxW: '140px', titleSize: '17px', dir: 'column', alignItems: 'flex-start', align: 'left', px: '-14px', py: '-8px',  dur: '8s',   delay: '-5s', bleedX: '0px',   bleedY: '0px', offsetX: '0px', offsetY: '52px' },
-    { row: '3', col: '2',     selfY: 'end',    selfX: 'end',   imgH: 'min(12vh, 200px)', ratio: '5/4', maxW: '150px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', align: 'left', px: '-20px', py: '-9px',  dur: '8.5s', delay: '-2s', bleedX: '0px',   bleedY: '0px', offsetX: '0px', offsetY: '0px' },
+      { row: '1', col: '1 / 3', selfY: 'start', selfX: 'start', imgH: 'min(55vh, 825px)', ratio: '4/3', maxW: '700px', titleSize: '26px', dir: 'row', alignItems: 'flex-end', align: 'left', px: '-18px', py: '-10px', dur: '7.5s', delay: '0s', offsetX: '-66.667px', offsetY: '-3.334px', bleedX: '0px', bleedY: '0px' },
+      { row: '2', col: '1', selfY: 'center', selfX: 'start', imgH: 'min(35vh, 550px)', ratio: '1/1', maxW: '350px', titleSize: '17px', dir: 'column', alignItems: 'flex-start', align: 'left', px: '-14px', py: '-8px', dur: '8s', delay: '-5s', offsetX: '321.334px', offsetY: '224.667px', bleedX: '0px', bleedY: '0px' },
+      { row: '3', col: '2', selfY: 'end', selfX: 'end', imgH: 'min(13.114vh, 218.566px)', ratio: '5/4', maxW: '163.925px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', align: 'left', px: '-20px', py: '-9px', dur: '8.5s', delay: '-2s', offsetX: '-204.667px', offsetY: '112px', bleedX: '0px', bleedY: '0px' },
+      { row: '2', col: '2', selfY: 'center', selfX: 'end', imgH: 'min(15.077vh, 239.688px)', ratio: '4/5', maxW: '148.452px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', align: 'left', px: '-17px', py: '-12px', dur: '7.8s', delay: '-6s', offsetX: '-458px', offsetY: '91.333px', bleedX: '0px', bleedY: '0px' },
   ],
   right: [
-    { row: '2', col: '1 / 3', selfY: 'center', selfX: 'end', imgH: 'min(24vh, 360px)', ratio: '3/4', maxW: '280px', titleSize: '26px', dir: 'row-reverse', alignItems: 'flex-end',   align: 'right', px: '-26px', py: '-14px', dur: '9s',   delay: '-3s',   bleedX: '56px',  bleedY: '0px', offsetX: '0px', offsetY: '0px' },
-    { row: '1', col: '1 / 3', selfY: 'start',  selfX: 'end', imgH: 'min(18vh, 260px)', ratio: '3/2', maxW: '270px', titleSize: '17px', dir: 'row-reverse', alignItems: 'flex-start', align: 'right', px: '-22px', py: '-12px', dur: '10s',  delay: '-1.5s', bleedX: '0px',   bleedY: '0px', stackH: 'min(13vh, 120px)' },
-    { row: '3', col: '2',     selfY: 'end',    selfX: 'end', imgH: 'min(15vh, 240px)', ratio: '2/3', maxW: '100px', titleSize: '15px', dir: 'column',      alignItems: 'flex-end',   align: 'right', px: '-16px', py: '-11px', dur: '9.5s', delay: '-4s',   bleedX: '-60px', bleedY: '0px', offsetX: '0px', offsetY: '0px' },
+      { row: '2', col: '1 / 3', selfY: 'center', selfX: 'end', imgH: 'min(54.977vh, 824.659px)', ratio: '3/4', maxW: '641.402px', titleSize: '26px', dir: 'row-reverse', alignItems: 'flex-end', align: 'right', px: '-26px', py: '-14px', dur: '9s', delay: '-3s', offsetX: '69.333px', offsetY: '14.667px', bleedX: '0px', bleedY: '0px' },
+      { row: '1', col: '1 / 3', selfY: 'start', selfX: 'end', imgH: 'min(22.823vh, 329.662px)', ratio: '3/2', maxW: '342.341px', titleSize: '17px', dir: 'row-reverse', alignItems: 'flex-start', align: 'right', px: '-22px', py: '-12px', dur: '10s', delay: '-1.5s', offsetX: '-372px', offsetY: '-26px', bleedX: '0px', bleedY: '0px', stackH: 'min(16.483vh, 152.152px)' },
+      { row: '3', col: '2', selfY: 'end', selfX: 'end', imgH: 'min(25.554vh, 408.869px)', ratio: '2/3', maxW: '170.362px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', align: 'right', px: '-16px', py: '-11px', dur: '9.5s', delay: '-4s', offsetX: '-60px', offsetY: '0px', bleedX: '0px', bleedY: '0px' },
+      { row: '3', col: '1', selfY: 'end', selfX: 'start', imgH: 'min(27.449vh, 457.476px)', ratio: '1/1', maxW: '274.485px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', align: 'right', px: '-19px', py: '-10px', dur: '8.2s', delay: '-2.5s', offsetX: '-162.667px', offsetY: '148px', bleedX: '0px', bleedY: '0px' },
   ],
 };
 
@@ -236,5 +238,5 @@ if (failures.length) {
   for (const f of failures) console.error('  - ' + f);
   process.exit(1);
 }
-console.log('check-research-leaves: the tuned six are unmoved at ' + geo.leafRows(MIN_STAGE) +
+console.log('check-research-leaves: the composition is unmoved at ' + geo.leafRows(MIN_STAGE) +
   ' rows, and every register up to ' + MAX_REGISTER + ' chapters gets a cell of its own');

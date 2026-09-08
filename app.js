@@ -2351,15 +2351,15 @@
     // instead of pushing the collage past the fold. `h` is the height in vh, `w` the px cap on it.
     LEAF_SPREADS = {
       left: [
-        { row: 1, h: 66, w: 990, ratio: '4/3', maxW: '280px', titleSize: '26px', dir: 'row', alignItems: 'flex-end', px: '-18px', py: '-10px', dur: '7.5s', delay: '0s', bleedX: '-56px', offsetY: '0px', cover: 'https://picsum.photos/seed/halvorsen-cuts/800/600' },
+        { row: 1, h: 165, w: 2475, ratio: '4/3', maxW: '700px', titleSize: '26px', dir: 'row', alignItems: 'flex-end', px: '-18px', py: '-10px', dur: '7.5s', delay: '0s', offsetX: '-66.667px', offsetY: '-3.334px', cover: 'https://picsum.photos/seed/halvorsen-cuts/800/600' },
       ],
       right: [
-        { row: 2, h: 72, w: 1080, ratio: '3/4', maxW: '280px', titleSize: '26px', dir: 'row-reverse', alignItems: 'flex-end', px: '-26px', py: '-14px', dur: '9s', delay: '-3s', bleedX: '56px', offsetY: '0px', cover: 'https://picsum.photos/seed/halvorsen-machines/600/800' },
+        { row: 2, h: 164.932, w: 2473.978, ratio: '3/4', maxW: '641.402px', titleSize: '26px', dir: 'row-reverse', alignItems: 'flex-end', px: '-26px', py: '-14px', dur: '9s', delay: '-3s', offsetX: '69.333px', offsetY: '14.667px', cover: 'https://picsum.photos/seed/halvorsen-machines/600/800' },
         // stackH and stackW: the height a declared plate may take here instead of h and w. This spread is
         // laid out as a row, its stock plate 18vh tall with the caption beside it; a declared plate stacks
         // its title underneath (see below), and at 18vh that stack runs out of the row into the anchor
         // plate in the row beneath. The other spreads are the anchors, whose stacks the page was tuned around.
-        { row: 1, h: 54, w: 780, stackH: 39, stackW: 360, ratio: '3/2', maxW: '270px', titleSize: '17px', dir: 'row-reverse', alignItems: 'flex-start', px: '-22px', py: '-12px', dur: '10s', delay: '-1.5s', bleedX: '0px', offsetY: '0px', cover: 'https://picsum.photos/seed/halvorsen-4/900/600' },
+        { row: 1, h: 68.468, w: 988.985, stackH: 49.449, stackW: 456.455, ratio: '3/2', maxW: '342.341px', titleSize: '17px', dir: 'row-reverse', alignItems: 'flex-start', px: '-22px', py: '-12px', dur: '10s', delay: '-1.5s', offsetX: '-372px', offsetY: '-26px', cover: 'https://picsum.photos/seed/halvorsen-4/900/600' },
       ],
     };
     // Pair styles, handed to a gutter's pair cells in order and cycled once they run out. A cycled style
@@ -2368,16 +2368,16 @@
     // viewport, so a pair in the second column lifts clear of it rather than settling onto it.
     LEAF_PAIRS = {
       left: [
-        { h: 42, w: 660, ratio: '1/1', maxW: '140px', titleSize: '17px', dir: 'column', alignItems: 'flex-start', px: '-14px', py: '-8px', dur: '8s', delay: '-5s', bleedX: '0px', offsetY: '52px', cover: 'https://picsum.photos/seed/halvorsen-3/700/700' },
-        { h: 36, w: 600, ratio: '5/4', maxW: '150px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-20px', py: '-9px', dur: '8.5s', delay: '-2s', bleedX: '0px', offsetY: '0px', cover: 'https://picsum.photos/seed/halvorsen-5/700/560' },
-        { h: 39, w: 620, ratio: '4/5', maxW: '128px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-17px', py: '-12px', dur: '7.8s', delay: '-6s', bleedX: '0px', offsetY: '-18px', cover: 'https://picsum.photos/seed/halvorsen-7/560/700' },
-        { h: 33, w: 560, ratio: '3/2', maxW: '140px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-12px', py: '-7px', dur: '9.2s', delay: '-1s', bleedX: '0px', offsetY: '18px', cover: 'https://picsum.photos/seed/halvorsen-9/900/600' },
+        { h: 105, w: 1650, ratio: '1/1', maxW: '350px', titleSize: '17px', dir: 'column', alignItems: 'flex-start', px: '-14px', py: '-8px', dur: '8s', delay: '-5s', offsetX: '321.334px', offsetY: '224.667px', cover: 'https://picsum.photos/seed/halvorsen-3/700/700' },
+        { h: 39.342, w: 655.698, ratio: '5/4', maxW: '163.925px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-20px', py: '-9px', dur: '8.5s', delay: '-2s', offsetX: '-204.667px', offsetY: '112px', cover: 'https://picsum.photos/seed/halvorsen-5/700/560' },
+        { h: 45.231, w: 719.064, ratio: '4/5', maxW: '148.452px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-17px', py: '-12px', dur: '7.8s', delay: '-6s', offsetX: '-458px', offsetY: '91.333px', cover: 'https://picsum.photos/seed/halvorsen-7/560/700' },
+        { h: 33, w: 560, ratio: '3/2', maxW: '140px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-12px', py: '-7px', dur: '9.2s', delay: '-1s', offsetX: '0px', offsetY: '18px', cover: 'https://picsum.photos/seed/halvorsen-9/900/600' },
       ],
       right: [
-        { h: 45, w: 720, ratio: '2/3', maxW: '100px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-16px', py: '-11px', dur: '9.5s', delay: '-4s', bleedX: '-60px', offsetY: '0px', cover: 'https://picsum.photos/seed/halvorsen-6/600/900' },
-        { h: 36, w: 600, ratio: '1/1', maxW: '120px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-19px', py: '-10px', dur: '8.2s', delay: '-2.5s', bleedX: '0px', offsetY: '-12px', cover: 'https://picsum.photos/seed/halvorsen-8/700/700' },
-        { h: 30, w: 520, ratio: '4/5', maxW: '110px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-13px', py: '-6px', dur: '10.5s', delay: '-3.5s', bleedX: '0px', offsetY: '30px', cover: 'https://picsum.photos/seed/halvorsen-10/560/700' },
-        { h: 39, w: 640, ratio: '3/2', maxW: '130px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-21px', py: '-13px', dur: '7.2s', delay: '-0.5s', bleedX: '0px', offsetY: '-24px', cover: 'https://picsum.photos/seed/halvorsen-11/900/600' },
+        { h: 76.663, w: 1226.606, ratio: '2/3', maxW: '170.362px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-16px', py: '-11px', dur: '9.5s', delay: '-4s', offsetX: '-60px', offsetY: '0px', cover: 'https://picsum.photos/seed/halvorsen-6/600/900' },
+        { h: 82.346, w: 1372.427, ratio: '1/1', maxW: '274.485px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-19px', py: '-10px', dur: '8.2s', delay: '-2.5s', offsetX: '-162.667px', offsetY: '148px', cover: 'https://picsum.photos/seed/halvorsen-8/700/700' },
+        { h: 30, w: 520, ratio: '4/5', maxW: '110px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-13px', py: '-6px', dur: '10.5s', delay: '-3.5s', offsetX: '0px', offsetY: '30px', cover: 'https://picsum.photos/seed/halvorsen-10/560/700' },
+        { h: 39, w: 640, ratio: '3/2', maxW: '130px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-21px', py: '-13px', dur: '7.2s', delay: '-0.5s', offsetX: '0px', offsetY: '-24px', cover: 'https://picsum.photos/seed/halvorsen-11/900/600' },
       ],
     };
     // A gutter holds one leaf per spread row and two per pair row.
