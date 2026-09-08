@@ -54,6 +54,16 @@ if (placeBody === null) {
   process.exit(1);
 }
 
+// The factor between the two pixel spaces a scaled collage has, read out of the class beside the method that
+// uses it: the pull is measured between two rects, which are in the viewport's pixels, and written into a
+// transform inside the collage, which is read in the collage's own (see landingScale). Undivided, a hero read
+// at two thirds would be given two thirds of the pull it asked for and the caption would still hang off the
+// page edge, which is the fault this pass exists to fix.
+const zoomBody = /\n {2}zoomOf\(el\) \{ return ([^\n]+?); \}/.exec(logicSrc);
+if (!zoomBody) {
+  fail('the logic class has no one line zoomOf(el), so this check cannot run placeLeafText against a scaled hero');
+}
+
 // the slide the guard has to recognise is written in morphTexts, and it is only findable there by the id the
 // animation is given. A rename on one side and not the other would leave the guard matching nothing and the
 // captions placed mid-flight again, with every check still green.
@@ -83,8 +93,9 @@ const LANDED = { left: -30, width: 200 };
 // where the slide has it partway through: still travelling in from off-page to the left
 const MIDSLIDE = -400;
 
-function stage() {
+function stage(zoom) {
   const hero = doc.createElement('section');
+  if (zoom) hero.currentCSSZoom = zoom;
   const leaf = doc.createElement('div');
   leaf.setAttribute('data-leaf', 'left');
   const text = doc.createElement('div');
@@ -106,12 +117,27 @@ function stage() {
   text.style.transform = 'none';
 
   const app = { heroRef: { current: hero } };
+  // eslint-disable-next-line no-new-func
+  app.zoomOf = zoomBody ? new Function('el', 'return ' + zoomBody[1] + ';') : () => 1;
   const place = new Function(placeBody);
   app.placeLeafText = () => place.call(app);
   return { app, hero, text, state };
 }
 
 const tick = () => new Promise((resolve) => setImmediate(resolve));
+
+// ---------------------------------------------------------------- a scaled hero: the pull is in the collage's pixels
+
+{
+  const { app, text } = stage(0.667);
+  app.placeLeafText();
+  // 44px of page is 66px of a collage read at two thirds, and the transform is written inside the collage
+  if (text.style.transform !== 'translateX(66px)') {
+    fail('on a collage read at 0.667 the caption was pulled back by ' + JSON.stringify(text.style.transform) +
+      ' rather than translateX(66px). The distance is measured on the page and written inside the drawing, so a ' +
+      'pull that is not divided by the factor the drawing is read at lands short and the caption is still cut off');
+  }
+}
 
 // ---------------------------------------------------------------- no slide in flight: measured on the spot
 

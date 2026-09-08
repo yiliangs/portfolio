@@ -148,7 +148,10 @@ try {
 
 // ---------------------------------------------------------------- the placement itself
 
-const VIEWPORTS = [[1000, 700], [1280, 720], [1366, 768], [1440, 900], [1920, 1080], [2560, 1440]];
+// The two short windows are not a screen anybody owns; they are the dense sheet. A wide landing on a
+// short page shows the fewest rows it ever shows, which is where a draw has the least room to place
+// fourteen plates and where it would give up if it were going to.
+const VIEWPORTS = [[1000, 460], [1280, 560], [1000, 700], [1280, 720], [1366, 768], [1440, 900], [1920, 1080], [2560, 1440]];
 const SEEDS = Array.from({ length: 50 }, (_, i) => i);
 // The corner block's depth is the span LANDING_WIDE writes, so there is one of it and this check runs
 // that one rather than a range. It used to be the statement's measured type, which is why there was a
@@ -174,9 +177,36 @@ const gapped = (a, b) => // true when the two boxes are apart by at least one em
 const overlaps = (a, b) =>
   a.col < b.col + b.w && b.col < a.col + a.w && a.row < b.row + b.h && b.row < a.row + a.h;
 
+// How many rows a screen shows has two terms now rather than one: the wide landing is scaled to the
+// page it is read on, and a scaled sheet draws its 44px rows smaller, so a screen holds more of them
+// (see landingScale in the logic class, and tools/check-laptop-scale.mjs for the factor itself). The
+// rule is lifted out of the class and run against a stand-in window rather than restated here, so a
+// sweep can never be placing a different number of rows than the page it names asks for.
+function liftRows() {
+  const grab = (name, re) => { const m = re.exec(logicSrc); if (!m) { fail('the logic class has no ' + name + ', so this check cannot ask it how many rows a screen shows'); return null; } return m[0].trim(); };
+  const parts = [
+    grab('STACK_W', /\n {2}STACK_W = [^;]+;/),
+    grab('STACK_RATIO', /\n {2}STACK_RATIO = [^;]+;/),
+    grab('isStacked', /\n {2}isStacked\([^\n]+\}/),
+    grab('SCALE_REF_W', /\n {2}SCALE_REF_W = [^;]+;/),
+    grab('SCALE_REF_H', /\n {2}SCALE_REF_H = [^;]+;/),
+    grab('SCALE_MIN', /\n {2}SCALE_MIN = [^;]+;/),
+    grab('landingScale', /\n {2}landingScale\([^\n]+\}/),
+    grab('visibleRows', /\n {2}visibleRows\(\) \{ return [^\n]+\}/),
+  ];
+  if (parts.some((p) => p === null)) return null;
+  try {
+    // eslint-disable-next-line no-new-func
+    const make = new Function('window', 'return new (class {\n' + parts.join('\n') + '\n})()');
+    make({ innerWidth: 1920, innerHeight: 1080 }).visibleRows();
+    return (w, h) => make({ innerWidth: w, innerHeight: h }).visibleRows();
+  } catch (e) { fail('the row count does not evaluate on its own: ' + e.message); return null; }
+}
+const rowsAt = liftRows() || ((w, h) => Math.max(6, Math.floor((h - HEADER) / ROW)));
+
 let worst = 0, checked = 0;
 for (const [w, h] of VIEWPORTS) {
-  const rows = Math.max(6, Math.floor((h - HEADER) / ROW));
+  const rows = rowsAt(w, h);
   const stRows = STATEMENT_ROWS;
   reserved = [cornerAt(stRows)];
   for (const seed of SEEDS) {
@@ -413,7 +443,10 @@ else {
     else {
       const g = tight(grid.getAttribute('style') || '');
       if (!g.includes('grid-auto-rows:44px')) fail('the desktop landing grid does not set grid-auto-rows:44px');
-      if (!g.includes('min-height:calc(100vh-57px)')) fail('the desktop landing grid does not stand at least calc(100vh - 57px) tall, so the hairlines stop short of the bottom edge');
+      // a screen tall, in the sheet's own pixels: the landing is scaled to the page it is read on, so
+      // the screen it has to cover is the screen divided by the factor it is read at (see
+      // landingScale, and tools/check-laptop-scale.mjs for the factor itself)
+      if (!g.includes('min-height:calc((100vh-57px)/var(--s))')) fail('the desktop landing grid does not stand at least a screen tall in its own pixels, calc((100vh - 57px) / var(--s)), so the hairlines stop short of the bottom edge');
       if (!g.includes('background-size:calc(100%/22)44px')) fail('the desktop landing grid does not rule itself on the 22 column, 44px module');
     }
     const mainStyle = tight(main.getAttribute('style') || '');
