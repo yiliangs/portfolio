@@ -54,7 +54,7 @@ export function tailPath(pts, n, tail, out, splits) {
   const b1 = tail / 3, b2 = tail * 2 / 3;
   for (let i = 1; i < n; i++) {
     const ax = pts[i * 2 - 2], ay = pts[i * 2 - 1], bx = pts[i * 2], by = pts[i * 2 + 1];
-    const seg = Math.hypot(bx - ax, by - ay);
+    const sx = bx - ax, sy = by - ay, seg = Math.sqrt(sx * sx + sy * sy);
     if (seg <= 1e-9) continue;
     const start = acc, end = acc + seg;
     if (splits[0] < 0 && b1 > start && b1 <= end) { const f = (b1 - start) / seg; out[c * 2] = ax + (bx - ax) * f; out[c * 2 + 1] = ay + (by - ay) * f; splits[0] = c++; }
@@ -85,13 +85,56 @@ export function octaveWeights(octaves, out) {
 // cheap 3D value noise: eight lattice hashes, smoothstep blend
 const hash = (x, y, z) => { const s = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453; return s - Math.floor(s); };
 const lerp = (a, b, k) => a + (b - a) * k;
-const noise = (x, y, z) => {
+export const noiseDirect = (x, y, z) => {
   const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z), fx = x - xi, fy = y - yi, fz = z - zi;
   const u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy), w = fz * fz * (3 - 2 * fz);
   const n00 = lerp(hash(xi, yi, zi), hash(xi + 1, yi, zi), u), n10 = lerp(hash(xi, yi + 1, zi), hash(xi + 1, yi + 1, zi), u);
   const n01 = lerp(hash(xi, yi, zi + 1), hash(xi + 1, yi, zi + 1), u), n11 = lerp(hash(xi, yi + 1, zi + 1), hash(xi + 1, yi + 1, zi + 1), u);
   return lerp(lerp(n00, n10, v), lerp(n01, n11, v), w);
 };
+
+// A frame's worth of lattice corners, hashed once. Every particle asks the landscape for its height four times, a
+// finite difference either side of it in x and in y, and each of those hashes eight corners per octave with a
+// sine: at a thousand particles that is tens of thousands of sines a frame, for a lattice that has a few hundred
+// distinct corners in it over a page at the default 320px cells. The corners the frame can reach are hashed at the
+// top of it and read back from here. The slice through the noise moves with the clock but not with x or y, so a
+// frame needs exactly two z planes, the one it sits between and the next.
+//
+// Nothing about the landscape changes: hash() is a pure function of three integers, and the store holds hash() of
+// those same integers, so every height that comes out is the number it was. A corner the store does not hold is
+// hashed on the spot, which nothing on the page should reach, since the store is built from the band the particles
+// live in with the gradient's own reach either side.
+export function newLattice() { return { x0: 0, y0: 0, nx: 0, ny: 0, zi: NaN, a: new Float64Array(0) }; }
+export function latticeFor(lat, xLo, xHi, yLo, yHi, z) {
+  const x0 = Math.floor(xLo), y0 = Math.floor(yLo), zi = Math.floor(z);
+  // a sample between two corners reads the one after it too, so the store runs one past the far end
+  const nx = Math.max(1, Math.floor(xHi) + 2 - x0), ny = Math.max(1, Math.floor(yHi) + 2 - y0);
+  lat.x0 = x0; lat.y0 = y0; lat.nx = nx; lat.ny = ny; lat.zi = zi;
+  if (lat.a.length < nx * ny * 2) lat.a = new Float64Array(nx * ny * 2);
+  const a = lat.a;
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+    const o = (j * nx + i) * 2;
+    a[o] = hash(x0 + i, y0 + j, zi); a[o + 1] = hash(x0 + i, y0 + j, zi + 1);
+  }
+  return lat;
+}
+export function noiseOn(lat, x, y, z) {
+  const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z), fx = x - xi, fy = y - yi, fz = z - zi;
+  const u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy), w = fz * fz * (3 - 2 * fz);
+  const ix = xi - lat.x0, iy = yi - lat.y0;
+  let h000, h100, h010, h110, h001, h101, h011, h111;
+  if (zi === lat.zi && ix >= 0 && iy >= 0 && ix + 1 < lat.nx && iy + 1 < lat.ny) {
+    const a = lat.a, o = (iy * lat.nx + ix) * 2, p = ((iy + 1) * lat.nx + ix) * 2;
+    h000 = a[o]; h001 = a[o + 1]; h100 = a[o + 2]; h101 = a[o + 3];
+    h010 = a[p]; h011 = a[p + 1]; h110 = a[p + 2]; h111 = a[p + 3];
+  } else {
+    h000 = hash(xi, yi, zi); h100 = hash(xi + 1, yi, zi); h010 = hash(xi, yi + 1, zi); h110 = hash(xi + 1, yi + 1, zi);
+    h001 = hash(xi, yi, zi + 1); h101 = hash(xi + 1, yi, zi + 1); h011 = hash(xi, yi + 1, zi + 1); h111 = hash(xi + 1, yi + 1, zi + 1);
+  }
+  const n00 = lerp(h000, h100, u), n10 = lerp(h010, h110, u);
+  const n01 = lerp(h001, h101, u), n11 = lerp(h011, h111, u);
+  return lerp(lerp(n00, n10, v), lerp(n01, n11, v), w);
+}
 
 export function mount(container) {
   // the landscape view sits under the dust: a quarter-resolution map of the height field with its contour lines
@@ -113,7 +156,7 @@ export function mount(container) {
   let mapImg = null, mapW = 1, mapH = 1, mapLevels = null, mapHeights = null;
   const P = [];
   // a particle never spawns inside an object
-  const inside = (x, y) => obstacles.some((o) => Math.hypot((x - o.x) / o.rx, (y - o.y) / o.ry) < 1);
+  const inside = (x, y) => obstacles.some((o) => { const ex = (x - o.x) / o.rx, ey = (y - o.y) / o.ry; return Math.sqrt(ex * ex + ey * ey) < 1; });
   // each particle carries a ring of its own recent path, sampled by distance rather than by frame, so the tail is the
   // same length whatever the frame rate or the particle's speed
   const spawn = (p) => {
@@ -135,33 +178,47 @@ export function mount(container) {
   // the landscape: noise sliced at a depth that advances with time, over as many octaves as the setting asks for.
   // The count is continuous, so an octave fades in across the slider's step into it rather than appearing whole
   const ow = new Float64Array(4);
+  const LAT = [newLattice(), newLattice(), newLattice(), newLattice()];
+  let owSum = 1;
   const height = (x, y) => {
     const z = t * params.morphSpeed, S = 1 / params.wavelength;
-    octaveWeights(params.octaves, ow);
-    let h = noise(x * S, y * S, z);
-    if (ow[1] > 0) h += ow[1] * noise(x * S * 2.1 + 7.3, y * S * 2.1 + 3.1, z * 1.3 + 11);
-    if (ow[2] > 0) h += ow[2] * noise(x * S * 4.3 + 19, y * S * 4.3 + 5, z * 1.7 + 23);
-    if (ow[3] > 0) h += ow[3] * noise(x * S * 8.7 + 41, y * S * 8.7 + 13, z * 2.1 + 37);
+    let h = noiseOn(LAT[0], x * S, y * S, z);
+    if (ow[1] > 0) h += ow[1] * noiseOn(LAT[1], x * S * 2.1 + 7.3, y * S * 2.1 + 3.1, z * 1.3 + 11);
+    if (ow[2] > 0) h += ow[2] * noiseOn(LAT[2], x * S * 4.3 + 19, y * S * 4.3 + 5, z * 1.7 + 23);
+    if (ow[3] > 0) h += ow[3] * noiseOn(LAT[3], x * S * 8.7 + 41, y * S * 8.7 + 13, z * 2.1 + 37);
     return h;
   };
   // the current at (x,y): the contour direction, which is the gradient turned a quarter turn, at a speed that
   // follows the slope between a floor and a ceiling; plus the cursor's brush-away
   const E = 1.5;
+  // the octave weights and the lattice corners this frame's landscape is read out of, taken once at the top of it.
+  // Every height in the frame reads them, and nothing in the frame changes them. See the noise section above.
+  const hashFrame = () => {
+    owSum = octaveWeights(params.octaves, ow);
+    const z = t * params.morphSpeed, S = 1 / params.wavelength;
+    // the band a height is ever asked for: a particle is dropped once it is more than 20px off the page, and the
+    // gradient reaches E either side of it. The contour map is read inside the page, well within that.
+    const xLo = -20 - E, xHi = vw + 20 + E, yLo = -20 - E, yHi = vh + 20 + E;
+    latticeFor(LAT[0], xLo * S, xHi * S, yLo * S, yHi * S, z);
+    if (ow[1] > 0) latticeFor(LAT[1], xLo * S * 2.1 + 7.3, xHi * S * 2.1 + 7.3, yLo * S * 2.1 + 3.1, yHi * S * 2.1 + 3.1, z * 1.3 + 11);
+    if (ow[2] > 0) latticeFor(LAT[2], xLo * S * 4.3 + 19, xHi * S * 4.3 + 19, yLo * S * 4.3 + 5, yHi * S * 4.3 + 5, z * 1.7 + 23);
+    if (ow[3] > 0) latticeFor(LAT[3], xLo * S * 8.7 + 41, xHi * S * 8.7 + 41, yLo * S * 8.7 + 13, yHi * S * 8.7 + 13, z * 2.1 + 37);
+  };
   const field = (x, y, out) => {
     const gx = (height(x + E, y) - height(x - E, y)) / (2 * E), gy = (height(x, y + E) - height(x, y - E)) / (2 * E);
-    const m = Math.hypot(gx, gy) + 1e-9, s = Math.min(params.maxSpeed, Math.max(params.minSpeed, m * params.wavelength * params.speed));
+    const m = Math.sqrt(gx * gx + gy * gy) + 1e-9, s = Math.min(params.maxSpeed, Math.max(params.minSpeed, m * params.wavelength * params.speed));
     out.x = gy / m * s; out.y = -gx / m * s;
     // the objects: inside the swerve zone the motion aimed at the object is shed, fully at its edge, and a nudge
     // outward keeps the particle from hugging the boundary; motion away from it is left alone
     for (const o of obstacles) {
-      const dx = x - o.x, dy = y - o.y, ex = dx / o.rx, ey = dy / o.ry, r = Math.hypot(ex, ey); // 1 at the edge in the box's own ellipse
+      const dx = x - o.x, dy = y - o.y, ex = dx / o.rx, ey = dy / o.ry, r = Math.sqrt(ex * ex + ey * ey); // 1 at the edge in the box's own ellipse
       if (r > params.avoidRadius) continue;
-      const nx = dx / (Math.hypot(dx, dy) + 1e-6), ny = dy / (Math.hypot(dx, dy) + 1e-6), toward = -(out.x * nx + out.y * ny);
+      const d0 = Math.sqrt(dx * dx + dy * dy) + 1e-6, nx = dx / d0, ny = dy / d0, toward = -(out.x * nx + out.y * ny);
       const k = Math.min(1, (params.avoidRadius - r) / (params.avoidRadius - 1)); // 0 at the zone's rim, 1 at the edge
       if (toward > 0) { out.x += nx * toward * k; out.y += ny * toward * k; }
       out.x += nx * params.avoidPush * k * k; out.y += ny * params.avoidPush * k * k;
     }
-    if (ptr.on && params.brush > 0) { const dx = x - ptr.x, dy = y - ptr.y, d = Math.hypot(dx, dy) + 1e-3, g = Math.exp(-(d * d) / (params.brush * params.brush)); out.x += dx / d * g * 160; out.y += dy / d * g * 160; }
+    if (ptr.on && params.brush > 0) { const dx = x - ptr.x, dy = y - ptr.y, d = Math.sqrt(dx * dx + dy * dy) + 1e-3, g = Math.exp(-(d * d) / (params.brush * params.brush)); out.x += dx / d * g * 160; out.y += dy / d * g * 160; }
   };
   // contour map: shade by height, and ink a line wherever the height crosses one of the contour levels
   const drawMap = () => {
@@ -169,7 +226,7 @@ export function mount(container) {
     const d = mapImg.data, L = params.contours, lv = mapLevels, hs = mapHeights;
     // normalise by the weights actually in use, not by the four-octave sum, or the shading and the contour levels
     // would drift every time the octave slider moved
-    const norm = octaveWeights(params.octaves, new Float64Array(4));
+    const norm = owSum;
     for (let j = 0, k = 0; j < mapH; j++) for (let i = 0; i < mapW; i++, k++) { const h = height(i / MAP_SCALE, j / MAP_SCALE) / norm; hs[k] = h; lv[k] = Math.floor(h * L); }
     // a contour is one pixel wide wherever the level steps to the right or downward neighbour
     for (let j = 0, k = 0; j < mapH; j++) for (let i = 0; i < mapW; i++, k++) {
@@ -196,6 +253,7 @@ export function mount(container) {
   const tick = (now) => {
     if (!alive) return; raf = requestAnimationFrame(tick);
     const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
+    hashFrame();
     if (P.length !== params.count) populate();
     map.style.display = params.showLandscape ? 'block' : 'none';
     if (params.showLandscape && frame++ % 3 === 0) drawMap();
