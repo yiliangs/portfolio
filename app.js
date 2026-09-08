@@ -2441,12 +2441,25 @@
     STACK_W = 1000;
     STACK_RATIO = 1.2;
     isStacked(w = window.innerWidth, h = window.innerHeight) { return w < this.STACK_W || w < h * this.STACK_RATIO; }
+    // A phone is not a small tablet. The stacked tier above still reads as a column with room for a
+    // measure beside it: the Development landing keeps its cards text-beside-plate, the sheet keeps
+    // three spec cells to a row, and the chapter keeps a margin column. None of that survives a page
+    // 390px wide. So a second term, under the first: below PHONE_W the same compositions are read
+    // again as one column with nothing at their side. It is a refinement of the stacked tier and never
+    // a branch beside it, which is what PHONE_W < STACK_W buys: a phone is always stacked as well, so
+    // no composition has to answer both questions at once.
+    PHONE_W = 600;
+    isPhone(w = window.innerWidth) { return w < this.PHONE_W; }
+    // Whether the page stands taller than it is wide. Only the home asks: its two objects are a pair
+    // laid across the page, and what they need is width rather than a large width, so a portrait
+    // tablet stacks them for the same reason a phone does. Everything else reads the two terms above.
+    isPortrait(w = window.innerWidth, h = window.innerHeight) { return h > w; }
     // narrow and landingRows decide which composition renders and how many rows it is drawn on, so they
     // are read from the window here rather than waiting for componentDidMount's first onResize: the first
     // paint would otherwise be the wrong one, replaced a frame later. The address bar is read the same
     // way, so a deep link paints the view it names, not the home first.
     state = { view: 'home', page: 'writing', cvReg: 'serif', idx: 10, hovered: 10, tab: { left: 0, width: 0 },
-      narrow: this.isStacked(), landingRows: this.visibleRows(),
+      narrow: this.isStacked(), landingRows: this.visibleRows(), phone: this.isPhone(), portrait: this.isPortrait(),
       // the description's clamp, in lines, and whether it was cut: both read off the page after the
       // first layout, since 0 lines means "not measured yet" and the module's overflow guard holds the
       // one frame before the answer arrives
@@ -3265,7 +3278,7 @@
       window.addEventListener('pointerdown', this.onDown); window.addEventListener('pointerup', this.onUp); window.addEventListener('pointercancel', this.onUp);
       this.onScroll = () => { this.syncParchment(); this.syncHome(); this.setState({ scrollY: window.scrollY }); clearTimeout(this.remeasureTimer); this.remeasureTimer = setTimeout(() => this.remeasureText(), 120); };
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => setTimeout(() => { this.remeasureText(); this.fitLandingStatement(); this.syncParchment(); }, 50));
-      this.onResize = () => { this.setState({ narrow: this.isStacked(), landingRows: this.visibleRows() }); this.measureTabs(); this.syncParchment(); this.syncHome(); };
+      this.onResize = () => { this.setState({ narrow: this.isStacked(), landingRows: this.visibleRows(), phone: this.isPhone(), portrait: this.isPortrait() }); this.measureTabs(); this.syncParchment(); this.syncHome(); };
       this.onKey = (e) => {
         const t = e.target; if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
         const n = this.data.length, { view, idx } = this.state;
