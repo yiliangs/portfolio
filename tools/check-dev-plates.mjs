@@ -31,9 +31,11 @@ import { DC_SOURCE, readLogicSource, readEntries, readTable, readNumber, registe
 
 const BUILT = 'app.js';
 
-// The two sheets issue #40 records, and the one issue #48 adds. They are named here because their
-// absence is the one failure this file cannot infer from anything else in the repository.
-const REQUIRED_SHEETS = ['Rhino Worktree Launcher', 'Agent Usage Stat', 'Building Graph Neural Network'];
+// The two sheets issue #40 records, the one issue #48 adds, and the three that replaced the last of
+// the original filler under #60. They are named here because their absence is the one failure this
+// file cannot infer from anything else in the repository.
+const REQUIRED_SHEETS = ['Rhino Worktree Launcher', 'Agent Usage Stat', 'Building Graph Neural Network',
+  'Long Mission Orchestrator', 'Knowledge Ratchet', 'Website Renovation Signpost'];
 
 // The whole Natalie block is issued with a moving plate: three of its sheets took one under #44 and
 // the five that still stood on a worded placeholder took theirs under #51. Naming them is the same
@@ -43,7 +45,8 @@ const REQUIRED_SHEETS = ['Rhino Worktree Launcher', 'Agent Usage Stat', 'Buildin
 // register says which sheets are supposed to move.
 const MOVING_SHEETS = ['Natalie', 'AI Layout', 'Synchronisation to the Rhino Ecosystem',
   'Linkage to Rhino Blocks', 'Residential Program-responsive Facade Layout',
-  'Unit Stack Calculation', 'Unit Demising Calculation', 'Room Layout Solver'];
+  'Unit Stack Calculation', 'Unit Demising Calculation', 'Room Layout Solver',
+  'Website Renovation Signpost'];
 
 // Every field the mono sheet or the Development landing reads off an entry. `summary` and
 // `statusShort` are carried by the data and read by neither, so they are not required here.
@@ -95,6 +98,23 @@ if (!romans) fail('the logic class has no romans list, so the register cannot be
 else {
   const n = romans[1].split(',').filter((s) => s.trim()).length;
   if (n < entries.length) fail('the register has ' + entries.length + ' entries but only ' + n + ' roman numerals');
+}
+
+// The page spans are the bound edition the whole book is written as, and they are hand-written one
+// entry at a time. Both registers are paginated by the same run of pages in data order, so an entry
+// dropped or moved leaves a gap that nothing else in the repository would notice: the sheet still
+// renders, the index still lists it, and the numbers simply stop meaning what they say. Every entry
+// has to open on the page after the one before it closes on, and `page` has to agree with the span
+// that `pages` prints beside it.
+let nextPage = entries.length ? entries[0].page : 0;
+for (const d of entries) {
+  const span = /^(\d+)–(\d+)$/.exec(String(d.pages ?? ''));
+  if (!span) { fail('the ' + d.title + ' entry has no page span this check can read: ' + d.pages); continue; }
+  const first = Number(span[1]), last = Number(span[2]);
+  if (d.page !== first) fail('the ' + d.title + ' entry opens on page ' + d.page + ' but prints the span ' + d.pages);
+  else if (first !== nextPage) fail('the ' + d.title + ' entry opens on page ' + first + ' where the edition is at ' + nextPage);
+  if (last < first) fail('the ' + d.title + ' entry closes on page ' + last + ', before the page it opens on');
+  nextPage = last + 1;
 }
 
 // ---------------------------------------------------------------- the plate files
