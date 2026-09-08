@@ -416,6 +416,14 @@
   //  need the same "wave has passed" signal without re-deriving it.
   // ════════════════════════════════════════════════════════════════════
 
+  // Distance, in units of `spatial`, at which a stamp's amplitude at a char
+  // reaches the 0.02 floor compute() discards it under: exp(-d) = 0.02 at
+  // d = ln(50). The slack makes the cheap test strictly weaker than the floor
+  // it stands in front of, so a stamp is only rejected on distance when it is
+  // far enough past the cutoff that no rounding inside exp could carry it back
+  // over, and every stamp near the boundary is still decided by the floor.
+  const AMPL_FLOOR_DIST = Math.log(50) * (1 + 1e-9);
+
   const Ripple = {
     // Tuning defaults — the framework's DEFAULTS mirrors these under
     // `ripple*` keys so the physical constants are owned in one place.
@@ -433,11 +441,21 @@
       let frontierAmp = 0;
       let interior = false;
 
+      // Every char of every lit pane runs this loop over the whole stamp
+      // buffer, and most of a stroke's stamps are too far off to reach any one
+      // char. Answer those from the squared distance, which is the same
+      // question the amplitude floor below asks and costs neither the square
+      // root nor the exponential.
+      const cutoff = spatial * AMPL_FLOOR_DIST;
+      const cutoffSq = cutoff * cutoff;
+
       for (let i = 0; i < stamps.length; i++) {
         const s = stamps[i];
         const ddx = charX - s.x;
         const ddy = charY - s.y;
-        const dd = Math.sqrt(ddx * ddx + ddy * ddy);
+        const dd2 = ddx * ddx + ddy * ddy;
+        if (dd2 > cutoffSq) continue;
+        const dd = Math.sqrt(dd2);
 
         const amplAtHit = Math.exp(-dd / spatial);
         if (amplAtHit < 0.02) continue;
@@ -898,12 +916,28 @@
   // space so stamps stay attached to the document while the viewport scrolls.
   // Keep the browser fallback policy here so every producer crosses the same
   // coordinate boundary.
+  //
+  // The offset is cached rather than read at each crossing. Every consumer of
+  // it — the pointer handler on each coalesced sample, the frame context once
+  // per instance — asks for it after this frame's inline styles have been
+  // written, and window.scrollX against a dirty layout lays the whole document
+  // out again to answer. It changes only when the page scrolls, so it is read
+  // where a read is free: from a passive scroll listener, which the browser
+  // dispatches at a rendering opportunity with layout already clean, and from
+  // _measure, which forces layout anyway for its own rects.
+  const pageOffset = { x: 0, y: 0 };
+
+  function readPageOffset() {
+    pageOffset.x = window.scrollX || window.pageXOffset || 0;
+    pageOffset.y = window.scrollY || window.pageYOffset || 0;
+  }
+
   function clientToPageX(clientX) {
-    return clientX + (window.scrollX || window.pageXOffset || 0);
+    return clientX + pageOffset.x;
   }
 
   function clientToPageY(clientY) {
-    return clientY + (window.scrollY || window.pageYOffset || 0);
+    return clientY + pageOffset.y;
   }
 
   // ════════════════════════════════════════════════════════════════════
@@ -965,6 +999,11 @@
     function attach() {
       if (attached) return;
       attached = true;
+
+      // The page offset the stamps are recorded against. Refreshed from the
+      // scroll event rather than from each stamp: see clientToPageX above.
+      readPageOffset();
+      window.addEventListener('scroll', readPageOffset, { passive: true });
 
       if (typeof window.PointerEvent !== 'undefined') {
         window.addEventListener('pointermove', (e) => {
@@ -1380,7 +1419,12 @@
           span.className = opts.className;
           span.style.display = 'inline-block';
           span.style.position = 'relative';
-          span.style.willChange = 'transform';
+          // Deliberately not promoted with will-change: transform. A pane of
+          // any length is hundreds of these, and a compositor layer each means
+          // hundreds of layers rebuilt and committed every frame while nothing
+          // moves, and a repaint and a rasterisation of its own for every
+          // colour and shadow write. The transform animates without it, inside
+          // the layer the pane already has.
 
           const textEl = document.createElement('span');
           textEl.className = opts.className + '-text';
@@ -1985,7 +2029,11 @@
     }
 
     // Char centers live in page space, matching cursor stamps and frame context.
+    // A measure reads a rect per char, so the layout is forced here whatever we
+    // do; take the true scroll offset while it is free and leave the cache
+    // holding it, so the centers are exact and the stamps agree with them.
     _measure() {
+      readPageOffset();
       const sx = clientToPageX(0);
       const sy = clientToPageY(0);
       for (const c of this._chars) {
