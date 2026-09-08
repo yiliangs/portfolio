@@ -175,6 +175,13 @@ if (mono) {
       const name = mc ? mc[1] : mr ? mr[1] : null;
       if (name) {
         bound.add(name);
+        // The binding is readable here and nowhere else: at run time an element carries the span it
+        // was given, not the name of the entry that gave it. data-mod carries that name across, and
+        // is what the tuning panel behind ?dev binds a module on the page to a row of the table by.
+        // A module without it, or with the wrong one, would be untunable or would move a neighbour.
+        const mod = item.getAttribute('data-mod');
+        if (mod === null) fail('module does not say which entry placed it (needs data-mod="' + name + '"): ' + where(item));
+        else if (mod !== name) fail('module places itself from sheet.' + name + ' but says data-mod="' + mod + '"');
         const from = DERIVED[name];
         if (from) {
           // a derived module is not placed by hand: renderVals works it out from the modules it
