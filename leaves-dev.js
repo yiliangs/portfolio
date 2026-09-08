@@ -119,13 +119,21 @@ export function mount(api) {
         vals.textContent = 'offset ' + cur.offsetX + ' ' + cur.offsetY
           + '   bleed ' + cur.bleedX + ' ' + cur.bleedY + '   scale ' + scaleOf(cur, base).toFixed(2);
         range.value = String(scaleOf(cur, base));
+        box.checked = !!cur.beside;
         row.style.borderLeftColor = selected && selected.key === leaf.key ? GOLD : 'transparent';
         row.style.background = selected && selected.key === leaf.key ? 'rgba(182,130,53,0.10)' : 'transparent';
       };
       range.oninput = () => { scaleEntry(e, base, Number(range.value)); rerender(); refresh(); };
       range.onpointerdown = (ev) => ev.stopPropagation();
+      // where the caption goes is a layout choice per leaf, not a number, so it gets a switch: under
+      // the plate by default, beside it for a leaf with no height left beneath it
+      const side = el('label', `display:flex; align-items:center; gap:6px; margin:3px 0 0; color:${DIM}; font-size:10px; cursor:pointer;`);
+      const box = el('input', `accent-color:${GOLD}; margin:0;`); box.type = 'checkbox';
+      side.append(box, el('span', '', 'caption beside the plate'));
+      box.onchange = () => { const cur = liveOf(leaf.key); if (box.checked) cur.beside = true; else delete cur.beside; rerender(); refresh(); };
+      box.onpointerdown = (ev) => ev.stopPropagation();
       row.onclick = () => { selected = { key: leaf.key }; refresh(); };
-      row.append(top, ...(shared ? [shared] : []), vals, range);
+      row.append(top, ...(shared ? [shared] : []), vals, range, side);
       list.appendChild(row);
       return { key: leaf.key, show };
     });
