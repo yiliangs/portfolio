@@ -406,18 +406,16 @@
               var Vi = Object.assign({}, V, {"b": item, $index: i});
               return h(F,{key:i},
                 "\n      ",
-                h("section", { key: "1", onClick: Vi.b?.open, style: {"display":"grid","gridTemplateColumns":"minmax(0,1fr) minmax(0,1fr)","alignItems":"stretch","cursor":"pointer"} },
+                "\n      ",
+                h("section", { key: "2", onClick: Vi.b?.open, style: S(`display:flex; flex-direction:${Vi.b?.dir ?? ""}; align-items:center; gap:clamp(14px,3vw,34px); width:min(94%, 1040px); margin:clamp(40px,7vh,96px) ${Vi.b?.marginR ?? ""} 0 ${Vi.b?.marginL ?? ""}; cursor:pointer;`) },
                   "\n        ",
-                  "\n        ",
-                  h("button", { key: "2", "data-shape": `leaf-${Vi.b?.cardNo ?? ""}`, "data-shape-alt": `frame-${Vi.b?.figNo ?? ""}`, onClick: Vi.b?.open, "aria-label": Vi.b?.title, style: S(`all:unset; grid-column:${Vi.b?.plateCol ?? ""}; grid-row:1; position:relative; display:block; cursor:pointer; overflow:hidden; background:var(--color-surface); filter:${Vi.b?.plateFilter ?? ""};`) },
+                  h("button", { key: "1", "data-shape": `leaf-${Vi.b?.cardNo ?? ""}`, "data-shape-alt": `frame-${Vi.b?.figNo ?? ""}`, onClick: Vi.b?.open, "aria-label": Vi.b?.title, style: S(`all:unset; cursor:pointer; display:block; flex:none; width:min(62%, 660px); aspect-ratio:${Vi.b?.ratio ?? ""}; overflow:hidden; background:var(--color-surface); filter:${Vi.b?.plateFilter ?? ""};`) },
                     "\n          ",
-                    h("span", { key: "1", "aria-hidden": "true", style: {"display":"block","width":"100%","aspectRatio":"1/1"} }),
-                    "\n          ",
-                    h("image-slot", { key: "3", id: Vi.b?.heroSlotId, src: Vi.b?.hero, shape: "rect", fit: "cover", placeholder: Vi.b?.placeholder, style: {"position":"absolute","inset":"0","width":"100%","height":"100%","display":"block"} }),
+                    h("image-slot", { key: "1", id: Vi.b?.heroSlotId, src: Vi.b?.hero, shape: "rect", fit: "contain", placeholder: Vi.b?.placeholder, style: {"width":"100%","height":"100%","display":"block"} }),
                     "\n        "
                   ),
                   "\n        ",
-                  h("div", { key: "4", style: S(`grid-column:${Vi.b?.textCol ?? ""}; grid-row:1; min-width:0; box-sizing:border-box; display:flex; flex-direction:column; justify-content:center; gap:6px; padding:clamp(12px,3.2vw,26px); text-align:${Vi.b?.align ?? ""}; box-shadow:${Vi.b?.edge ?? ""};`) },
+                  h("div", { key: "3", style: S(`min-width:0; flex:1 1 auto; display:flex; flex-direction:column; gap:6px; text-align:${Vi.b?.align ?? ""};`) },
                     "\n          ",
                     h("p", { key: "1|14.1ssam4e", style: {"margin":"0","fontFamily":"var(--deco)","fontSize":"10px","letterSpacing":"0.1em","color":"var(--color-accent-700)"} },
                       h(F,{key:0},"",I(Vi.b?.kicker,1),"")
@@ -2580,16 +2578,20 @@
       const rank = (p) => { const i = this.BAND_ORDER.indexOf(p.id); return i < 0 ? this.BAND_ORDER.length : i; };
       return entries.map((p, i) => [p, i]).sort((a, b) => rank(a[0]) - rank(b[0]) || a[1] - b[1]).map(([p]) => p);
     }
-    // Bands interlock. Each is two half-page cells, a plate and its caption, and the two swap sides every
-    // band, so the plates run down the page as a chain rather than a stack. The hairlines are drawn on the
-    // caption cell only, along its top edge and along the edge it shares with the plate, which is what
-    // leaves two plates butting corner to corner with no rule between them. `align` reads the caption
-    // outward, away from the page centre, as a leaf in the collage's margin reads outward.
-    BAND_RULE = 'inset 0 1px 0 0 var(--color-divider)';
+    // A band is a loose leaf, not a cell. The collage's leaves are independent things adrift in a margin,
+    // and the column keeps that: each band is laid out on its own, takes the proportion of the picture it
+    // carries rather than a proportion the layout imposes, and is set against one edge of the page with
+    // slack left on the other. Nothing is ruled and nothing lines up between one band and the next, which
+    // is what stops the column reading as a table of two columns.
+    //
+    // The edge alternates, so a band hangs off the left, the next off the right, and the plate is the half
+    // that touches the edge: `dir` puts it first in the row or last. The caption reads toward the plate it
+    // belongs to, beginning against it on a left band and ending against it on a right one, so the two
+    // halves stay one block however much slack the band leaves.
     bandSide(k) {
       return k % 2 === 0
-        ? { plateCol: '1', textCol: '2', align: 'right', edge: this.BAND_RULE + ', inset 1px 0 0 0 var(--color-divider)' }
-        : { plateCol: '2', textCol: '1', align: 'left', edge: this.BAND_RULE + ', inset -1px 0 0 0 var(--color-divider)' };
+        ? { dir: 'row', marginL: '0', marginR: 'auto', align: 'left' }
+        : { dir: 'row-reverse', marginL: 'auto', marginR: '0', align: 'right' };
     }
     // The sheet the roll is fitted to on the Research landing: parchment.js scales the model to whatever
     // box setAnchor is handed, so this element's size is the scroll's size on screen. The expression is
@@ -3796,6 +3798,8 @@
       const heroNarrow = view === 'page' && page.reg === 'serif' && this.state.narrow;
       const serifBands = !heroNarrow ? [] : this.bandOrder(own).map((p, k) => ({ ...p, ...this.bandSide(k),
         cardNo: k + 1, morphName: 'row-' + k, kicker: 'Chapter ' + p.numeral + ' · ' + p.year,
+        // the plate is cut to the picture, so nothing is cropped and no two bands are the same shape
+        ratio: p.heroW && p.heroH ? p.heroW + '/' + p.heroH : '3/2',
         // The collage types a leaf's colophon in under the cursor. A stacked page is read on a screen
         // that has no cursor, so the band states it outright and nothing is hidden behind a hover.
         detail: p.subtitle + '\n' + p.role + ' · ' + p.status + ' · pp. ' + p.pages,

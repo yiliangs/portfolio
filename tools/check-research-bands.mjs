@@ -18,9 +18,10 @@
 // names it, and the run below is the one that was asked for. A chapter the list does not name has to
 // come out at the end rather than vanish, which is the case a new entry lands in.
 //
-// The bands interlock. Plate and caption swap halves every band, and the hairlines belong to the
-// caption cell, so two plates meet corner to corner with no rule between them. Break the alternation
-// and the page is a stack of identical rows; draw the rule across the whole band and the chain is cut.
+// The bands are loose leaves, not cells. Each is narrower than the page and set against one edge of it,
+// the edge alternating, with the slack falling on the other side; each plate is cut to its own picture,
+// so no two are the same shape; and nothing is ruled. Lay them on a grid instead and they line up into
+// two columns, which is the table this composition is not.
 //
 // The roll keeps its anchor. parchment.js fits the model to whatever box setAnchor is handed, and on
 // this register that box is scriptRef; the glyphs that burn it are read out of heroTextRef. A landing
@@ -112,23 +113,31 @@ if (geo) {
   }
 }
 
-// ---------------------------------------------------------------- the bands interlock
+// ---------------------------------------------------------------- the bands are loose leaves
 
+// A band is set against one edge of the page by its own auto margin, and the edge alternates. The plate
+// is the half that touches it, so the row runs one way on a left band and the other way on a right one,
+// and the caption reads toward the plate rather than away from it.
 if (geo) {
-  const rule = /inset 0 1px 0 0/;
   for (let k = 0; k < serif.length; k++) {
-    const s = geo.bandSide(k), want = k % 2 === 0 ? '1' : '2';
-    if (s.plateCol !== want) fail('band ' + (k + 1) + ' puts its plate in column ' + s.plateCol + ', not ' + want + ': the bands stop alternating');
-    if (s.textCol === s.plateCol) fail('band ' + (k + 1) + ' lays its caption on top of its plate, both in column ' + s.plateCol);
-    if (s.plateCol !== '1' && s.plateCol !== '2') fail('band ' + (k + 1) + ' places its plate outside the two half-page columns');
-    // the caption reads outward, away from the page centre: right when it holds the right half
-    const outward = s.textCol === '2' ? 'right' : 'left';
-    if (s.align !== outward) fail('band ' + (k + 1) + ' reads its caption ' + s.align + ' from the ' + (s.textCol === '2' ? 'right' : 'left') + ' half, which is inward');
-    // the hairlines belong to the caption cell: its top edge, and the edge it shares with the plate.
-    // A rule drawn across the whole band would put one between two plates and cut the chain.
-    if (!rule.test(s.edge)) fail('band ' + (k + 1) + ' draws no rule along the top of its caption');
-    const shared = s.textCol === '2' ? 'inset 1px 0 0 0' : 'inset -1px 0 0 0';
-    if (!s.edge.includes(shared)) fail('band ' + (k + 1) + ' draws no rule on the edge its caption shares with its plate');
+    const s = geo.bandSide(k), left = k % 2 === 0;
+    const want = left ? { dir: 'row', marginL: '0', marginR: 'auto', align: 'left' }
+                      : { dir: 'row-reverse', marginL: 'auto', marginR: '0', align: 'right' };
+    for (const key of ['dir', 'marginL', 'marginR', 'align']) {
+      if (s[key] !== want[key]) {
+        fail('band ' + (k + 1) + ' should hang off the ' + (left ? 'left' : 'right') + ' edge: '
+          + key + ' is "' + s[key] + '", not "' + want[key] + '"');
+      }
+    }
+    // Exactly one margin is auto, or the band is not set against an edge at all: two autos centre it and
+    // none of them stretches it to the full width, and either way the leaves start lining up on a column.
+    if ((s.marginL === 'auto') === (s.marginR === 'auto')) {
+      fail('band ' + (k + 1) + ' has margins ' + s.marginL + ' / ' + s.marginR + ', so it is not set against an edge');
+    }
+    // nothing is ruled: a band that carries a hairline is the table the column is not
+    for (const [key, v] of Object.entries(s)) {
+      if (typeof v === 'string' && /inset|solid|divider/.test(v)) fail('band ' + (k + 1) + ' draws a rule in ' + key + ': ' + v);
+    }
   }
 }
 
@@ -173,19 +182,39 @@ if (blocks.isHeroNarrow) {
   if (band.includes('{{ leftLeaves }}') || band.includes('{{ rightLeaves }}')) {
     fail('the stacked landing still renders the collage margins');
   }
-  // A plate takes its width from its half of the page and its height from the band. Put the square on
-  // the plate cell as an aspect-ratio and it becomes the shape rather than a floor: the cell is stretched
-  // to a caption taller than the square, the ratio then derives the width from that height, and the plate
-  // runs off the page. The square belongs to a spacer inside the cell, with the picture laid over it.
-  const plate = /<button data-shape="leaf-\{\{ b\.cardNo \}\}"[^>]*style="([^"]*)"/.exec(band);
-  if (!plate) fail('the stacked landing has no plate cell this check can read');
+  // The plate is cut to the picture, so nothing is cropped and no two bands are the same shape. It takes
+  // a width and derives its height from that ratio, which holds only while its cross size is its own: in
+  // a stretched row the ratio runs the other way, deriving the width from a tall caption and pushing the
+  // plate off the page, which is what a two-column grid of these did at 390px.
+  // only the band loop: the colophon box below it is two hairline rectangles on purpose
+  const loopAt = band.indexOf('<sc-for list="{{ serifBands }}"');
+  const loop = loopAt < 0 ? '' : band.slice(loopAt, band.indexOf('</sc-for>', loopAt));
+  const sec = /<section onClick="\{\{ b\.open \}\}" style="([^"]*)"/.exec(loop);
+  const plate = /<button data-shape="leaf-\{\{ b\.cardNo \}\}"[^>]*style="([^"]*)"/.exec(loop);
+  if (!sec || !plate) fail('the stacked landing has no band this check can read');
   else {
-    if (/aspect-ratio/.test(plate[1])) fail('the band plate carries an aspect-ratio of its own, so a tall caption drives its width and pushes it off the page');
-    for (const rule of ['position:relative', 'overflow:hidden']) {
-      if (!plate[1].includes(rule)) fail('the band plate is missing ' + rule + ', so the picture cannot be laid over the whole cell');
+    if (!/display:flex/.test(sec[1])) fail('a band is not a row of two things, so the plate and its caption are placed by something else');
+    if (!/align-items:center/.test(sec[1])) fail('the band row is not centred, so a tall caption stretches the plate and its ratio drives the width');
+    if (/grid-template-columns/.test(sec[1])) fail('the bands are laid on a grid, so the leaves line up on a column instead of standing free');
+    if (!/margin:[^;]*\{\{ b\.marginR \}\}[^;]*\{\{ b\.marginL \}\}/.test(sec[1])) fail('a band does not take its side margins from bandSide, so it is not set against an alternating edge');
+    if (!/flex:none/.test(plate[1])) fail('the band plate can be flexed, so its width is not the one its ratio is taken from');
+    if (!/aspect-ratio:\{\{ b\.ratio \}\}/.test(plate[1])) fail('the band plate does not take the picture\'s own proportion');
+    if (!/fit="contain"/.test(loop)) fail('the band picture is cropped rather than shown whole');
+    // no alignment lines: nothing in a band is ruled, bordered or shadowed
+    for (const m of loop.match(/style="[^"]*"/g) || []) {
+      if (/box-shadow|border(?!-)|border-(top|right|bottom|left|width|style|color)/.test(m)) {
+        fail('a band draws an alignment line: ' + m.slice(0, 90));
+      }
     }
-    if (!/<span aria-hidden="true" style="[^"]*aspect-ratio:1\/1/.test(band)) fail('the band plate has no square spacer, so nothing sets the least tall a band may be');
-    if (!/<image-slot[^>]*style="position:absolute; inset:0/.test(band)) fail('the band picture is not laid over the whole plate cell');
+  }
+  // every band's plate is cut to its own entry's picture, and the register carries enough different
+  // shapes that the column cannot read as a stack of one repeated cell
+  if (geo) {
+    const ratios = new Set(geo.bandOrder(serif).map((p) => p.heroW + '/' + p.heroH));
+    for (const p of serif) {
+      if (!p.heroW || !p.heroH) fail(p.id + ' declares no picture size, so its band falls back to a shape the layout chose');
+    }
+    if (ratios.size < 3) fail('the register carries only ' + ratios.size + ' plate shapes, so the column reads as a grid whatever the markup says');
   }
 }
 if (blocks.isHeroWide && !blocks.isHeroWide.includes('{{ leftLeaves }}')) fail('the wide landing no longer renders the collage margins');
@@ -233,5 +262,6 @@ if (failures.length) {
   for (const f of failures) console.error('  - ' + f);
   process.exit(1);
 }
-console.log('check-research-bands: ' + serif.length + ' chapters run the declared order, the bands alternate and interlock, '
-  + 'the scroll reads at 0.9 wide and 0.72 stacked, and both landings carry the roll\'s anchor');
+console.log('check-research-bands: ' + serif.length + ' chapters run the declared order, every band hangs off its own '
+  + 'edge at its picture proportion with nothing ruled, the scroll reads at 0.9 wide and 0.72 stacked, and '
+  + 'both landings carry the roll anchor');
