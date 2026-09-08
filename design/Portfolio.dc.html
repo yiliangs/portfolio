@@ -886,14 +886,6 @@
     </section>
     </sc-if>
 
-    <!-- a paper carries its plates inline, so the two placeholder details belong only to a written chapter -->
-    <sc-if value="{{ isEssay }}" hint-placeholder-val="{{ true }}">
-    <div style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:clamp(20px,4vw,56px);">
-      <figure class="plate" style="margin:0; aspect-ratio:4/3; filter:sepia(0.22) saturate(0.82) contrast(1.05);"><image-slot id="{{ current.detailSlotA }}" shape="rect" placeholder="Detail: drawing or interface" style="width:100%; height:100%;"></image-slot></figure>
-      <figure class="plate" style="margin:0; aspect-ratio:4/3; filter:sepia(0.22) saturate(0.82) contrast(1.05);"><image-slot id="{{ current.detailSlotB }}" shape="rect" placeholder="Detail: process or site" style="width:100%; height:100%;"></image-slot></figure>
-    </div>
-    <p style="margin:14px 0 0; font-size:13px; line-height:20px; color:var(--color-neutral-700);"><span style="font-family:var(--font-heading); font-size:17px; color:var(--color-accent);">Figs. 1–2.</span> Working states. Left, the drawing or interface; right, where it was made.</p>
-    </sc-if>
 
     <hr style="height:1px; border:0; margin:calc(3*28px) 0 0; background:var(--color-divider);">
     <nav style="display:flex; justify-content:space-between; align-items:baseline; gap:var(--space-4); padding:28px 0 calc(3*28px); flex-wrap:wrap;">
@@ -985,32 +977,39 @@
       <div style="display:flex; gap:6px; flex-wrap:wrap;"><span class="tag tag-outline" style="font-family:var(--mono);">{{ current.kind }}</span><span class="tag tag-neutral" style="font-family:var(--mono);">{{ current.year }}</span></div>
     </aside>
 
-    <!-- The details, in one of two arrangements. The pair is the sheet's own: two figures, side by
+    <!-- The details, in one of three arrangements. The pair is the sheet's own: two figures, side by
          side on the wide sheet and stacked on the narrow one, each taking its own field, detailA and
-         detailB, and each falling back to its worded placeholder, so a sheet may show one and leave
-         the other. An entry that names a single `detail` instead gets one figure across the columns
-         the pair spanned, on the rows its own ratio needs. It keeps detailSlotA's id, so the morph
-         and the cell readout find the same slot whichever arrangement the sheet is in. -->
-    <sc-if value="{{ detailPair }}" hint-placeholder-val="{{ true }}">
+         detailB, and each drawn only when its own field names a picture, so a sheet may show one and
+         leave the other. An entry that names a single `detail` instead gets one figure across the
+         columns the pair spanned, on the rows its own ratio needs. It keeps detailSlotA's id, so the
+         morph and the cell readout find the same slot whichever arrangement the sheet is in. An
+         entry that names none of the three is the third arrangement, and the common one: the module
+         is not drawn at all, and the sheet closes over the rows it would have taken rather than
+         standing an empty frame where a picture was never going to be. -->
+    <sc-if value="{{ detailPairA }}" hint-placeholder-val="{{ true }}">
     <figure class="plate sheet-mod sheet-plate" data-enter="" data-mod="detailA" onMouseEnter="{{ sheet.detailA.move }}" onMouseMove="{{ sheet.detailA.move }}" onMouseLeave="{{ sheet.detailA.leave }}" style="grid-column:{{ sheet.detailA.col }}; grid-row:{{ sheet.detailA.row }}; --d:{{ sheet.detailA.delay }}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;">
       <span class="sheet-mark" aria-hidden="true" style="left:8px; top:5px;">+</span>
-      <image-slot id="{{ current.detailSlotA }}" src="{{ current.detailA }}" shape="rect" fit="contain" placeholder="Detail: drawing or interface" style="width:100%; height:100%;"></image-slot>
+      <image-slot id="{{ current.detailSlotA }}" src="{{ current.detailA }}" shape="rect" fit="contain" style="width:100%; height:100%;"></image-slot>
       <span class="sheet-mark" aria-hidden="true" style="right:8px; bottom:5px;">+</span>
     </figure>
+    </sc-if>
+    <sc-if value="{{ detailPairB }}" hint-placeholder-val="{{ true }}">
     <figure class="plate sheet-mod sheet-plate" data-enter="" data-mod="detailB" onMouseEnter="{{ sheet.detailB.move }}" onMouseMove="{{ sheet.detailB.move }}" onMouseLeave="{{ sheet.detailB.leave }}" style="grid-column:{{ sheet.detailB.col }}; grid-row:{{ sheet.detailB.row }}; --d:{{ sheet.detailB.delay }}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;">
       <span class="sheet-mark" aria-hidden="true" style="left:8px; top:5px;">+</span>
-      <image-slot id="{{ current.detailSlotB }}" src="{{ current.detailB }}" shape="rect" fit="contain" placeholder="Detail: process or site" style="width:100%; height:100%;"></image-slot>
+      <image-slot id="{{ current.detailSlotB }}" src="{{ current.detailB }}" shape="rect" fit="contain" style="width:100%; height:100%;"></image-slot>
       <span class="sheet-mark" aria-hidden="true" style="right:8px; bottom:5px;">+</span>
     </figure>
     </sc-if>
     <sc-if value="{{ detailOne }}" hint-placeholder-val="{{ false }}">
     <figure class="plate sheet-mod sheet-plate" data-enter="" data-mod="detail" onMouseEnter="{{ sheet.detail.move }}" onMouseMove="{{ sheet.detail.move }}" onMouseLeave="{{ sheet.detail.leave }}" style="grid-column:{{ sheet.detail.col }}; grid-row:{{ sheet.detail.row }}; --d:{{ sheet.detail.delay }}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;">
       <span class="sheet-mark" aria-hidden="true" style="left:8px; top:5px;">+</span>
-      <image-slot id="{{ current.detailSlotA }}" src="{{ current.detail }}" shape="rect" fit="contain" placeholder="Detail: drawing or interface" style="width:100%; height:100%;"></image-slot>
+      <image-slot id="{{ current.detailSlotA }}" src="{{ current.detail }}" shape="rect" fit="contain" style="width:100%; height:100%;"></image-slot>
       <span class="sheet-mark" aria-hidden="true" style="right:8px; bottom:5px;">+</span>
     </figure>
     </sc-if>
+    <sc-if value="{{ hasDetail }}" hint-placeholder-val="{{ true }}">
     <p class="sheet-mod" data-enter="" data-mod="detailCaption" style="grid-column:{{ sheet.detailCaption.col }}; grid-row:{{ sheet.detailCaption.row }}; --d:{{ sheet.detailCaption.delay }}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="min-width:0;"><span style="color:var(--color-accent);">{{ current.detailFigWord }}</span> <span key="cap-detail-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.detailCaptionText }}</span></span><span style="flex:none; color:var(--color-neutral-600); white-space:nowrap;">{{ sheet.detailReadout }}</span></p>
+    </sc-if>
 
     <!-- Linked sheets: the other end of the graph the landing draws. What this sheet names and what
          names it are closed into one list in the logic class, so the module states the relation rather
@@ -2921,7 +2920,8 @@ class Component extends DCLogic {
         // the plates under the account are captioned by the entry when it has something to say about
         // them, and by the sheet's own line when it has not; the kicker counts whatever is there
         detailFigWord: d.detail ? 'Fig. 1.' : 'Figs. 1–2.',
-        detailCaptionText: d.detailCaption || 'Working states. Left, the drawing or interface; right, where it was made.',
+        // no invented caption: a detail figure that names none says nothing under itself
+        detailCaptionText: d.detailCaption || '',
         hasLink: !!d.href || linkIdx >= 0, noLink: !d.href && linkIdx < 0, href: d.href || '#', linkTarget: d.linkBlank ? '_blank' : undefined, linkRel: d.linkBlank ? 'noopener' : undefined,
         linkClick: linkIdx >= 0 ? (e) => { e.preventDefault(); this.open(linkIdx); } : undefined,
         previewOpacity: hovered === i ? '1' : '0',
@@ -3120,7 +3120,13 @@ class Component extends DCLogic {
     const detailTop = Math.min(at(place.detailA.row)[0], at(place.detailB.row)[0]);
     const detailFoot = Math.max(at(place.detailA.row)[1], at(place.detailB.row)[1]);
     const oneDetail = !!current.detail && current.detailW > 0 && current.detailH > 0;
-    const detailRows = oneDetail
+    // The common state, and the one the module used to answer with two worded frames: an entry that
+    // names no detail picture at all. The module takes no rows, so grewDetail carries it away on its
+    // own; grewDetailGap below takes the caption's rows and the row that separated the module from
+    // the linked sheets, which is the rest of what the table wrote for a module that is not there.
+    const noDetail = !oneDetail && !current.detailA && !current.detailB;
+    const detailRows = noDetail ? 0
+      : oneDetail
       ? this.rowsFor(detailCol[1] - detailCol[0], current.detailW, current.detailH)
       : detailFoot - detailTop;
     const grewDetail = detailRows - (detailFoot - detailTop);
@@ -3139,8 +3145,11 @@ class Component extends DCLogic {
     // what the linked sheets took
     const heroMovesFrom = at(place.heroCaption.row)[0], detailMovesFrom = at(place.detailCaption.row)[0];
     const linksMovesFrom = at(place.navBack.row)[0];
+    // What a dropped detail module takes beyond its plates: its caption's rows and the blank row
+    // under them, which is exactly the distance the table leaves between the caption and the links.
+    const grewDetailGap = noDetail ? detailMovesFrom - linksTop : 0;
     const shiftAt = (row) => (row >= heroMovesFrom ? grewHero : 0) + (row >= detailMovesFrom ? grewDetail : 0) +
-      (row >= linksMovesFrom ? grewLinks : 0);
+      (row >= linksTop ? grewDetailGap : 0) + (row >= linksMovesFrom ? grewLinks : 0);
     const sheet = {};
     for (const name of Object.keys(place)) {
       const span = at(place[name].row);
@@ -3196,7 +3205,7 @@ class Component extends DCLogic {
       // The serif chapter has no moving plate and keeps heroImg/heroSlot.
       heroVideo: view === 'chapter' && !!current.video, heroStill: view === 'chapter' && !current.video,
       // one plate under the account, or the pair the sheet has always carried
-      detailOne: oneDetail, detailPair: !oneDetail,
+      detailOne: oneDetail, detailPairA: !oneDetail && !!current.detailA, detailPairB: !oneDetail && !!current.detailB, hasDetail: !noDetail,
       rBody: mono ? this.MONO : 'var(--font-body)', rAlign: mono ? 'left' : 'justify', rTracking: mono ? '-0.03em' : '0',
       brandChars: (this.state.brandAnim || Array.from(this.BRAND).map((ch) => ({ ch, reg: brandReg, swap: false }))).map((c) => ({
         ch: c.ch, font: c.reg === 'mono' ? this.MONO : 'var(--font-heading)', tracking: c.reg === 'mono' ? '-0.03em' : '0',

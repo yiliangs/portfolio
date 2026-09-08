@@ -288,14 +288,24 @@ function cutTable(table, rule, entry, vw, box, narrow) {
   const detailTop = Math.min(at(table.detailA.row)[0], at(table.detailB.row)[0]);
   const detailFoot = Math.max(at(table.detailA.row)[1], at(table.detailB.row)[1]);
   const one = !!entry.detail && entry.detailW > 0 && entry.detailH > 0;
-  const detailRows = one ? rule.rowsFor(vw, box, detailCol[1] - detailCol[0], entry.detailW, entry.detailH) : detailFoot - detailTop;
+  // An entry that names no detail picture at all drops the module: the plates take no rows, and the
+  // caption and the blank row under it go with them, which is the distance the table leaves between
+  // the caption and the links. Everything below closes up to the row the plates would have started on.
+  const none = !one && !entry.detailA && !entry.detailB;
+  const detailRows = none ? 0
+    : one ? rule.rowsFor(vw, box, detailCol[1] - detailCol[0], entry.detailW, entry.detailH)
+    : detailFoot - detailTop;
   const grewDetail = detailRows - (detailFoot - detailTop);
 
   const heroFrom = at(table.heroCaption.row)[0], detailFrom = at(table.detailCaption.row)[0];
-  const shiftAt = (row) => (row >= heroFrom ? grewHero : 0) + (row >= detailFrom ? grewDetail : 0);
+  const linksFrom = at(table.links.row)[0];
+  const grewDetailGap = none ? detailFrom - linksFrom : 0;
+  const shiftAt = (row) => (row >= heroFrom ? grewHero : 0) + (row >= detailFrom ? grewDetail : 0) +
+    (row >= linksFrom ? grewDetailGap : 0);
   const out = {};
   for (const [name, spot] of Object.entries(table)) {
     if (one && (name === 'detailA' || name === 'detailB')) continue; // replaced by the single figure
+    if (none && (name === 'detailA' || name === 'detailB' || name === 'detailCaption')) continue; // not drawn at all
     const span = at(spot.row);
     const shift = shiftAt(span[0]);
     out[name] = {
@@ -307,7 +317,7 @@ function cutTable(table, rule, entry, vw, box, narrow) {
     const row = detailTop + shiftAt(detailTop);
     out.detail = { col: detailCol[0] + ' / ' + detailCol[1], row: row + ' / ' + (row + detailRows) };
   }
-  return { table: out, portrait, one, heroRows, grewHero, detailRows, grewDetail, detailCols: detailCol[1] - detailCol[0], shiftAt };
+  return { table: out, portrait, one, none, heroRows, grewHero, detailRows, grewDetail, detailCols: detailCol[1] - detailCol[0], shiftAt };
 }
 
 function checkCut(where, rule, laid, table, entry, vw, box) {
@@ -385,7 +395,7 @@ try {
           checkCut('the ' + d.title + ' sheet on ' + name + ' at ' + vw + 'px', rule, laid, table, d, vw, vw - bar);
           if (vw === 1440 && bar === SCROLLBAR[0] && !narrow) {
             seen.push(d.title + ': ' + (laid.portrait ? 'hero ' + rule.PORTRAIT_COLS + ' by ' + laid.heroRows : 'hero standard') +
-              ', ' + (laid.one ? 'detail ' + laid.detailCols + ' by ' + laid.detailRows : 'detail pair'));
+              ', ' + (laid.one ? 'detail ' + laid.detailCols + ' by ' + laid.detailRows : laid.none ? 'no detail module' : 'detail pair'));
           }
         }
       }
@@ -445,6 +455,8 @@ const slots = [...tpl.content.querySelectorAll('image-slot')].filter((el) =>
 // Each slot id and the fields it is allowed to show. detailSlotA carries two, because the single
 // detail figure reuses it: the morph and the cell readout then find the same slot whichever
 // arrangement the sheet is in.
+const PLACEHOLDER_OWED = new Set(['current.heroSlotId', 'p.plateSlotId']);
+
 const EXPECTED = {
   'current.heroSlotId': ['current.hero'],
   'current.detailSlotA': ['current.detailA', 'current.detail'],
@@ -464,9 +476,12 @@ for (const el of slots) {
   if (!got) fail('the ' + id + ' slot passes no src as one whole binding, so a named plate cannot reach it');
   else if (!want.includes(got)) fail('the ' + id + ' slot reads its picture from ' + got + ', not ' + want.join(' or '));
   else sources.add(got);
-  // the two detail slots word their own placeholder, the rest take the entry's, so only its
-  // presence is the invariant here
-  if (!el.getAttribute('placeholder')) fail('the ' + id + ' slot lost its placeholder, so an entry with no picture would show an empty frame');
+  // Only the slots that are drawn whatever the entry names owe a placeholder: the sheet hero and
+  // the landing plate, which take the entry's own wording. The three detail slots are drawn only
+  // when their field names a picture, so they can never fall back to one and carry none.
+  if (PLACEHOLDER_OWED.has(id) && !el.getAttribute('placeholder')) {
+    fail('the ' + id + ' slot lost its placeholder, so an entry with no picture would show an empty frame');
+  }
 }
 for (const id of Object.keys(EXPECTED)) {
   if (!seen.has(id)) fail('the template carries no Development plate slot for ' + id);
@@ -533,7 +548,9 @@ for (const [id, srcPaths] of Object.entries(EXPECTED)) {
   for (const srcPath of srcPaths) {
     const filled = mine.filter((c) => new RegExp('src:\\s*' + jsPath(srcPath)).test(c));
     if (!filled.length) fail(BUILT + "'s " + id + ' slot does not pass src: ' + srcPath + ', so it is behind ' + DC_SOURCE);
-    for (const c of filled) if (!/placeholder:/.test(c)) fail(BUILT + "'s " + id + ' slot passes a src but no placeholder');
+    if (PLACEHOLDER_OWED.has(id)) {
+      for (const c of filled) if (!/placeholder:/.test(c)) fail(BUILT + "'s " + id + ' slot passes a src but no placeholder');
+    }
   }
 }
 

@@ -1743,33 +1743,10 @@
                 "\n    "
               ),
               "\n    ") : null),
-            "\n\n    ",
+            "\n\n\n    ",
+            h("hr", { key: "16", style: {"height":"1px","border":"0","margin":"calc(3*28px) 0 0","background":"var(--color-divider)"} }),
             "\n    ",
-            (V.isEssay ? h(F,{key:17},
-              "\n    ",
-              h("div", { key: "1", style: {"display":"grid","gridTemplateColumns":"minmax(0,1fr) minmax(0,1fr)","gap":"clamp(20px,4vw,56px)"} },
-                "\n      ",
-                h("figure", { key: "1", className: "plate", style: {"margin":"0","aspectRatio":"4/3","filter":"sepia(0.22) saturate(0.82) contrast(1.05)"} },
-                  h("image-slot", { key: "0", id: V.current?.detailSlotA, shape: "rect", placeholder: "Detail: drawing or interface", style: {"width":"100%","height":"100%"} })
-                ),
-                "\n      ",
-                h("figure", { key: "3", className: "plate", style: {"margin":"0","aspectRatio":"4/3","filter":"sepia(0.22) saturate(0.82) contrast(1.05)"} },
-                  h("image-slot", { key: "0", id: V.current?.detailSlotB, shape: "rect", placeholder: "Detail: process or site", style: {"width":"100%","height":"100%"} })
-                ),
-                "\n    "
-              ),
-              "\n    ",
-              h("p", { key: "3|97.76h6dp", style: {"margin":"14px 0 0","fontSize":"13px","lineHeight":"20px","color":"var(--color-neutral-700)"} },
-                h("span", { key: "0|10.bamrr4", style: {"fontFamily":"var(--font-heading)","fontSize":"17px","color":"var(--color-accent)"} },
-                  "Figs. 1–2."
-                ),
-                " Working states. Left, the drawing or interface; right, where it was made."
-              ),
-              "\n    ") : null),
-            "\n\n    ",
-            h("hr", { key: "19", style: {"height":"1px","border":"0","margin":"calc(3*28px) 0 0","background":"var(--color-divider)"} }),
-            "\n    ",
-            h("nav", { key: "21", style: {"display":"flex","justifyContent":"space-between","alignItems":"baseline","gap":"var(--space-4)","padding":"28px 0 calc(3*28px)","flexWrap":"wrap"} },
+            h("nav", { key: "18", style: {"display":"flex","justifyContent":"space-between","alignItems":"baseline","gap":"var(--space-4)","padding":"28px 0 calc(3*28px)","flexWrap":"wrap"} },
               "\n      ",
               h("button", { key: "1|24.1chn43n", className: "btn btn-ghost", onClick: V.goPageCurrent, style: {"whiteSpace":"nowrap","fontFamily":"var(--r-body)"} },
                 h(F,{key:0},"← ",I(V.current?.backWord,1),"")
@@ -1997,7 +1974,7 @@
               ),
               "\n\n    ",
               "\n    ",
-              (V.detailPair ? h(F,{key:35},
+              (V.detailPairA ? h(F,{key:35},
                 "\n    ",
                 h("figure", { key: "1", className: "plate sheet-mod sheet-plate", "data-enter": "", "data-mod": "detailA", onMouseEnter: V.sheet?.detailA?.move, onMouseMove: V.sheet?.detailA?.move, onMouseLeave: V.sheet?.detailA?.leave, style: S(`grid-column:${V.sheet?.detailA?.col ?? ""}; grid-row:${V.sheet?.detailA?.row ?? ""}; --d:${V.sheet?.detailA?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
                   "\n      ",
@@ -2005,21 +1982,7 @@
                     "+"
                   ),
                   "\n      ",
-                  h("image-slot", { key: "3", id: V.current?.detailSlotA, src: V.current?.detailA, shape: "rect", fit: "contain", placeholder: "Detail: drawing or interface", style: {"width":"100%","height":"100%"} }),
-                  "\n      ",
-                  h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
-                    "+"
-                  ),
-                  "\n    "
-                ),
-                "\n    ",
-                h("figure", { key: "3", className: "plate sheet-mod sheet-plate", "data-enter": "", "data-mod": "detailB", onMouseEnter: V.sheet?.detailB?.move, onMouseMove: V.sheet?.detailB?.move, onMouseLeave: V.sheet?.detailB?.leave, style: S(`grid-column:${V.sheet?.detailB?.col ?? ""}; grid-row:${V.sheet?.detailB?.row ?? ""}; --d:${V.sheet?.detailB?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
-                  "\n      ",
-                  h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
-                    "+"
-                  ),
-                  "\n      ",
-                  h("image-slot", { key: "3", id: V.current?.detailSlotB, src: V.current?.detailB, shape: "rect", fit: "contain", placeholder: "Detail: process or site", style: {"width":"100%","height":"100%"} }),
+                  h("image-slot", { key: "3", id: V.current?.detailSlotA, src: V.current?.detailA, shape: "rect", fit: "contain", style: {"width":"100%","height":"100%"} }),
                   "\n      ",
                   h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
                     "+"
@@ -2028,7 +1991,24 @@
                 ),
                 "\n    ") : null),
               "\n    ",
-              (V.detailOne ? h(F,{key:37},
+              (V.detailPairB ? h(F,{key:37},
+                "\n    ",
+                h("figure", { key: "1", className: "plate sheet-mod sheet-plate", "data-enter": "", "data-mod": "detailB", onMouseEnter: V.sheet?.detailB?.move, onMouseMove: V.sheet?.detailB?.move, onMouseLeave: V.sheet?.detailB?.leave, style: S(`grid-column:${V.sheet?.detailB?.col ?? ""}; grid-row:${V.sheet?.detailB?.row ?? ""}; --d:${V.sheet?.detailB?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
+                  "\n      ",
+                  h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
+                    "+"
+                  ),
+                  "\n      ",
+                  h("image-slot", { key: "3", id: V.current?.detailSlotB, src: V.current?.detailB, shape: "rect", fit: "contain", style: {"width":"100%","height":"100%"} }),
+                  "\n      ",
+                  h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
+                    "+"
+                  ),
+                  "\n    "
+                ),
+                "\n    ") : null),
+              "\n    ",
+              (V.detailOne ? h(F,{key:39},
                 "\n    ",
                 h("figure", { key: "1", className: "plate sheet-mod sheet-plate", "data-enter": "", "data-mod": "detail", onMouseEnter: V.sheet?.detail?.move, onMouseMove: V.sheet?.detail?.move, onMouseLeave: V.sheet?.detail?.leave, style: S(`grid-column:${V.sheet?.detail?.col ?? ""}; grid-row:${V.sheet?.detail?.row ?? ""}; --d:${V.sheet?.detail?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
                   "\n      ",
@@ -2036,7 +2016,7 @@
                     "+"
                   ),
                   "\n      ",
-                  h("image-slot", { key: "3", id: V.current?.detailSlotA, src: V.current?.detail, shape: "rect", fit: "contain", placeholder: "Detail: drawing or interface", style: {"width":"100%","height":"100%"} }),
+                  h("image-slot", { key: "3", id: V.current?.detailSlotA, src: V.current?.detail, shape: "rect", fit: "contain", style: {"width":"100%","height":"100%"} }),
                   "\n      ",
                   h("span", { key: "5|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"right":"8px","bottom":"5px"} },
                     "+"
@@ -2045,23 +2025,26 @@
                 ),
                 "\n    ") : null),
               "\n    ",
-              h("p", { key: "39|136.19o3fos", className: "sheet-mod", "data-enter": "", "data-mod": "detailCaption", style: S(`grid-column:${V.sheet?.detailCaption?.col ?? ""}; grid-row:${V.sheet?.detailCaption?.row ?? ""}; --d:${V.sheet?.detailCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
-                h("span", { key: "0|85.yyckg0", style: {"minWidth":"0"} },
-                  h("span", { key: "0|27.1uoc6rv", style: {"color":"var(--color-accent)"} },
-                    h(F,{key:0},"",I(V.current?.detailFigWord,1),"")
+              (V.hasDetail ? h(F,{key:41},
+                "\n    ",
+                h("p", { key: "1|136.19o3fos", className: "sheet-mod", "data-enter": "", "data-mod": "detailCaption", style: S(`grid-column:${V.sheet?.detailCaption?.col ?? ""}; grid-row:${V.sheet?.detailCaption?.row ?? ""}; --d:${V.sheet?.detailCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
+                  h("span", { key: "0|85.yyckg0", style: {"minWidth":"0"} },
+                    h("span", { key: "0|27.1uoc6rv", style: {"color":"var(--color-accent)"} },
+                      h(F,{key:0},"",I(V.current?.detailFigWord,1),"")
+                    ),
+                    " ",
+                    h("span", { key: `cap-detail-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono" },
+                      h(F,{key:0},"",I(V.current?.detailCaptionText,1),"")
+                    )
                   ),
-                  " ",
-                  h("span", { key: `cap-detail-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono" },
-                    h(F,{key:0},"",I(V.current?.detailCaptionText,1),"")
+                  h("span", { key: "1|25.ibc6df", style: {"flex":"none","color":"var(--color-neutral-600)","whiteSpace":"nowrap"} },
+                    h(F,{key:0},"",I(V.sheet?.detailReadout,1),"")
                   )
                 ),
-                h("span", { key: "1|25.ibc6df", style: {"flex":"none","color":"var(--color-neutral-600)","whiteSpace":"nowrap"} },
-                  h(F,{key:0},"",I(V.sheet?.detailReadout,1),"")
-                )
-              ),
+                "\n    ") : null),
               "\n\n    ",
               "\n    ",
-              h("div", { key: "42", className: "sheet-mod", "data-enter": "", "data-mod": "links", style: S(`grid-column:${V.sheet?.links?.col ?? ""}; grid-row:${V.sheet?.links?.row ?? ""}; --d:${V.sheet?.links?.delay ?? ""}; display:grid; grid-auto-rows:44px; align-content:start; overflow:hidden;`) },
+              h("div", { key: "44", className: "sheet-mod", "data-enter": "", "data-mod": "links", style: S(`grid-column:${V.sheet?.links?.col ?? ""}; grid-row:${V.sheet?.links?.row ?? ""}; --d:${V.sheet?.links?.delay ?? ""}; display:grid; grid-auto-rows:44px; align-content:start; overflow:hidden;`) },
                 "\n      ",
                 h("p", { key: "1|13.bujc8", style: {"margin":"0","display":"flex","alignItems":"center","padding":"0 22px","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Linked sheets"
@@ -2099,11 +2082,11 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("button", { key: "45|24.1chn43n", className: "sheet-mod sheet-ctl", "data-enter": "", "data-mod": "navBack", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navBack?.col ?? ""}; grid-row:${V.sheet?.navBack?.row ?? ""}; --d:${V.sheet?.navBack?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
+              h("button", { key: "47|24.1chn43n", className: "sheet-mod sheet-ctl", "data-enter": "", "data-mod": "navBack", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navBack?.col ?? ""}; grid-row:${V.sheet?.navBack?.row ?? ""}; --d:${V.sheet?.navBack?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
                 h(F,{key:0},"← ",I(V.current?.backWord,1),"")
               ),
               "\n    ",
-              h("button", { key: "47|110.pyry3", className: "sheet-mod sheet-ctl", "data-enter": "", "data-mod": "navNext", onClick: V.openNext, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navNext?.col ?? ""}; grid-row:${V.sheet?.navNext?.row ?? ""}; --d:${V.sheet?.navNext?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:11px 22px; text-align:right; color:var(--color-text); background:var(--color-bg);`) },
+              h("button", { key: "49|110.pyry3", className: "sheet-mod sheet-ctl", "data-enter": "", "data-mod": "navNext", onClick: V.openNext, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navNext?.col ?? ""}; grid-row:${V.sheet?.navNext?.row ?? ""}; --d:${V.sheet?.navNext?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:11px 22px; text-align:right; color:var(--color-text); background:var(--color-bg);`) },
                 "\n      ",
                 h("span", { key: "1|47.13c0pry", style: {"fontSize":"11px","lineHeight":"14px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   h(F,{key:0},"Next · ",I(V.next?.kickerWord,1)," ",I(V.next?.numeral,3),"")
@@ -4001,7 +3984,8 @@
           // the plates under the account are captioned by the entry when it has something to say about
           // them, and by the sheet's own line when it has not; the kicker counts whatever is there
           detailFigWord: d.detail ? 'Fig. 1.' : 'Figs. 1–2.',
-          detailCaptionText: d.detailCaption || 'Working states. Left, the drawing or interface; right, where it was made.',
+          // no invented caption: a detail figure that names none says nothing under itself
+          detailCaptionText: d.detailCaption || '',
           hasLink: !!d.href || linkIdx >= 0, noLink: !d.href && linkIdx < 0, href: d.href || '#', linkTarget: d.linkBlank ? '_blank' : undefined, linkRel: d.linkBlank ? 'noopener' : undefined,
           linkClick: linkIdx >= 0 ? (e) => { e.preventDefault(); this.open(linkIdx); } : undefined,
           previewOpacity: hovered === i ? '1' : '0',
@@ -4200,7 +4184,13 @@
       const detailTop = Math.min(at(place.detailA.row)[0], at(place.detailB.row)[0]);
       const detailFoot = Math.max(at(place.detailA.row)[1], at(place.detailB.row)[1]);
       const oneDetail = !!current.detail && current.detailW > 0 && current.detailH > 0;
-      const detailRows = oneDetail
+      // The common state, and the one the module used to answer with two worded frames: an entry that
+      // names no detail picture at all. The module takes no rows, so grewDetail carries it away on its
+      // own; grewDetailGap below takes the caption's rows and the row that separated the module from
+      // the linked sheets, which is the rest of what the table wrote for a module that is not there.
+      const noDetail = !oneDetail && !current.detailA && !current.detailB;
+      const detailRows = noDetail ? 0
+        : oneDetail
         ? this.rowsFor(detailCol[1] - detailCol[0], current.detailW, current.detailH)
         : detailFoot - detailTop;
       const grewDetail = detailRows - (detailFoot - detailTop);
@@ -4219,8 +4209,11 @@
       // what the linked sheets took
       const heroMovesFrom = at(place.heroCaption.row)[0], detailMovesFrom = at(place.detailCaption.row)[0];
       const linksMovesFrom = at(place.navBack.row)[0];
+      // What a dropped detail module takes beyond its plates: its caption's rows and the blank row
+      // under them, which is exactly the distance the table leaves between the caption and the links.
+      const grewDetailGap = noDetail ? detailMovesFrom - linksTop : 0;
       const shiftAt = (row) => (row >= heroMovesFrom ? grewHero : 0) + (row >= detailMovesFrom ? grewDetail : 0) +
-        (row >= linksMovesFrom ? grewLinks : 0);
+        (row >= linksTop ? grewDetailGap : 0) + (row >= linksMovesFrom ? grewLinks : 0);
       const sheet = {};
       for (const name of Object.keys(place)) {
         const span = at(place[name].row);
@@ -4276,7 +4269,7 @@
         // The serif chapter has no moving plate and keeps heroImg/heroSlot.
         heroVideo: view === 'chapter' && !!current.video, heroStill: view === 'chapter' && !current.video,
         // one plate under the account, or the pair the sheet has always carried
-        detailOne: oneDetail, detailPair: !oneDetail,
+        detailOne: oneDetail, detailPairA: !oneDetail && !!current.detailA, detailPairB: !oneDetail && !!current.detailB, hasDetail: !noDetail,
         rBody: mono ? this.MONO : 'var(--font-body)', rAlign: mono ? 'left' : 'justify', rTracking: mono ? '-0.03em' : '0',
         brandChars: (this.state.brandAnim || Array.from(this.BRAND).map((ch) => ({ ch, reg: brandReg, swap: false }))).map((c) => ({
           ch: c.ch, font: c.reg === 'mono' ? this.MONO : 'var(--font-heading)', tracking: c.reg === 'mono' ? '-0.03em' : '0',
