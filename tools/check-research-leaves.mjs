@@ -198,14 +198,55 @@ if (geo) {
 // and the freeze recorded it faithfully because a freeze records position, not visibility.
 
 if (geo) {
-  // the bound is the margin's own width, read off the logic class rather than kept here, and the
-  // template has to take its tracks from the same number or the two can drift apart again
-  const GUTTER = geo.LEAF_GUTTER;
-  if (!Number.isFinite(GUTTER)) fail('the logic class has no LEAF_GUTTER, so there is no width to bound an offset by');
+  // The margin the offsets are authored against, read off the logic class rather than kept here. Three
+  // things have to agree or the leaves drift through one another again: the grid's own tracks, the unit
+  // an offset is rendered in, and this bound.
+  const GUTTER_MIN = geo.LEAF_GUTTER_BASE;
+  if (!Number.isFinite(GUTTER_MIN)) fail('the logic class has no LEAF_GUTTER_BASE, so there is no width to bound an offset by');
+  if (typeof geo.LEAF_GUTTER !== 'string' || !geo.LEAF_GUTTER.includes(GUTTER_MIN + 'px')) {
+    fail('LEAF_GUTTER does not rest on the ' + GUTTER_MIN + 'px the offsets are authored against');
+  }
   if (!/grid-template-columns:\{\{ leafGutter \}\} minmax\(0,1fr\) \{\{ leafGutter \}\}/.test(templateSrc)) {
     fail('the hero grid no longer takes its margins from leafGutter, so a margin can grow away from the offsets written against it');
   }
-  const GUTTER_MIN = GUTTER;
+  // A displacement aimed across the margin at the far line has to be corrected by the margin's growth,
+  // or it holds the leaf still while the line it was aimed at walks away. That is what carried chapter
+  // XVIII through its neighbour at 2560, and what put Graphic Statics at 393px on every screen at once.
+  if (!logicSrc.includes('offsetX: this.edgeX(pos.offsetX, pos.selfX, pos.beside)')) {
+    fail('a leaf renders offsetX as written rather than against the line it was composed to, so it drifts as the margin grows');
+  }
+  if (typeof geo.edgeX !== 'function' || typeof geo.towardFarEdge !== 'function') {
+    fail('the logic class has no edgeX/towardFarEdge, so nothing holds a leaf to the line it was composed to');
+  } else {
+    // a cell justified to the start is anchored at the low end of its margin, whichever margin it is
+    if (geo.towardFarEdge('start') !== 1 || geo.towardFarEdge('end') !== -1) {
+      fail('the far line is not read off the justification of the cell itself, so one margin is corrected the wrong way');
+    }
+    // a small displacement is a distance from the leaf's own line and stays as written
+    for (const [v, selfX] of [['12px', 'start'], ['-12px', 'start'], ['0px', 'end'], ['-100px', 'start']]) {
+      const got = geo.edgeX(v, selfX);
+      if (got !== parseFloat(v) + 'px') fail('edgeX corrects ' + v + ' at a ' + selfX + ' cell, which is a distance from its own line: ' + got);
+    }
+    // one aimed more than half the margin at the far line is corrected by the margin's growth, and the
+    // correction is zero at the base, so the composition is reproduced exactly at the width it was made at
+    for (const [v, selfX, sign] of [['336.667px', 'start', '+'], ['-215px', 'end', '-']]) {
+      const got = geo.edgeX(v, selfX, false);
+      if (!got.startsWith('calc(')) { fail('edgeX leaves ' + v + ' at a ' + selfX + ' cell uncorrected, so it drifts from the line it was aimed at'); continue; }
+      // a caption set beside its plate slides the plate inside the box, so the box cannot be corrected
+      if (geo.edgeX(v, selfX, true) !== parseFloat(v) + 'px') fail('edgeX corrects a leaf whose caption stands beside its plate, which carries the plate off the page');
+      if (!got.includes(sign + ' (' + geo.LEAF_GUTTER + ' - ' + GUTTER_MIN + 'px)')) {
+        fail('edgeX corrects ' + v + ' in the wrong direction or against the wrong margin: ' + got);
+      }
+    }
+  }
+
+  // the tuner drags in screen pixels and stores them as written, which is what the render does with a
+  // displacement from a leaf's own line; a corrected one is only corrected away from the base width
+  const tuner = readFileSync('leaves-dev.js', 'utf8');
+  if (!tuner.includes('GUTTER_BASE = ' + GUTTER_MIN)) {
+    fail('the tuner does not know the base margin the offsets are authored against');
+  }
+
   // outward is negative in the left gutter and positive in the right one
   for (const side of ['left', 'right']) {
     const outward = side === 'left' ? -1 : 1;

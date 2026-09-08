@@ -38,6 +38,17 @@ export function serialize(spreads, pairs) {
 const px = (s) => parseFloat(s) || 0;
 const round = (n) => Math.round(n * 1000) / 1000;
 
+// A horizontal offset is stored against a 280px margin and rendered as that share of the live one, so a
+// margin twice as wide moves the leaf twice as far. A drag is in screen pixels, so it has to be divided
+// by the same scale before it is stored, or the leaf runs away from the cursor on a wide page. The live
+// margin is the leaf grid's own width, which is the wrapper's parent. Vertical offsets are not scaled.
+const GUTTER_BASE = 280;
+const gutterScale = (wrap) => {
+  const g = wrap && wrap.parentElement ? wrap.parentElement.getBoundingClientRect().width : 0;
+  return g > 0 ? g / GUTTER_BASE : 1;
+};
+const wrapFor = (key) => document.querySelector('[data-leaf][data-slot="' + key + '"]');
+
 // A leaf can be moved two ways and they are not the same move. `offsetX`/`offsetY` sit on the wrapper
 // and carry the whole leaf, plate and caption together; that is what a drag writes. `bleedX`/`bleedY`
 // sit on the plate alone, which is how an anchor crosses the page edge while its title stays put.
@@ -152,7 +163,7 @@ export function mount(api) {
   const move = (dx, dy, plateOnly) => {
     if (!selected) return;
     const e = liveOf(selected.key), kx = plateOnly ? 'bleedX' : 'offsetX', ky = plateOnly ? 'bleedY' : 'offsetY';
-    e[kx] = round(px(e[kx]) + dx) + 'px';
+    e[kx] = round(px(e[kx]) + dx / gutterScale(wrapFor(selected.key))) + 'px';
     e[ky] = round(px(e[ky]) + dy) + 'px';
     rerender(); refresh();
   };
@@ -173,13 +184,14 @@ export function mount(api) {
     if (!e) return;
     selected = { key: wrap.dataset.slot };
     const plateOnly = ev.altKey, kx = plateOnly ? 'bleedX' : 'offsetX', ky = plateOnly ? 'bleedY' : 'offsetY';
-    drag = { key: wrap.dataset.slot, x: ev.clientX, y: ev.clientY, kx, ky, bx: px(e[kx]), by: px(e[ky]) };
+    drag = { key: wrap.dataset.slot, x: ev.clientX, y: ev.clientY, kx, ky,
+      bx: px(e[kx]), by: px(e[ky]), scale: gutterScale(wrap) };
     refresh();
   };
   const onMove = (ev) => {
     if (!drag) return;
     const e = liveOf(drag.key);
-    e[drag.kx] = round(drag.bx + ev.clientX - drag.x) + 'px';
+    e[drag.kx] = round(drag.bx + (ev.clientX - drag.x) / drag.scale) + 'px';
     e[drag.ky] = round(drag.by + ev.clientY - drag.y) + 'px';
     rerender(); refresh();
   };

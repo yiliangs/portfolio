@@ -1456,12 +1456,41 @@ class Component extends DCLogic {
       { h: 39, w: 640, ratio: '3/2', maxW: '130px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-21px', py: '-13px', dur: '7.2s', delay: '-0.5s', offsetX: '0px', offsetY: '-24px', cover: 'https://picsum.photos/seed/halvorsen-11/900/600' },
     ],
   };
-  // The width of each margin, and the frame every tuned offset is written against. It is fixed rather
-  // than elastic because the two do not otherwise agree: the grid places a leaf in its slot and the
-  // offset then displaces it by a count of pixels, so a margin free to grow carries the slot away from
-  // an offset that stays where it was written. Held at one width, every offset means the same thing at
-  // every viewport, and the title column takes whatever the screen has over the composition's measure.
-  LEAF_GUTTER = 280;
+  // The margins, and the two lines every leaf is composed against.
+  //
+  // The margins grow with the page: a plate is capped by the column it sits in, so a margin held at one
+  // width holds every picture at its smallest and the collage never fills a wide screen. What does not
+  // grow is a leaf's relationship to the composition, and there are only two lines it can have one to:
+  // the page's own edge, and the edge of the title column. A leaf's cell already anchors it to one of
+  // them, the outer column to the page and the inner one to the title column, and a displacement from
+  // the line it is anchored to is a count of pixels that means the same thing at every width.
+  //
+  // What does not survive is a displacement large enough to carry a leaf across the margin to the other
+  // line, which is how the panel was used to swap two leaves rather than swap their cells. Written as
+  // pixels, such an offset holds the leaf still while the line it was aimed at walks away: Graphic
+  // Statics stood at 393px at 1920, 2560 and 3000 alike while the leaf beside it moved out with the
+  // margin, and the two crossed at about 2400. Those offsets are corrected by the margin's growth, so
+  // the leaf keeps its distance from the line it was actually composed against.
+  //
+  // A leaf is taken to be composed against the far line when its offset carries it more than half the
+  // margin that way. At LEAF_GUTTER_BASE every correction is zero, so the composition the panel was
+  // used to make is reproduced exactly at the width it was made at, whatever this rule decides.
+  LEAF_GUTTER_BASE = 280;
+  LEAF_GUTTER = 'max(280px, calc((100vw - 2 * clamp(20px,3vw,56px) - 980px) / 2))';
+  // The direction from a cell's own line to the far one. A cell justified to the start is anchored at the
+  // low end of its margin whichever margin that is, so its far line is the one to the right, and a cell
+  // justified to the end is the mirror of that. The side does not enter into it.
+  towardFarEdge(selfX) { return selfX === 'start' ? 1 : -1; }
+  // `beside` is the one shape this cannot correct. A leaf is justified by its whole box, plate and
+  // caption together, and for every other leaf the caption is stacked so the box's edge is the plate's
+  // edge. A caption set beside the plate takes the width the cell has to spare, so the box's edge stays
+  // put while the plate slides away from it inside, and a correction aimed at the box carries the plate
+  // off the page rather than holding it still. Such a leaf keeps its offset as written.
+  edgeX(v, selfX, beside) {
+    const n = parseFloat(v) || 0, toward = this.towardFarEdge(selfX);
+    if (beside || n * toward <= this.LEAF_GUTTER_BASE / 2) return n + 'px';
+    return 'calc(' + n + 'px ' + (toward > 0 ? '+' : '-') + ' (' + this.LEAF_GUTTER + ' - ' + this.LEAF_GUTTER_BASE + 'px))';
+  }
 
   // A gutter holds one leaf per spread row and two per pair row.
   leafCapacity(side, rows) { return 2 * rows - this.LEAF_SPREADS[side].length; }
@@ -2791,6 +2820,10 @@ class Component extends DCLogic {
       const plateH = beside ? pos.imgH : (pos.stackH || pos.imgH);
       const plateW = declared ? 'min(' + pos.maxW + ', calc(' + plateH + ' * ' + p.heroW + ' / ' + p.heroH + '))' : 'auto';
       return { ...p, ...pos, cover: (real && p.hero) || pos.cover,
+        // an offset that was aimed at the far side of the margin is corrected by the margin's growth;
+        // every other one is a distance from the line its own cell is anchored to and stays as written.
+        // The vertical offsets are left alone: the rows are fractions of the hero and already move with it.
+        offsetX: this.edgeX(pos.offsetX, pos.selfX, pos.beside),
         filter: (real && p.hero) ? 'none' : 'sepia(0.22) saturate(0.82) contrast(1.05)',
         ratio: declared ? p.heroW + '/' + p.heroH : pos.ratio,
         plateW,
@@ -2972,7 +3005,7 @@ class Component extends DCLogic {
       subBrandDisplay: this.state.narrow ? 'none' : 'inline', indexCols: this.state.narrow ? 'minmax(0,1fr)' : 'minmax(0,7fr) minmax(0,5fr)', previewDisplay: this.state.narrow ? 'none' : 'block',
       parallax: Math.round((this.state.scrollY || 0) * 0.18) + 'px',
       hintOpacity: this.state.hintGone || this.state.usedKeys ? '0' : '1', bloomHintOpacity: this.state.bloomTouched ? '0' : '1',
-      leafGutter: this.LEAF_GUTTER + 'px',
+      leafGutter: this.LEAF_GUTTER,
       projects, pageProjects, leaves, leafRows, leftLeaves: leaves.filter((l) => l.side === 'left'), rightLeaves: leaves.filter((l) => l.side === 'right'), featured, current, next: projects[(idx + 1) % projects.length], hovered: hov, cv: cvViews.timeline,
       gridPlatesRow: gridRows.plates, gridAuthorRow: gridRows.author, gridColophonRow: gridRows.colophon, gridContactRow: gridRows.contact,
       sheet, sheetGridRef: this.sheetGridRef,
