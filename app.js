@@ -181,7 +181,7 @@
           h("main", { key: "writing", "data-screen-label": "Research", style: {"maxWidth":"none","margin":"0","padding":"0 clamp(20px,3vw,56px)","backgroundImage":"radial-gradient(color-mix(in srgb, var(--color-text) 16%, transparent) 1px, transparent 1.1px)","backgroundSize":"44px 44px","backgroundPosition":"22px 22px"} },
             "\n\n    ",
             "\n    ",
-            h("section", { key: "2", ref: V.heroRef, style: S(`position:relative; text-align:center; margin:0 calc(-1 * clamp(20px,3vw,56px)); padding:28px clamp(20px,3vw,56px) 96px; perspective:1200px; overflow:hidden; height:calc(100vh - 57px); box-sizing:border-box; display:grid; grid-template-columns:${V.leafGutter ?? ""} minmax(0,1fr) ${V.leafGutter ?? ""}; gap:0 40px; align-items:center;`) },
+            h("section", { key: "2", ref: V.heroRef, style: {"position":"relative","textAlign":"center","margin":"0 calc(-1 * clamp(20px,3vw,56px))","padding":"28px clamp(20px,3vw,56px) 96px","perspective":"1200px","overflow":"hidden","height":"calc(100vh - 57px)","boxSizing":"border-box","display":"grid","gridTemplateColumns":"minmax(280px,1fr) minmax(0,900px) minmax(280px,1fr)","gap":"0 40px","alignItems":"center"} },
               "\n      ",
               "\n      ",
               "\n      ",
@@ -2511,7 +2511,7 @@
       left: [
         { h: 105, w: 1650, ratio: '1/1', maxW: '350px', titleSize: '17px', dir: 'column', alignItems: 'flex-start', px: '-14px', py: '-8px', dur: '8s', delay: '-5s', offsetX: '336.667px', offsetY: '112px', cover: 'https://picsum.photos/seed/halvorsen-3/700/700' },
         { h: 39.342, w: 655.698, ratio: '5/4', maxW: '163.925px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-20px', py: '-9px', dur: '8.5s', delay: '-2s', offsetX: '-204.667px', offsetY: '27px', beside: true, cover: 'https://picsum.photos/seed/halvorsen-5/700/560' },
-        { h: 45.231, w: 719.064, ratio: '4/5', maxW: '148.452px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-17px', py: '-12px', dur: '7.8s', delay: '-6s', offsetX: '-215px', offsetY: '149.333px', cover: 'https://picsum.photos/seed/halvorsen-7/560/700' },
+        { h: 45.231, w: 719.064, ratio: '4/5', maxW: '148.452px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', px: '-17px', py: '-12px', dur: '7.8s', delay: '-6s', offsetX: '-478px', offsetY: '149.333px', cover: 'https://picsum.photos/seed/halvorsen-7/560/700' },
         { h: 33, w: 560, ratio: '3/2', maxW: '140px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-12px', py: '-7px', dur: '9.2s', delay: '-1s', offsetX: '0px', offsetY: '18px', cover: 'https://picsum.photos/seed/halvorsen-9/900/600' },
       ],
       right: [
@@ -2521,42 +2521,6 @@
         { h: 39, w: 640, ratio: '3/2', maxW: '130px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', px: '-21px', py: '-13px', dur: '7.2s', delay: '-0.5s', offsetX: '0px', offsetY: '-24px', cover: 'https://picsum.photos/seed/halvorsen-11/900/600' },
       ],
     };
-    // The margins, and the two lines every leaf is composed against.
-    //
-    // The margins grow with the page: a plate is capped by the column it sits in, so a margin held at one
-    // width holds every picture at its smallest and the collage never fills a wide screen. What does not
-    // grow is a leaf's relationship to the composition, and there are only two lines it can have one to:
-    // the page's own edge, and the edge of the title column. A leaf's cell already anchors it to one of
-    // them, the outer column to the page and the inner one to the title column, and a displacement from
-    // the line it is anchored to is a count of pixels that means the same thing at every width.
-    //
-    // What does not survive is a displacement large enough to carry a leaf across the margin to the other
-    // line, which is how the panel was used to swap two leaves rather than swap their cells. Written as
-    // pixels, such an offset holds the leaf still while the line it was aimed at walks away: Graphic
-    // Statics stood at 393px at 1920, 2560 and 3000 alike while the leaf beside it moved out with the
-    // margin, and the two crossed at about 2400. Those offsets are corrected by the margin's growth, so
-    // the leaf keeps its distance from the line it was actually composed against.
-    //
-    // A leaf is taken to be composed against the far line when its offset carries it more than half the
-    // margin that way. At LEAF_GUTTER_BASE every correction is zero, so the composition the panel was
-    // used to make is reproduced exactly at the width it was made at, whatever this rule decides.
-    LEAF_GUTTER_BASE = 280;
-    LEAF_GUTTER = 'max(280px, calc((100vw - 2 * clamp(20px,3vw,56px) - 980px) / 2))';
-    // The direction from a cell's own line to the far one. A cell justified to the start is anchored at the
-    // low end of its margin whichever margin that is, so its far line is the one to the right, and a cell
-    // justified to the end is the mirror of that. The side does not enter into it.
-    towardFarEdge(selfX) { return selfX === 'start' ? 1 : -1; }
-    // `beside` is the one shape this cannot correct. A leaf is justified by its whole box, plate and
-    // caption together, and for every other leaf the caption is stacked so the box's edge is the plate's
-    // edge. A caption set beside the plate takes the width the cell has to spare, so the box's edge stays
-    // put while the plate slides away from it inside, and a correction aimed at the box carries the plate
-    // off the page rather than holding it still. Such a leaf keeps its offset as written.
-    edgeX(v, selfX, beside) {
-      const n = parseFloat(v) || 0, toward = this.towardFarEdge(selfX);
-      if (beside || n * toward <= this.LEAF_GUTTER_BASE / 2) return n + 'px';
-      return 'calc(' + n + 'px ' + (toward > 0 ? '+' : '-') + ' (' + this.LEAF_GUTTER + ' - ' + this.LEAF_GUTTER_BASE + 'px))';
-    }
-  
     // A gutter holds one leaf per spread row and two per pair row.
     leafCapacity(side, rows) { return 2 * rows - this.LEAF_SPREADS[side].length; }
     // Leaves alternate gutters, so a row is added only once the fuller of the two runs out of cells.
@@ -3885,10 +3849,6 @@
         const plateH = beside ? pos.imgH : (pos.stackH || pos.imgH);
         const plateW = declared ? 'min(' + pos.maxW + ', calc(' + plateH + ' * ' + p.heroW + ' / ' + p.heroH + '))' : 'auto';
         return { ...p, ...pos, cover: (real && p.hero) || pos.cover,
-          // an offset that was aimed at the far side of the margin is corrected by the margin's growth;
-          // every other one is a distance from the line its own cell is anchored to and stays as written.
-          // The vertical offsets are left alone: the rows are fractions of the hero and already move with it.
-          offsetX: this.edgeX(pos.offsetX, pos.selfX, pos.beside),
           filter: (real && p.hero) ? 'none' : 'sepia(0.22) saturate(0.82) contrast(1.05)',
           ratio: declared ? p.heroW + '/' + p.heroH : pos.ratio,
           plateW,
@@ -4070,7 +4030,6 @@
         subBrandDisplay: this.state.narrow ? 'none' : 'inline', indexCols: this.state.narrow ? 'minmax(0,1fr)' : 'minmax(0,7fr) minmax(0,5fr)', previewDisplay: this.state.narrow ? 'none' : 'block',
         parallax: Math.round((this.state.scrollY || 0) * 0.18) + 'px',
         hintOpacity: this.state.hintGone || this.state.usedKeys ? '0' : '1', bloomHintOpacity: this.state.bloomTouched ? '0' : '1',
-        leafGutter: this.LEAF_GUTTER,
         projects, pageProjects, leaves, leafRows, leftLeaves: leaves.filter((l) => l.side === 'left'), rightLeaves: leaves.filter((l) => l.side === 'right'), featured, current, next: projects[(idx + 1) % projects.length], hovered: hov, cv: cvViews.timeline,
         gridPlatesRow: gridRows.plates, gridAuthorRow: gridRows.author, gridColophonRow: gridRows.colophon, gridContactRow: gridRows.contact,
         sheet, sheetGridRef: this.sheetGridRef,

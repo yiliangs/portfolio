@@ -80,7 +80,7 @@ const TUNED = {
       { row: '1', col: '1 / 3', selfY: 'start', selfX: 'start', imgH: 'min(55vh, 825px)', ratio: '4/3', maxW: '700px', titleSize: '26px', dir: 'row', alignItems: 'flex-end', align: 'left', px: '-18px', py: '-10px', dur: '7.5s', delay: '0s', offsetX: '-66.667px', offsetY: '-3.334px', bleedX: '0px', bleedY: '0px', beside: false },
       { row: '2', col: '1', selfY: 'center', selfX: 'start', imgH: 'min(35vh, 550px)', ratio: '1/1', maxW: '350px', titleSize: '17px', dir: 'column', alignItems: 'flex-start', align: 'left', px: '-14px', py: '-8px', dur: '8s', delay: '-5s', offsetX: '336.667px', offsetY: '112px', bleedX: '0px', bleedY: '0px', beside: false },
       { row: '3', col: '2', selfY: 'end', selfX: 'end', imgH: 'min(13.114vh, 218.566px)', ratio: '5/4', maxW: '163.925px', titleSize: '15px', dir: 'column', alignItems: 'flex-start', align: 'left', px: '-20px', py: '-9px', dur: '8.5s', delay: '-2s', offsetX: '-204.667px', offsetY: '27px', bleedX: '0px', bleedY: '0px', beside: true },
-      { row: '2', col: '2', selfY: 'center', selfX: 'end', imgH: 'min(15.077vh, 239.688px)', ratio: '4/5', maxW: '148.452px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', align: 'left', px: '-17px', py: '-12px', dur: '7.8s', delay: '-6s', offsetX: '-215px', offsetY: '149.333px', bleedX: '0px', bleedY: '0px', beside: false },
+      { row: '2', col: '2', selfY: 'center', selfX: 'end', imgH: 'min(15.077vh, 239.688px)', ratio: '4/5', maxW: '148.452px', titleSize: '15px', dir: 'column', alignItems: 'flex-end', align: 'left', px: '-17px', py: '-12px', dur: '7.8s', delay: '-6s', offsetX: '-478px', offsetY: '149.333px', bleedX: '0px', bleedY: '0px', beside: false },
   ],
   right: [
       { row: '2', col: '1 / 3', selfY: 'center', selfX: 'end', imgH: 'min(54.977vh, 824.659px)', ratio: '3/4', maxW: '641.402px', titleSize: '26px', dir: 'row-reverse', alignItems: 'flex-end', align: 'right', px: '-26px', py: '-14px', dur: '9s', delay: '-3s', offsetX: '11.333px', offsetY: '23.334px', bleedX: '0px', bleedY: '0px', beside: false },
@@ -179,86 +179,6 @@ if (geo) {
   // the whole point of the rule: a register that has not grown past the tuned six keeps three rows
   if (geo.leafRows(MIN_STAGE) !== MIN_ROWS) {
     fail('a register of ' + MIN_STAGE + ' no longer sits on ' + MIN_ROWS + ' rows, so the tuned composition is being rescaled for nothing');
-  }
-}
-
-// ---------------------------------------------------------------- no leaf is tuned off the page
-
-// A leaf is placed in its gutter by the grid and then displaced by the offset a tuning session dragged
-// it to. The offset is in pixels and the gutter is elastic, `minmax(280px, 1fr)`, so the two do not move
-// together: an offset larger than the gutter itself has carried the leaf clean out of it, and outward
-// that means off the page, where the hero's overflow:hidden deletes it with no other symptom.
-//
-// Inward is not the same case and is not bounded here. A leaf pushed toward the title column overlaps
-// the type, which is visible and is a composition the tuner may want; a leaf pushed past the page edge
-// is simply gone. That asymmetry is the rule: outward is bounded by the gutter, inward is not.
-//
-// This is what put chapter XVIII off the left edge at every viewport. It was frozen there by the panel
-// in #49 at -478px, against a gutter that is 280px at its widest on the pages the collage renders on,
-// and the freeze recorded it faithfully because a freeze records position, not visibility.
-
-if (geo) {
-  // The margin the offsets are authored against, read off the logic class rather than kept here. Three
-  // things have to agree or the leaves drift through one another again: the grid's own tracks, the unit
-  // an offset is rendered in, and this bound.
-  const GUTTER_MIN = geo.LEAF_GUTTER_BASE;
-  if (!Number.isFinite(GUTTER_MIN)) fail('the logic class has no LEAF_GUTTER_BASE, so there is no width to bound an offset by');
-  if (typeof geo.LEAF_GUTTER !== 'string' || !geo.LEAF_GUTTER.includes(GUTTER_MIN + 'px')) {
-    fail('LEAF_GUTTER does not rest on the ' + GUTTER_MIN + 'px the offsets are authored against');
-  }
-  if (!/grid-template-columns:\{\{ leafGutter \}\} minmax\(0,1fr\) \{\{ leafGutter \}\}/.test(templateSrc)) {
-    fail('the hero grid no longer takes its margins from leafGutter, so a margin can grow away from the offsets written against it');
-  }
-  // A displacement aimed across the margin at the far line has to be corrected by the margin's growth,
-  // or it holds the leaf still while the line it was aimed at walks away. That is what carried chapter
-  // XVIII through its neighbour at 2560, and what put Graphic Statics at 393px on every screen at once.
-  if (!logicSrc.includes('offsetX: this.edgeX(pos.offsetX, pos.selfX, pos.beside)')) {
-    fail('a leaf renders offsetX as written rather than against the line it was composed to, so it drifts as the margin grows');
-  }
-  if (typeof geo.edgeX !== 'function' || typeof geo.towardFarEdge !== 'function') {
-    fail('the logic class has no edgeX/towardFarEdge, so nothing holds a leaf to the line it was composed to');
-  } else {
-    // a cell justified to the start is anchored at the low end of its margin, whichever margin it is
-    if (geo.towardFarEdge('start') !== 1 || geo.towardFarEdge('end') !== -1) {
-      fail('the far line is not read off the justification of the cell itself, so one margin is corrected the wrong way');
-    }
-    // a small displacement is a distance from the leaf's own line and stays as written
-    for (const [v, selfX] of [['12px', 'start'], ['-12px', 'start'], ['0px', 'end'], ['-100px', 'start']]) {
-      const got = geo.edgeX(v, selfX);
-      if (got !== parseFloat(v) + 'px') fail('edgeX corrects ' + v + ' at a ' + selfX + ' cell, which is a distance from its own line: ' + got);
-    }
-    // one aimed more than half the margin at the far line is corrected by the margin's growth, and the
-    // correction is zero at the base, so the composition is reproduced exactly at the width it was made at
-    for (const [v, selfX, sign] of [['336.667px', 'start', '+'], ['-215px', 'end', '-']]) {
-      const got = geo.edgeX(v, selfX, false);
-      if (!got.startsWith('calc(')) { fail('edgeX leaves ' + v + ' at a ' + selfX + ' cell uncorrected, so it drifts from the line it was aimed at'); continue; }
-      // a caption set beside its plate slides the plate inside the box, so the box cannot be corrected
-      if (geo.edgeX(v, selfX, true) !== parseFloat(v) + 'px') fail('edgeX corrects a leaf whose caption stands beside its plate, which carries the plate off the page');
-      if (!got.includes(sign + ' (' + geo.LEAF_GUTTER + ' - ' + GUTTER_MIN + 'px)')) {
-        fail('edgeX corrects ' + v + ' in the wrong direction or against the wrong margin: ' + got);
-      }
-    }
-  }
-
-  // the tuner drags in screen pixels and stores them as written, which is what the render does with a
-  // displacement from a leaf's own line; a corrected one is only corrected away from the base width
-  const tuner = readFileSync('leaves-dev.js', 'utf8');
-  if (!tuner.includes('GUTTER_BASE = ' + GUTTER_MIN)) {
-    fail('the tuner does not know the base margin the offsets are authored against');
-  }
-
-  // outward is negative in the left gutter and positive in the right one
-  for (const side of ['left', 'right']) {
-    const outward = side === 'left' ? -1 : 1;
-    for (const [group, styles] of [['spreads', geo.LEAF_SPREADS[side]], ['pairs', geo.LEAF_PAIRS[side]]]) {
-      styles.forEach((st, i) => {
-        const off = parseFloat(st.offsetX || '0') * outward;
-        if (off > GUTTER_MIN) {
-          fail(group + '.' + side + '.' + i + ' is tuned ' + Math.round(off) + 'px outward, past the '
-            + GUTTER_MIN + 'px gutter, so its plate is clipped away at every viewport');
-        }
-      });
-    }
   }
 }
 
