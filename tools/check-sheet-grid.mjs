@@ -208,13 +208,13 @@ if (mono) {
       }
 
       const cls = (item.getAttribute('class') || '').split(/\s+/);
-      if (!cls.includes('sheet-mod')) fail('module is not a sheet-mod, so it draws no hairline frame: ' + where(item));
+      if (!cls.includes('sheet-mod')) fail('module is not a sheet-mod, so it does not plot in: ' + where(item));
       // a frame that lights up says "click me". Only the controls are allowed to say it
-      if (cls.includes('sheet-ctl') && item.tagName.toLowerCase() !== 'button') {
-        fail('sheet-ctl brings the frame to full ink on hover, so it belongs on a control, not on ' + where(item));
+      if (cls.includes('mod-ctl') && item.tagName.toLowerCase() !== 'button') {
+        fail('mod-ctl brings the frame to full ink on hover, so it belongs on a control, not on ' + where(item));
       }
-      if (!cls.includes('sheet-ctl') && item.tagName.toLowerCase() === 'button') {
-        fail('control without sheet-ctl, so it gives no hover feedback: ' + where(item));
+      if (!cls.includes('mod-ctl') && item.tagName.toLowerCase() === 'button') {
+        fail('control without mod-ctl, so it gives no hover feedback: ' + where(item));
       }
 
       // the plot-in: data-enter is what the IntersectionObserver watches, --d is the module's stagger

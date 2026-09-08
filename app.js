@@ -481,7 +481,7 @@
               h("div", { key: "1", style: {"marginTop":"88px","display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","borderRight":"1px solid var(--hair)","borderBottom":"1px solid var(--hair)","backgroundImage":"linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
                 "\n\n    ",
                 "\n    ",
-                h("section", { key: "2", style: {"gridColumn":"1 / 15","gridRow":"2 / 12","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 var(--frame), inset 0 1px 0 0 var(--frame), 1px 0 0 0 var(--frame), 0 1px 0 0 var(--frame)","padding":"22px","boxSizing":"border-box"} },
+                h("section", { key: "2", className: "mod", style: {"gridColumn":"1 / 15","gridRow":"2 / 12","padding":"22px"} },
                   "\n      ",
                   h("p", { key: "1|17.1dagtdl", "data-morph": "kicker", style: {"margin":"0 0 22px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
                     h(F,{key:0},"",I(V.page?.kicker,1),"")
@@ -502,10 +502,10 @@
                 ),
                 "\n    ",
                 "\n    ",
-                h("div", { key: "5", ref: V.platformRef, "aria-hidden": "true", style: {"gridColumn":"15 / 23","gridRow":"2 / 12","minHeight":"0","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 var(--frame), inset 0 1px 0 0 var(--frame), 1px 0 0 0 var(--frame), 0 1px 0 0 var(--frame)","cursor":"grab","touchAction":"none","userSelect":"none"} }),
+                h("div", { key: "5", ref: V.platformRef, "aria-hidden": "true", className: "mod", style: {"gridColumn":"15 / 23","gridRow":"2 / 12","minHeight":"0","cursor":"grab","touchAction":"none","userSelect":"none"} }),
                 "\n\n    ",
                 "\n    ",
-                h("p", { key: "8|22.11u5osx", ref: V.contentsRef, "data-morph": "index-kicker", style: {"gridColumn":"1 / 7","gridRow":"14 / 15","margin":"0","display":"flex","alignItems":"center","padding":"0 22px","background":"var(--color-bg)","boxShadow":"inset 1px 0 0 0 var(--frame), inset 0 1px 0 0 var(--frame), 1px 0 0 0 var(--frame), 0 1px 0 0 var(--frame)","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
+                h("p", { key: "8|22.11u5osx", ref: V.contentsRef, "data-morph": "index-kicker", className: "mod", style: {"gridColumn":"1 / 7","gridRow":"14 / 15","margin":"0","display":"flex","alignItems":"center","padding":"0 22px","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
                   h(F,{key:0},"",I(V.page?.indexKicker,1),"")
                 ),
                 "\n    ",
@@ -513,7 +513,7 @@
                   var Vi = Object.assign({}, V, {"p": item, $index: i});
                   return h(F,{key:i},
                     "\n      ",
-                    h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, onClick: Vi.p?.open, onMouseEnter: Vi.p?.hover, style: S(`grid-column:1 / 23; grid-row:${Vi.p?.cardRow ?? ""}; display:grid; grid-template-columns:repeat(22,1fr); cursor:pointer; color:var(--color-text); background:var(--color-bg); border-width:0; border-style:solid; border-color:var(--color-neutral-400); box-shadow:inset 1px 0 0 0 var(--frame), inset 0 1px 0 0 var(--frame), 1px 0 0 0 var(--frame), 0 1px 0 0 var(--frame); transition:box-shadow 240ms ease;`), className: "scp6" },
+                    h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, onClick: Vi.p?.open, onMouseEnter: Vi.p?.hover, className: "mod mod-ctl", style: S(`grid-column:1 / 23; grid-row:${Vi.p?.cardRow ?? ""}; display:grid; grid-template-columns:repeat(22,1fr); cursor:pointer; color:var(--color-text);`) },
                       "\n        ",
                       h("div", { key: "1", style: S(`grid-column:${Vi.p?.textCol ?? ""}; grid-row:1; min-width:0; padding:22px; box-sizing:border-box; align-self:end;`) },
                         "\n          ",
@@ -531,8 +531,11 @@
                         "\n        "
                       ),
                       "\n        ",
-                      h("div", { key: "3", "data-shape": Vi.p?.frameShape, "data-shape-alt": `frame-${Vi.p?.figNo ?? ""}`, style: S(`grid-column:${Vi.p?.plateCol ?? ""}; grid-row:1; height:100%; box-shadow:inset 1px 0 0 0 var(--frame), inset 0 1px 0 0 var(--frame), 1px 0 0 0 var(--frame), 0 1px 0 0 var(--frame); box-sizing:border-box; position:relative; overflow:hidden;`) },
-                        h("image-slot", { key: "0", id: Vi.p?.plateSlotId, src: Vi.p?.hero, shape: "rect", fit: "cover", placeholder: Vi.p?.placeholder, style: {"width":"100%","height":"100%"} })
+                      "\n        ",
+                      h("div", { key: "4", "data-shape": Vi.p?.frameShape, "data-shape-alt": `frame-${Vi.p?.figNo ?? ""}`, className: "mod", style: S(`grid-column:${Vi.p?.plateCol ?? ""}; grid-row:1;`) },
+                        h("div", { key: "0", style: {"position":"absolute","inset":"0","overflow":"hidden"} },
+                          h("image-slot", { key: "0", id: Vi.p?.plateSlotId, src: Vi.p?.hero, shape: "rect", fit: "cover", placeholder: Vi.p?.placeholder, style: {"width":"100%","height":"100%"} })
+                        )
                       ),
                       "\n      "
                     ),
@@ -542,7 +545,7 @@
                 h("div", { key: "12", ref: V.platesRef, style: S(`grid-column:1 / 2; grid-row:${V.gridPlatesRow ?? ""}; height:0;`) }),
                 "\n\n    ",
                 "\n    ",
-                h("section", { key: "15", ref: V.notesRef, style: S(`grid-column:1 / 11; grid-row:${V.gridAuthorRow ?? ""}; background:var(--color-bg); box-shadow:inset 1px 0 0 0 var(--frame), inset 0 1px 0 0 var(--frame), 1px 0 0 0 var(--frame), 0 1px 0 0 var(--frame); padding:22px; box-sizing:border-box;`) },
+                h("section", { key: "15", ref: V.notesRef, className: "mod", style: S(`grid-column:1 / 11; grid-row:${V.gridAuthorRow ?? ""}; padding:22px;`) },
                   "\n      ",
                   h("p", { key: "1|3.377ldf", "data-morph": "notes-kicker", style: {"margin":"0 0 22px","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
                     "who"
@@ -570,7 +573,7 @@
                   "\n    "
                 ),
                 "\n    ",
-                h("ol", { key: "17", style: S(`grid-column:12 / 23; grid-row:${V.gridAuthorRow ?? ""}; background:var(--color-bg); box-shadow:inset 1px 0 0 0 var(--frame), inset 0 1px 0 0 var(--frame), 1px 0 0 0 var(--frame), 0 1px 0 0 var(--frame); padding:22px; box-sizing:border-box; list-style:none; margin:0; font-feature-settings:'tnum' 1;`) },
+                h("ol", { key: "17", className: "mod", style: S(`grid-column:12 / 23; grid-row:${V.gridAuthorRow ?? ""}; padding:22px; list-style:none; margin:0; font-feature-settings:'tnum' 1;`) },
                   "\n      ",
                   h(F,{key:1},L(V.cv).map(function(item,i){
                     var Vi = Object.assign({}, V, {"c": item, $index: i});
@@ -599,20 +602,20 @@
                   "\n    "
                 ),
                 "\n\n    ",
-                h("p", { key: "19|19.19w1nxe", "data-morph": "colophon", style: S(`grid-column:1 / 16; grid-row:${V.gridColophonRow ?? ""}; margin:0; background:var(--color-bg); box-shadow:inset 1px 0 0 0 var(--frame), inset 0 1px 0 0 var(--frame), 1px 0 0 0 var(--frame), 0 1px 0 0 var(--frame);  padding:22px; box-sizing:border-box; color:var(--color-neutral-600); font-size:12px; line-height:18px;`) },
+                h("p", { key: "19|19.19w1nxe", "data-morph": "colophon", className: "mod", style: S(`grid-column:1 / 16; grid-row:${V.gridColophonRow ?? ""}; margin:0; padding:22px; color:var(--color-neutral-600); font-size:12px; line-height:18px;`) },
                   h(F,{key:0},"",I(V.page?.colophon,1),"")
                 ),
                 "\n\n    ",
                 "\n    ",
-                h("a", { key: "22|5.49kwkt", href: V.cvMailto, style: S(`grid-column:1 / 3; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 var(--frame), inset 0 1px 0 0 var(--frame), 1px 0 0 0 var(--frame), 0 1px 0 0 var(--frame); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("a", { key: "22|5.49kwkt", href: V.cvMailto, className: C("mod mod-ctl","scp6"), style: S(`grid-column:1 / 3; grid-row:${V.gridContactRow ?? ""}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;`) },
                   "email"
                 ),
                 "\n    ",
-                h("a", { key: "24|6.1yz8dag", href: V.cvGithub, style: S(`grid-column:3 / 5; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 var(--frame), inset 0 1px 0 0 var(--frame), 1px 0 0 0 var(--frame), 0 1px 0 0 var(--frame); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("a", { key: "24|6.1yz8dag", href: V.cvGithub, className: C("mod mod-ctl","scp6"), style: S(`grid-column:3 / 5; grid-row:${V.gridContactRow ?? ""}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;`) },
                   "github"
                 ),
                 "\n    ",
-                h("button", { key: "26|2.3ho5a", onClick: V.goCvMono, style: S(`all:unset; grid-column:5 / 7; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 var(--frame), inset 0 1px 0 0 var(--frame), 1px 0 0 0 var(--frame), 0 1px 0 0 var(--frame); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("button", { key: "26|2.3ho5a", onClick: V.goCvMono, className: C("mod mod-ctl","scp6"), style: S(`all:unset; grid-column:5 / 7; grid-row:${V.gridContactRow ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text);`) },
                   "cv"
                 ),
                 "\n    "
@@ -634,7 +637,7 @@
                 h("div", { key: "4", ref: V.notesRef, style: {"gridColumn":"1 / 2","gridRow":"1 / 2","height":"0"} }),
                 "\n\n    ",
                 "\n    ",
-                h("section", { key: "7", ref: V.landingStatementRef, "data-mod": "statement", style: S(`grid-column:${V.land?.statement?.col ?? ""}; grid-row:${V.land?.statement?.row ?? ""}; position:relative; z-index:1; background:var(--color-bg); box-shadow:inset 1px 0 0 0 var(--frame), inset 0 1px 0 0 var(--frame), 1px 0 0 0 var(--frame), 0 1px 0 0 var(--frame); padding:22px; box-sizing:border-box; overflow:hidden;`) },
+                h("section", { key: "7", ref: V.landingStatementRef, "data-mod": "statement", className: "mod", style: S(`grid-column:${V.land?.statement?.col ?? ""}; grid-row:${V.land?.statement?.row ?? ""}; z-index:1; padding:22px; overflow:clip; overflow-clip-margin:1px;`) },
                   "\n      ",
                   h("p", { key: "1|17.1dagtdl", "data-morph": "kicker", style: {"margin":"0 0 22px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.08em","color":"var(--color-neutral-600)"} },
                     h(F,{key:0},"",I(V.page?.kicker,1),"")
@@ -655,7 +658,7 @@
                 ),
                 "\n    ",
                 "\n    ",
-                h("div", { key: "10", ref: V.platformRef, "aria-hidden": "true", "data-mod": "platform", style: S(`grid-column:${V.land?.platform?.col ?? ""}; grid-row:${V.land?.platform?.row ?? ""}; position:relative; z-index:1; min-height:0; background:var(--color-bg); box-shadow:inset 1px 0 0 0 var(--frame), inset 0 1px 0 0 var(--frame), 1px 0 0 0 var(--frame), 0 1px 0 0 var(--frame); cursor:grab; touch-action:none; user-select:none;`) }),
+                h("div", { key: "10", ref: V.platformRef, "aria-hidden": "true", "data-mod": "platform", className: "mod", style: S(`grid-column:${V.land?.platform?.col ?? ""}; grid-row:${V.land?.platform?.row ?? ""}; z-index:1; min-height:0; cursor:grab; touch-action:none; user-select:none;`) }),
                 "\n\n    ",
                 "\n    ",
                 h("svg", { key: "13", "aria-hidden": "true", style: {"position":"absolute","inset":"0","width":"100%","height":"100%","zIndex":"0","pointerEvents":"none","overflow":"visible"} },
@@ -675,7 +678,7 @@
                   var Vi = Object.assign({}, V, {"p": item, $index: i});
                   return h(F,{key:i},
                     "\n      ",
-                    h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, "data-mod": Vi.p?.mod, onClick: Vi.p?.open, onMouseEnter: Vi.p?.type, onMouseLeave: Vi.p?.untype, onFocus: Vi.p?.type, onBlur: Vi.p?.untype, tabIndex: "0", "aria-label": Vi.p?.title, style: S(`grid-column:${Vi.p?.col ?? ""}; grid-row:${Vi.p?.row ?? ""}; position:relative; z-index:${Vi.p?.zIndex ?? ""}; display:grid; grid-template-rows:minmax(0,1fr) 44px; cursor:pointer; box-sizing:border-box; color:var(--color-text); background:var(--color-bg); box-shadow:inset 1px 0 0 0 ${Vi.p?.frameInk ?? ""}, inset 0 1px 0 0 ${Vi.p?.frameInk ?? ""}, 1px 0 0 0 ${Vi.p?.frameInk ?? ""}, 0 1px 0 0 ${Vi.p?.frameInk ?? ""}; transition:box-shadow 240ms ease;`), className: "scp8" },
+                    h("div", { key: "1", "data-shape": `card-${Vi.p?.shapeIdx ?? ""}`, "data-mod": Vi.p?.mod, "data-lit": Vi.p?.lit, onClick: Vi.p?.open, onMouseEnter: Vi.p?.type, onMouseLeave: Vi.p?.untype, onFocus: Vi.p?.type, onBlur: Vi.p?.untype, tabIndex: "0", "aria-label": Vi.p?.title, className: C("mod mod-ctl","scp7"), style: S(`grid-column:${Vi.p?.col ?? ""}; grid-row:${Vi.p?.row ?? ""}; z-index:${Vi.p?.zIndex ?? ""}; display:grid; grid-template-rows:minmax(0,1fr) 44px; cursor:pointer; color:var(--color-text);`) },
                       "\n        ",
                       h("div", { key: "1", "data-shape": Vi.p?.frameShape, "data-shape-alt": `frame-${Vi.p?.figNo ?? ""}`, style: {"position":"relative","minHeight":"0","overflow":"hidden","boxShadow":"inset 0 -1px 0 0 var(--color-divider)"} },
                         "\n          ",
@@ -696,7 +699,7 @@
                       ),
                       "\n        ",
                       "\n        ",
-                      h("p", { key: "6|26.1pcf1c", "aria-live": "polite", style: S(`position:absolute; left:0; right:0; top:${Vi.p?.whyTop ?? ""}; bottom:${Vi.p?.whyBottom ?? ""}; margin:0; padding:10px; box-sizing:border-box; pointer-events:none; background:var(--color-bg); color:var(--color-neutral-700); font-size:12px; line-height:17px; white-space:pre-wrap; box-shadow:inset 1px 0 0 0 var(--color-text), inset 0 1px 0 0 var(--color-text), 1px 0 0 0 var(--color-text), 0 1px 0 0 var(--color-text); opacity:${Vi.p?.whyOpacity ?? ""}; transition:opacity 220ms ease;`) },
+                      h("p", { key: "6|26.1pcf1c", "aria-live": "polite", className: "mod", "data-lit": "", style: S(`position:absolute; left:0; right:0; top:${Vi.p?.whyTop ?? ""}; bottom:${Vi.p?.whyBottom ?? ""}; margin:0; padding:10px; pointer-events:none; color:var(--color-neutral-700); font-size:12px; line-height:17px; white-space:pre-wrap; opacity:${Vi.p?.whyOpacity ?? ""}; transition:opacity 220ms ease;`) },
                         h(F,{key:0},"",I(Vi.p?.typed,1),""),
                         h("span", { key: "1", "aria-hidden": "true", style: S(`display:inline-block; width:1px; height:0.9em; margin-left:2px; vertical-align:-0.1em; background:var(--color-text); opacity:${Vi.p?.caretOpacity ?? ""};`) })
                       ),
@@ -706,15 +709,15 @@
                 })),
                 "\n\n    ",
                 "\n    ",
-                h("a", { key: "19|5.49kwkt", href: V.cvMailto, "data-mod": "contactEmail", style: S(`grid-column:${V.land?.contactEmail?.col ?? ""}; grid-row:${V.land?.contactEmail?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 var(--frame), inset 0 1px 0 0 var(--frame), 1px 0 0 0 var(--frame), 0 1px 0 0 var(--frame); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("a", { key: "19|5.49kwkt", href: V.cvMailto, "data-mod": "contactEmail", className: C("mod mod-ctl","scp6"), style: S(`grid-column:${V.land?.contactEmail?.col ?? ""}; grid-row:${V.land?.contactEmail?.row ?? ""}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;`) },
                   "email"
                 ),
                 "\n    ",
-                h("a", { key: "21|6.1yz8dag", href: V.cvGithub, "data-mod": "contactGithub", style: S(`grid-column:${V.land?.contactGithub?.col ?? ""}; grid-row:${V.land?.contactGithub?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; background:var(--color-bg); box-shadow:inset 1px 0 0 0 var(--frame), inset 0 1px 0 0 var(--frame), 1px 0 0 0 var(--frame), 0 1px 0 0 var(--frame); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none; transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("a", { key: "21|6.1yz8dag", href: V.cvGithub, "data-mod": "contactGithub", className: C("mod mod-ctl","scp6"), style: S(`grid-column:${V.land?.contactGithub?.col ?? ""}; grid-row:${V.land?.contactGithub?.row ?? ""}; z-index:1; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); text-decoration:none;`) },
                   "github"
                 ),
                 "\n    ",
-                h("button", { key: "23|2.3ho5a", onClick: V.goCvMono, "data-mod": "contactCv", style: S(`all:unset; grid-column:${V.land?.contactCv?.col ?? ""}; grid-row:${V.land?.contactCv?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); box-shadow:inset 1px 0 0 0 var(--frame), inset 0 1px 0 0 var(--frame), 1px 0 0 0 var(--frame), 0 1px 0 0 var(--frame); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); transition:box-shadow 240ms ease;`), className: "scp7" },
+                h("button", { key: "23|2.3ho5a", onClick: V.goCvMono, "data-mod": "contactCv", className: C("mod mod-ctl","scp6"), style: S(`all:unset; grid-column:${V.land?.contactCv?.col ?? ""}; grid-row:${V.land?.contactCv?.row ?? ""}; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; box-sizing:border-box; cursor:pointer; background:var(--color-bg); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text);`) },
                   "cv"
                 ),
                 "\n    "
@@ -1140,7 +1143,7 @@
           "\n  ",
           h("main", { key: "cv-mono", "data-screen-label": "CV mono", className: "cvm", style: {"maxWidth":"min(1040px, 100% - 2 * clamp(24px, 5vw, 72px))","margin":"0 auto","boxSizing":"border-box","padding":"clamp(32px,5vw,72px) 22px"} },
             "\n\n    ",
-            h("button", { key: "1|10.buh750", onClick: V.goPageCurrent, style: {"all":"unset","cursor":"pointer","display":"inline-flex","alignItems":"center","margin":"0 0 28px","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)","transition":"color 200ms ease"}, className: "scp9" },
+            h("button", { key: "1|10.buh750", onClick: V.goPageCurrent, style: {"all":"unset","cursor":"pointer","display":"inline-flex","alignItems":"center","margin":"0 0 28px","fontSize":"12px","letterSpacing":"0.08em","color":"var(--color-neutral-600)","transition":"color 200ms ease"}, className: "scp8" },
               "<- back"
             ),
             "\n\n    ",
@@ -1800,12 +1803,12 @@
             h("div", { key: "1", ref: V.sheetGridRef, style: {"position":"relative","marginTop":"88px","display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","borderRight":"1px solid var(--hair)","borderBottom":"1px solid var(--hair)","backgroundImage":"linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
               "\n\n    ",
               "\n    ",
-              h("button", { key: "2|24.1chn43n", className: "sheet-mod sheet-ctl", "data-enter": "", "data-mod": "back", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.back?.col ?? ""}; grid-row:${V.sheet?.back?.row ?? ""}; --d:${V.sheet?.back?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
+              h("button", { key: "2|24.1chn43n", className: "mod sheet-mod mod-ctl", "data-enter": "", "data-mod": "back", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.back?.col ?? ""}; grid-row:${V.sheet?.back?.row ?? ""}; --d:${V.sheet?.back?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
                 h(F,{key:0},"← ",I(V.current?.backWord,1),"")
               ),
               "\n\n    ",
               "\n    ",
-              h("section", { key: "5", className: "sheet-mod", "data-enter": "", "data-mod": "header", style: S(`grid-column:${V.sheet?.header?.col ?? ""}; grid-row:${V.sheet?.header?.row ?? ""}; --d:${V.sheet?.header?.delay ?? ""}; padding:22px;`) },
+              h("section", { key: "5", className: "mod sheet-mod", "data-enter": "", "data-mod": "header", style: S(`grid-column:${V.sheet?.header?.col ?? ""}; grid-row:${V.sheet?.header?.row ?? ""}; --d:${V.sheet?.header?.delay ?? ""}; padding:22px;`) },
                 "\n      ",
                 h("p", { key: `kicker-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono", style: {"margin":"0 0 22px","fontSize":"12px","lineHeight":"14px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-accent-700)","fontFeatureSettings":"'tnum' 1"} },
                   h(F,{key:0},"",I(V.current?.kickerWord,1)," ",I(V.current?.numeral,3)," · ",I(V.current?.kind,5)," · ",I(V.current?.year,7),"")
@@ -1821,12 +1824,12 @@
                 "\n    "
               ),
               "\n    ",
-              h("span", { key: "7|19.1h99e0b", className: "sheet-mod", "data-enter": "", "data-mod": "ghost", "aria-hidden": "true", style: S(`grid-column:${V.sheet?.ghost?.col ?? ""}; grid-row:${V.sheet?.ghost?.row ?? ""}; --d:${V.sheet?.ghost?.delay ?? ""}; display:flex; align-items:flex-end; justify-content:flex-end; padding:22px; font-family:'DM Mono', ui-monospace, monospace; font-weight:400; font-size:clamp(40px,5.5vw,84px); line-height:1; letter-spacing:-0.04em; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; user-select:none; font-feature-settings:'tnum' 1;`) },
+              h("span", { key: "7|19.1h99e0b", className: "mod sheet-mod", "data-enter": "", "data-mod": "ghost", "aria-hidden": "true", style: S(`grid-column:${V.sheet?.ghost?.col ?? ""}; grid-row:${V.sheet?.ghost?.row ?? ""}; --d:${V.sheet?.ghost?.delay ?? ""}; display:flex; align-items:flex-end; justify-content:flex-end; padding:22px; font-family:'DM Mono', ui-monospace, monospace; font-weight:400; font-size:clamp(40px,5.5vw,84px); line-height:1; letter-spacing:-0.04em; color:transparent; -webkit-text-stroke:1px var(--color-accent); opacity:0.55; user-select:none; font-feature-settings:'tnum' 1;`) },
                 h(F,{key:0},"",I(V.current?.ghost,1),"")
               ),
               "\n\n    ",
               "\n    ",
-              h("div", { key: "10", className: "sheet-mod", "data-enter": "", "data-mod": "specSheet", style: S(`grid-column:${V.sheet?.specSheet?.col ?? ""}; grid-row:${V.sheet?.specSheet?.row ?? ""}; --d:${V.sheet?.specSheet?.delay ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "10", className: "mod sheet-mod", "data-enter": "", "data-mod": "specSheet", style: S(`grid-column:${V.sheet?.specSheet?.col ?? ""}; grid-row:${V.sheet?.specSheet?.row ?? ""}; --d:${V.sheet?.specSheet?.delay ?? ""}; padding:11px 22px;`) },
                 h("p", { key: "0|5.3wrm2m", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Sheet"
                 ),
@@ -1835,7 +1838,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "12", className: "sheet-mod", "data-enter": "", "data-mod": "specRole", style: S(`grid-column:${V.sheet?.specRole?.col ?? ""}; grid-row:${V.sheet?.specRole?.row ?? ""}; --d:${V.sheet?.specRole?.delay ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "12", className: "mod sheet-mod", "data-enter": "", "data-mod": "specRole", style: S(`grid-column:${V.sheet?.specRole?.col ?? ""}; grid-row:${V.sheet?.specRole?.row ?? ""}; --d:${V.sheet?.specRole?.delay ?? ""}; padding:11px 22px;`) },
                 h("p", { key: "0|4.yk2787", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Role"
                 ),
@@ -1844,7 +1847,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "14", className: "sheet-mod", "data-enter": "", "data-mod": "specWith", style: S(`grid-column:${V.sheet?.specWith?.col ?? ""}; grid-row:${V.sheet?.specWith?.row ?? ""}; --d:${V.sheet?.specWith?.delay ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "14", className: "mod sheet-mod", "data-enter": "", "data-mod": "specWith", style: S(`grid-column:${V.sheet?.specWith?.col ?? ""}; grid-row:${V.sheet?.specWith?.row ?? ""}; --d:${V.sheet?.specWith?.delay ?? ""}; padding:11px 22px;`) },
                 h("p", { key: "0|4.yk5x1d", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "With"
                 ),
@@ -1853,7 +1856,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "16", className: "sheet-mod", "data-enter": "", "data-mod": "specStatus", style: S(`grid-column:${V.sheet?.specStatus?.col ?? ""}; grid-row:${V.sheet?.specStatus?.row ?? ""}; --d:${V.sheet?.specStatus?.delay ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "16", className: "mod sheet-mod", "data-enter": "", "data-mod": "specStatus", style: S(`grid-column:${V.sheet?.specStatus?.col ?? ""}; grid-row:${V.sheet?.specStatus?.row ?? ""}; --d:${V.sheet?.specStatus?.delay ?? ""}; padding:11px 22px;`) },
                 h("p", { key: "0|6.1m8lgyx", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Status"
                 ),
@@ -1862,7 +1865,7 @@
                 )
               ),
               "\n    ",
-              h("div", { key: "18", className: "sheet-mod", "data-enter": "", "data-mod": "specRev", style: S(`grid-column:${V.sheet?.specRev?.col ?? ""}; grid-row:${V.sheet?.specRev?.row ?? ""}; --d:${V.sheet?.specRev?.delay ?? ""}; padding:11px 22px;`) },
+              h("div", { key: "18", className: "mod sheet-mod", "data-enter": "", "data-mod": "specRev", style: S(`grid-column:${V.sheet?.specRev?.col ?? ""}; grid-row:${V.sheet?.specRev?.row ?? ""}; --d:${V.sheet?.specRev?.delay ?? ""}; padding:11px 22px;`) },
                 h("p", { key: "0|11.1s8ry21", style: {"margin":"0","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Rev / Scale"
                 ),
@@ -1872,7 +1875,7 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("figure", { key: "21", className: "plate sheet-mod sheet-plate", "data-enter": "", "data-mod": "hero", "data-shape": `frame-${V.current?.figNo ?? ""}`, onMouseEnter: V.sheet?.hero?.move, onMouseMove: V.sheet?.hero?.move, onMouseLeave: V.sheet?.hero?.leave, style: S(`grid-column:${V.sheet?.hero?.col ?? ""}; grid-row:${V.sheet?.hero?.row ?? ""}; --d:${V.sheet?.hero?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
+              h("figure", { key: "21", className: "plate mod sheet-mod sheet-plate", "data-enter": "", "data-mod": "hero", "data-shape": `frame-${V.current?.figNo ?? ""}`, onMouseEnter: V.sheet?.hero?.move, onMouseMove: V.sheet?.hero?.move, onMouseLeave: V.sheet?.hero?.leave, style: S(`grid-column:${V.sheet?.hero?.col ?? ""}; grid-row:${V.sheet?.hero?.row ?? ""}; --d:${V.sheet?.hero?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
                 "\n      ",
                 h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
                   "+"
@@ -1890,7 +1893,7 @@
                 "\n    "
               ),
               "\n    ",
-              h("p", { key: "23|141.s2m5lr", className: "sheet-mod", "data-enter": "", "data-mod": "heroCaption", style: S(`grid-column:${V.sheet?.heroCaption?.col ?? ""}; grid-row:${V.sheet?.heroCaption?.row ?? ""}; --d:${V.sheet?.heroCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
+              h("p", { key: "23|141.s2m5lr", className: "mod sheet-mod", "data-enter": "", "data-mod": "heroCaption", style: S(`grid-column:${V.sheet?.heroCaption?.col ?? ""}; grid-row:${V.sheet?.heroCaption?.row ?? ""}; --d:${V.sheet?.heroCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
                 h("span", { key: "0|92.1o5q0e0", style: {"minWidth":"0"} },
                   h("span", { key: "0|44.1e4j9ob", style: {"color":"var(--color-accent)"} },
                     h(F,{key:0},"",I(V.current?.figWord,1)," ",I(V.current?.numeral,3),".")
@@ -1906,7 +1909,7 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("div", { key: "26", className: "sheet-mod", "data-enter": "", "data-mod": "body1", style: S(`grid-column:${V.sheet?.body1?.col ?? ""}; grid-row:${V.sheet?.body1?.row ?? ""}; --d:${V.sheet?.body1?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
+              h("div", { key: "26", className: "mod sheet-mod", "data-enter": "", "data-mod": "body1", style: S(`grid-column:${V.sheet?.body1?.col ?? ""}; grid-row:${V.sheet?.body1?.row ?? ""}; --d:${V.sheet?.body1?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
                 "\n      ",
                 h("span", { key: "1|5.36tydg", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
                   "01 //"
@@ -1917,7 +1920,7 @@
                 "\n    "
               ),
               "\n    ",
-              h("div", { key: "28", className: "sheet-mod", "data-enter": "", "data-mod": "body2", style: S(`grid-column:${V.sheet?.body2?.col ?? ""}; grid-row:${V.sheet?.body2?.row ?? ""}; --d:${V.sheet?.body2?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
+              h("div", { key: "28", className: "mod sheet-mod", "data-enter": "", "data-mod": "body2", style: S(`grid-column:${V.sheet?.body2?.col ?? ""}; grid-row:${V.sheet?.body2?.row ?? ""}; --d:${V.sheet?.body2?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
                 "\n      ",
                 h("span", { key: "1|5.36uq3p", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
                   "02 //"
@@ -1928,7 +1931,7 @@
                 "\n    "
               ),
               "\n    ",
-              h("div", { key: "30", className: "sheet-mod", "data-enter": "", "data-mod": "body3", style: S(`grid-column:${V.sheet?.body3?.col ?? ""}; grid-row:${V.sheet?.body3?.row ?? ""}; --d:${V.sheet?.body3?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
+              h("div", { key: "30", className: "mod sheet-mod", "data-enter": "", "data-mod": "body3", style: S(`grid-column:${V.sheet?.body3?.col ?? ""}; grid-row:${V.sheet?.body3?.row ?? ""}; --d:${V.sheet?.body3?.delay ?? ""}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:22px; font-size:14.5px; line-height:26px; color:rgb(217, 216, 216);`) },
                 "\n      ",
                 h("span", { key: "1|5.36vhty", style: {"fontSize":"12px","lineHeight":"26px","letterSpacing":"0.08em","color":"var(--color-accent-700)"} },
                   "03 //"
@@ -1939,7 +1942,7 @@
                 "\n    "
               ),
               "\n    ",
-              h("aside", { key: "32", className: "sheet-mod", "data-enter": "", "data-mod": "aside", style: S(`grid-column:${V.sheet?.aside?.col ?? ""}; grid-row:${V.sheet?.aside?.row ?? ""}; --d:${V.sheet?.aside?.delay ?? ""}; display:flex; flex-direction:column; gap:20px; padding:22px; font-size:12.5px; line-height:20px; color:var(--color-neutral-700);`) },
+              h("aside", { key: "32", className: "mod sheet-mod", "data-enter": "", "data-mod": "aside", style: S(`grid-column:${V.sheet?.aside?.col ?? ""}; grid-row:${V.sheet?.aside?.row ?? ""}; --d:${V.sheet?.aside?.delay ?? ""}; display:flex; flex-direction:column; gap:20px; padding:22px; font-size:12.5px; line-height:20px; color:var(--color-neutral-700);`) },
                 "\n      ",
                 (V.marginalia ? h(F,{key:1},
                   "\n        ",
@@ -1999,7 +2002,7 @@
               "\n    ",
               (V.detailPair ? h(F,{key:35},
                 "\n    ",
-                h("figure", { key: "1", className: "plate sheet-mod sheet-plate", "data-enter": "", "data-mod": "detailA", onMouseEnter: V.sheet?.detailA?.move, onMouseMove: V.sheet?.detailA?.move, onMouseLeave: V.sheet?.detailA?.leave, style: S(`grid-column:${V.sheet?.detailA?.col ?? ""}; grid-row:${V.sheet?.detailA?.row ?? ""}; --d:${V.sheet?.detailA?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
+                h("figure", { key: "1", className: "plate mod sheet-mod sheet-plate", "data-enter": "", "data-mod": "detailA", onMouseEnter: V.sheet?.detailA?.move, onMouseMove: V.sheet?.detailA?.move, onMouseLeave: V.sheet?.detailA?.leave, style: S(`grid-column:${V.sheet?.detailA?.col ?? ""}; grid-row:${V.sheet?.detailA?.row ?? ""}; --d:${V.sheet?.detailA?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
                   "\n      ",
                   h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
                     "+"
@@ -2013,7 +2016,7 @@
                   "\n    "
                 ),
                 "\n    ",
-                h("figure", { key: "3", className: "plate sheet-mod sheet-plate", "data-enter": "", "data-mod": "detailB", onMouseEnter: V.sheet?.detailB?.move, onMouseMove: V.sheet?.detailB?.move, onMouseLeave: V.sheet?.detailB?.leave, style: S(`grid-column:${V.sheet?.detailB?.col ?? ""}; grid-row:${V.sheet?.detailB?.row ?? ""}; --d:${V.sheet?.detailB?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
+                h("figure", { key: "3", className: "plate mod sheet-mod sheet-plate", "data-enter": "", "data-mod": "detailB", onMouseEnter: V.sheet?.detailB?.move, onMouseMove: V.sheet?.detailB?.move, onMouseLeave: V.sheet?.detailB?.leave, style: S(`grid-column:${V.sheet?.detailB?.col ?? ""}; grid-row:${V.sheet?.detailB?.row ?? ""}; --d:${V.sheet?.detailB?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
                   "\n      ",
                   h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
                     "+"
@@ -2030,7 +2033,7 @@
               "\n    ",
               (V.detailOne ? h(F,{key:37},
                 "\n    ",
-                h("figure", { key: "1", className: "plate sheet-mod sheet-plate", "data-enter": "", "data-mod": "detail", onMouseEnter: V.sheet?.detail?.move, onMouseMove: V.sheet?.detail?.move, onMouseLeave: V.sheet?.detail?.leave, style: S(`grid-column:${V.sheet?.detail?.col ?? ""}; grid-row:${V.sheet?.detail?.row ?? ""}; --d:${V.sheet?.detail?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
+                h("figure", { key: "1", className: "plate mod sheet-mod sheet-plate", "data-enter": "", "data-mod": "detail", onMouseEnter: V.sheet?.detail?.move, onMouseMove: V.sheet?.detail?.move, onMouseLeave: V.sheet?.detail?.leave, style: S(`grid-column:${V.sheet?.detail?.col ?? ""}; grid-row:${V.sheet?.detail?.row ?? ""}; --d:${V.sheet?.detail?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
                   "\n      ",
                   h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
                     "+"
@@ -2045,7 +2048,7 @@
                 ),
                 "\n    ") : null),
               "\n    ",
-              h("p", { key: "39|136.19o3fos", className: "sheet-mod", "data-enter": "", "data-mod": "detailCaption", style: S(`grid-column:${V.sheet?.detailCaption?.col ?? ""}; grid-row:${V.sheet?.detailCaption?.row ?? ""}; --d:${V.sheet?.detailCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
+              h("p", { key: "39|136.19o3fos", className: "mod sheet-mod", "data-enter": "", "data-mod": "detailCaption", style: S(`grid-column:${V.sheet?.detailCaption?.col ?? ""}; grid-row:${V.sheet?.detailCaption?.row ?? ""}; --d:${V.sheet?.detailCaption?.delay ?? ""}; margin:0; padding:11px 22px; display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
                 h("span", { key: "0|85.yyckg0", style: {"minWidth":"0"} },
                   h("span", { key: "0|27.1uoc6rv", style: {"color":"var(--color-accent)"} },
                     h(F,{key:0},"",I(V.current?.detailFigWord,1),"")
@@ -2061,7 +2064,7 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("div", { key: "42", className: "sheet-mod", "data-enter": "", "data-mod": "links", style: S(`grid-column:${V.sheet?.links?.col ?? ""}; grid-row:${V.sheet?.links?.row ?? ""}; --d:${V.sheet?.links?.delay ?? ""}; display:grid; grid-auto-rows:44px; align-content:start; overflow:hidden;`) },
+              h("div", { key: "42", className: "mod sheet-mod", "data-enter": "", "data-mod": "links", style: S(`grid-column:${V.sheet?.links?.col ?? ""}; grid-row:${V.sheet?.links?.row ?? ""}; --d:${V.sheet?.links?.delay ?? ""}; display:grid; grid-auto-rows:44px; align-content:start; overflow:clip; overflow-clip-margin:1px;`) },
                 "\n      ",
                 h("p", { key: "1|13.bujc8", style: {"margin":"0","display":"flex","alignItems":"center","padding":"0 22px","fontSize":"10px","lineHeight":"12px","letterSpacing":"0.12em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   "Linked sheets"
@@ -2099,11 +2102,11 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("button", { key: "45|24.1chn43n", className: "sheet-mod sheet-ctl", "data-enter": "", "data-mod": "navBack", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navBack?.col ?? ""}; grid-row:${V.sheet?.navBack?.row ?? ""}; --d:${V.sheet?.navBack?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
+              h("button", { key: "45|24.1chn43n", className: "mod sheet-mod mod-ctl", "data-enter": "", "data-mod": "navBack", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navBack?.col ?? ""}; grid-row:${V.sheet?.navBack?.row ?? ""}; --d:${V.sheet?.navBack?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 22px; font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
                 h(F,{key:0},"← ",I(V.current?.backWord,1),"")
               ),
               "\n    ",
-              h("button", { key: "47|110.pyry3", className: "sheet-mod sheet-ctl", "data-enter": "", "data-mod": "navNext", onClick: V.openNext, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navNext?.col ?? ""}; grid-row:${V.sheet?.navNext?.row ?? ""}; --d:${V.sheet?.navNext?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:11px 22px; text-align:right; color:var(--color-text); background:var(--color-bg);`) },
+              h("button", { key: "47|110.pyry3", className: "mod sheet-mod mod-ctl", "data-enter": "", "data-mod": "navNext", onClick: V.openNext, style: S(`all:unset; position:relative; grid-column:${V.sheet?.navNext?.col ?? ""}; grid-row:${V.sheet?.navNext?.row ?? ""}; --d:${V.sheet?.navNext?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; padding:11px 22px; text-align:right; color:var(--color-text); background:var(--color-bg);`) },
                 "\n      ",
                 h("span", { key: "1|47.13c0pry", style: {"fontSize":"11px","lineHeight":"14px","letterSpacing":"0.1em","textTransform":"uppercase","color":"var(--color-neutral-600)"} },
                   h(F,{key:0},"Next · ",I(V.next?.kickerWord,1)," ",I(V.next?.numeral,3),"")
@@ -4146,7 +4149,10 @@
           mod: 'plate.' + p.slug,
           whyTop: below ? '100%' : 'auto', whyBottom: below ? 'auto' : '100%',
           typed, whyOpacity: on ? '1' : '0', caretOpacity: on && typed.length < p.why.length ? '1' : '0',
-          frameInk: lit ? 'var(--color-text)' : 'var(--frame)',
+          // the state, not the ink: .mod[data-lit] carries the full-ink frame, so the three steps of the
+          // ladder are all in one CSS rule and a plate says only which of them it is on. null rather than
+          // false, so React leaves the attribute off a plate that is not lit
+          lit: lit ? '' : null,
           // the hovered plate rises over its neighbours: a module's right and bottom hairlines are drawn
           // outside its own box, so without this its lit frame would be covered on two sides. A plate
           // lit by the graph rises for the same reason, but under the plate the cursor is on.
