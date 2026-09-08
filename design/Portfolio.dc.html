@@ -2613,9 +2613,17 @@ class Component extends DCLogic {
     // the model lives in one grid opening on the Development page: clip the fixed layer to that cell.
     // Only once the roll is actually in it: a travel still to start, or in the air, has the roll out in
     // the page, and clipping to the opening it is heading for would blink it away where it stands
-    layer.style.clipPath = k === 1 && !this.parchTween && !this.parchTravel
+    const landed = k === 1 && !this.parchTween && !this.parchTravel;
+    layer.style.clipPath = landed
       ? 'inset(' + pr.top + 'px ' + (window.innerWidth - pr.right) + 'px ' + (window.innerHeight - pr.bottom) + 'px ' + pr.left + 'px)'
       : 'none';
+    // and, for that state only, above the cell it is clipped into. The opening is an opaque module that stacks in
+    // its own right, and it comes later in the page than this layer, so at equal height the cell's ground paints
+    // over the model. Clipped, the layer reaches no further than the opening, so nothing outside it changes; the
+    // rest of the time the layer is the full viewport and has to stay under the page. syncHome carries the same
+    // rule for the cube's layer when the cube lands on this cell. Only while the layer is parked in the root: a
+    // travel lifts it to the body at 4, and that ride is not this rule's to overwrite
+    if (layer.parentNode === root) layer.style.zIndex = landed ? '2' : '1';
     // A register change that arrives while a travel is still in the air supersedes it; the roll carries
     // on from the pose that travel had reached. Queued behind it instead, as it was, the new travel sat
     // out the rest of the old one holding parchTravel, and the frame the old tween ended on was one

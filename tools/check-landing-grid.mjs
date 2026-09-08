@@ -513,11 +513,29 @@ if (!/data-shape-alt="frame-\{\{ p\.figNo \}\}"/.test(src)) {
 // in the page, is clipped to a cell it has not reached and blinks out. And a travel must land on its
 // anchor exactly: bez() is a bisection that answers 0.99999 at t = 1, so a pose left a hair short read
 // as a different anchor on the next sync and started the whole travel over, a second time, every time.
-const clipLine = /layer\.style\.clipPath\s*=\s*(k === 1[\s\S]{0,240}?);/.exec(logicSrc);
+// syncHome writes the same property for the cube's layer, so read this one out of syncParchment alone
+const syncAt = logicSrc.indexOf('\n  syncParchment(');
+const syncSrc = syncAt < 0 ? '' : logicSrc.slice(syncAt);
+const clipLine = /layer\.style\.clipPath\s*=\s*([\s\S]{0,240}?);/.exec(syncSrc);
 if (!clipLine) fail('syncParchment no longer clips the layer to the platform opening');
-else if (!/!this\.parchTravel/.test(clipLine[1])) {
-  fail('the platform clip does not wait for a pending travel (' + clipLine[1].trim() +
-    '): the roll would be clipped to the opening it is still flying towards');
+else {
+  // the condition may be written on the assignment itself or held in a binding the assignment reads, since the
+  // same answer also decides how high the layer stacks. Follow the name in that case: what this check is about is
+  // the condition, not where it is spelled
+  let cond = clipLine[1];
+  const named = /^([A-Za-z_$][\w$]*)\s*\?/.exec(cond.trim());
+  if (named) {
+    const decl = new RegExp('const\\s+' + named[1] + '\\s*=\\s*([\\s\\S]{0,240}?);').exec(syncSrc);
+    if (!decl) fail('the platform clip reads a condition named ' + named[1] + ' that nothing in syncParchment declares');
+    else cond = decl[1];
+  }
+  if (!/k === 1/.test(cond)) {
+    fail('the platform clip is no longer conditioned on the platform anchor (' + cond.trim() +
+      '): every other view would have the full-viewport layer clipped to a cell it is not standing in');
+  } else if (!/!this\.parchTravel/.test(cond)) {
+    fail('the platform clip does not wait for a pending travel (' + cond.trim() +
+      '): the roll would be clipped to the opening it is still flying towards');
+  }
 }
 if (!/place\(\{\s*\.\.\.dest\s*\}\)/.test(logicSrc)) {
   fail("the roll's travel does not land on its anchor exactly (place({ ...dest })), so a pose short of " +
