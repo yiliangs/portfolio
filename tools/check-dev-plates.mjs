@@ -37,7 +37,7 @@ const REQUIRED_SHEETS = ['Rhino Worktree Launcher', 'Agent Usage Stat'];
 
 // Every field the mono sheet or the Development landing reads off an entry. `summary` and
 // `statusShort` are carried by the data and read by neither, so they are not required here.
-const SHEET_FIELDS = ['title', 'subtitle', 'kind', 'year', 'page', 'pages', 'role', 'with', 'status',
+const SHEET_FIELDS = ['id', 'title', 'subtitle', 'kind', 'year', 'page', 'pages', 'role', 'with', 'status',
   'stack', 'link', 'caption', 'placeholder', 'why', 'margin', 'body1', 'body2', 'body3'];
 
 // The still plate fields. `hero` and `detail` are cut to their own proportion and so must state
