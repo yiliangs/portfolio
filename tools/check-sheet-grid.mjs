@@ -18,7 +18,6 @@ import { JSDOM } from 'jsdom';
 
 const SRC = 'design/Portfolio.dc.html';
 const COLUMNS = 22; // grid lines run 1..COLUMNS+1
-const RESERVED = ['heroReadout', 'detailReadout']; // renderVals puts these on the same object
 // Modules the template names that no table places by hand: renderVals works each one out from the
 // modules it stands in for. `detail` is the single plate an entry may carry instead of the
 // detailA/detailB pair, and it takes the columns the pair spanned and the rows its picture needs.
@@ -94,7 +93,6 @@ function validateTable(name, table) {
   if (!table) return;
   const boxes = [];
   for (const [mod, at] of Object.entries(table)) {
-    if (RESERVED.includes(mod)) fail(name + '.' + mod + ' uses a name renderVals reserves on the same object (' + RESERVED.join(', ') + ')');
     const c = span(at.col), r = span(at.row);
     if (!c) { fail(name + '.' + mod + ' has a column span this check cannot read: ' + JSON.stringify(at.col)); continue; }
     if (!r) { fail(name + '.' + mod + ' has a row span this check cannot read: ' + JSON.stringify(at.row)); continue; }
@@ -280,13 +278,13 @@ if (mono) {
         fail('the ' + label + ' pane has no data-tr, so the cursor passes over it: expected a data-tr element holding ' + JSON.stringify(needle));
       }
     }
-    // the readout is live state, not the sheet's ink: rippling it would fight its own updates
-    for (const el of trEls) {
-      if (/sheet\.(hero|detail)Readout/.test(el.innerHTML)) fail('the coordinate readout carries data-tr; it changes per cell and the effect would rebuild under it');
-    }
-
     // nothing sits out of the grid's flow: the full-sheet guide lines the plate hover once threw were
-    // dropped because they read as a stray boundary through the text, and a hover lights only its own frame
+    // dropped because they read as a stray boundary through the text, and a hover lights only its own
+    // frame. The cell readout that hover once wrote into the caption went the same way: it pushed a
+    // long caption out of its module, and a coordinate on a screen capture told the reader nothing.
+    for (const el of grid.querySelectorAll('*')) {
+      if (/sheet\.\w+\.(move|leave)|sheet\.\w*Readout/.test(el.outerHTML)) fail('a plate binds the cursor cell readout again, which was removed for pushing captions out of their module: ' + where(el));
+    }
     for (const o of overlays) fail('an absolutely positioned child sits over the grid out of flow: ' + where(o));
 
     for (const el of [grid, ...grid.querySelectorAll('*')]) {
@@ -309,11 +307,6 @@ if (mono) {
     ['id="{{ current.detailSlotB }}"', 'detail slot B'],
     ['{{ goPageCurrent }}', 'back binding'],
     ['{{ openNext }}', 'next binding'],
-    ['{{ sheet.hero.move }}', 'hero plate pointer readout'],
-    ['{{ sheet.detailA.move }}', 'detail A pointer readout'],
-    ['{{ sheet.detailB.move }}', 'detail B pointer readout'],
-    ['{{ sheet.heroReadout }}', 'hero caption readout'],
-    ['{{ sheet.detailReadout }}', 'detail caption readout'],
   ];
   for (const [needle, label] of hooks) {
     if (!html.includes(needle)) fail('the sheet lost its ' + label + ' hook (' + needle + ')');

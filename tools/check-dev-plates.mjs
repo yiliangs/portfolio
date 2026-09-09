@@ -90,9 +90,10 @@ for (const d of mono) {
   }
 }
 
-// num(i) indexes the romans list by the entry's position, so an entry past the end of that list
-// prints its kicker as "Sheet undefined". This is the only check that reads the data array, which is
-// why the guard sits here rather than in a file of its own.
+// num(i) indexes the romans list by the entry's position within its register, so a register longer
+// than that list prints its last kickers as "Sheet undefined". The whole data array is the longest a
+// register can be, so the list is held to that. This is the only check that reads the data array,
+// which is why the guard sits here rather than in a file of its own.
 const romans = /\n\s*romans = \[([^\]]*)\]/.exec(readLogicSource());
 if (!romans) fail('the logic class has no romans list, so the register cannot be numbered');
 else {

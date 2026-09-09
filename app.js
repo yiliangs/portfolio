@@ -1783,7 +1783,7 @@
           "\n  ",
           h("main", { key: V.chapterKey, "data-screen-label": "Chapter", style: {"maxWidth":"1160px","margin":"0 auto","padding":"0 clamp(20px,4vw,48px) 88px","fontFamily":"var(--mono)","fontSize":"14px","lineHeight":"22px"} },
             "\n    ",
-            h("div", { key: "1", ref: V.sheetGridRef, style: {"position":"relative","marginTop":"88px","display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","borderRight":"1px solid var(--hair)","borderBottom":"1px solid var(--hair)","backgroundImage":"linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
+            h("div", { key: "1", style: {"position":"relative","marginTop":"88px","display":"grid","gridTemplateColumns":"repeat(22,1fr)","gridAutoRows":"44px","gap":"0","borderRight":"1px solid var(--hair)","borderBottom":"1px solid var(--hair)","backgroundImage":"linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px)","backgroundSize":"calc(100%/22) 44px"} },
               "\n\n    ",
               "\n    ",
               h("button", { key: "2|24.1chn43n", className: "mod sheet-mod mod-ctl", "data-enter": "", "data-mod": "back", onClick: V.goPageCurrent, style: S(`all:unset; position:relative; grid-column:${V.sheet?.back?.col ?? ""}; grid-row:${V.sheet?.back?.row ?? ""}; --d:${V.sheet?.back?.delay ?? ""}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 clamp(14px,3.7vw,22px); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);`) },
@@ -1858,7 +1858,7 @@
               ),
               "\n\n    ",
               "\n    ",
-              h("figure", { key: "21", className: "plate mod sheet-mod sheet-plate", "data-enter": "", "data-mod": "hero", "data-shape": `frame-${V.current?.figNo ?? ""}`, onMouseEnter: V.sheet?.hero?.move, onMouseMove: V.sheet?.hero?.move, onMouseLeave: V.sheet?.hero?.leave, style: S(`grid-column:${V.sheet?.hero?.col ?? ""}; grid-row:${V.sheet?.hero?.row ?? ""}; --d:${V.sheet?.hero?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
+              h("figure", { key: "21", className: "plate mod sheet-mod sheet-plate", "data-enter": "", "data-mod": "hero", "data-shape": `frame-${V.current?.figNo ?? ""}`, style: S(`grid-column:${V.sheet?.hero?.col ?? ""}; grid-row:${V.sheet?.hero?.row ?? ""}; --d:${V.sheet?.hero?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
                 "\n      ",
                 h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
                   "+"
@@ -1876,18 +1876,13 @@
                 "\n    "
               ),
               "\n    ",
-              h("p", { key: "23|141.s2m5lr", className: "mod sheet-mod", "data-enter": "", "data-mod": "heroCaption", style: S(`grid-column:${V.sheet?.heroCaption?.col ?? ""}; grid-row:${V.sheet?.heroCaption?.row ?? ""}; --d:${V.sheet?.heroCaption?.delay ?? ""}; margin:0; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px); display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
-                h("span", { key: "0|92.1o5q0e0", style: {"minWidth":"0"} },
-                  h("span", { key: "0|44.1e4j9ob", style: {"color":"var(--color-accent)"} },
-                    h(F,{key:0},"",I(V.current?.figWord,1)," ",I(V.current?.numeral,3),".")
-                  ),
-                  " ",
-                  h("span", { key: `cap-hero-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono" },
-                    h(F,{key:0},"",I(V.current?.caption,1),"")
-                  )
+              h("p", { key: "23|92.1o5q0e0", className: "mod sheet-mod", "data-enter": "", "data-mod": "heroCaption", style: S(`grid-column:${V.sheet?.heroCaption?.col ?? ""}; grid-row:${V.sheet?.heroCaption?.row ?? ""}; --d:${V.sheet?.heroCaption?.delay ?? ""}; margin:0; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px); font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
+                h("span", { key: "0|44.1e4j9ob", style: {"color":"var(--color-accent)"} },
+                  h(F,{key:0},"",I(V.current?.figWord,1)," ",I(V.current?.numeral,3),".")
                 ),
-                h("span", { key: "1|23.1l7l3dq", style: {"flex":"none","color":"var(--color-neutral-600)","whiteSpace":"nowrap"} },
-                  h(F,{key:0},"",I(V.sheet?.heroReadout,1),"")
+                " ",
+                h("span", { key: `cap-hero-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono" },
+                  h(F,{key:0},"",I(V.current?.caption,1),"")
                 )
               ),
               "\n\n    ",
@@ -1985,7 +1980,7 @@
               "\n    ",
               (V.detailPairA ? h(F,{key:35},
                 "\n    ",
-                h("figure", { key: "1", className: "plate mod sheet-mod sheet-plate", "data-enter": "", "data-mod": "detailA", onMouseEnter: V.sheet?.detailA?.move, onMouseMove: V.sheet?.detailA?.move, onMouseLeave: V.sheet?.detailA?.leave, style: S(`grid-column:${V.sheet?.detailA?.col ?? ""}; grid-row:${V.sheet?.detailA?.row ?? ""}; --d:${V.sheet?.detailA?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
+                h("figure", { key: "1", className: "plate mod sheet-mod sheet-plate", "data-enter": "", "data-mod": "detailA", style: S(`grid-column:${V.sheet?.detailA?.col ?? ""}; grid-row:${V.sheet?.detailA?.row ?? ""}; --d:${V.sheet?.detailA?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
                   "\n      ",
                   h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
                     "+"
@@ -2002,7 +1997,7 @@
               "\n    ",
               (V.detailPairB ? h(F,{key:37},
                 "\n    ",
-                h("figure", { key: "1", className: "plate mod sheet-mod sheet-plate", "data-enter": "", "data-mod": "detailB", onMouseEnter: V.sheet?.detailB?.move, onMouseMove: V.sheet?.detailB?.move, onMouseLeave: V.sheet?.detailB?.leave, style: S(`grid-column:${V.sheet?.detailB?.col ?? ""}; grid-row:${V.sheet?.detailB?.row ?? ""}; --d:${V.sheet?.detailB?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
+                h("figure", { key: "1", className: "plate mod sheet-mod sheet-plate", "data-enter": "", "data-mod": "detailB", style: S(`grid-column:${V.sheet?.detailB?.col ?? ""}; grid-row:${V.sheet?.detailB?.row ?? ""}; --d:${V.sheet?.detailB?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
                   "\n      ",
                   h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
                     "+"
@@ -2019,7 +2014,7 @@
               "\n    ",
               (V.detailOne ? h(F,{key:39},
                 "\n    ",
-                h("figure", { key: "1", className: "plate mod sheet-mod sheet-plate", "data-enter": "", "data-mod": "detail", onMouseEnter: V.sheet?.detail?.move, onMouseMove: V.sheet?.detail?.move, onMouseLeave: V.sheet?.detail?.leave, style: S(`grid-column:${V.sheet?.detail?.col ?? ""}; grid-row:${V.sheet?.detail?.row ?? ""}; --d:${V.sheet?.detail?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
+                h("figure", { key: "1", className: "plate mod sheet-mod sheet-plate", "data-enter": "", "data-mod": "detail", style: S(`grid-column:${V.sheet?.detail?.col ?? ""}; grid-row:${V.sheet?.detail?.row ?? ""}; --d:${V.sheet?.detail?.delay ?? ""}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;`) },
                   "\n      ",
                   h("span", { key: "1|1.3t1s", className: "sheet-mark", "aria-hidden": "true", style: {"left":"8px","top":"5px"} },
                     "+"
@@ -2036,18 +2031,13 @@
               "\n    ",
               (V.hasDetail ? h(F,{key:41},
                 "\n    ",
-                h("p", { key: "1|136.19o3fos", className: "mod sheet-mod", "data-enter": "", "data-mod": "detailCaption", style: S(`grid-column:${V.sheet?.detailCaption?.col ?? ""}; grid-row:${V.sheet?.detailCaption?.row ?? ""}; --d:${V.sheet?.detailCaption?.delay ?? ""}; margin:0; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px); display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
-                  h("span", { key: "0|85.yyckg0", style: {"minWidth":"0"} },
-                    h("span", { key: "0|27.1uoc6rv", style: {"color":"var(--color-accent)"} },
-                      h(F,{key:0},"",I(V.current?.detailFigWord,1),"")
-                    ),
-                    " ",
-                    h("span", { key: `cap-detail-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono" },
-                      h(F,{key:0},"",I(V.current?.detailCaptionText,1),"")
-                    )
+                h("p", { key: "1|85.yyckg0", className: "mod sheet-mod", "data-enter": "", "data-mod": "detailCaption", style: S(`grid-column:${V.sheet?.detailCaption?.col ?? ""}; grid-row:${V.sheet?.detailCaption?.row ?? ""}; --d:${V.sheet?.detailCaption?.delay ?? ""}; margin:0; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px); font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;`) },
+                  h("span", { key: "0|27.1uoc6rv", style: {"color":"var(--color-accent)"} },
+                    h(F,{key:0},"",I(V.current?.detailFigWord,1),"")
                   ),
-                  h("span", { key: "1|25.ibc6df", style: {"flex":"none","color":"var(--color-neutral-600)","whiteSpace":"nowrap"} },
-                    h(F,{key:0},"",I(V.sheet?.detailReadout,1),"")
+                  " ",
+                  h("span", { key: `cap-detail-${V.current?.figNo ?? ""}`, "data-tr": "wake", "data-reg": "mono" },
+                    h(F,{key:0},"",I(V.current?.detailCaptionText,1),"")
                   )
                 ),
                 "\n    ") : null),
@@ -2136,7 +2126,7 @@
         if (this.fog) { clearTimeout(this.fogKillTimer); this.fogKillTimer = setTimeout(() => { if (this.fog && this.state.view !== 'home') { this.fog.destroy(); this.fog = null; } }, 1000); }
       }
     }
-    headRef = React.createRef(); rootRef = React.createRef(); heroRef = React.createRef(); scriptRef = React.createRef(); parchLayerRef = React.createRef(); platformRef = React.createRef(); heroTextRef = React.createRef(); tabToolingRef = React.createRef(); tabWritingRef = React.createRef(); sheetGridRef = React.createRef();
+    headRef = React.createRef(); rootRef = React.createRef(); heroRef = React.createRef(); scriptRef = React.createRef(); parchLayerRef = React.createRef(); platformRef = React.createRef(); heroTextRef = React.createRef(); tabToolingRef = React.createRef(); tabWritingRef = React.createRef();
     MONO = "'Geist Mono', ui-monospace, monospace";
     CUBE_COLLAPSE_MS = 1500; // the cube's collapse into the platform: dissolve, travel, press flat
     // one numeral per entry of the register, so this list has to stay at least as long as data
@@ -2939,7 +2929,15 @@
     // behind the type rather than as the page itself
     heroBlockH() { return 'calc(' + this.heroSheetH(true) + ' + clamp(36px, 6vh, 80px))'; }
   
-    num(i) { return (this.props.numerals ?? 'roman') === 'roman' ? this.romans[i] : String(i + 1); }
+    // An entry is numbered within its own register, in data order: the Research page counts its
+    // chapters from I and the Development page counts its sheets from I, whatever the other holds and
+    // however the two interleave in data. ordinal(i) is that count, zero-based; roman(n) prints a count.
+    ordinal(i) { let n = 0; for (let j = 0; j < i; j++) if (this.reg(j) === this.reg(i)) n++; return n; }
+    roman(n) { return (this.props.numerals ?? 'roman') === 'roman' ? this.romans[n] : String(n + 1); }
+    num(i) { return this.roman(this.ordinal(i)); }
+    // Next and previous follow the same count: the neighbour is the next entry of the same register in
+    // data order, wrapping at its end, so a Development sheet never hands off to a Research chapter.
+    neighbour(i, step) { const n = this.data.length; let j = i; do { j = (j + step + n) % n; } while (this.reg(j) !== this.reg(i)); return j; }
     reg(i) { return /Research|Writing|Essay/.test(this.data[i].kind) ? 'serif' : 'mono'; }
     pageOf(i) { return this.reg(i) === 'mono' ? 'tooling' : 'writing'; }
     // The CV carries its own register: the link that opened it decides whether the document is set in
@@ -3365,15 +3363,15 @@
       this.onResize = () => { this.setState({ narrow: this.isStacked(), landingRows: this.visibleRows(), phone: this.isPhone(), portrait: this.isPortrait() }); this.measureTabs(); this.syncParchment(); this.syncHome(); };
       this.onKey = (e) => {
         const t = e.target; if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
-        const n = this.data.length, { view, idx } = this.state;
+        const { view, idx } = this.state;
         // an unfolded statement is the innermost thing Escape can close, so it takes the key first and
         // the reader stays on the landing rather than being navigated off it
         if (e.key === 'Escape' && this.state.landingIntroOpen) this.setState({ landingIntroOpen: false });
         else if (e.key === 'Escape') this.goPage(this.state.view === 'chapter' ? this.pageOf(idx) : this.state.page);
         else if (e.key === 't' || e.key === 'T') this.goPage('tooling');
         else if (e.key === 'e' || e.key === 'E') this.goPage('writing');
-        else if (e.key === 'ArrowRight') this.open(view === 'chapter' ? (idx + 1) % n : this.featuredFor[this.state.page][0]);
-        else if (e.key === 'ArrowLeft') this.open(view === 'chapter' ? (idx + n - 1) % n : this.featuredFor[this.state.page][1]);
+        else if (e.key === 'ArrowRight') this.open(view === 'chapter' ? this.neighbour(idx, 1) : this.featuredFor[this.state.page][0]);
+        else if (e.key === 'ArrowLeft') this.open(view === 'chapter' ? this.neighbour(idx, -1) : this.featuredFor[this.state.page][1]);
         else if (/^[1-9]$/.test(e.key) && +e.key <= n) this.open(+e.key - 1);
         else return;
         this.setState({ usedKeys: true });
@@ -3890,28 +3888,8 @@
       });
     }
   
-    componentWillUnmount() { this.dead = true; if (this.leafTuner) { this.leafTuner.destroy(); this.leafTuner = null; } if (this.gridTuner) { this.gridTuner.destroy(); this.gridTuner = null; } if (this.fog) { this.fog.destroy(); this.fog = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); window.removeEventListener('popstate', this.onPop); this.observer?.disconnect(); cancelAnimationFrame(this.cellRaf); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
+    componentWillUnmount() { this.dead = true; if (this.leafTuner) { this.leafTuner.destroy(); this.leafTuner = null; } if (this.gridTuner) { this.gridTuner.destroy(); this.gridTuner = null; } if (this.fog) { this.fog.destroy(); this.fog = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); window.removeEventListener('popstate', this.onPop); this.observer?.disconnect(); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
     observeReveals() { document.querySelectorAll('[data-enter=""]').forEach((el) => this.observer.observe(el)); }
-    // the cursor's cell on the sheet grid, sampled once a frame and only written when the cell actually
-    // changes, so crossing a 48px column re-renders once rather than once per pixel of travel
-    onPlateMove(name, e) {
-      const grid = this.sheetGridRef.current; if (!grid) return;
-      const r = grid.getBoundingClientRect();
-      const x = Math.min(22, Math.max(1, Math.floor((e.clientX - r.left) / (r.width / 22)) + 1));
-      const y = Math.max(1, Math.floor((e.clientY - r.top) / 44) + 1);
-      this.pendingCell = { plate: name, x, y };
-      if (this.cellRaf) return;
-      this.cellRaf = requestAnimationFrame(() => {
-        this.cellRaf = 0;
-        const c = this.pendingCell, s = this.state.cell; if (!c) return;
-        if (s && s.plate === c.plate && s.x === c.x && s.y === c.y) return;
-        this.setState({ cell: c });
-      });
-    }
-    onPlateLeave() {
-      cancelAnimationFrame(this.cellRaf); this.cellRaf = 0; this.pendingCell = null;
-      if (this.state.cell) this.setState({ cell: null });
-    }
     // The serif register never scrambles: this picker hands back the glyph it was given, so the
     // wavefront carries brightness and nothing on the line moves. resolve() in the library takes a
     // function as the picker itself, so no entry in its GlyphPickers registry is needed.
@@ -4203,7 +4181,7 @@
           hasLink: !!d.href || linkIdx >= 0, noLink: !d.href && linkIdx < 0, href: d.href || '#', linkTarget: d.linkBlank ? '_blank' : undefined, linkRel: d.linkBlank ? 'noopener' : undefined,
           linkClick: linkIdx >= 0 ? (e) => { e.preventDefault(); this.open(linkIdx); } : undefined,
           previewOpacity: hovered === i ? '1' : '0',
-          ghost: m ? 'SHT-' + String(i + 1).padStart(2, '0') : this.num(i),
+          ghost: m ? 'SHT-' + String(this.ordinal(i) + 1).padStart(2, '0') : this.num(i),
           kickerWord: m ? 'Sheet' : 'Chapter', figWord: m ? 'Fig.' : 'Plate', backWord: m ? 'Sheet register' : 'Contents',
           signal: this.signal(d), shapeIdx: 0, open: () => this.open(i), hover: () => this.setState({ hovered: i }) };
       });
@@ -4397,7 +4375,7 @@
         stack[name] = { col: spot.col, row: after ? (lastCardEnd + +after[1]) + ' / ' + (lastCardEnd + +after[2]) : spot.row };
       }
       const pad = (n) => String(n).padStart(2, '0');
-      const featured = this.featuredFor[pageKey].map((i, k) => ({ ...projects[i], plateNumeral: this.num(k) }));
+      const featured = this.featuredFor[pageKey].map((i, k) => ({ ...projects[i], plateNumeral: this.roman(k) }));
       const current = projects[idx];
       const paperMod = current.paper ? (this.papers || {})[idx] : null;
       const paperBlocks = this.renderPaper(paperMod, this.state.phone);
@@ -4486,16 +4464,6 @@
       const detailRow = detailTop + shiftAt(detailTop);
       sheet.detail = { col: detailCol[0] + ' / ' + detailCol[1], row: detailRow + ' / ' + (detailRow + detailRows),
         delay: ((detailRow - 1) * this.PLOT_STEP) + 'ms' };
-      // hovering a plate reads the cursor's cell back into that plate's caption
-      const cur = this.state.cell;
-      const pad2 = (n) => String(n).padStart(2, '0');
-      const readout = cur ? 'x ' + pad2(cur.x) + ' · y ' + pad2(cur.y) : '';
-      sheet.heroReadout = cur && cur.plate === 'hero' ? readout : '';
-      sheet.detailReadout = cur && cur.plate !== 'hero' ? readout : '';
-      for (const name of ['hero', 'detailA', 'detailB', 'detail']) {
-        sheet[name].move = (e) => this.onPlateMove(name, e);
-        sheet[name].leave = () => this.onPlateLeave();
-      }
       return {
         isHome: view === 'home', showTabs: view !== 'home', goHome: () => this.goHome(),
         homeLayerRef: this.homeLayerRef, homeRollRef: this.homeRollRef, homeCubeRef: this.homeCubeRef, fogLayerRef: this.fogLayerRef,
@@ -4573,14 +4541,14 @@
         // brand and the bar's own padding carry phone floors beside it; measureTabs re-reads the
         // underline off the tab's own box, so nothing here moves the mark.
         hintDisplay: this.state.phone ? 'none' : 'flex',
-        projects, pageProjects, leaves, leafRows, leftLeaves: leaves.filter((l) => l.side === 'left'), rightLeaves: leaves.filter((l) => l.side === 'right'), featured, current, next: projects[(idx + 1) % projects.length], hovered: hov, cv: cvViews.timeline,
+        projects, pageProjects, leaves, leafRows, leftLeaves: leaves.filter((l) => l.side === 'left'), rightLeaves: leaves.filter((l) => l.side === 'right'), featured, current, next: projects[this.neighbour(idx, 1)], hovered: hov, cv: cvViews.timeline,
         stack,
-        sheet, sheetGridRef: this.sheetGridRef,
+        sheet,
         contentsRef: this.contentsRef, platesRef: this.platesRef, notesRef: this.notesRef, landingStatementRef: this.landingStatementRef, headRef: this.headRef, tabToolingRef: this.tabToolingRef, tabWritingRef: this.tabWritingRef,
         goTooling: () => this.goPage('tooling'), goWriting: () => this.goPage('writing'),
         goPageCurrent: () => this.goPage(view === 'chapter' ? this.pageOf(idx) : pageKey), goNotes: () => this.go(this.notesRef),
         previewMono: () => this.setState({ previewReg: 'mono' }), previewSerif: () => this.setState({ previewReg: 'serif' }), previewNone: () => this.setState({ previewReg: null }),
-        openNext: () => this.open((idx + 1) % projects.length),
+        openNext: () => this.open(this.neighbour(idx, 1)),
       };
     }
   }

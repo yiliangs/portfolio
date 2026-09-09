@@ -951,7 +951,7 @@
        their ink as rgb, which is what 88% of --color-text over --color-bg composites to. ============ -->
   <sc-if value="{{ isMono }}" hint-placeholder-val="{{ false }}">
   <main key="{{ chapterKey }}" data-screen-label="Chapter" style="max-width:1160px; margin:0 auto; padding:0 clamp(20px,4vw,48px) 88px; font-family:var(--mono); font-size:14px; line-height:22px;">
-    <div ref="{{ sheetGridRef }}" style="position:relative; margin-top:88px; display:grid; grid-template-columns:repeat(22,1fr); grid-auto-rows:44px; gap:0; border-right:1px solid var(--hair); border-bottom:1px solid var(--hair); background-image:linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px); background-size:calc(100%/22) 44px;">
+    <div style="position:relative; margin-top:88px; display:grid; grid-template-columns:repeat(22,1fr); grid-auto-rows:44px; gap:0; border-right:1px solid var(--hair); border-bottom:1px solid var(--hair); background-image:linear-gradient(to right, var(--hair) 0 1px, transparent 1px), linear-gradient(to bottom, var(--hair) 0 1px, transparent 1px); background-size:calc(100%/22) 44px;">
 
     <!-- back to the sheet register -->
     <button class="mod sheet-mod mod-ctl" data-enter="" data-mod="back" onClick="{{ goPageCurrent }}" style="all:unset; position:relative; grid-column:{{ sheet.back.col }}; grid-row:{{ sheet.back.row }}; --d:{{ sheet.back.delay }}; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; white-space:nowrap; padding:0 clamp(14px,3.7vw,22px); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; color:var(--color-text); background:var(--color-bg);">← {{ current.backWord }}</button>
@@ -972,8 +972,8 @@
     <div class="mod sheet-mod" data-enter="" data-mod="specStatus" style="grid-column:{{ sheet.specStatus.col }}; grid-row:{{ sheet.specStatus.row }}; --d:{{ sheet.specStatus.delay }}; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px);"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Status</p><p key="spec-status-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px;">{{ current.status }}</p></div>
     <div class="mod sheet-mod" data-enter="" data-mod="specRev" style="grid-column:{{ sheet.specRev.col }}; grid-row:{{ sheet.specRev.row }}; --d:{{ sheet.specRev.delay }}; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px);"><p style="margin:0; font-size:10px; line-height:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--color-neutral-600);">Rev / Scale</p><p key="spec-rev-{{ current.figNo }}" data-tr="wake" data-reg="mono" style="margin:0; font-size:13px; line-height:18px; font-feature-settings:'tnum' 1;">{{ current.year }} · 1:1</p></div>
 
-    <!-- the figure's height is a row count, not a ratio. Under the cursor it throws its own edges
-         across the sheet as guide lines and reads the cell back into its caption.
+    <!-- the figure's height is a row count, not a ratio. Under the cursor its registration marks
+         come up to full ink; nothing else on the sheet answers the plate.
          An entry that names a hero shows it here; one that names none keeps the placeholder slot,
          which is what an absent src leaves behind: the binding is one whole {{ }}, so the compiled
          prop is undefined and no src attribute is written at all. The fit is contain rather than
@@ -985,13 +985,13 @@
          with no sound and no controls, opening on the hero as its poster so the frame the reader
          arrives at is the one the landing card carried. Each playback attribute is a whole binding
          because a bare one compiles to an empty string, which React reads as false. -->
-    <figure class="plate mod sheet-mod sheet-plate" data-enter="" data-mod="hero" data-shape="frame-{{ current.figNo }}" onMouseEnter="{{ sheet.hero.move }}" onMouseMove="{{ sheet.hero.move }}" onMouseLeave="{{ sheet.hero.leave }}" style="grid-column:{{ sheet.hero.col }}; grid-row:{{ sheet.hero.row }}; --d:{{ sheet.hero.delay }}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;">
+    <figure class="plate mod sheet-mod sheet-plate" data-enter="" data-mod="hero" data-shape="frame-{{ current.figNo }}" style="grid-column:{{ sheet.hero.col }}; grid-row:{{ sheet.hero.row }}; --d:{{ sheet.hero.delay }}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;">
       <span class="sheet-mark" aria-hidden="true" style="left:8px; top:5px;">+</span>
       <sc-if value="{{ heroVideo }}" hint-placeholder-val="{{ false }}"><video src="{{ current.video }}" poster="{{ current.hero }}" autoPlay="{{ true }}" muted="{{ true }}" loop="{{ true }}" playsInline="{{ true }}" preload="metadata" aria-label="{{ current.caption }}" style="width:100%; height:100%; display:block; object-fit:contain; background:var(--color-surface);"></video></sc-if>
       <sc-if value="{{ heroStill }}" hint-placeholder-val="{{ true }}"><image-slot id="{{ current.heroSlotId }}" src="{{ current.hero }}" shape="rect" fit="contain" placeholder="{{ current.placeholder }}" style="width:100%; height:100%;"></image-slot></sc-if>
       <span class="sheet-mark" aria-hidden="true" style="right:8px; bottom:5px;">+</span>
     </figure>
-    <p class="mod sheet-mod" data-enter="" data-mod="heroCaption" style="grid-column:{{ sheet.heroCaption.col }}; grid-row:{{ sheet.heroCaption.row }}; --d:{{ sheet.heroCaption.delay }}; margin:0; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px); display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="min-width:0;"><span style="color:var(--color-accent);">{{ current.figWord }} {{ current.numeral }}.</span> <span key="cap-hero-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.caption }}</span></span><span style="flex:none; color:var(--color-neutral-600); white-space:nowrap;">{{ sheet.heroReadout }}</span></p>
+    <p class="mod sheet-mod" data-enter="" data-mod="heroCaption" style="grid-column:{{ sheet.heroCaption.col }}; grid-row:{{ sheet.heroCaption.row }}; --d:{{ sheet.heroCaption.delay }}; margin:0; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px); font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="color:var(--color-accent);">{{ current.figWord }} {{ current.numeral }}.</span> <span key="cap-hero-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.caption }}</span></p>
 
     <!-- the account: three numbered notes, each its own module, with the sheet's data beside them -->
     <div class="mod sheet-mod" data-enter="" data-mod="body1" style="grid-column:{{ sheet.body1.col }}; grid-row:{{ sheet.body1.row }}; --d:{{ sheet.body1.delay }}; display:grid; grid-template-columns:3.5em minmax(0,1fr); gap:0 var(--space-3); align-content:start; padding:clamp(14px,3.7vw,22px); font-size:clamp(13px,3.4vw,14.5px); line-height:clamp(23px,6.1vw,26px); color:rgb(217, 216, 216);">
@@ -1021,33 +1021,33 @@
          detailB, and each drawn only when its own field names a picture, so a sheet may show one and
          leave the other. An entry that names a single `detail` instead gets one figure across the
          columns the pair spanned, on the rows its own ratio needs. It keeps detailSlotA's id, so the
-         morph and the cell readout find the same slot whichever arrangement the sheet is in. An
+         morph finds the same slot whichever arrangement the sheet is in. An
          entry that names none of the three is the third arrangement, and the common one: the module
          is not drawn at all, and the sheet closes over the rows it would have taken rather than
          standing an empty frame where a picture was never going to be. -->
     <sc-if value="{{ detailPairA }}" hint-placeholder-val="{{ true }}">
-    <figure class="plate mod sheet-mod sheet-plate" data-enter="" data-mod="detailA" onMouseEnter="{{ sheet.detailA.move }}" onMouseMove="{{ sheet.detailA.move }}" onMouseLeave="{{ sheet.detailA.leave }}" style="grid-column:{{ sheet.detailA.col }}; grid-row:{{ sheet.detailA.row }}; --d:{{ sheet.detailA.delay }}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;">
+    <figure class="plate mod sheet-mod sheet-plate" data-enter="" data-mod="detailA" style="grid-column:{{ sheet.detailA.col }}; grid-row:{{ sheet.detailA.row }}; --d:{{ sheet.detailA.delay }}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;">
       <span class="sheet-mark" aria-hidden="true" style="left:8px; top:5px;">+</span>
       <image-slot id="{{ current.detailSlotA }}" src="{{ current.detailA }}" shape="rect" fit="contain" style="width:100%; height:100%;"></image-slot>
       <span class="sheet-mark" aria-hidden="true" style="right:8px; bottom:5px;">+</span>
     </figure>
     </sc-if>
     <sc-if value="{{ detailPairB }}" hint-placeholder-val="{{ true }}">
-    <figure class="plate mod sheet-mod sheet-plate" data-enter="" data-mod="detailB" onMouseEnter="{{ sheet.detailB.move }}" onMouseMove="{{ sheet.detailB.move }}" onMouseLeave="{{ sheet.detailB.leave }}" style="grid-column:{{ sheet.detailB.col }}; grid-row:{{ sheet.detailB.row }}; --d:{{ sheet.detailB.delay }}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;">
+    <figure class="plate mod sheet-mod sheet-plate" data-enter="" data-mod="detailB" style="grid-column:{{ sheet.detailB.col }}; grid-row:{{ sheet.detailB.row }}; --d:{{ sheet.detailB.delay }}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;">
       <span class="sheet-mark" aria-hidden="true" style="left:8px; top:5px;">+</span>
       <image-slot id="{{ current.detailSlotB }}" src="{{ current.detailB }}" shape="rect" fit="contain" style="width:100%; height:100%;"></image-slot>
       <span class="sheet-mark" aria-hidden="true" style="right:8px; bottom:5px;">+</span>
     </figure>
     </sc-if>
     <sc-if value="{{ detailOne }}" hint-placeholder-val="{{ false }}">
-    <figure class="plate mod sheet-mod sheet-plate" data-enter="" data-mod="detail" onMouseEnter="{{ sheet.detail.move }}" onMouseMove="{{ sheet.detail.move }}" onMouseLeave="{{ sheet.detail.leave }}" style="grid-column:{{ sheet.detail.col }}; grid-row:{{ sheet.detail.row }}; --d:{{ sheet.detail.delay }}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;">
+    <figure class="plate mod sheet-mod sheet-plate" data-enter="" data-mod="detail" style="grid-column:{{ sheet.detail.col }}; grid-row:{{ sheet.detail.row }}; --d:{{ sheet.detail.delay }}; margin:0; border:0; outline:0; filter:none; padding:1px 0 0 1px;">
       <span class="sheet-mark" aria-hidden="true" style="left:8px; top:5px;">+</span>
       <image-slot id="{{ current.detailSlotA }}" src="{{ current.detail }}" shape="rect" fit="contain" style="width:100%; height:100%;"></image-slot>
       <span class="sheet-mark" aria-hidden="true" style="right:8px; bottom:5px;">+</span>
     </figure>
     </sc-if>
     <sc-if value="{{ hasDetail }}" hint-placeholder-val="{{ true }}">
-    <p class="mod sheet-mod" data-enter="" data-mod="detailCaption" style="grid-column:{{ sheet.detailCaption.col }}; grid-row:{{ sheet.detailCaption.row }}; --d:{{ sheet.detailCaption.delay }}; margin:0; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px); display:flex; align-items:baseline; justify-content:space-between; gap:22px; font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="min-width:0;"><span style="color:var(--color-accent);">{{ current.detailFigWord }}</span> <span key="cap-detail-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.detailCaptionText }}</span></span><span style="flex:none; color:var(--color-neutral-600); white-space:nowrap;">{{ sheet.detailReadout }}</span></p>
+    <p class="mod sheet-mod" data-enter="" data-mod="detailCaption" style="grid-column:{{ sheet.detailCaption.col }}; grid-row:{{ sheet.detailCaption.row }}; --d:{{ sheet.detailCaption.delay }}; margin:0; padding:clamp(7px,1.85vw,11px) clamp(14px,3.7vw,22px); font-size:13px; line-height:20px; color:var(--color-neutral-700); font-feature-settings:'tnum' 1;"><span style="color:var(--color-accent);">{{ current.detailFigWord }}</span> <span key="cap-detail-{{ current.figNo }}" data-tr="wake" data-reg="mono">{{ current.detailCaptionText }}</span></p>
     </sc-if>
 
     <!-- Linked sheets: the other end of the graph the landing draws. What this sheet names and what
@@ -1102,7 +1102,7 @@ class Component extends DCLogic {
       if (this.fog) { clearTimeout(this.fogKillTimer); this.fogKillTimer = setTimeout(() => { if (this.fog && this.state.view !== 'home') { this.fog.destroy(); this.fog = null; } }, 1000); }
     }
   }
-  headRef = React.createRef(); rootRef = React.createRef(); heroRef = React.createRef(); scriptRef = React.createRef(); parchLayerRef = React.createRef(); platformRef = React.createRef(); heroTextRef = React.createRef(); tabToolingRef = React.createRef(); tabWritingRef = React.createRef(); sheetGridRef = React.createRef();
+  headRef = React.createRef(); rootRef = React.createRef(); heroRef = React.createRef(); scriptRef = React.createRef(); parchLayerRef = React.createRef(); platformRef = React.createRef(); heroTextRef = React.createRef(); tabToolingRef = React.createRef(); tabWritingRef = React.createRef();
   MONO = "'Geist Mono', ui-monospace, monospace";
   CUBE_COLLAPSE_MS = 1500; // the cube's collapse into the platform: dissolve, travel, press flat
   // one numeral per entry of the register, so this list has to stay at least as long as data
@@ -1905,7 +1905,15 @@ class Component extends DCLogic {
   // behind the type rather than as the page itself
   heroBlockH() { return 'calc(' + this.heroSheetH(true) + ' + clamp(36px, 6vh, 80px))'; }
 
-  num(i) { return (this.props.numerals ?? 'roman') === 'roman' ? this.romans[i] : String(i + 1); }
+  // An entry is numbered within its own register, in data order: the Research page counts its
+  // chapters from I and the Development page counts its sheets from I, whatever the other holds and
+  // however the two interleave in data. ordinal(i) is that count, zero-based; roman(n) prints a count.
+  ordinal(i) { let n = 0; for (let j = 0; j < i; j++) if (this.reg(j) === this.reg(i)) n++; return n; }
+  roman(n) { return (this.props.numerals ?? 'roman') === 'roman' ? this.romans[n] : String(n + 1); }
+  num(i) { return this.roman(this.ordinal(i)); }
+  // Next and previous follow the same count: the neighbour is the next entry of the same register in
+  // data order, wrapping at its end, so a Development sheet never hands off to a Research chapter.
+  neighbour(i, step) { const n = this.data.length; let j = i; do { j = (j + step + n) % n; } while (this.reg(j) !== this.reg(i)); return j; }
   reg(i) { return /Research|Writing|Essay/.test(this.data[i].kind) ? 'serif' : 'mono'; }
   pageOf(i) { return this.reg(i) === 'mono' ? 'tooling' : 'writing'; }
   // The CV carries its own register: the link that opened it decides whether the document is set in
@@ -2331,15 +2339,15 @@ class Component extends DCLogic {
     this.onResize = () => { this.setState({ narrow: this.isStacked(), landingRows: this.visibleRows(), phone: this.isPhone(), portrait: this.isPortrait() }); this.measureTabs(); this.syncParchment(); this.syncHome(); };
     this.onKey = (e) => {
       const t = e.target; if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
-      const n = this.data.length, { view, idx } = this.state;
+      const { view, idx } = this.state;
       // an unfolded statement is the innermost thing Escape can close, so it takes the key first and
       // the reader stays on the landing rather than being navigated off it
       if (e.key === 'Escape' && this.state.landingIntroOpen) this.setState({ landingIntroOpen: false });
       else if (e.key === 'Escape') this.goPage(this.state.view === 'chapter' ? this.pageOf(idx) : this.state.page);
       else if (e.key === 't' || e.key === 'T') this.goPage('tooling');
       else if (e.key === 'e' || e.key === 'E') this.goPage('writing');
-      else if (e.key === 'ArrowRight') this.open(view === 'chapter' ? (idx + 1) % n : this.featuredFor[this.state.page][0]);
-      else if (e.key === 'ArrowLeft') this.open(view === 'chapter' ? (idx + n - 1) % n : this.featuredFor[this.state.page][1]);
+      else if (e.key === 'ArrowRight') this.open(view === 'chapter' ? this.neighbour(idx, 1) : this.featuredFor[this.state.page][0]);
+      else if (e.key === 'ArrowLeft') this.open(view === 'chapter' ? this.neighbour(idx, -1) : this.featuredFor[this.state.page][1]);
       else if (/^[1-9]$/.test(e.key) && +e.key <= n) this.open(+e.key - 1);
       else return;
       this.setState({ usedKeys: true });
@@ -2856,28 +2864,8 @@ class Component extends DCLogic {
     });
   }
 
-  componentWillUnmount() { this.dead = true; if (this.leafTuner) { this.leafTuner.destroy(); this.leafTuner = null; } if (this.gridTuner) { this.gridTuner.destroy(); this.gridTuner = null; } if (this.fog) { this.fog.destroy(); this.fog = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); window.removeEventListener('popstate', this.onPop); this.observer?.disconnect(); cancelAnimationFrame(this.cellRaf); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
+  componentWillUnmount() { this.dead = true; if (this.leafTuner) { this.leafTuner.destroy(); this.leafTuner = null; } if (this.gridTuner) { this.gridTuner.destroy(); this.gridTuner = null; } if (this.fog) { this.fog.destroy(); this.fog = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); window.removeEventListener('popstate', this.onPop); this.observer?.disconnect(); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
   observeReveals() { document.querySelectorAll('[data-enter=""]').forEach((el) => this.observer.observe(el)); }
-  // the cursor's cell on the sheet grid, sampled once a frame and only written when the cell actually
-  // changes, so crossing a 48px column re-renders once rather than once per pixel of travel
-  onPlateMove(name, e) {
-    const grid = this.sheetGridRef.current; if (!grid) return;
-    const r = grid.getBoundingClientRect();
-    const x = Math.min(22, Math.max(1, Math.floor((e.clientX - r.left) / (r.width / 22)) + 1));
-    const y = Math.max(1, Math.floor((e.clientY - r.top) / 44) + 1);
-    this.pendingCell = { plate: name, x, y };
-    if (this.cellRaf) return;
-    this.cellRaf = requestAnimationFrame(() => {
-      this.cellRaf = 0;
-      const c = this.pendingCell, s = this.state.cell; if (!c) return;
-      if (s && s.plate === c.plate && s.x === c.x && s.y === c.y) return;
-      this.setState({ cell: c });
-    });
-  }
-  onPlateLeave() {
-    cancelAnimationFrame(this.cellRaf); this.cellRaf = 0; this.pendingCell = null;
-    if (this.state.cell) this.setState({ cell: null });
-  }
   // The serif register never scrambles: this picker hands back the glyph it was given, so the
   // wavefront carries brightness and nothing on the line moves. resolve() in the library takes a
   // function as the picker itself, so no entry in its GlyphPickers registry is needed.
@@ -3169,7 +3157,7 @@ class Component extends DCLogic {
         hasLink: !!d.href || linkIdx >= 0, noLink: !d.href && linkIdx < 0, href: d.href || '#', linkTarget: d.linkBlank ? '_blank' : undefined, linkRel: d.linkBlank ? 'noopener' : undefined,
         linkClick: linkIdx >= 0 ? (e) => { e.preventDefault(); this.open(linkIdx); } : undefined,
         previewOpacity: hovered === i ? '1' : '0',
-        ghost: m ? 'SHT-' + String(i + 1).padStart(2, '0') : this.num(i),
+        ghost: m ? 'SHT-' + String(this.ordinal(i) + 1).padStart(2, '0') : this.num(i),
         kickerWord: m ? 'Sheet' : 'Chapter', figWord: m ? 'Fig.' : 'Plate', backWord: m ? 'Sheet register' : 'Contents',
         signal: this.signal(d), shapeIdx: 0, open: () => this.open(i), hover: () => this.setState({ hovered: i }) };
     });
@@ -3363,7 +3351,7 @@ class Component extends DCLogic {
       stack[name] = { col: spot.col, row: after ? (lastCardEnd + +after[1]) + ' / ' + (lastCardEnd + +after[2]) : spot.row };
     }
     const pad = (n) => String(n).padStart(2, '0');
-    const featured = this.featuredFor[pageKey].map((i, k) => ({ ...projects[i], plateNumeral: this.num(k) }));
+    const featured = this.featuredFor[pageKey].map((i, k) => ({ ...projects[i], plateNumeral: this.roman(k) }));
     const current = projects[idx];
     const paperMod = current.paper ? (this.papers || {})[idx] : null;
     const paperBlocks = this.renderPaper(paperMod, this.state.phone);
@@ -3452,16 +3440,6 @@ class Component extends DCLogic {
     const detailRow = detailTop + shiftAt(detailTop);
     sheet.detail = { col: detailCol[0] + ' / ' + detailCol[1], row: detailRow + ' / ' + (detailRow + detailRows),
       delay: ((detailRow - 1) * this.PLOT_STEP) + 'ms' };
-    // hovering a plate reads the cursor's cell back into that plate's caption
-    const cur = this.state.cell;
-    const pad2 = (n) => String(n).padStart(2, '0');
-    const readout = cur ? 'x ' + pad2(cur.x) + ' · y ' + pad2(cur.y) : '';
-    sheet.heroReadout = cur && cur.plate === 'hero' ? readout : '';
-    sheet.detailReadout = cur && cur.plate !== 'hero' ? readout : '';
-    for (const name of ['hero', 'detailA', 'detailB', 'detail']) {
-      sheet[name].move = (e) => this.onPlateMove(name, e);
-      sheet[name].leave = () => this.onPlateLeave();
-    }
     return {
       isHome: view === 'home', showTabs: view !== 'home', goHome: () => this.goHome(),
       homeLayerRef: this.homeLayerRef, homeRollRef: this.homeRollRef, homeCubeRef: this.homeCubeRef, fogLayerRef: this.fogLayerRef,
@@ -3539,14 +3517,14 @@ class Component extends DCLogic {
       // brand and the bar's own padding carry phone floors beside it; measureTabs re-reads the
       // underline off the tab's own box, so nothing here moves the mark.
       hintDisplay: this.state.phone ? 'none' : 'flex',
-      projects, pageProjects, leaves, leafRows, leftLeaves: leaves.filter((l) => l.side === 'left'), rightLeaves: leaves.filter((l) => l.side === 'right'), featured, current, next: projects[(idx + 1) % projects.length], hovered: hov, cv: cvViews.timeline,
+      projects, pageProjects, leaves, leafRows, leftLeaves: leaves.filter((l) => l.side === 'left'), rightLeaves: leaves.filter((l) => l.side === 'right'), featured, current, next: projects[this.neighbour(idx, 1)], hovered: hov, cv: cvViews.timeline,
       stack,
-      sheet, sheetGridRef: this.sheetGridRef,
+      sheet,
       contentsRef: this.contentsRef, platesRef: this.platesRef, notesRef: this.notesRef, landingStatementRef: this.landingStatementRef, headRef: this.headRef, tabToolingRef: this.tabToolingRef, tabWritingRef: this.tabWritingRef,
       goTooling: () => this.goPage('tooling'), goWriting: () => this.goPage('writing'),
       goPageCurrent: () => this.goPage(view === 'chapter' ? this.pageOf(idx) : pageKey), goNotes: () => this.go(this.notesRef),
       previewMono: () => this.setState({ previewReg: 'mono' }), previewSerif: () => this.setState({ previewReg: 'serif' }), previewNone: () => this.setState({ previewReg: null }),
-      openNext: () => this.open((idx + 1) % projects.length),
+      openNext: () => this.open(this.neighbour(idx, 1)),
     };
   }
 }
