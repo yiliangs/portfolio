@@ -866,12 +866,14 @@
       <div><dt style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--color-neutral-600);">Pages</dt><dd key="spec-pages-{{ current.figNo }}" data-tr="wake" data-reg="serif" data-fx="ripple" style="margin:0; font-feature-settings:'tnum' 1;">{{ current.pages }}</dd></div>
     </dl>
 
-    <!-- the plate takes the hero image's own ratio when the entry declares one, so a drawing that is
-         not 16:9 is shown whole; object-fit is contain rather than cover so that a wrong or missing
-         ratio letterboxes the image instead of silently cutting its edges off -->
-    <figure class="plate" data-shape="frame-{{ current.figNo }}" style="margin:0; aspect-ratio:{{ heroRatio }}; width:100%; position:relative; filter:{{ heroFilter }};">
-      <sc-if value="{{ heroSlot }}" hint-placeholder-val="{{ true }}"><image-slot id="{{ current.heroSlotId }}" shape="rect" placeholder="{{ current.placeholder }}" style="width:100%; height:100%;"></image-slot></sc-if>
-      <sc-if value="{{ heroImg }}" hint-placeholder-val="{{ false }}"><img src="{{ current.hero }}" alt="{{ current.caption }}" style="width:100%; height:100%; display:block; object-fit:contain;"></sc-if>
+    <!-- the picture carries the hero image's own ratio when the entry declares one, so a drawing that
+         is not 16:9 is shown whole, and the figure sizes to it: the .plate mat is a border-box border,
+         so a ratio on the figure would cut the box outside the mat and leave the picture a box 12px
+         short on each axis, letterboxed at its sides (#84). object-fit is contain rather than cover so
+         that a wrong or missing ratio letterboxes the image instead of silently cutting its edges off -->
+    <figure class="plate" data-shape="frame-{{ current.figNo }}" style="margin:0; width:100%; position:relative; filter:{{ heroFilter }};">
+      <sc-if value="{{ heroSlot }}" hint-placeholder-val="{{ true }}"><image-slot id="{{ current.heroSlotId }}" shape="rect" placeholder="{{ current.placeholder }}" style="width:100%; height:auto; aspect-ratio:{{ heroRatio }}; display:block;"></image-slot></sc-if>
+      <sc-if value="{{ heroImg }}" hint-placeholder-val="{{ false }}"><img src="{{ current.hero }}" alt="{{ current.caption }}" style="width:100%; height:auto; aspect-ratio:{{ heroRatio }}; display:block; object-fit:contain;"></sc-if>
     </figure>
     <!-- the plate's caption: the "Fig. N." kicker is accent and the caption is neutral ink, so the
          pane stands on the caption's own span rather than the paragraph that holds both colours -->
