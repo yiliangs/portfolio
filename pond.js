@@ -38,8 +38,19 @@ export const PARAMS = {
     restFor: [4, 0, 20, 0.5, 'longest rest, s'],
     leash: [120, 20, 600, 10, 'how far the goal may run ahead of its shoal, px'],
   },
+  swim: {
+    coast: [1.4, 0.2, 5, 0.05, 'glide drag time constant, s'],
+    kick: [2.5, 0.2, 10, 0.1, 'thrust acceleration, per s'],
+    over: [1.3, 1, 2.5, 0.05, 'a thrust aims this far above the wanted speed'],
+    low: [0.6, 0.1, 0.95, 0.01, 'a glide ends when speed falls to this share of the wanted speed'],
+    beats: [3, 1, 8, 1, 'most tail beats in a cruising thrust'],
+    maxHz: [4, 1, 8, 0.1, 'fastest tail beat, per s'],
+    hover: [0.12, 0, 2, 0.01, 'single holding beats per s while hovering'],
+    idle: [0.015, 0, 0.5, 0.005, 'chance per s that a calm fish stops to hover'],
+    idleFor: [6, 0, 30, 0.5, 'longest hover, s'],
+  },
   motion: {
-    cruise: [42, 2, 120, 1, 'swimming speed on patrol, px/s'],
+    cruise: [42, 2, 120, 1, 'wanted swimming speed, px/s'],
     burst: [3.2, 1, 10, 0.1, 'burst speed as a multiple of cruise'],
     turn: [2.4, 0.1, 8, 0.1, 'turn rate when calm, rad/s'],
     turnBurst: [5, 0, 15, 0.1, 'extra turn rate at full burst, rad/s'],
@@ -50,8 +61,7 @@ export const PARAMS = {
   body: {
     length: [24, 10, 60, 1, 'mean fish length, px'],
     amp: [0.11, 0, 0.4, 0.01, 'tail sweep, of body length'],
-    beat: [0.6, 0, 4, 0.05, 'tail beats per s when still'],
-    stride: [0.75, 0.2, 3, 0.05, 'body lengths travelled per beat'],
+    stride: [1.5, 0.2, 4, 0.05, 'body lengths a thrust aims to cover per beat'],
     alpha: [0.5, 0.05, 1, 0.01, 'ink opacity'],
     width: [1, 0.3, 3, 0.05, 'line width, px'],
   },
@@ -90,8 +100,9 @@ const WAVE_K = Math.PI * 2 * 0.9; // a little under one wavelength along the bod
 // Lateral amplitude down the body, s from 0 at the head to 1 at the tail, as a share of the tail's. Carangiform: the
 // head yaws a little, the neck barely moves, and the sweep grows toward the tail.
 export const envelope = (s) => 0.2 - 0.6 * s + 1.4 * s * s;
-// Tail beats per second: a fish covers about `stride` body lengths per beat, so a fast fish beats faster.
-export const beatHz = (speed, len, p) => p.beat + speed / (len * p.stride);
+// Tail beats per second of a thrust that aims at speed `top`: a fish covers about `stride` body lengths per beat, so
+// an urgent thrust beats faster. Fixed when the thrust starts, never read off the speed frame by frame.
+export const thrustHz = (top, len, p) => Math.min(p.maxHz, Math.max(0.5, top / (len * p.stride)));
 // The lateral offset of spine point s at the given phase, for a fish whose tail sweeps `amp` px.
 export const lateral = (s, phase, amp) => amp * envelope(s) * Math.sin(phase - WAVE_K * s);
 
@@ -190,8 +201,9 @@ function spawnFish(w, f, sh) {
   for (const o of w.islands) if (shoreR(o, f.x, f.y, p.shore) < 1) { onShore(o, f.x, f.y, p.shore, PT); f.x = PT.x; f.y = PT.y; }
   const a = sh.route[sh.leg], to = anchorAt(w, a, { x: 0, y: 0 });
   f.h = Math.atan2(to.y - f.y, to.x - f.x) + (r() - 0.5) * 0.8;
-  f.sp = p.cruise * f.pace; f.en = 0; f.flee = 0; f.fx = 0; f.fy = 0;
-  f.phase = r() * TAU; f.wa = 0;
+  f.sp = p.cruise * (w.reduced ? p.reduced : f.pace) * (0.6 + 0.6 * r()); f.en = 0; f.flee = 0; f.fx = 0; f.fy = 0;
+  f.phase = r() * TAU; f.fin = r() * TAU; f.wa = 0; f.idle = 0; f.cs = -2;
+  f.left = 0; f.top = 0; f.hz = 0; f.sweep = 0; f.amp = r() * 0.5; f.low = p.low * (0.85 + 0.3 * r());
   f.rope = new Float32Array(SPINE * 2);
   const seg = (f.len * BODY) / (SPINE - 1), cx = Math.cos(f.h), cy = Math.sin(f.h);
   for (let i = 0; i < SPINE; i++) { f.rope[i * 2] = f.x - cx * seg * i; f.rope[i * 2 + 1] = f.y - cy * seg * i; }
@@ -307,6 +319,40 @@ function ripple(w, x, y, size, life) {
   w.ripples.push({ x, y, age: 0, size, life });
 }
 
+// ----- beat and glide -----
+// A pond fish does not beat its tail all the time. It swims in bouts: a thrust of a few beats that lifts it a little
+// above the speed it wants, then a glide with the tail still and the body straightening while drag bleeds the speed
+// away, and the next thrust once it has slowed to `low` of what it wants (each fish's own threshold, redrawn every
+// glide, so neighbours do not beat in step). The beat rate is fixed for the whole thrust from the speed it aims at,
+// through the stride; urgency raises the aim and so the rate, up to maxHz. With nothing wanted the fish hovers,
+// sculling with its pectoral fins and giving one slow beat now and then to hold its place.
+// Starts a thrust of n beats at hz aiming at speed top, with the tail sweeping `sweep` of its full amplitude.
+function kick(w, f, top, n, hz, sweep) { f.top = top; f.left = n; f.hz = hz; f.sweep = sweep; }
+function swim(w, f, want, dt) {
+  const p = w.params, r = w.rand;
+  // sudden urgency (a treat seen, a fright) does not wait for the thrust under way to finish: it speeds that one up
+  if (f.left > 0 && want * p.over > f.top * 1.3) { f.top = want * p.over; f.hz = w.reduced ? Math.min(1, thrustHz(f.top, f.len, p)) : thrustHz(f.top, f.len, p); f.left = Math.max(f.left, 2); }
+  if (f.left > 0) {
+    f.sp += (f.top - f.sp) * (1 - Math.exp(-dt * p.kick));
+    const beats = Math.min(f.left, f.hz * dt);
+    f.phase = (f.phase + TAU * beats) % TAU; f.left -= beats;
+    f.amp += (f.sweep - f.amp) * Math.min(1, dt * 8);
+    if (f.left <= 1e-9) { f.left = 0; f.low = p.low * (0.85 + 0.3 * r()); }
+  } else {
+    // the glide: drag, and the body relaxing toward straight
+    f.sp *= Math.exp(-dt / p.coast);
+    f.amp *= Math.exp(-dt / 0.35);
+    if (want > 1 && f.sp < want * f.low) {
+      const urgent = f.en > 0.3, top = want * p.over;
+      let n = urgent ? 2 + Math.floor(r() * 3) : 1 + Math.floor(r() * Math.max(1, Math.round(p.beats)));
+      if (f.sp < want * 0.4) n++; // from near stillness it takes an extra beat to get going
+      kick(w, f, top, n, w.reduced ? Math.min(1, thrustHz(top, f.len, p)) : thrustHz(top, f.len, p), 0.8 + 0.4 * Math.min(1, f.en));
+    } else if (want <= 1 && r() < p.hover * dt) kick(w, f, Math.min(p.cruise * 0.25, 8), 1, 0.8, 0.5); // a holding beat
+  }
+  // the pectoral fins scull all the time, harder the slower the fish
+  f.fin = (f.fin + TAU * (0.5 + 0.9 * Math.max(0, 1 - f.sp / Math.max(1, p.cruise))) * dt) % TAU;
+}
+
 // Advances the world by dt seconds. Deterministic: the only randomness is the world's own source.
 export function step(w, dt) {
   if (!(dt > 0)) return;
@@ -392,18 +438,24 @@ export function step(w, dt) {
       }
     }
     // turn toward the wish at a limited rate: a burst turns sharper
-    if (!w.reduced && r() < p.whim * dt) { f.en = Math.max(f.en, 0.3 + 0.3 * r()); f.wa = (r() - 0.5) * 2.4; }
+    if (!w.reduced && !(f.idle > 0) && r() < p.whim * dt) { f.en = Math.max(f.en, 0.3 + 0.3 * r()); f.wa = (r() - 0.5) * 2.4; }
     if (w.reduced) f.en = 0;
-    const want = Math.atan2(sy, sx), turn = (w.reduced ? p.turn * 0.6 : p.turn + p.turnBurst * f.en) * dt;
-    let dh = wrapAngle(want - f.h); if (dh > turn) dh = turn; else if (dh < -turn) dh = -turn;
+    // a calm fish now and then stops to hover a few seconds; anything urgent wakes it
+    if (f.idle > 0) { f.idle -= dt; if (f.en > 0.2) f.idle = 0; }
+    else if (f.en < 0.05 && r() < p.idle * dt) f.idle = p.idleFor * (0.3 + 0.7 * r());
+    const aim = wrapAngle(Math.atan2(sy, sx) - f.h);
+    // a sharp turn from a glide or a hover is one strong stroke, a C-start: the head whips round and a single beat
+    // drives it out of the turn. A slow turn is just a curve, taken whether the tail is beating or not
+    if (!w.reduced && !(f.idle > 0) && Math.abs(aim) > 2 && f.cs <= -2 && f.left <= 0) { f.cs = 0.3; kick(w, f, Math.max(f.sp, p.cruise * f.pace) * p.over, 1, Math.min(p.maxHz, 3), 1.3); }
+    f.cs -= dt;
+    const turn = (w.reduced ? p.turn * 0.6 : p.turn + p.turnBurst * (f.en + (f.cs > 0 ? 2 : 0))) * dt;
+    const dh = aim > turn ? turn : aim < -turn ? -turn : aim;
     f.h = wrapAngle(f.h + dh);
-    // speed follows energy: a burst kicks in quickly and fades slowly
+    // the speed it wants: its own pace in the shoal's gear, raised by urgency, nothing while it hovers
     const gear = sh.gear > 1 ? 1 + (sh.gear - 1) * 0.5 : sh.gear; // a dashing shoal swims faster, a resting one slower
-    const cap = w.reduced ? p.cruise * p.reduced : p.cruise * f.pace * gear * (1 + f.en * (p.burst - 1));
-    f.sp += (cap - f.sp) * Math.min(1, dt * (cap > f.sp ? 7 : 1.5));
-    if (w.reduced && f.sp > cap) f.sp = cap;
+    const want = f.idle > 0 ? 0 : w.reduced ? p.cruise * p.reduced : p.cruise * f.pace * gear * (1 + f.en * (p.burst - 1));
+    swim(w, f, want, dt);
     f.en *= decay;
-    f.phase = (f.phase + TAU * beatHz(f.sp, f.len, p) * dt) % TAU;
   }
   // move, then hold every head out of the islands and inside the page
   for (let i = 0; i < n; i++) {
@@ -451,7 +503,7 @@ function curveThrough(ctx, xs, ys, count) {
 }
 const LX = new Float32Array(SPINE), LY = new Float32Array(SPINE);
 function drawFish(ctx, f, p, swim) {
-  const amp = f.len * p.amp * (0.55 + 0.45 * Math.min(1.6, f.sp / Math.max(1, p.cruise))) * swim;
+  const amp = f.len * p.amp * f.amp * swim;
   const rope = f.rope;
   for (let i = 0; i < SPINE; i++) {
     const a = Math.max(0, i - 1), b = Math.min(SPINE - 1, i + 1);
@@ -487,8 +539,8 @@ function drawFish(ctx, f, p, swim) {
   ctx.closePath();
   ctx.globalAlpha = 0.92; ctx.fill();
   ctx.globalAlpha = p.alpha; ctx.stroke();
-  // pectoral fins, paddling a little more when the fish is slow
-  const flap = 0.35 * Math.sin(f.phase * 0.7) * swim, fl = f.len * 0.13, k = 2;
+  // pectoral fins, sculling wider when the fish is slow
+  const flap = (0.2 + 0.25 * Math.max(0, 1 - f.sp / Math.max(1, p.cruise))) * Math.sin(f.fin) * swim, fl = f.len * 0.13, k = 2;
   let bx = PX[k] - PX[k + 1], by = PY[k] - PY[k + 1]; const bm = Math.hypot(bx, by) || 1; bx /= bm; by /= bm;
   ctx.beginPath();
   for (const side of [1, -1]) {

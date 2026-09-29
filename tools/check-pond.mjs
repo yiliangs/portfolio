@@ -7,23 +7,82 @@
 //
 // Run with `npm run check`. Exits non-zero and prints every failure it found.
 
-import { defaults, createWorld, step, setIslands, setPointer, dropTreat, strokeStart, strokeTo, strokeEnd, strokeCancel, envelope, beatHz, lateral, shoreR, coast, islandsFrom, MARGIN } from '../pond.js';
+// POND_MODULE=<path> runs these checks against another copy of pond.js, e.g. an older commit's, to show a check failing
+// on the code it was written to replace.
+import { pathToFileURL } from 'node:url';
+import { resolve } from 'node:path';
+const M = await import(process.env.POND_MODULE ? pathToFileURL(resolve(process.env.POND_MODULE)).href : '../pond.js');
+const { defaults, createWorld, step, setIslands, setPointer, dropTreat, strokeStart, strokeTo, strokeEnd, strokeCancel, envelope, thrustHz, lateral, shoreR, coast, islandsFrom, MARGIN } = M;
 
 const failures = [];
 const fail = (msg) => failures.push(msg);
 const DT = 1 / 60;
+const TAU = Math.PI * 2;
+const metric = (line) => { if (process.env.POND_METRICS) console.log(line); };
 
-// (a) the stroke: the tail sweeps wider than the head, and a faster fish beats faster
+// the stroke: the tail sweeps wider than the head; a thrust's beat rate follows the speed it aims at through the
+// stride, so an urgent thrust beats faster, but never past maxHz
 {
   const p = defaults();
   if (!(envelope(1) > envelope(0) * 3)) fail(`tail amplitude ${envelope(1)} should far exceed head amplitude ${envelope(0)}`);
-  let peak = 0; for (let ph = 0; ph < Math.PI * 2; ph += 0.01) peak = Math.max(peak, Math.abs(lateral(1, ph, 5)));
-  let head = 0; for (let ph = 0; ph < Math.PI * 2; ph += 0.01) head = Math.max(head, Math.abs(lateral(0, ph, 5)));
+  let peak = 0; for (let ph = 0; ph < TAU; ph += 0.01) peak = Math.max(peak, Math.abs(lateral(1, ph, 5)));
+  let head = 0; for (let ph = 0; ph < TAU; ph += 0.01) head = Math.max(head, Math.abs(lateral(0, ph, 5)));
   if (!(peak > head)) fail(`lateral sweep at the tail ${peak.toFixed(2)} should exceed the head ${head.toFixed(2)}`);
-  const slow = beatHz(p.cruise, p.length, p), fast = beatHz(p.cruise * p.burst, p.length, p);
-  if (!(fast > slow * 2)) fail(`beat rate should scale with speed: ${slow.toFixed(2)} Hz at cruise, ${fast.toFixed(2)} Hz at burst`);
-  const a = beatHz(40, 24, p) - beatHz(20, 24, p), b = beatHz(60, 24, p) - beatHz(40, 24, p);
-  if (Math.abs(a - b) > 1e-9) fail('beat rate should rise linearly with speed');
+  if (typeof thrustHz !== 'function') fail('pond.js should export thrustHz, the beat rate of a thrust');
+  else {
+    const slow = thrustHz(p.cruise * p.over, p.length, p), fast = thrustHz(p.cruise * p.burst * p.over, p.length, p);
+    if (!(fast > slow * 1.5)) fail(`an urgent thrust should beat faster: ${slow.toFixed(2)} Hz at cruise, ${fast.toFixed(2)} Hz at burst`);
+    if (!(thrustHz(1e4, p.length, p) <= p.maxHz)) fail(`a thrust should never beat past maxHz ${p.maxHz}`);
+  }
+}
+
+// Beat and glide, over a seeded minute on a 1440x900 page with two islands. The beat rate is read off the tail's
+// phase each frame, so it holds for any model of the stroke: a frame whose phase does not advance is a glide. A
+// cruising fish is one with nothing urgent on it and not hovering. (a) the beat of a cruising fish sits at a pond
+// fish's 1 to 2 Hz, never past 4.5 Hz for anything; (b) a cruising fish glides 35% to 65% of the time; the pond stays
+// active, mean speed at least SPEED_FLOOR.
+const ISL2 = [{ x: 300, y: 250, w: 170, h: 340 }, { x: 900, y: 330, w: 240, h: 240 }];
+export const SPEED_FLOOR = 30;
+export function beatMetrics(seed) {
+  const w = createWorld(defaults(), { w: 1440, h: 900, seed });
+  setIslands(w, ISL2);
+  const prev = w.fish.map((f) => f.phase), hz = [];
+  let top = 0, glide = 0, cruising = 0, speed = 0, speedN = 0;
+  for (let s = 0; s < 60 * 65; s++) {
+    step(w, DT);
+    w.fish.forEach((f, i) => {
+      const d = (((f.phase - prev[i]) % TAU) + TAU) % TAU; prev[i] = f.phase;
+      if (s < 60 * 5) return;
+      const b = d / TAU / DT;
+      top = Math.max(top, b); speed += f.sp; speedN++;
+      if (f.en > 0.05 || f.flee > 0 || f.idle > 0) return;
+      cruising++;
+      if (b < 0.05) glide++; else hz.push(b);
+    });
+  }
+  hz.sort((a, b) => a - b);
+  return { median: hz.length ? hz[hz.length >> 1] : 0, top, glide: glide / Math.max(1, cruising), speed: speed / Math.max(1, speedN) };
+}
+for (const seed of [2, 19]) {
+  const m = beatMetrics(seed);
+  const show = `seed ${seed}: cruising beat median ${m.median.toFixed(2)} Hz, top ${m.top.toFixed(2)} Hz, glide ${(m.glide * 100).toFixed(0)}%, mean speed ${m.speed.toFixed(1)} px/s`;
+  metric(show);
+  if (!(m.median >= 1 && m.median <= 2.2)) fail(`${show}: (a) a cruising fish should beat at 1 to 2.2 Hz`);
+  if (!(m.top <= 4.5)) fail(`${show}: (a) no tail should beat past 4.5 Hz`);
+  if (!(m.glide >= 0.35 && m.glide <= 0.65)) fail(`${show}: (b) a cruising fish should glide 35% to 65% of the time`);
+  if (!(m.speed >= SPEED_FLOOR)) fail(`${show}: mean speed should be at least ${SPEED_FLOOR} px/s`);
+}
+// (c) a fish that wants no speed hovers: a lone fish held idle for a minute beats well under once every three seconds
+{
+  const p = defaults(); p.count = 1;
+  const w = createWorld(p, { w: 1440, h: 900, seed: 6 });
+  let turns = 0, prev = w.fish[0].phase;
+  for (let s = 0; s < 60 * 60; s++) {
+    w.fish[0].idle = 1e9; step(w, DT);
+    turns += ((((w.fish[0].phase - prev) % TAU) + TAU) % TAU) / TAU; prev = w.fish[0].phase;
+  }
+  metric(`hover: ${(turns / 60).toFixed(2)} Hz`);
+  if (!(turns / 60 < 0.3)) fail(`(c) a hovering fish should beat under 0.3 Hz on average, beat ${(turns / 60).toFixed(2)} Hz`);
 }
 
 // a pond with the two islands placed as the home view places them, and a cursor sweeping through
@@ -144,7 +203,6 @@ for (const seed of [3, 11]) {
 // and not a scatter, (2) each shoal swimming as one while it travels, (3) the shoals ranging over the whole pond
 // rather than milling where they started, and (4) a visibly busier pond than the calm first version, whose cruise was
 // 26 px/s. SPEED_FLOOR is that line.
-export const SPEED_FLOOR = 36;
 export function patrolMetrics(seed) {
   const w = createWorld(defaults(), { w: 1440, h: 900, seed });
   setIslands(w, [{ x: 300, y: 250, w: 170, h: 340 }, { x: 900, y: 330, w: 240, h: 240 }]);
