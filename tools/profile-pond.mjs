@@ -43,7 +43,8 @@ if (args.help) {
   --view=1080p1,1440p2    viewports: 1080p1 = 1920x1080 at DPR 1, 1440p2 = 2560x1440 at DPR 2
   --load=idle,busy        idle: fish only; busy: a scripted drag dropping treats across the water
   --mode=off,on           pond-off baseline and pond-on
-  --sections              time each section of draw() (JS time only)
+  --coast-res=1,2         pond-on runs at each coastRes (coast layer resolution, CSS px scale); default: the page's own
+  --sections              time each section of drawCoasts() and drawLive(), and the coast copy (JS time only)
   --ablate=a,b            extra pond-on runs, each with draw() sections skipped: water,land,shore,fish,treats,rings;
                           join with + to skip several in one run (land+shore), or 'all' for an empty draw()
   --cpu-profile           V8 CPU profile during pond-on runs; prints top self-time functions
@@ -60,6 +61,7 @@ for (const v of VIEW_KEYS) if (!VIEWS[v]) throw new Error('unknown --view ' + v)
 const LOADS = list(args.load, 'idle,busy');
 const MODES = list(args.mode, 'off,on');
 const ABLATE = args.ablate ? list(args.ablate) : [];
+const COAST_RES = args['coast-res'] ? list(args['coast-res']).map(Number) : [null];
 const SECTIONS = ['water', 'land', 'shore', 'fish', 'treats'];
 const ablation = (item) => (item === 'all' ? [...SECTIONS] : item.split('+'));
 for (const a of ABLATE) for (const p of ablation(a)) if (!SECTIONS.includes(p) && p !== 'rings') throw new Error('unknown --ablate ' + p);
@@ -79,36 +81,42 @@ function instrumentedPond() {
 `);
   src = once(src, '\n  const ro = new ResizeObserver(resize);', '\n  globalThis.__pondWorld = world;\n  const ro = new ResizeObserver(resize);');
   src = once(src, '\n    step(world, dt);\n', '\n    const __t0 = performance.now(); step(world, dt); const __t1 = performance.now();\n');
-  src = once(src, '\n    draw(ctx, world, ink, paper, GOLD, water);\n', '\n    const __t2 = performance.now(); draw(ctx, world, ink, paper, GOLD, water); if (globalThis.__prof) __prof.tick(__t1 - __t0, performance.now() - __t2);\n');
+  src = once(src, '\n    paint();\n', '\n    const __t2 = performance.now(); paint(); if (globalThis.__prof) __prof.tick(__t1 - __t0, performance.now() - __t2);\n');
   src = once(src, '\n  return api;\n}', '\n  globalThis.__pondApi = api;\n  return api;\n}');
-  if (args.sections || ABLATE.length) src = sectionDraw(src);
+  if (args.sections || ABLATE.length) {
+    // the coast layer's sections; then 'copy' runs from the end of the coasts to the first live section (the scaled
+    // copy onto the canvas when the coasts are drawn apart, nearly nothing when they are drawn straight on)
+    src = sectionFn(src, 'export function drawCoasts(ctx, w, ink, paper, water = paper) {', [
+      ['water', (l) => l.startsWith('ctx.globalAlpha = 1; ctx.fillStyle = water;')],
+      ['land', (l) => l === 'ctx.fillStyle = paper;'],
+      ['shore', (l) => l.startsWith('ctx.strokeStyle = ink;')],
+    ], 'copy');
+    src = sectionFn(src, 'export function drawLive(ctx, w, ink, paper, gold) {', [
+      ['fish', (l) => l.startsWith('// the school')],
+      ['treats', (l) => l.startsWith('// ripples, then')],
+    ], null);
+  }
   return src;
 }
-// Cuts draw() at the first line of each section. Each section is a run of whole statements, so wrapping it in an
-// if-block to skip it keeps the braces balanced. Skipping 'shore' also skips the stroke style set-up, so the fish
-// stroke with the previous frame's style; the cost of the strokes is the same.
-function sectionDraw(src) {
-  const start = src.indexOf('export function draw(ctx, w, ink, paper, gold, water = paper) {');
+// Cuts one of pond.js's draw functions (drawCoasts, drawLive) at the first line of each section. Each section is a run
+// of whole statements, so wrapping it in an if-block to skip it keeps the braces balanced. The function's end opens
+// the section named by after; null closes the frame's timing. drawLive sets its own stroke style, so skipping a coast
+// section leaves the fish as they are.
+function sectionFn(src, head, anchors, after) {
+  const start = src.indexOf(head);
   const end = src.indexOf('\n}\n', start);
-  if (start < 0 || end < 0) throw new Error('profile-pond: draw() not found in pond.js; update the rewrite');
+  if (start < 0 || end < 0) throw new Error(`profile-pond: "${head}" not found in pond.js; update the rewrite`);
   const lines = src.slice(start, end).split('\n');
-  const anchors = [
-    ['water', (l) => l.startsWith('ctx.globalAlpha = 1; ctx.fillStyle = water;')],
-    ['land', (l) => l === 'ctx.fillStyle = paper;'],
-    ['shore', (l) => l.startsWith('ctx.strokeStyle = ink;')],
-    ['fish', (l) => l.startsWith('// the school')],
-    ['treats', (l) => l.startsWith('// ripples, then')],
-  ];
-  const at = anchors.map(([name, test]) => { const i = lines.findIndex((l) => test(l.trim())); if (i < 0) throw new Error(`profile-pond: draw() section "${name}" not found; update the rewrite`); return i; });
+  const at = anchors.map(([name, test]) => { const i = lines.findIndex((l) => test(l.trim())); if (i < 0) throw new Error(`profile-pond: section "${name}" not found; update the rewrite`); return i; });
   const last = lines.length - 1; // the closing `ctx.globalAlpha = 1;`
-  if (lines[last].trim() !== 'ctx.globalAlpha = 1;') throw new Error('profile-pond: draw() no longer ends where the rewrite expects');
-  for (let k = 0; k < at.length - 1; k++) if (!(at[k] < at[k + 1])) throw new Error('profile-pond: draw() sections out of order');
+  if (lines[last].trim() !== 'ctx.globalAlpha = 1;') throw new Error(`profile-pond: "${head}" no longer ends where the rewrite expects`);
+  for (let k = 0; k < at.length - 1; k++) if (!(at[k] < at[k + 1])) throw new Error('profile-pond: sections out of order');
   const out = [];
   for (let i = 0; i < lines.length; i++) {
     const k = at.indexOf(i);
     if (k > 0) out.push('  }');
     if (k >= 0) out.push(`  __prof.sec('${anchors[k][0]}'); if (!__prof.cfg.ablate.includes('${anchors[k][0]}')) {`);
-    if (i === last) out.push('  }', "  __prof.sec(null);");
+    if (i === last) out.push('  }', `  __prof.sec(${after === null ? 'null' : `'${after}'`});`);
     out.push(lines[i]);
   }
   return src.slice(0, start) + out.join('\n') + src.slice(end);
@@ -207,6 +215,7 @@ async function runScenario(sc) {
     const n0 = await ev('__prof.n'); await sleep(1000); const n1 = await ev('__prof.n');
     if (n1 - n0 < 10) throw new Error(`frames are not advancing (${n1 - n0} in 1 s); the tab is backgrounded or stalled`);
     if (sc.ablate && ablation(sc.ablate).includes('rings')) await ev('__pondApi.params.rings = 0');
+    if (sc.cr != null) await ev(`__pondApi.params.coastRes = ${sc.cr}`);
     await sleep(2500); // the pond's 900 ms fade-in, and the world settling
     const page = await ev('({ iso: crossOriginIsolated, dpr: devicePixelRatio, w: innerWidth, h: innerHeight, fish: globalThis.__pondWorld ? __pondWorld.fish.length : 0, canvas: (() => { const c = document.querySelector("canvas"); return c ? c.width + "x" + c.height : null; })() })');
 
@@ -296,14 +305,14 @@ function analyseProfile(p, frames) {
 // ---------- the matrix ----------
 const scenarios = [];
 for (const throttle of THROTTLES) for (const view of VIEW_KEYS) for (const load of LOADS) {
-  for (const mode of MODES) scenarios.push({ throttle, viewKey: view, view: VIEWS[view], load, mode });
-  for (const ablate of ABLATE) scenarios.push({ throttle, viewKey: view, view: VIEWS[view], load, mode: 'on', ablate });
+  for (const mode of MODES) for (const cr of mode === 'on' ? COAST_RES : [null]) scenarios.push({ throttle, viewKey: view, view: VIEWS[view], load, mode, cr });
+  for (const cr of COAST_RES) for (const ablate of ABLATE) scenarios.push({ throttle, viewKey: view, view: VIEWS[view], load, mode: 'on', ablate, cr });
 }
 console.log(`pond profile: ${scenarios.length} scenarios x ${SECONDS} s; Chrome ${gpu.headless ? 'headless' : 'headed'}; GPU ${gpu.vendor} / ${gpu.device}; 2d_canvas=${gpu.canvas2d} gpu_compositing=${gpu.compositing} rasterization=${gpu.rasterization}`);
 
 const results = [];
 for (const sc of scenarios) {
-  const label = `${sc.throttle}x ${sc.viewKey} ${sc.load} ${sc.mode}${sc.ablate ? ' -' + sc.ablate : ''}`;
+  const label = `${sc.throttle}x ${sc.viewKey} ${sc.load} ${sc.mode}${sc.cr != null ? ' cr' + sc.cr : ''}${sc.ablate ? ' -' + sc.ablate : ''}`;
   process.stdout.write(label + ' ... ');
   try { const r = await runScenario(sc); results.push(r); console.log(`ok (${r.dump.frames.length} frames, canvas ${r.page.canvas}, iso=${r.page.iso}, fish ${r.page.fish}, treats ${r.dump.treats.toFixed(1)}${r.dump.hash ? ', hash ' + r.dump.hash : ''})`); }
   catch (e) { console.log('FAILED: ' + e.message); results.push({ ...sc, error: e.message }); }
@@ -326,16 +335,18 @@ const pad = (s, n) => String(s).padEnd(n);
 console.log('\n' + ['scenario'.padEnd(30), 'fps', 'int mean/p95', '>20', '>33', 'step mean/p95/max', 'draw mean/p95/max', 'main%', 'main ms/fr', 'gpu ms/fr', 'viz ms/fr', 'gc ms/fr'].join(' | '));
 for (const x of rows) {
   const r = x.r;
-  console.log([pad(`${r.throttle}x ${r.viewKey} ${r.load} ${r.mode}${r.ablate ? ' -' + r.ablate : ''}${x.stalled ? ' STALLED' : ''}`, 30), f(x.fps, 1), `${f(x.I.mean, 1)}/${f(x.I.p95, 1)}`, x.over20, x.over33,
+  console.log([pad(`${r.throttle}x ${r.viewKey} ${r.load} ${r.mode}${r.cr != null ? ' cr' + r.cr : ''}${r.ablate ? ' -' + r.ablate : ''}${x.stalled ? ' STALLED' : ''}`, 30), f(x.fps, 1), `${f(x.I.mean, 1)}/${f(x.I.p95, 1)}`, x.over20, x.over33,
     r.mode === 'off' ? '-' : `${f(x.S.mean)}/${f(x.S.p95)}/${f(x.S.max)}`, r.mode === 'off' ? '-' : `${f(x.D.mean)}/${f(x.D.p95)}/${f(x.D.max)}`,
     f(100 * x.busyShare, 0), f(x.t.mainMs), f(x.t.gpuMs), f(x.t.vizMs), f(x.t.gcMs, 3)].join(' | '));
 }
 // marginal cost: pond-on minus pond-off, per frame
 console.log('\nmarginal (on - off) per frame: main ms, gpu ms, viz ms, frames >20 ms on/off');
-const key = (r) => `${r.throttle}x ${r.viewKey} ${r.load}`;
+// base: the cell a pond-off baseline belongs to; key: a pond-on variant of it (its coastRes, when set)
+const base = (r) => `${r.throttle}x ${r.viewKey} ${r.load}`;
+const key = (r) => base(r) + (r.cr != null ? ` cr${r.cr}` : '');
 const marg = {};
 for (const x of rows) if (x.r.mode === 'on' && !x.r.ablate && !x.stalled) {
-  const o = rows.find((y) => y.r.mode === 'off' && !y.stalled && key(y.r) === key(x.r)); if (!o) continue;
+  const o = rows.find((y) => y.r.mode === 'off' && !y.stalled && base(y.r) === base(x.r)); if (!o) continue;
   const m = { main: x.t.mainMs - o.t.mainMs, gpu: x.t.gpuMs - o.t.gpuMs, viz: x.t.vizMs - o.t.vizMs, over20: [x.over20, o.over20] };
   marg[key(x.r)] = m;
   console.log(`  ${pad(key(x.r), 20)} main ${f(m.main)}  gpu ${f(m.gpu)}  viz ${f(m.viz)}  >20ms ${m.over20[0]}/${m.over20[1]}`);
@@ -349,7 +360,7 @@ if (ABLATE.length) {
 }
 if (args.sections) {
   console.log('\ndraw() sections, JS ms per frame (mean)');
-  for (const x of rows) if (x.r.mode === 'on' && !x.r.ablate && x.r.dump.secN) console.log(`  ${pad(key(x.r), 20)} ` + SECTIONS.map((k) => `${k} ${f((x.r.dump.secAcc[k] || 0) / x.r.dump.secN, 3)}`).join('  '));
+  for (const x of rows) if (x.r.mode === 'on' && !x.r.ablate && x.r.dump.secN) console.log(`  ${pad(key(x.r), 20)} ` + [...SECTIONS.slice(0, 3), 'copy', ...SECTIONS.slice(3)].map((k) => `${k} ${f((x.r.dump.secAcc[k] || 0) / x.r.dump.secN, 3)}`).join('  '));
 }
 if (args['cpu-profile']) {
   console.log('\nCPU profile, top self time (ms per frame)');

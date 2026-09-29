@@ -72,6 +72,7 @@ export const PARAMS = {
     shoreAlpha: [0.16, 0, 1, 0.01, 'shoreline opacity'],
     water: [0.08, 0, 0.4, 0.005, 'how much darker the water is than the land'],
     shallows: [0.6, 0, 1, 0.05, 'how far the shallows lighten back toward the land'],
+    coastRes: [1, 1, 2, 0.25, 'resolution of the coasts on a dense screen: 1 CSS px, 2 the full backing store'],
   },
   treats: {
     sense: [240, 0, 800, 10, 'how far a fish notices a treat, px'],
@@ -628,8 +629,15 @@ export function waterOf(paper, depth) {
 const SHALLOWS = [[36, 0.16], [20, 0.2], [9, 0.28]];
 
 // Draws the world onto ctx (already scaled to CSS px). ink and paper are CSS colours (paper is the land); water is the
-// pond's colour and defaults to the land's; gold is the treats' colour.
+// pond's colour and defaults to the land's; gold is the treats' colour. The world is two layers, drawn in order: the
+// coasts (opaque: the water, the land, the shores and the waves lapping at them) and the live layer over them (the
+// fish, the ripples and the treats). The shell may draw the coasts at a lower resolution than the live layer.
 export function draw(ctx, w, ink, paper, gold, water = paper) {
+  drawCoasts(ctx, w, ink, paper, water);
+  drawLive(ctx, w, ink, paper, gold);
+}
+// The coast layer: covers the whole canvas, so it needs nothing under it.
+export function drawCoasts(ctx, w, ink, paper, water = paper) {
   const p = w.params, still = w.reduced;
   // the water, then each island as land with shallows lightening toward its coast
   ctx.globalAlpha = 1; ctx.fillStyle = water; ctx.fillRect(0, 0, w.w, w.h);
@@ -653,7 +661,13 @@ export function draw(ctx, w, ink, paper, gold, water = paper) {
       coastPath(ctx, o, g); ctx.stroke();
     }
   }
+  ctx.globalAlpha = 1;
+}
+// The live layer: the fish, the ripples and the treats, over the coasts.
+export function drawLive(ctx, w, ink, paper, gold) {
+  const p = w.params, still = w.reduced;
   // the school: a paper fill under each outline, so crossing fish read as one over the other
+  ctx.strokeStyle = ink; ctx.lineWidth = p.width; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   ctx.fillStyle = paper;
   for (const f of w.fish) drawFish(ctx, f, p, still ? 0.4 : 1);
   // ripples, then the treats on the surface above everything
@@ -696,6 +710,23 @@ export function mount(container) {
     resizeWorld(world, vw, vh);
   };
   const ro = new ResizeObserver(resize); ro.observe(container); resize();
+  // On a dense screen the coasts are drawn into a copy at coastRes backing pixels per CSS px (1 by default) and scaled
+  // up onto the canvas: their big soft paths cost the GPU by the pixel, and nothing in them is fine enough to need the
+  // full resolution. The live layer is drawn over them at full resolution. At coastRes >= dpr they go straight on.
+  let coastCanvas = null, coastCtx = null;
+  const paint = () => {
+    const res = Math.min(dpr, Math.max(1, params.coastRes || 1));
+    if (res >= dpr) drawCoasts(ctx, world, ink, paper, water);
+    else {
+      if (!coastCtx) { coastCanvas = document.createElement('canvas'); coastCtx = coastCanvas.getContext('2d', { alpha: false }); }
+      const cw = Math.max(1, Math.round(vw * res)), ch = Math.max(1, Math.round(vh * res));
+      if (coastCanvas.width !== cw || coastCanvas.height !== ch) { coastCanvas.width = cw; coastCanvas.height = ch; }
+      coastCtx.setTransform(res, 0, 0, res, 0, 0);
+      drawCoasts(coastCtx, world, ink, paper, water);
+      ctx.imageSmoothingEnabled = true; ctx.drawImage(coastCanvas, 0, 0, vw, vh);
+    }
+    drawLive(ctx, world, ink, paper, GOLD);
+  };
   let alive = true, raf = 0, last = performance.now();
   const tick = (now) => {
     raf = 0;
@@ -705,7 +736,7 @@ export function mount(container) {
     inkAge += dt; if (inkAge > 1) readInk();
     step(world, dt);
     if (paper !== waterFor || params.water !== waterDepth) { waterFor = paper; waterDepth = params.water; water = waterOf(paper, waterDepth); }
-    draw(ctx, world, ink, paper, GOLD, water);
+    paint();
   };
   // a hidden tab runs nothing; on return the clock restarts rather than jumping by the time away
   const onVisible = () => { if (!alive) return; if (document.hidden) { if (raf) cancelAnimationFrame(raf); raf = 0; } else if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } };
@@ -730,7 +761,7 @@ export function mount(container) {
       alive = false; if (raf) cancelAnimationFrame(raf); ro.disconnect();
       document.removeEventListener('visibilitychange', onVisible); reducedQ?.removeEventListener?.('change', onReduced);
       if (dev) dev.destroy();
-      canvas.width = canvas.height = 0; if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+      canvas.width = canvas.height = 0; if (coastCanvas) coastCanvas.width = coastCanvas.height = 0; if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
     },
   };
   if (new URLSearchParams(location.search).has('dev')) import('./pond-dev.js').then((m) => { if (alive) dev = m.mount(api); }).catch((e) => console.error('pond-dev', e));
