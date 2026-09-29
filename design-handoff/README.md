@@ -18,7 +18,7 @@ Everything in `design/` is a **design reference built in HTML** (a Design Compon
   - Left: **Research roll** — a button cell (`height:min(44vh,400px)`) holding the word "Research" (heading face 300, `clamp(26px,3.4vw,50px)`, letter-spacing 0.01em). The 3D parchment roll (`parchment.js`) is anchored to this cell in a fixed full-viewport WebGL layer (`z-index:1`, opacity 0.8). Clicking → Research page.
   - Right: **Development cube** — a button cell; `home.js` mounts a three.js wireframe cube (ink `#1a1918`, edge opacity 0.5, face wash 0.04 back-side) with the word "Development" as extruded 3D outline type inside (helvetiker glyph outlines → `ExtrudeGeometry`, depth `0.035 × cube side`; only cap contours are stroked, opacity 0.5 → 0.75 on hover). The lettering counter-rotates so it stays facing the viewer (`inner.quaternion = cube⁻¹ slerp identity 0.12`). Clicking → Development page.
 - Footer line (bottom): centered flex row, gap 24px, small-caps meta links.
-- **Background field** (`field.js`, fixed layer `z-index:0`, fades in 900ms): 700 particles ride a curl-noise current and leave hairline ink trails (line width 0.45–0.95px, alpha 0.24; 4% of particles gold `--color-accent` at 0.45). Trails fade by `destination-out` 3.5%/frame. Each home object bends the current into a narrow tangential band just outside it (radius `min(140, max(w,h)/2)`; roll clockwise, cube counter-clockwise); the cursor pushes particles away within ~110px. Trails thin to zero within 70px of the headline block and footer ("quiet" boxes). Field is destroyed 1s after leaving Home.
+- **Background pond** (`pond.js`, fixed layer `z-index:0`, fades in 900ms): the page seen from above as water, the two home objects as islands (ellipses on their visible boxes). About 30 line-drawn fish (14 on a coarse pointer) school by repulsion, orientation and attraction zones with a blind rear sector, swim with a travelling tail wave, steer round the islands and never enter them, and turn back at the screen edges. Hairline rings lap inward at each shore. A click on open water drops a gold treat the nearest fish burst toward and eat; a fast cursor startles the fish near it. Honours `prefers-reduced-motion` and pauses while the tab is hidden. Pond is destroyed 1s after leaving Home.
 
 ### Research (`data-screen-label="Research"`)
 - Full-viewport hero (`height:calc(100vh - 57px)`, perspective 1200px) with the parchment roll unrolled into a script; hero text tilts with the cursor (see Interactions). Dotted radial-gradient paper texture at 16% ink.
@@ -62,7 +62,7 @@ Everything in `design/` is a **design reference built in HTML** (a Design Compon
 - `design/Portfolio.dc.html` — the whole site (template + logic class).
 - `design/home.js` — Development cube (three.js) and the cube→platform collapse.
 - `design/parchment.js` — Research roll / script / platform (three.js).
-- `design/field.js` — home background particle field (2D canvas).
+- `pond.js` — home background pond (2D canvas); `pond-dev.js` is its `?dev` tuning panel.
 - `design/src/text-rippling.js` — text ripple helper.
 - `design/image-slot.js`, `design/support.js` — runtime helpers for the prototype.
 - `design/github.md` — connected repository record.

@@ -53,7 +53,7 @@
         "\n\n\n  ",
         "\n  ",
         "\n  ",
-        h("div", { key: "3", ref: V.fogLayerRef, "data-print": "hide", "aria-hidden": "true", style: {"position":"fixed","inset":"0","pointerEvents":"none","zIndex":"0","opacity":"0","transition":"opacity 900ms cubic-bezier(.65,0,.15,1)"} }),
+        h("div", { key: "3", ref: V.pondLayerRef, "data-print": "hide", "aria-hidden": "true", style: {"position":"fixed","inset":"0","pointerEvents":"none","zIndex":"0","opacity":"0","transition":"opacity 900ms cubic-bezier(.65,0,.15,1)"} }),
         "\n  ",
         h("div", { key: "5", ref: V.parchLayerRef, "data-print": "hide", "aria-hidden": "true", style: {"position":"fixed","inset":"0","pointerEvents":"none","zIndex":"1","opacity":"0.8"} }),
         "\n  ",
@@ -2109,21 +2109,22 @@
   
   class Component extends DCLogic {
     contentsRef = React.createRef(); platesRef = React.createRef(); notesRef = React.createRef(); landingStatementRef = React.createRef();
-    homeLayerRef = React.createRef(); homeRollRef = React.createRef(); homeCubeRef = React.createRef(); fogLayerRef = React.createRef(); 
-    // the home fog lives only on the home view; it fades out (and stops) elsewhere
-    syncFog() {
-      const layer = this.fogLayerRef.current; if (!layer) return;
+    homeLayerRef = React.createRef(); homeRollRef = React.createRef(); homeCubeRef = React.createRef(); pondLayerRef = React.createRef(); 
+    // the home pond lives only on the home view; it fades out (and stops) elsewhere. syncHome runs this on resize and
+    // scroll too, so the islands follow the objects wherever the page puts them
+    syncPond() {
+      const layer = this.pondLayerRef.current; if (!layer) return;
       const home = this.state.view === 'home', roll = this.homeRollRef.current, cube = this.homeCubeRef.current;
       if (home && roll && cube) {
-        if (!this.fog) { if (this.fogLoading) return; this.fogLoading = true; import('./field.js').then((m) => { this.fogLoading = false; if (!this.fogLayerRef.current || this.fog) return; this.fog = m.mount(this.fogLayerRef.current); this.syncFog(); }).catch(() => { this.fogLoading = false; }); return; }
+        if (!this.pond) { if (this.pondLoading) return; this.pondLoading = true; import('./pond.js').then((m) => { this.pondLoading = false; if (!this.pondLayerRef.current || this.pond) return; this.pond = m.mount(this.pondLayerRef.current); this.syncPond(); }).catch(() => { this.pondLoading = false; }); return; }
         const box = (el) => { const r = el.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; };
         // the visible objects, not their layout cells: the roll stands about as wide as its word, the cube is a square
         const rb = box(roll), rs = roll.firstElementChild ? box(roll.firstElementChild) : rb, rw = Math.max(rs.w, rb.h * 0.5), cb = box(cube), cs = Math.min(cb.w, cb.h);
-        this.fog.setSources([{ x: rb.x + rb.w / 2 - rw / 2, y: rb.y, w: rw, h: rb.h }, { x: cb.x + cb.w / 2 - cs / 2, y: cb.y + cb.h / 2 - cs / 2, w: cs, h: cs }]);
+        this.pond.setSources([{ x: rb.x + rb.w / 2 - rw / 2, y: rb.y, w: rw, h: rb.h }, { x: cb.x + cb.w / 2 - cs / 2, y: cb.y + cb.h / 2 - cs / 2, w: cs, h: cs }]);
         layer.style.opacity = '1';
       } else {
         layer.style.opacity = '0';
-        if (this.fog) { clearTimeout(this.fogKillTimer); this.fogKillTimer = setTimeout(() => { if (this.fog && this.state.view !== 'home') { this.fog.destroy(); this.fog = null; } }, 1000); }
+        if (this.pond) { clearTimeout(this.pondKillTimer); this.pondKillTimer = setTimeout(() => { if (this.pond && this.state.view !== 'home') { this.pond.destroy(); this.pond = null; } }, 1000); }
       }
     }
     headRef = React.createRef(); rootRef = React.createRef(); heroRef = React.createRef(); scriptRef = React.createRef(); parchLayerRef = React.createRef(); platformRef = React.createRef(); heroTextRef = React.createRef(); tabToolingRef = React.createRef(); tabWritingRef = React.createRef();
@@ -3246,7 +3247,7 @@
       if (from) { this.plateLead = true; this.plateFrom = from; }
     }
     syncHome() {
-      this.syncFog();
+      this.syncPond();
       const layer = this.homeLayerRef.current; if (!layer) return;
       const box = (el) => { const r = el.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; };
       const cell = this.state.view === 'home' ? this.homeCubeRef.current : null;
@@ -3414,7 +3415,7 @@
   
         if (this.parch) { this.parch.setTilt(kx, ky, inside); this.parch.setCursor(e.clientX, e.clientY); }
         const rootEl = this.rootRef.current; if (rootEl) { rootEl.style.setProperty('--mx', String(kx)); rootEl.style.setProperty('--my', String(ky)); }
-        if (this.fog) this.fog.setPointer(e.clientX, e.clientY, true);
+        if (this.pond) this.pond.setPointer(e.clientX, e.clientY, true);
         if (this.dragLast && this.parch) { this.parch.drag(e.clientX - this.dragLast[0], e.clientY - this.dragLast[1]); this.dragLast = [e.clientX, e.clientY]; }
       };
       window.addEventListener('pointermove', this.onTilt, { passive: true });
@@ -3422,6 +3423,10 @@
       this.onDown = (e) => { const pf = this.platformRef.current; if (!pf || !this.parch || !this.parch.isPlatform() || e.button !== 0) return; const r = pf.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return; this.dragLast = [e.clientX, e.clientY]; this.parch.dragStart(); pf.style.cursor = 'grabbing'; };
       this.onUp = () => { if (!this.dragLast) return; this.dragLast = null; if (this.parch) this.parch.dragEnd(); const pf = this.platformRef.current; if (pf) pf.style.cursor = 'grab'; };
       window.addEventListener('pointerdown', this.onDown); window.addEventListener('pointerup', this.onUp); window.addEventListener('pointercancel', this.onUp);
+      // a click on the open water of the home view drops a treat for the fish; a click that was meant for a control, or
+      // that ends a text selection, feeds nothing. A touch tap arrives as a click too.
+      this.onFeed = (e) => { if (!this.pond || this.state.view !== 'home' || e.button !== 0) return; if (e.target && e.target.closest && e.target.closest('a, button, input, textarea, select, label, [role=button]')) return; if (String(window.getSelection ? window.getSelection() : '')) return; this.pond.drop(e.clientX, e.clientY); };
+      window.addEventListener('click', this.onFeed);
       this.onScroll = () => { this.syncParchment(); this.syncHome(); this.setState({ scrollY: window.scrollY }); clearTimeout(this.remeasureTimer); this.remeasureTimer = setTimeout(() => this.remeasureText(), 120); };
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => setTimeout(() => { this.remeasureText(); this.fitLandingStatement(); this.syncParchment(); }, 50));
       this.onResize = () => { this.setState({ narrow: this.isStacked(), landingRows: this.visibleRows(), phone: this.isPhone(), portrait: this.isPortrait(), scale: this.landingScale() }); this.measureTabs(); this.syncParchment(); this.syncHome(); };
@@ -3469,7 +3474,7 @@
       // re-render through forceUpdate, both park on their own side of the window, and each hides itself
       // on a view it has nothing to tune, so only one ever stands on the page. The flag is the only
       // thing that fetches them, so the page ships nothing for them otherwise, the same arrangement
-      // field.js has for the home field.
+      // pond.js has for the home pond.
       if (this.dev) {
         import('./leaves-dev.js')
           .then((m) => { if (!this.dead) this.leafTuner = m.mount({ spreads: this.LEAF_SPREADS, pairs: this.LEAF_PAIRS, rerender: () => this.forceUpdate() }); })
@@ -3955,7 +3960,7 @@
       });
     }
   
-    componentWillUnmount() { this.dead = true; if (this.leafTuner) { this.leafTuner.destroy(); this.leafTuner = null; } if (this.gridTuner) { this.gridTuner.destroy(); this.gridTuner = null; } if (this.fog) { this.fog.destroy(); this.fog = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); window.removeEventListener('popstate', this.onPop); this.observer?.disconnect(); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
+    componentWillUnmount() { this.dead = true; if (this.leafTuner) { this.leafTuner.destroy(); this.leafTuner = null; } if (this.gridTuner) { this.gridTuner.destroy(); this.gridTuner = null; } if (this.pond) { this.pond.destroy(); this.pond = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); clearTimeout(this.pondKillTimer); window.removeEventListener('click', this.onFeed); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); window.removeEventListener('popstate', this.onPop); this.observer?.disconnect(); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
     observeReveals() { document.querySelectorAll('[data-enter=""]').forEach((el) => this.observer.observe(el)); }
     // The serif register never scrambles: this picker hands back the glyph it was given, so the
     // wavefront carries brightness and nothing on the line moves. resolve() in the library takes a
@@ -4533,7 +4538,7 @@
         delay: ((detailRow - 1) * this.PLOT_STEP) + 'ms' };
       return {
         isHome: view === 'home', showTabs: view !== 'home', goHome: () => this.goHome(),
-        homeLayerRef: this.homeLayerRef, homeRollRef: this.homeRollRef, homeCubeRef: this.homeCubeRef, fogLayerRef: this.fogLayerRef,
+        homeLayerRef: this.homeLayerRef, homeRollRef: this.homeRollRef, homeCubeRef: this.homeCubeRef, pondLayerRef: this.pondLayerRef,
         goToolingFromCube: () => { this.goPage('tooling'); this.cubeLead = true; },
         // The home in portrait. Two objects laid across a page need width, not a large width, so a phone
         // and an upright tablet both read them down the page instead. The main takes the screen exactly:
