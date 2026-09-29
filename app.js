@@ -2111,12 +2111,13 @@
     contentsRef = React.createRef(); platesRef = React.createRef(); notesRef = React.createRef(); landingStatementRef = React.createRef();
     homeLayerRef = React.createRef(); homeRollRef = React.createRef(); homeCubeRef = React.createRef(); pondLayerRef = React.createRef(); 
     // the home pond lives only on the home view; it fades out (and stops) elsewhere. syncHome runs this on resize and
-    // scroll too, so the islands follow the objects wherever the page puts them
+    // scroll too, so the islands follow the objects wherever the page puts them; each frame the pond also reads the
+    // objects' own outlines on screen, and falls back to these boxes while an object shows nothing
     syncPond() {
       const layer = this.pondLayerRef.current; if (!layer) return;
       const home = this.state.view === 'home', roll = this.homeRollRef.current, cube = this.homeCubeRef.current;
       if (home && roll && cube) {
-        if (!this.pond) { if (this.pondLoading) return; this.pondLoading = true; import('./pond.js').then((m) => { this.pondLoading = false; if (!this.pondLayerRef.current || this.pond) return; this.pond = m.mount(this.pondLayerRef.current); this.syncPond(); }).catch(() => { this.pondLoading = false; }); return; }
+        if (!this.pond) { if (this.pondLoading) return; this.pondLoading = true; import('./pond.js').then((m) => { this.pondLoading = false; if (!this.pondLayerRef.current || this.pond) return; this.pond = m.mount(this.pondLayerRef.current); this.pond.setOutlines([(o) => (this.parch ? this.parch.outline(o) : 0), (o) => (this.home ? this.home.outline(o) : 0)]); this.syncPond(); }).catch(() => { this.pondLoading = false; }); return; }
         const box = (el) => { const r = el.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; };
         // the visible objects, not their layout cells: the roll stands about as wide as its word, the cube is a square
         const rb = box(roll), rs = roll.firstElementChild ? box(roll.firstElementChild) : rb, rw = Math.max(rs.w, rb.h * 0.5), cb = box(cube), cs = Math.min(cb.w, cb.h);
