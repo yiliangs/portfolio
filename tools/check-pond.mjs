@@ -112,5 +112,52 @@ for (const seed of [3, 11]) {
   if (!(top > w.params.cruise * 2)) fail(`full motion: a treat should set fish bursting, top speed only ${top.toFixed(1)} px/s`);
 }
 
+// Shoals that patrol. One seeded minute on a 1440x900 page with two islands, sampled twice a second after a
+// settling spell. A cluster is a connected group of fish linked within three body lengths, and it counts as a shoal
+// once it holds three fish: a pair is not a shoal. What has to read: (1) several shoals at once, not one loose school
+// and not a scatter, (2) each shoal swimming as one while it travels, (3) the shoals ranging over the whole pond
+// rather than milling where they started, and (4) a visibly busier pond than the calm first version, whose cruise was
+// 26 px/s. SPEED_FLOOR is that line.
+export const SPEED_FLOOR = 36;
+export function patrolMetrics(seed) {
+  const w = createWorld(defaults(), { w: 1440, h: 900, seed });
+  setIslands(w, [{ x: 300, y: 250, w: 170, h: 340 }, { x: 900, y: 330, w: 240, h: 240 }]);
+  const link = 3 * w.params.length, link2 = link * link;
+  let frames = 0, good = 0, polSum = 0, polN = 0, speedSum = 0, speedN = 0, grouped = 0, fishSeen = 0;
+  const cells = new Set();
+  for (let s = 0; s < 60 * 60; s++) {
+    step(w, DT);
+    if (s < 60 * 5 || s % 30) continue;
+    const F = w.fish, n = F.length, id = new Int32Array(n).fill(-1);
+    let clusters = 0;
+    for (let i = 0; i < n; i++) {
+      if (id[i] >= 0) continue;
+      const stack = [i], members = []; id[i] = i;
+      while (stack.length) { const a = stack.pop(); members.push(a); for (let j = 0; j < n; j++) if (id[j] < 0) { const dx = F[j].x - F[a].x, dy = F[j].y - F[a].y; if (dx * dx + dy * dy < link2) { id[j] = i; stack.push(j); } } }
+      if (members.length < 3) continue;
+      clusters++; grouped += members.length;
+      let cx = 0, cy = 0, hx = 0, hy = 0, sp = 0;
+      for (const m of members) { cx += F[m].x; cy += F[m].y; hx += Math.cos(F[m].h); hy += Math.sin(F[m].h); sp += F[m].sp; }
+      const k = members.length; cx /= k; cy /= k; sp /= k;
+      cells.add(Math.min(2, Math.floor((cx / w.w) * 3)) * 3 + Math.min(2, Math.floor((cy / w.h) * 3)));
+      if (sp >= SPEED_FLOOR) { polSum += Math.hypot(hx, hy) / k; polN++; } // travelling
+    }
+    for (const f of F) { speedSum += f.sp; speedN++; }
+    fishSeen += n; frames++;
+    if (clusters >= 3 && clusters <= 7) good++;
+  }
+  return { clustered: good / frames, polarisation: polN ? polSum / polN : 0, cells: cells.size, speed: speedSum / speedN, grouped: grouped / fishSeen };
+}
+for (const seed of [2, 19]) {
+  const m = patrolMetrics(seed);
+  const show = `seed ${seed}: 3-7 shoals in ${(m.clustered * 100).toFixed(0)}% of frames, polarisation ${m.polarisation.toFixed(2)}, ${m.cells}/9 cells, mean speed ${m.speed.toFixed(1)} px/s, ${(m.grouped * 100).toFixed(0)}% of fish in shoals`;
+  if (process.env.POND_METRICS) console.log(show);
+  if (!(m.clustered >= 0.8)) fail(`${show}: 3 to 7 shoals should show in at least 80% of frames`);
+  if (!(m.polarisation >= 0.7)) fail(`${show}: a travelling shoal should hold polarisation 0.7`);
+  if (!(m.cells >= 7)) fail(`${show}: the shoals should visit at least 7 of 9 cells`);
+  if (!(m.speed >= SPEED_FLOOR)) fail(`${show}: mean speed should be at least ${SPEED_FLOOR} px/s`);
+  if (!(m.grouped >= 0.7)) fail(`${show}: at least 70% of fish should swim in a shoal`);
+}
+
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }
 console.log('check-pond: stroke, islands, treats and reduced motion hold');
