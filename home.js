@@ -6,7 +6,7 @@
 // Anchored to a viewport box like the parchment roll. On click it collapses into the Development platform in three
 // beats — the word dissolves, the cube travels and turns into the platform's axonometric pose, then presses down into a
 // sheet with the platform's exact proportions and projection — so the parchment platform can take over unseen.
-// mount(container) -> { setAnchor, collapse, reset, setPlatformFrame, setInk, setHover, setOpacity, destroy }
+// mount(container) -> { setAnchor, collapse, reset, setPlatformFrame, setInk, setHover, setOpacity, outline, destroy }
 import * as THREE from './vendor/three-0.160.0.module.min.js';
 
 const INK = 0x1a1918;
@@ -106,6 +106,7 @@ export function hypercube(a, b, fold, pos, wt, wpos, wnd) {
     m = Math.max(m, Math.abs(hcP[o]), Math.abs(hcP[o + 1]), Math.abs(hcP[o + 2]));
   }
   const k = m > 0 ? 0.5 * CS / m : 0;
+  hcK = k;
   for (let e = 0; e < HC_E.length; e++) {
     const i = HC_E[e][0], j = HC_E[e][1], p = i * 3, q = j * 3, o = e * 6;
     pos[o] = hcP[p] * k; pos[o + 1] = hcP[p + 1] * k; pos[o + 2] = hcP[p + 2] * k;
@@ -160,6 +161,22 @@ export function hypercube(a, b, fold, pos, wt, wpos, wnd) {
     wnd[n + 3] = clamp01(0.5 + (hcW[wall[1]] + hcW[wall[2]] + hcW[wall[3]] + hcW[wall[4]]) / (4 * HYPER_SPAN));
   }
   return pos;
+}
+
+// The figure's silhouette on screen, as the 16 vertices of the last pose hypercube() was asked for. The edges and the
+// walls are both drawn from exactly these points in the shell's one frame, so the set is the whole outline and a hull
+// of it is the figure's. matrix takes the shell's local space to clip space (projection times view times the
+// figure's world matrix), vw and vh are the viewport in CSS px, and out takes x, y pairs in viewport px. Pure, and
+// allocation free, so a check can step it without a renderer and the page can call it every frame.
+let hcK = 0; // the refit scale of the last pose, which the edge and wall buffers were written at
+const olV = new THREE.Vector3();
+export function hyperOutline(matrix, vw, vh, out) {
+  if (out.length < 32) return 0;
+  for (let i = 0; i < 16; i++) {
+    olV.set(hcP[i * 3] * hcK, hcP[i * 3 + 1] * hcK, hcP[i * 3 + 2] * hcK).applyMatrix4(matrix);
+    out[i * 2] = (olV.x + 1) / 2 * vw; out[i * 2 + 1] = (1 - olV.y) / 2 * vh;
+  }
+  return 16;
 }
 
 // Where the figure stands at rest: the three-quarter view, rocked by the roll and nudged by the cursor. Written as a
@@ -432,8 +449,12 @@ export function mount(container) {
     // home page, ink blocks with paper edges once the cube lands on the dark Development page
     edgeMat.color.copy(inkCur); wallMat.color.copy(inkCur); plateMat.color.copy(inkCur); voxEdgeMat.color.copy(inkCur); voxMat.color.copy(inkCur);
     renderer.render(scene, camera);
+    rendered = true;
   };
   raf = requestAnimationFrame(tick);
+  // outline() reads the matrices the last render left, so it has nothing to say before there was one
+  let rendered = false;
+  const olM = new THREE.Matrix4();
 
   return {
     // viewport-px box the cube should occupy (mid-collapse the timeline owns the box; mid-expand this retargets the cube's cell)
@@ -456,6 +477,13 @@ export function mount(container) {
       dis = trav = flat = fold = 1; anchor = { ...col.plate }; hoverTo = 0;
     },
     busy() { return !!col; },
+    // the figure's on-screen silhouette as x, y pairs in viewport px (see hyperOutline); 0 while it has nothing of
+    // its own to show: faded out, mid collapse or expand, or pressed into the platform's plate
+    outline(out) {
+      if (!alive || !rendered || alpha < 0.05 || col || flat > 0) return 0;
+      olM.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse).multiply(hyper.matrixWorld);
+      return hyperOutline(olM, vw, vh, out);
+    },
     reset() { col = null; dis = trav = flat = fold = 0; },
     setPlatformFrame(f) { if (f) frame = { ...frame, ...f }; },
     // the cube is drawn in ink on the light home ground and in paper once it lands on the dark Development page

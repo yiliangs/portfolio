@@ -1,16 +1,16 @@
-// Dev panel for the home field. One section per part of the system (landscape, flow, particles), one row per
+// Dev panel for the home pond. One section per part of the system (school, lead, swim, motion, body, islands, treats), one row per
 // parameter with its name, its value and what it does, tuning the live object in place. Loaded only when the URL
-// carries ?dev, so it ships nothing to the page otherwise. Clear wipes the trails so a setting can be read on a clean
-// sheet. Copy writes the current values as a PARAMS block ready to paste back into field.js; Reset returns to the
-// defaults it was mounted with. The d key hides and shows the panel.
-// mount(field) -> { destroy() }, where field is what field.js's mount returned
-import { PARAMS } from './field.js';
+// carries ?dev, so it ships nothing to the page otherwise. Clear empties the water of treats and ripples. Copy writes
+// the current values as a PARAMS block ready to paste back into pond.js; Reset returns to the defaults it was mounted
+// with. The d key hides and shows the panel.
+// mount(pond) -> { destroy() }, where pond is what pond.js's mount returned
+import { PARAMS } from './pond.js';
 
 const INK = '#f3f2f2', DIM = '#a8a4a0', GOLD = '#b68235', RULE = 'rgba(243,242,242,0.12)';
 const el = (tag, css, text) => { const e = document.createElement(tag); if (css) e.style.cssText = css; if (text != null) e.textContent = text; return e; };
 
-export function mount(field) {
-  const params = field.params, initial = { ...params };
+export function mount(pond) {
+  const params = pond.params, initial = { ...params };
   const root = el('div', `position:fixed; right:16px; bottom:16px; z-index:1000; width:320px; max-height:calc(100vh - 32px); overflow:auto; box-sizing:border-box; padding:4px 0 10px; background:rgba(28,27,26,0.94); color:${INK}; font:11px/1.5 'Geist Mono', ui-monospace, monospace; border-radius:6px; box-shadow:0 12px 40px rgba(0,0,0,0.35); user-select:none; pointer-events:auto;`);
   const refresh = [];
   for (const [section, entries] of Object.entries(PARAMS)) {
@@ -44,7 +44,7 @@ export function mount(field) {
   const out = el('pre', `margin:8px 14px 0; white-space:pre-wrap; color:${DIM}; font-size:10px; max-height:140px; overflow:auto; user-select:text;`);
   const dump = () => Object.entries(PARAMS).map(([section, entries]) => `  ${section}: {\n${Object.entries(entries).map(([k, v]) => `    ${k}: [${params[k]}, ${v.slice(1).map((x) => (typeof x === 'string' ? `'${x}'` : x)).join(', ')}],`).join('\n')}\n  },`).join('\n');
   bar.append(
-    button('clear', () => field.clear(), 'wipe the trails'),
+    button('clear', () => pond.clear(), 'empty the water of treats and ripples'),
     button('copy', () => { const text = dump(); out.textContent = text; navigator.clipboard?.writeText(text).catch(() => {}); }, 'copy the values as a PARAMS block'),
     button('reset', () => { Object.assign(params, initial); refresh.forEach((f) => f()); out.textContent = ''; }, 'back to the defaults'),
     button('hide', () => { root.hidden = true; }, 'hide; press d to show again'),

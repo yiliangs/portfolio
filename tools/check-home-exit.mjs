@@ -100,7 +100,7 @@ function stage() {
     platformRef: { current: null },
     parchLayerRef: { current: parchLayer },
     CUBE_COLLAPSE_MS: 1500,
-    syncFog() {},
+    syncPond() {},
     home: {
       setOpacity(a) { calls.push(['setOpacity', a]); },
       busy() { return false; },
