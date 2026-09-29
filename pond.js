@@ -65,6 +65,8 @@ export const PARAMS = {
     lap: [0.12, 0, 1, 0.01, 'waves per s'],
     ringAlpha: [0.13, 0, 1, 0.01, 'wave opacity'],
     shoreAlpha: [0.16, 0, 1, 0.01, 'shoreline opacity'],
+    water: [0.08, 0, 0.4, 0.005, 'how much darker the water is than the land'],
+    shallows: [0.6, 0, 1, 0.05, 'how far the shallows lighten back toward the land'],
   },
   treats: {
     sense: [240, 0, 800, 10, 'how far a fish notices a treat, px'],
@@ -510,10 +512,33 @@ function coastPath(ctx, o, off) {
   ctx.closePath();
 }
 
-// Draws the world onto ctx (already scaled to CSS px). ink and paper are CSS colours; gold is the treats' colour.
-export function draw(ctx, w, ink, paper, gold) {
+// The water's colour: the land's (the page background) taken toward a deep cool slate by `depth`. On a light page the
+// slate darkens it; on a dark page a near-black slate does, so the water sits below the land in both themes.
+// Accepts #rgb, #rrggbb and rgb()/rgba(); anything else leaves the water the colour of the land.
+export function waterOf(paper, depth) {
+  const s = String(paper).trim(); let c = null;
+  if (s[0] === '#') { const h = s.length === 4 ? s.slice(1).split('').map((d) => d + d).join('') : s.slice(1, 7); if (/^[0-9a-f]{6}$/i.test(h)) c = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)); }
+  else { const m = s.match(/rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/i); if (m) c = [+m[1], +m[2], +m[3]]; }
+  if (!c) return s;
+  const light = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 > 0.5, deep = light ? [44, 74, 85] : [4, 10, 13];
+  // a dark page has little room below it, so the same depth pulls three times as far to read as the same step
+  const k = light ? depth : Math.min(1, depth * 3), mix = c.map((v, i) => Math.round(v + (deep[i] - v) * k));
+  return `rgb(${mix[0]}, ${mix[1]}, ${mix[2]})`;
+}
+// bands of shallows round each island, far to near: grown by px, strength of the land colour laid over the water
+const SHALLOWS = [[36, 0.16], [20, 0.2], [9, 0.28]];
+
+// Draws the world onto ctx (already scaled to CSS px). ink and paper are CSS colours (paper is the land); water is the
+// pond's colour and defaults to the land's; gold is the treats' colour.
+export function draw(ctx, w, ink, paper, gold, water = paper) {
   const p = w.params, still = w.reduced;
-  ctx.clearRect(0, 0, w.w, w.h);
+  // the water, then each island as land with shallows lightening toward its coast
+  ctx.globalAlpha = 1; ctx.fillStyle = water; ctx.fillRect(0, 0, w.w, w.h);
+  ctx.fillStyle = paper;
+  for (const o of w.islands) {
+    for (const [g, a] of SHALLOWS) { ctx.globalAlpha = p.shallows * a; coastPath(ctx, o, g); ctx.fill(); }
+    ctx.globalAlpha = 1; coastPath(ctx, o, 0); ctx.fill();
+  }
   ctx.strokeStyle = ink; ctx.lineWidth = p.width; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   // the shores and the water lapping in toward them
   for (const o of w.islands) {
@@ -563,7 +588,7 @@ export function mount(container) {
   reducedQ?.addEventListener?.('change', onReduced);
   // the tokens live on the root div, not on <html>, so read them off the layer itself; and read them again every
   // second, so a change of theme reaches the ink without any hook into how the theme is switched
-  let ink = '#201f1d', paper = '#f3f2f2', inkAge = Infinity;
+  let ink = '#201f1d', paper = '#f3f2f2', inkAge = Infinity, water = paper, waterFor = null, waterDepth = NaN;
   const readInk = () => { const css = getComputedStyle(container); ink = css.getPropertyValue('--color-text').trim() || ink; paper = css.getPropertyValue('--color-bg').trim() || paper; inkAge = 0; };
   let vw = 1, vh = 1;
   const resize = () => {
@@ -580,7 +605,8 @@ export function mount(container) {
     const dt = Math.min(0.05, Math.max(0, (now - last) / 1000)); last = now;
     inkAge += dt; if (inkAge > 1) readInk();
     step(world, dt);
-    draw(ctx, world, ink, paper, GOLD);
+    if (paper !== waterFor || params.water !== waterDepth) { waterFor = paper; waterDepth = params.water; water = waterOf(paper, waterDepth); }
+    draw(ctx, world, ink, paper, GOLD, water);
   };
   // a hidden tab runs nothing; on return the clock restarts rather than jumping by the time away
   const onVisible = () => { if (!alive) return; if (document.hidden) { if (raf) cancelAnimationFrame(raf); raf = 0; } else if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); } };

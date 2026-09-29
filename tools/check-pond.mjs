@@ -12,7 +12,7 @@
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 const M = await import(process.env.POND_MODULE ? pathToFileURL(resolve(process.env.POND_MODULE)).href : '../pond.js');
-const { defaults, createWorld, step, setIslands, setPointer, dropTreat, strokeStart, strokeTo, strokeEnd, strokeCancel, envelope, thrustHz, lateral, shoreR, coast, islandsFrom, MARGIN } = M;
+const { defaults, createWorld, step, setIslands, setPointer, dropTreat, strokeStart, strokeTo, strokeEnd, strokeCancel, envelope, thrustHz, lateral, shoreR, coast, islandsFrom, MARGIN, waterOf } = M;
 
 const failures = [];
 const fail = (msg) => failures.push(msg);
@@ -293,6 +293,19 @@ for (const seed of [2, 19]) {
   if (!(m.grouped >= 0.6)) fail(`${show}: (g) at least 60% of the fish should be in a group`);
   if (!(m.cells >= 7)) fail(`${show}: (h) the groups should visit at least 7 of 9 cells`);
   if (!(m.polarisation >= 0.6)) fail(`${show}: (h) a moving group should hold polarisation 0.6`);
+}
+
+// The water is the paper tinted a shade toward the depth: darker than the land in either theme, the paper itself at
+// depth 0, and the same answer whether the paper arrives as hex or as rgb().
+{
+  if (typeof waterOf !== 'function') fail('pond.js should export waterOf, the water colour over a paper');
+  else {
+    const lum = (s) => { const [r, g, b] = s.match(/\d+/g).map(Number); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+    if (!(lum(waterOf('#f3f2f2', 0.08)) < lum('rgb(243, 242, 242)'))) fail(`light theme: the water ${waterOf('#f3f2f2', 0.08)} should be darker than the land #f3f2f2`);
+    if (!(lum(waterOf('#1b1a19', 0.08)) < lum('rgb(27, 26, 25)'))) fail(`dark theme: the water ${waterOf('#1b1a19', 0.08)} should be darker than the land #1b1a19`);
+    if (waterOf('#f3f2f2', 0) !== 'rgb(243, 242, 242)') fail(`water at depth 0 should be the paper itself, got ${waterOf('#f3f2f2', 0)}`);
+    if (waterOf('rgb(27, 26, 25)', 0.08) !== waterOf('#1b1a19', 0.08)) fail(`water over rgb() and hex paper should agree: ${waterOf('rgb(27, 26, 25)', 0.08)} vs ${waterOf('#1b1a19', 0.08)}`);
+  }
 }
 
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }
