@@ -417,5 +417,57 @@ for (const seed of [2, 19]) {
   }
 }
 
+// The pointer's land is the drawn coast: islandAt answers from the same shore the fish keep off, so a point on an
+// island's land hits that island, a point just past its coast is water, and the answer follows the outline as it
+// turns. A drag stroke that crosses an island lays nothing on the land and does not pile its treats on the shore.
+{
+  if (typeof M.islandAt !== 'function') fail('islandAt(w, x, y) is not exported');
+  else {
+    const { islandAt } = M;
+    const p = defaults(); p.count = 0; p.countTouch = 0;
+    const w = createWorld(p, { w: 1440, h: 900, seed: 7, reduced: true });
+    const RX = 900, RY = 450, L = 150, T = 20; let ang = 0;
+    const bar = (out) => {   // a thin bar, 300 x 40, turned by ang
+      const c = Math.cos(ang), s = Math.sin(ang), q = [[-L, -T], [L, -T], [L, T], [-L, T]]; let n = 0;
+      for (let e = 0; e < 4; e++) for (let j = 0; j < 8; j++) {
+        const u = j / 8, x = q[e][0] + (q[(e + 1) % 4][0] - q[e][0]) * u, y = q[e][1] + (q[(e + 1) % 4][1] - q[e][1]) * u;
+        out[2 * n] = RX + x * c - y * s; out[2 * n + 1] = RY + x * s + y * c; n++;
+      }
+      return n;
+    };
+    const SQ = { x: 340, y: 390, w: 120, h: 120 };
+    M.setOutlines(w, [null, bar]); setIslands(w, [SQ, { x: RX - L, y: RY - T, w: 2 * L, h: 2 * T }]);
+    for (let s = 0; s < 60 * 10; s++) step(w, DT);
+    const [sq, rb] = w.islands;
+    if (islandAt(w, sq.x, sq.y) !== 0) fail(`islandAt at island 0's centre should be 0, got ${islandAt(w, sq.x, sq.y)}`);
+    if (islandAt(w, rb.x, rb.y) !== 1) fail(`islandAt at island 1's centre should be 1, got ${islandAt(w, rb.x, rb.y)}`);
+    if (islandAt(w, 40, 40) !== -1) fail(`islandAt on open water should be -1, got ${islandAt(w, 40, 40)}`);
+    let miss = 0, hit = 0;
+    for (let k = 0; k < 48; k++) {
+      const t = (k / 48) * TAU;
+      for (const o of [sq, rb]) {
+        const R = coast(o, t);
+        if (islandAt(w, o.x + Math.cos(t) * (R - 2), o.y + Math.sin(t) * (R - 2)) !== o.i) hit++;
+        if (islandAt(w, o.x + Math.cos(t) * (R + 2), o.y + Math.sin(t) * (R + 2)) !== -1) miss++;
+      }
+    }
+    if (hit) fail(`islandAt: ${hit}/96 points 2 px inside a coast missed their island`);
+    if (miss) fail(`islandAt: ${miss}/96 points 2 px past a coast still hit an island`);
+    // the bar's far end: land while the bar lies flat, water once it stands up
+    const ex = RX + L - 10, ey = RY;
+    const before = islandAt(w, ex, ey);
+    ang = Math.PI / 2; for (let s = 0; s < 60 * 10; s++) step(w, DT);
+    const after = islandAt(w, ex, ey);
+    if (before !== 1 || after !== -1) fail(`islandAt should follow the outline: the bar's end hit ${before} lying flat (want 1) and ${after} standing (want -1)`);
+    // a stroke straight through island 0 lays nothing on its land
+    const y0 = sq.y + 25;   // off the centre, so a treat rolled radially to the shore leaves the line
+    strokeStart(w, 60, y0); strokeTo(w, sq.x, y0); strokeTo(w, 700, y0); strokeEnd(w);
+    const off = w.treats.filter((t) => Math.abs(t.y - y0) > 1).length, onLand = w.treats.filter((t) => islandAt(w, t.x, t.y) >= 0).length;
+    if (!w.treats.length) fail('a stroke across open water and an island laid no treats at all');
+    if (onLand) fail(`${onLand} treats lie on an island's land after a stroke across it`);
+    if (off > 2) fail(`a stroke across an island rolled ${off} treats off its line onto the shore (want at most the 2 in the shore band)`);
+  }
+}
+
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }
 console.log('check-pond: stroke, islands, treats and reduced motion hold');

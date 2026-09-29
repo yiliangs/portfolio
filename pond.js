@@ -8,7 +8,7 @@
 // world's own seeded random source and touches nothing else, so a run from a seed is the same run every time and
 // tools/check-pond.mjs drives it headless. mount() is the browser shell around it: canvas, clock, colours, lifecycle.
 //
-// mount(container) -> { setSources([{x,y,w,h}]), setOutlines([(out) => count]), setPointer(x,y,active), drop(x,y), strokeStart(x,y), strokeTo(x,y),
+// mount(container) -> { setSources([{x,y,w,h}]), setOutlines([(out) => count]), setPointer(x,y,active), hit(x,y), drop(x,y), strokeStart(x,y), strokeTo(x,y),
 //   strokeEnd(), strokeCancel(), params, clear(), destroy() }
 // With ?dev in the URL the parameters open in a panel (pond-dev.js) and can be tuned live; `params` is that object.
 // Parameters by section: [default, min, max, step, label].
@@ -318,6 +318,13 @@ export function setIslands(w, boxes) {
 }
 export function setOutlines(w, fns) { w.outlines = fns || []; }
 export function setPointer(w, x, y, on) { w.ptr.x = x; w.ptr.y = y; w.ptr.on = !!on; }
+// The island whose coast holds (x,y), by index, or -1 on open water. The same coast the fish keep off, so the land a
+// pointer lands on is the land drawn on screen, whatever shape the island has taken this frame.
+export function islandAt(w, x, y) {
+  let best = -1, low = 1;
+  for (const o of w.islands) { const r = shoreR(o, x, y, 0); if (r < low) { low = r; best = o.i; } }
+  return best;
+}
 // A treat that lands on an island rolls off into the water at the nearest shore.
 export function dropTreat(w, x, y) {
   const g = w.params.shore + 4;
@@ -338,8 +345,10 @@ export function strokeTo(w, x, y) {
   let left = L;
   while (left >= s.need) {
     ax += ux * s.need; ay += uy * s.need; left -= s.need; s.need = Math.max(1, w.params.spacing);
-    if (!s.dropped) { dropTreat(w, s.sx, s.sy); s.dropped++; }
-    dropTreat(w, ax, ay); s.dropped++;
+    // a stroke that crosses an island lays nothing on the land; it picks up again on the far water
+    if (!s.dropped) { if (islandAt(w, s.sx, s.sy) < 0) dropTreat(w, s.sx, s.sy); s.dropped++; }
+    if (islandAt(w, ax, ay) < 0) dropTreat(w, ax, ay);
+    s.dropped++;
   }
   s.need -= left; s.x = x; s.y = y;
 }
@@ -707,6 +716,7 @@ export function mount(container) {
     setSources(list) { setIslands(world, list); },
     setOutlines(fns) { setOutlines(world, fns); },
     setPointer(x, y, on) { setPointer(world, x, y, on); },
+    hit(x, y) { return islandAt(world, x, y); },
     drop(x, y) { dropTreat(world, x, y); },
     strokeStart(x, y) { strokeStart(world, x, y); },
     strokeTo(x, y) { strokeTo(world, x, y); },
