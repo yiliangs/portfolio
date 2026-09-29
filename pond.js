@@ -77,13 +77,49 @@ export const beatHz = (speed, len, p) => p.beat + speed / (len * p.stride);
 // The lateral offset of spine point s at the given phase, for a fish whose tail sweeps `amp` px.
 export const lateral = (s, phase, amp) => amp * envelope(s) * Math.sin(phase - WAVE_K * s);
 
-// ----- the islands -----
-// Each box becomes an ellipse centred on it. A fish's head is kept outside the ellipse grown by the shore gap.
-export const islandsFrom = (boxes) => (boxes || []).map((b) => ({ x: b.x + b.w / 2, y: b.y + b.h / 2, rx: Math.max(1, b.w / 2), ry: Math.max(1, b.h / 2) }));
-// Normalised radius of (x,y) in the ellipse (rx+g, ry+g): 1 on it, below 1 inside.
-export const ellipseR = (o, x, y, g) => { const ex = (x - o.x) / (o.rx + g), ey = (y - o.y) / (o.ry + g); return Math.sqrt(ex * ex + ey * ey); };
-
 const TAU = Math.PI * 2;
+
+// ----- the islands -----
+// An island is a smooth star-shaped coast around its source box: seen from its centre, the coast at bearing t lies at
+//   coast(t) = e(t) * (1 + sum over k = 2..5 of a_k cos(k t + phi_k)) * lift
+// where e(t) is the radius of the ellipse on the box grown by MARGIN, the a_k decay so the lobes stay gentle, and the
+// phases come from the island's index, so an island keeps its shape across reloads, resizes and scrolls. lift scales
+// the coast out until its narrowest point still clears that ellipse, so the object always stands on land.
+// This is the one representation of an island: containment, push-out, steering, treats and the waves all read it.
+export const MARGIN = 12;
+const LOBES = [[2, 0.12], [3, 0.08], [4, 0.05], [5, 0.03]];
+const lobes = (ph, t) => { let g = 1; for (let i = 0; i < LOBES.length; i++) g += LOBES[i][1] * Math.cos(LOBES[i][0] * t + ph[i]); return g; };
+export function islandsFrom(boxes) {
+  return (boxes || []).map((b, i) => {
+    const r = rng(0x5eed + i * 7919), ph = LOBES.map(() => r() * TAU);
+    let lo = Infinity; for (let k = 0; k < 360; k++) lo = Math.min(lo, lobes(ph, (k / 360) * TAU));
+    return { x: b.x + b.w / 2, y: b.y + b.h / 2, rx: Math.max(1, b.w / 2) + MARGIN, ry: Math.max(1, b.h / 2) + MARGIN, ph, lift: 1 / lo };
+  });
+}
+// the coast's distance from the island's centre at bearing t
+export function coast(o, t) {
+  const c = Math.cos(t), s = Math.sin(t);
+  return ((o.rx * o.ry) / Math.sqrt((o.ry * c) ** 2 + (o.rx * s) ** 2)) * lobes(o.ph, t) * o.lift;
+}
+// Normalised radius of (x,y) against the coast grown by g px: 1 on it, below 1 inside. g is added, not scaled, so a
+// gap is the same width all the way round.
+export function shoreR(o, x, y, g) { const dx = x - o.x, dy = y - o.y; return Math.hypot(dx, dy) / (coast(o, Math.atan2(dy, dx)) + g); }
+// Distance in px from (x,y) out to the coast grown by g, along the ray from the centre; negative inside.
+export function shoreGap(o, x, y, g) { const dx = x - o.x, dy = y - o.y; return Math.hypot(dx, dy) - coast(o, Math.atan2(dy, dx)) - g; }
+// The point on the coast grown by g along the ray through (x,y), written to out.
+export function onShore(o, x, y, g, out) {
+  let dx = x - o.x, dy = y - o.y; const d = Math.hypot(dx, dy);
+  if (d < 1e-6) { dx = 0; dy = -1; } else { dx /= d; dy /= d; }
+  const R = coast(o, Math.atan2(dy, dx)) + g; out.x = o.x + dx * R; out.y = o.y + dy * R; return out;
+}
+// The coast's outward unit normal at the bearing of (x,y), written to out: the radial direction tilted by the slope
+// of the coast, so a fish reads a lobe's flank as a flank and not as a circle.
+export function shoreNormal(o, x, y, out) {
+  const t = Math.atan2(y - o.y, x - o.x), h = 0.01, R = coast(o, t), dR = (coast(o, t + h) - coast(o, t - h)) / (2 * h);
+  const c = Math.cos(t), s = Math.sin(t), nx = R * c + dR * s, ny = R * s - dR * c, m = Math.hypot(nx, ny) || 1;
+  out.x = nx / m; out.y = ny / m; return out;
+}
+const NRM = { x: 0, y: 0 }, PT = { x: 0, y: 0 };
 const wrapAngle = (a) => { a = (a + Math.PI) % TAU; if (a < 0) a += TAU; return a - Math.PI; };
 
 function spawnFish(w, f) {
@@ -125,10 +161,7 @@ export function setPointer(w, x, y, on) { w.ptr.x = x; w.ptr.y = y; w.ptr.on = !
 // A treat that lands on an island rolls off into the water at the nearest shore.
 export function dropTreat(w, x, y) {
   const g = w.params.shore + 4;
-  for (const o of w.islands) {
-    const r = ellipseR(o, x, y, g);
-    if (r < 1) { const dx = x - o.x, dy = y - o.y; if (dx === 0 && dy === 0) { y = o.y - o.ry - g; } else { x = o.x + dx / Math.max(r, 1e-6); y = o.y + dy / Math.max(r, 1e-6); } }
-  }
+  for (const o of w.islands) if (shoreR(o, x, y, g) < 1) { onShore(o, x, y, g, PT); x = PT.x; y = PT.y; }
   if (w.treats.length >= w.params.max) w.treats.splice(0, w.treats.length - w.params.max + 1);
   w.treats.push({ x, y, age: 0 });
   ripple(w, x, y, 34, 1.6);
@@ -200,11 +233,10 @@ export function step(w, dt) {
     if (f.flee > 0) { f.flee -= dt; sx += f.fx * 5 * Math.max(0, f.flee); sy += f.fy * 5 * Math.max(0, f.flee); }
     // islands: inside the look zone the part of the heading aimed at the shore is turned along it
     for (const o of w.islands) {
-      const rr = ellipseR(o, f.x, f.y, p.shore), reach = 1 + p.look / Math.max(o.rx, o.ry);
-      if (rr > reach) continue;
-      let gx = (f.x - o.x) / ((o.rx + p.shore) ** 2), gy = (f.y - o.y) / ((o.ry + p.shore) ** 2);
-      const gm = Math.hypot(gx, gy) || 1; gx /= gm; gy /= gm;
-      const k = Math.min(1, (reach - rr) / (reach - 1)), toward = -(hx * gx + hy * gy);
+      const gap = shoreGap(o, f.x, f.y, p.shore);
+      if (gap > p.look) continue;
+      shoreNormal(o, f.x, f.y, NRM); const gx = NRM.x, gy = NRM.y;
+      const k = Math.min(1, Math.max(0, 1 - gap / Math.max(1, p.look))), toward = -(hx * gx + hy * gy);
       if (toward > -0.2) {
         const side = hx * -gy + hy * gx >= 0 ? 1 : -1; // go round on whichever side it already leans to
         sx += -gy * side * 4 * k + gx * 2 * k * k; sy += gx * side * 4 * k + gy * 2 * k * k;
@@ -228,13 +260,10 @@ export function step(w, dt) {
     const f = F[i];
     f.x += Math.cos(f.h) * f.sp * dt; f.y += Math.sin(f.h) * f.sp * dt;
     for (const o of w.islands) {
-      const rr = ellipseR(o, f.x, f.y, p.shore);
-      if (rr >= 1) continue;
-      const dx = f.x - o.x, dy = f.y - o.y;
-      if (rr < 1e-6) { f.x = o.x; f.y = o.y - o.ry - p.shore; } else { f.x = o.x + dx / rr; f.y = o.y + dy / rr; }
+      if (shoreR(o, f.x, f.y, p.shore) >= 1) continue;
+      onShore(o, f.x, f.y, p.shore, PT); f.x = PT.x; f.y = PT.y;
       // shed the motion aimed inward: the fish slides along the shore
-      let gx = (f.x - o.x) / ((o.rx + p.shore) ** 2), gy = (f.y - o.y) / ((o.ry + p.shore) ** 2);
-      const gm = Math.hypot(gx, gy) || 1; gx /= gm; gy /= gm;
+      shoreNormal(o, f.x, f.y, NRM); const gx = NRM.x, gy = NRM.y;
       let vx = Math.cos(f.h), vy = Math.sin(f.h); const into = vx * gx + vy * gy;
       if (into < 0) { vx -= into * gx; vy -= into * gy; if (Math.hypot(vx, vy) > 1e-6) f.h = Math.atan2(vy, vx); }
     }
@@ -250,8 +279,7 @@ export function step(w, dt) {
       rope[k * 2] = rope[k * 2 - 2] + dx * seg; rope[k * 2 + 1] = rope[k * 2 - 1] + dy * seg;
       // the body stays in the water too: an island that moves under a fish (the page scrolled) pushes it aside
       for (const o of w.islands) {
-        const rr = ellipseR(o, rope[k * 2], rope[k * 2 + 1], 2);
-        if (rr < 1 && rr > 1e-6) { rope[k * 2] = o.x + (rope[k * 2] - o.x) / rr; rope[k * 2 + 1] = o.y + (rope[k * 2 + 1] - o.y) / rr; }
+        if (shoreR(o, rope[k * 2], rope[k * 2 + 1], 2) < 1) { onShore(o, rope[k * 2], rope[k * 2 + 1], 2, PT); rope[k * 2] = PT.x; rope[k * 2 + 1] = PT.y; }
       }
     }
     // the first mouth to reach a treat takes it
@@ -323,6 +351,15 @@ function drawFish(ctx, f, p, swim) {
   ctx.stroke();
 }
 
+// A closed smooth path round an island's coast grown by off px: 96 samples, curved through their midpoints.
+const COAST_N = 96, CX = new Float32Array(COAST_N), CY = new Float32Array(COAST_N);
+function coastPath(ctx, o, off) {
+  for (let i = 0; i < COAST_N; i++) { const t = (i / COAST_N) * TAU, R = coast(o, t) + off; CX[i] = o.x + Math.cos(t) * R; CY[i] = o.y + Math.sin(t) * R; }
+  ctx.beginPath(); ctx.moveTo((CX[COAST_N - 1] + CX[0]) / 2, (CY[COAST_N - 1] + CY[0]) / 2);
+  for (let i = 0; i < COAST_N; i++) { const j = (i + 1) % COAST_N; ctx.quadraticCurveTo(CX[i], CY[i], (CX[i] + CX[j]) / 2, (CY[i] + CY[j]) / 2); }
+  ctx.closePath();
+}
+
 // Draws the world onto ctx (already scaled to CSS px). ink and paper are CSS colours; gold is the treats' colour.
 export function draw(ctx, w, ink, paper, gold) {
   const p = w.params, still = w.reduced;
@@ -331,7 +368,7 @@ export function draw(ctx, w, ink, paper, gold) {
   // the shores and the water lapping in toward them
   for (const o of w.islands) {
     ctx.globalAlpha = p.shoreAlpha;
-    ctx.beginPath(); ctx.ellipse(o.x, o.y, o.rx + 3, o.ry + 3, 0, 0, TAU); ctx.stroke();
+    coastPath(ctx, o, 0); ctx.stroke();
     const m = Math.round(p.rings);
     for (let i = 0; i < m; i++) {
       const u = still ? (i + 0.5) / m : ((w.t * p.lap + i / m) % 1); // 0 far out, 1 at the shore
@@ -339,7 +376,7 @@ export function draw(ctx, w, ink, paper, gold) {
       if (a <= 0.001) continue;
       const g = 3 + p.reach * (1 - u);
       ctx.globalAlpha = p.ringAlpha * a;
-      ctx.beginPath(); ctx.ellipse(o.x, o.y, o.rx + g, o.ry + g, 0, 0, TAU); ctx.stroke();
+      coastPath(ctx, o, g); ctx.stroke();
     }
   }
   // the school: a paper fill under each outline, so crossing fish read as one over the other

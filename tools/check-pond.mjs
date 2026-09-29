@@ -7,7 +7,7 @@
 //
 // Run with `npm run check`. Exits non-zero and prints every failure it found.
 
-import { defaults, createWorld, step, setIslands, setPointer, dropTreat, envelope, beatHz, lateral, ellipseR } from '../pond.js';
+import { defaults, createWorld, step, setIslands, setPointer, dropTreat, envelope, beatHz, lateral, shoreR, coast, islandsFrom, MARGIN } from '../pond.js';
 
 const failures = [];
 const fail = (msg) => failures.push(msg);
@@ -46,12 +46,29 @@ for (const seed of [1, 7, 42]) {
     step(w, DT);
     for (const f of w.fish) for (const o of w.islands) {
       for (let i = 0; i < f.rope.length; i += 2) {
-        const r = ellipseR(o, f.rope[i], f.rope[i + 1], 0);
+        const r = shoreR(o, f.rope[i], f.rope[i + 1], 0);
         if (r < worst) { worst = r; where = `seed ${seed} step ${s} spine point ${i / 2}`; }
       }
     }
   }
   if (!(worst >= 1)) fail(`a fish entered an island: normalised radius ${worst.toFixed(3)} at ${where}`);
+}
+
+// the islands are organic, not ellipses, keep their shape wherever the page puts them, and hold the object on land
+{
+  const [a] = islandsFrom([{ x: 0, y: 0, w: 200, h: 200 }]), [b] = islandsFrom([{ x: 500, y: 90, w: 200, h: 200 }]);
+  let lo = Infinity, hi = 0, same = true;
+  for (let k = 0; k < 360; k++) {
+    const t = (k / 360) * Math.PI * 2, r = coast(a, t);
+    lo = Math.min(lo, r); hi = Math.max(hi, r);
+    if (Math.abs(r - coast(b, t)) > 1e-9) same = false;
+  }
+  if (!(hi / lo > 1.2)) fail(`island coast should be irregular: radius ranges only ${lo.toFixed(1)} to ${hi.toFixed(1)} on a square box`);
+  if (!(lo >= 100 + MARGIN - 1e-9)) fail(`island coast should clear the box's own ellipse plus the margin, narrowest ${lo.toFixed(1)}`);
+  if (!same) fail('an island should keep its shape when the page moves it');
+  const [, c2] = islandsFrom([{ x: 0, y: 0, w: 200, h: 200 }, { x: 0, y: 0, w: 200, h: 200 }]);
+  let differ = false; for (let k = 0; k < 36; k++) if (Math.abs(coast(c2, k / 5.7) - coast(a, k / 5.7)) > 1) differ = true;
+  if (!differ) fail('the two islands should have different coasts');
 }
 
 // (c) a treat dropped within sensing range is eaten within a bounded time, and a reduced-motion school still eats
