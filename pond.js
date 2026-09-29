@@ -1,8 +1,8 @@
-// Home pond: the page seen from above as still water, with the two home objects standing in it as islands. A small
-// school of line-drawn fish mills about between them, water laps inward at each shore, and a click drops a treat the
-// fish race for and eat. The layer sits behind reading text, so the resting picture is calm: the school cruises
-// slowly and only bursts into speed for a reason (a treat, a fast cursor, or now and then on its own) before it
-// settles again.
+// Home pond: the page seen from above as still water, with the two home objects standing in it as islands. A few
+// dozen line-drawn fish swim between them in groups that form, merge and part on their own, water laps inward at each
+// shore, and a click drops a treat the fish race for and eat. The layer sits behind reading text, so the resting
+// picture is calm: the fish swim in easy beats and glides and only burst into speed for a reason (a treat, a fast
+// cursor, or now and then on their own) before they settle again.
 //
 // The simulation is kept apart from the drawing. createWorld() builds a state, step() advances it by dt with the
 // world's own seeded random source and touches nothing else, so a run from a seed is the same run every time and
@@ -18,25 +18,16 @@ export const PARAMS = {
     countTouch: [16, 1, 120, 1, 'fish on a coarse pointer'],
     repel: [16, 0, 120, 1, 'zone of repulsion, px'],
     orient: [60, 0, 300, 1, 'zone of orientation, px'],
-    attract: [150, 0, 600, 5, 'zone of attraction, px'],
+    vision: [5, 1, 30, 0.5, 'how far a fish sees its neighbours, body lengths'],
+    near: [4, 1, 16, 1, 'nearest visible neighbours a fish attends to'],
     fov: [300, 90, 360, 5, 'field of view, degrees; the rest is blind behind'],
+    far: [200, 0, 1200, 10, 'how far a fish that sees no one looks for company, px'],
     wander: [0.35, 0, 3, 0.05, 'weight of each fish\'s own meander'],
   },
-  shoals: {
-    shoals: [5, 1, 7, 1, 'shoals at the start'],
-    maxShoal: [12, 3, 40, 1, 'a shoal larger than this splits'],
-    across: [0.12, 0, 1, 0.01, 'pull between fish of different shoals, of the pull within one'],
-    huddle: [0.8, 0, 4, 0.05, 'pull toward the middle of its own shoal'],
-    swap: [0.04, 0, 1, 0.01, 'chance per s that a fish passing another shoal joins it'],
-  },
-  patrol: {
-    pull: [1.1, 0, 5, 0.05, 'pull of the shoal\'s patrol goal'],
-    pace: [40, 0, 200, 1, 'patrol goal speed, px/s'],
-    dash: [0.25, 0, 1, 0.05, 'chance a leg is a fast transit'],
-    dashPace: [2, 1, 5, 0.1, 'transit speed, as a multiple of patrol'],
-    rest: [0.2, 0, 1, 0.05, 'chance of milling in place at a waypoint'],
-    restFor: [4, 0, 20, 0.5, 'longest rest, s'],
-    leash: [120, 20, 600, 10, 'how far the goal may run ahead of its shoal, px'],
+  lead: {
+    share: [0.4, 0, 0.95, 0.01, 'share of fish carrying a destination of their own'],
+    will: [1.2, 0, 5, 0.05, 'pull of a destination against the pull of the group'],
+    keep: [12, 2, 120, 1, 'mean time a fish keeps a destination, s'],
   },
   swim: {
     coast: [1.4, 0.2, 5, 0.05, 'glide drag time constant, s'],
@@ -151,59 +142,59 @@ export function shoreNormal(o, x, y, out) {
 const NRM = { x: 0, y: 0 }, PT = { x: 0, y: 0 };
 const wrapAngle = (a) => { a = (a + Math.PI) % TAU; if (a < 0) a += TAU; return a - Math.PI; };
 
-// ----- shoals -----
-// The fish swim in shoals, not one school. Each fish belongs to a shoal; alignment and cohesion are strong within a
-// shoal and weak across shoals, while every fish keeps clear of every other. Each shoal patrols a route of waypoints
-// (round an island's shore, along the pond's edge, or across open water) through a goal point that moves along it.
-// The goal is a weak pull on its fish and is held on a leash to their middle, so the shoal leads itself: it rests and
-// mills at some waypoints, dashes some legs, and turns aside for food. Shoals exchange fish when they pass, split
-// when they grow too large, and are kept between three and seven in number where the fish allow.
-// A waypoint: a bearing and an offset off an island's coast, or a point on the page in fractions of its size (also the
-// stand-in when the island is not there yet).
-function anchorAt(w, a, out) {
-  const o = a.isl != null ? w.islands[a.isl] : null;
-  if (o) { const R = coast(o, a.t) + a.off; out.x = o.x + Math.cos(a.t) * R; out.y = o.y + Math.sin(a.t) * R; }
-  else { out.x = a.u * w.w; out.y = a.v * w.h; }
-  // in open water, and on the page
+// ----- company and destinations -----
+// There are no shoals as objects: every fish follows the same rule, and the groups are whatever that rule makes. A fish
+// attends to its `near` nearest neighbours that it can see, within `vision` body lengths and outside the blind sector
+// behind it. Too close, it turns away; near, it lines up; further, it closes in. Counting neighbours instead of
+// taking everyone within a radius means a crowd never pulls on a fish as one mass, so a group can be drawn apart.
+// What moves the groups is an informed minority (Couzin et al. 2005): at any time about `share` of the fish carry a
+// destination of their own (a point off an island's shore, along the rim, in open water, or where food was found)
+// and weigh it against the pull of their neighbours. A few informed fish steer the group they swim in, two that
+// disagree pull it apart, and a destination lapses after tens of seconds or when it is reached while other fish take
+// up new ones. No fish leads for long, so groups wander the pond, meet, merge and part. Food makes a fish informed at
+// once and strongly, which gathers groups at a feeding spot.
+// Moves (out.x, out.y) into open water on the page, clear of the islands.
+function settle(w, out) {
   for (const q of w.islands) if (shoreGap(q, out.x, out.y, 0) < 50) onShore(q, out.x, out.y, 50, out);
   const m = 70;
   out.x = Math.min(Math.max(out.x, Math.min(m, w.w / 2)), Math.max(w.w - m, w.w / 2));
   out.y = Math.min(Math.max(out.y, Math.min(m, w.h / 2)), Math.max(w.h - m, w.h / 2));
   return out;
 }
-const RIM = [[0.1, 0.12], [0.5, 0.08], [0.9, 0.12], [0.93, 0.5], [0.9, 0.88], [0.5, 0.92], [0.1, 0.88], [0.07, 0.5]];
-export const ROUTE_KINDS = 4; // round island 0, round island 1, along the rim, across open water
-function makeRoute(w, kind) {
-  const r = w.rand, dir = r() < 0.5 ? 1 : -1, A = [];
-  if (kind < 2) {
-    const t0 = r() * TAU;
-    for (let k = 0; k < 6; k++) A.push({ isl: kind, t: t0 + (dir * k * TAU) / 6, off: 55 + r() * 45, u: 0.2 + 0.6 * r(), v: 0.2 + 0.6 * r() });
-  } else if (kind === 2) {
-    const s0 = Math.floor(r() * RIM.length);
-    for (let k = 0; k < RIM.length; k++) { const c = RIM[(s0 + dir * k + RIM.length * 2) % RIM.length]; A.push({ u: c[0], v: c[1] }); }
-  } else {
-    for (let k = 0; k < 5; k++) A.push({ u: 0.1 + 0.8 * r(), v: 0.1 + 0.8 * r() });
-  }
-  return A;
+// Gives f a destination of its own, spread over the pond so that groups patrol different parts and cross paths.
+function inform(w, f) {
+  const r = w.rand, p = w.params, q = r(), g = { x: 0, y: 0 };
+  if (w.fed.length && q < 0.15) { const s = w.fed[Math.floor(r() * w.fed.length)]; g.x = s.x + (r() - 0.5) * 80; g.y = s.y + (r() - 0.5) * 80; }
+  else if (w.islands.length && q < 0.5) {
+    const o = w.islands[Math.floor(r() * w.islands.length)], t = r() * TAU, R = coast(o, t) + 50 + r() * 50;
+    g.x = o.x + Math.cos(t) * R; g.y = o.y + Math.sin(t) * R;
+  } else if (q < 0.75) {
+    // somewhere along the rim, 80 px in
+    const iw = Math.max(0, w.w - 160), ih = Math.max(0, w.h - 160); let s = r() * 2 * (iw + ih);
+    if (s < iw) { g.x = 80 + s; g.y = 80; } else if ((s -= iw) < ih) { g.x = w.w - 80; g.y = 80 + s; }
+    else if ((s -= ih) < iw) { g.x = w.w - 80 - s; g.y = w.h - 80; } else { g.x = 80; g.y = w.h - 80 - (s - iw); }
+  } else { g.x = (0.1 + 0.8 * r()) * w.w; g.y = (0.1 + 0.8 * r()) * w.h; }
+  f.goal = settle(w, g); f.keep = p.keep * (0.5 + r()); f.will = 0.6 + 0.8 * r(); f.food = false;
 }
-function newShoal(w, kind) {
-  const route = makeRoute(w, kind), g = anchorAt(w, route[0], { x: 0, y: 0 });
-  const sh = { route, kind, leg: 1 % route.length, gx: g.x, gy: g.y, rest: 0, gear: 1, n: 0, cx: g.x, cy: g.y, hx: 0, hy: 0 };
-  w.shoals.push(sh);
-  return sh;
+// The last few places food was eaten, which a fish may later take as its destination.
+function remember(w, t) {
+  const near = w.fed.find((s) => Math.hypot(s.x - t.x, s.y - t.y) < 80);
+  if (near) { near.x = t.x; near.y = t.y; return; }
+  w.fed.push({ x: t.x, y: t.y }); if (w.fed.length > 4) w.fed.shift();
 }
-function spawnFish(w, f, sh) {
+// the k nearest neighbours of the fish being steered, by squared distance and index
+const NB = 16, ND = new Float64Array(NB), NJ = new Int32Array(NB);
+function spawnFish(w, f, x, y) {
   const r = w.rand, p = w.params;
-  f.sh = sh;
   f.len = p.length * (0.75 + 0.5 * r());
-  f.pace = 0.85 + 0.3 * r();                      // each fish's own cruise, so a shoal does not move as one block
-  f.x = sh.gx + (r() - 0.5) * 70; f.y = sh.gy + (r() - 0.5) * 70;
+  f.pace = 0.85 + 0.3 * r();                      // each fish's own cruise, so a group does not move as one block
+  f.x = x + (r() - 0.5) * 70; f.y = y + (r() - 0.5) * 70;
   for (const o of w.islands) if (shoreR(o, f.x, f.y, p.shore) < 1) { onShore(o, f.x, f.y, p.shore, PT); f.x = PT.x; f.y = PT.y; }
-  const a = sh.route[sh.leg], to = anchorAt(w, a, { x: 0, y: 0 });
-  f.h = Math.atan2(to.y - f.y, to.x - f.x) + (r() - 0.5) * 0.8;
+  f.h = r() * TAU;
   f.sp = p.cruise * (w.reduced ? p.reduced : f.pace) * (0.6 + 0.6 * r()); f.en = 0; f.flee = 0; f.fx = 0; f.fy = 0;
   f.phase = r() * TAU; f.fin = r() * TAU; f.wa = 0; f.idle = 0; f.cs = -2;
   f.left = 0; f.top = 0; f.hz = 0; f.sweep = 0; f.amp = r() * 0.5; f.low = p.low * (0.85 + 0.3 * r());
+  f.goal = null; f.keep = 0; f.will = 1; f.food = false;
   f.rope = new Float32Array(SPINE * 2);
   const seg = (f.len * BODY) / (SPINE - 1), cx = Math.cos(f.h), cy = Math.sin(f.h);
   for (let i = 0; i < SPINE; i++) { f.rope[i * 2] = f.x - cx * seg * i; f.rope[i * 2 + 1] = f.y - cy * seg * i; }
@@ -215,7 +206,7 @@ export function createWorld(params, opts = {}) {
   const w = {
     params, w: opts.w || 1, h: opts.h || 1, t: 0, rand: rng(opts.seed == null ? 1 : opts.seed),
     coarse: !!opts.coarse, reduced: !!opts.reduced,
-    fish: [], shoals: [], islands: [], treats: [], ripples: [], stroke: null,
+    fish: [], islands: [], treats: [], ripples: [], stroke: null, fed: [],
     ptr: { x: 0, y: 0, on: false, px: 0, py: 0, seen: false, speed: 0 },
     eaten: 0,
   };
@@ -223,66 +214,16 @@ export function createWorld(params, opts = {}) {
   return w;
 }
 const target = (w) => Math.max(0, Math.round(w.coarse ? w.params.countTouch : w.params.count));
+// The first fish start in a few loose knots about the page; a later newcomer turns up beside a fish already there,
+// and a surplus leaves from the end.
 function populate(w) {
-  const n = target(w), p = w.params, r = w.rand;
-  if (!w.shoals.length && n > 0) {
-    // the first shoals: at least three fish each, the rest shared out unevenly so the sizes vary
-    const k = Math.max(1, Math.min(7, Math.round(p.shoals), Math.floor(n / 4) || 1)), off = Math.floor(r() * ROUTE_KINDS);
-    const S = []; for (let i = 0; i < k; i++) S.push(newShoal(w, (i + off) % ROUTE_KINDS));
-    const want = S.map(() => 0.4 + r() * 1.6), size = S.map(() => Math.min(3, Math.floor(n / k)));
-    for (let left = n - size.reduce((a, b) => a + b, 0); left > 0; left--) {
-      let best = -1, bv = -1; for (let i = 0; i < k; i++) { if (size[i] >= p.maxShoal) continue; const v = want[i] * r(); if (v > bv) { bv = v; best = i; } }
-      size[best < 0 ? Math.floor(r() * k) : best]++;
-    }
-    for (let i = 0; i < k; i++) for (let j = 0; j < size[i]; j++) w.fish.push(spawnFish(w, {}, S[i]));
+  const n = target(w), r = w.rand;
+  if (!w.fish.length && n > 0) {
+    const knots = []; for (let k = 4 + Math.floor(r() * 3); k > 0; k--) knots.push(settle(w, { x: (0.1 + 0.8 * r()) * w.w, y: (0.1 + 0.8 * r()) * w.h }));
+    for (let i = 0; i < n; i++) { const c = knots[Math.floor(r() * knots.length)]; w.fish.push(spawnFish(w, {}, c.x, c.y)); }
   }
-  // later changes of count: a newcomer joins the smallest shoal, the surplus leaves from the end
-  while (w.fish.length < n) { let s0 = w.shoals[0]; for (const sh of w.shoals) if (sh.n < s0.n) s0 = sh; w.fish.push(spawnFish(w, {}, s0)); s0.n++; }
+  while (w.fish.length < n) { const g = w.fish[Math.floor(r() * w.fish.length)]; w.fish.push(spawnFish(w, {}, g ? g.x : r() * w.w, g ? g.y : r() * w.h)); }
   if (w.fish.length > n) w.fish.length = n;
-}
-// Splits a shoal across its line of travel: the fish on one side go with a new shoal on a new route.
-function split(w, sh) {
-  const F = w.fish.filter((f) => f.sh === sh);
-  const m = Math.hypot(sh.hx, sh.hy) || 1, px = -sh.hy / m, py = sh.hx / m;
-  F.sort((a, b) => (a.x * px + a.y * py) - (b.x * px + b.y * py));
-  const ns = newShoal(w, Math.floor(w.rand() * ROUTE_KINDS));
-  ns.gx = sh.cx + px * 40; ns.gy = sh.cy + py * 40; ns.leg = 0;
-  for (let i = Math.ceil(F.length / 2); i < F.length; i++) F[i].sh = ns;
-}
-// Counts, middles and headings of the shoals; their splits; and their goals' progress along the routes.
-function updateShoals(w, dt) {
-  const p = w.params, r = w.rand, S = w.shoals;
-  for (const sh of S) { sh.n = 0; sh.cx = 0; sh.cy = 0; sh.hx = 0; sh.hy = 0; }
-  for (const f of w.fish) { const sh = f.sh; sh.n++; sh.cx += f.x; sh.cy += f.y; sh.hx += Math.cos(f.h); sh.hy += Math.sin(f.h); }
-  for (let i = S.length - 1; i >= 0; i--) if (S[i].n === 0) S.splice(i, 1);
-  for (const sh of S) { sh.cx /= sh.n; sh.cy /= sh.n; }
-  // too big a shoal splits; too few shoals, and the biggest splits
-  for (let guard = 0; guard < 2; guard++) {
-    let big = S[0]; for (const sh of S) if (sh.n > big.n) big = sh;
-    if (!big || S.length >= 7) break;
-    if (big.n > p.maxShoal || (S.length < 3 && big.n >= 6)) { split(w, big); big.n = Math.ceil(big.n / 2); } else break;
-  }
-  for (const sh of S) {
-    // food near the shoal becomes its goal
-    let food = null, fd = p.sense;
-    for (const t of w.treats) { const d = Math.hypot(t.x - sh.cx, t.y - sh.cy); if (d < fd) { fd = d; food = t; } }
-    if (food) { sh.gx = food.x; sh.gy = food.y; sh.rest = 0; sh.gear = 1; continue; }
-    if (sh.rest > 0) { sh.rest -= dt; if (sh.rest <= 0) sh.gear = 1; continue; }
-    anchorAt(w, sh.route[sh.leg], PT);
-    const dx = PT.x - sh.gx, dy = PT.y - sh.gy, d = Math.hypot(dx, dy);
-    if (d < 25) {
-      sh.leg = (sh.leg + 1) % sh.route.length;
-      if (sh.leg === 0 && r() < 0.5) { sh.kind = Math.floor(r() * ROUTE_KINDS); sh.route = makeRoute(w, sh.kind); }
-      const q = r();
-      if (q < p.rest) { sh.rest = p.restFor * (0.4 + 0.6 * r()); sh.gear = 0.6; } else sh.gear = q < p.rest + p.dash ? p.dashPace : 1;
-      continue;
-    }
-    // the goal leads, but never runs further ahead of its fish than the leash
-    const lag = Math.hypot(sh.gx - sh.cx, sh.gy - sh.cy), slack = Math.max(0, Math.min(1, 1 - (lag - p.leash) / p.leash));
-    const go = Math.min(d, p.pace * sh.gear * slack * dt);
-    sh.gx += (dx / d) * go; sh.gy += (dy / d) * go;
-    for (const o of w.islands) if (shoreGap(o, sh.gx, sh.gy, 0) < 40) { onShore(o, sh.gx, sh.gy, 40, PT); sh.gx = PT.x; sh.gy = PT.y; }
-  }
 }
 export function resizeWorld(w, width, height) { w.w = Math.max(1, width); w.h = Math.max(1, height); }
 export function setIslands(w, boxes) { w.islands = islandsFrom(boxes); }
@@ -368,43 +309,48 @@ export function step(w, dt) {
   // treats age and sink; ripples spread
   for (let i = w.treats.length - 1; i >= 0; i--) { const t = w.treats[i]; t.age += dt; if (t.age > p.sink) w.treats.splice(i, 1); }
   for (let i = w.ripples.length - 1; i >= 0; i--) { const q = w.ripples[i]; q.age += dt; if (q.age > q.life) w.ripples.splice(i, 1); }
-  updateShoals(w, dt);
 
   const cosFov = Math.cos((p.fov * Math.PI) / 360);
-  const zr2 = p.repel * p.repel, zo2 = p.orient * p.orient, za2 = p.attract * p.attract;
-  const decay = Math.exp(-dt / p.calm);
+  const zr2 = p.repel * p.repel, zo2 = p.orient * p.orient, far2 = p.far * p.far;
+  const decay = Math.exp(-dt / p.calm), k = Math.max(1, Math.min(NB, Math.round(p.near)));
+  // the rate of taking up a destination that keeps about `share` of the fish informed, each for about `keep` s
+  const curious = p.share >= 1 ? Infinity : p.share / Math.max(1e-6, 1 - p.share) / Math.max(1, p.keep);
   for (let i = 0; i < n; i++) {
-    const f = F[i], hx = Math.cos(f.h), hy = Math.sin(f.h);
-    // Couzin's three zones: anyone too close is avoided and nothing else counts; otherwise the fish lines up with the
-    // ones near it and closes on the ones further off, seeing only what is in front of it. Its own shoal counts in
-    // full, another shoal only faintly
-    let rx = 0, ry = 0, nr = 0, ox = 0, oy = 0, no = 0, ax = 0, ay = 0, na = 0, other = null, od2 = zo2;
-    const sh = f.sh;
+    const f = F[i], hx = Math.cos(f.h), hy = Math.sin(f.h), V2 = (p.vision * f.len) ** 2;
+    // everyone too close is avoided; of the rest, the k nearest it can see count; the nearest of all is company to
+    // head for when it sees no one
+    let rx = 0, ry = 0, nr = 0, m = 0, lone = -1, ld2 = far2;
     for (let j = 0; j < n; j++) {
       if (j === i) continue;
       const g = F[j], dx = g.x - f.x, dy = g.y - f.y, d2 = dx * dx + dy * dy;
-      if (d2 > za2 || d2 < 1e-9) continue;
-      const d = Math.sqrt(d2);
-      if (d2 < zr2) { rx -= dx / d; ry -= dy / d; nr++; continue; }
-      if ((dx * hx + dy * hy) / d < cosFov) continue;
-      const kin = g.sh === sh ? 1 : p.across;
-      if (g.sh !== sh && d2 < od2) { od2 = d2; other = g.sh; }
-      if (d2 < zo2) { ox += Math.cos(g.h) * kin; oy += Math.sin(g.h) * kin; no++; } else { ax += (dx / d) * kin; ay += (dy / d) * kin; na++; }
+      if (d2 < 1e-9) continue;
+      if (d2 < zr2) { const d = Math.sqrt(d2); rx -= dx / d; ry -= dy / d; nr++; continue; }
+      if (d2 < ld2) { ld2 = d2; lone = j; }
+      if (d2 > V2 || (dx * hx + dy * hy) / Math.sqrt(d2) < cosFov) continue;
+      if (m === k && d2 >= ND[k - 1]) continue;
+      let q = m < k ? m++ : k - 1;
+      while (q > 0 && ND[q - 1] > d2) { ND[q] = ND[q - 1]; NJ[q] = NJ[q - 1]; q--; }
+      ND[q] = d2; NJ[q] = j;
     }
     let sx = hx, sy = hy; // momentum: with nothing to react to, a fish carries on
-    if (nr > 0) { const m = Math.hypot(rx, ry) || 1; sx += (rx / m) * 1.6; sy += (ry / m) * 1.6; }
-    else {
-      // averaged over every neighbour, so a crowd of strangers pulls only as hard as `across` says
+    if (nr > 0) { const mm = Math.hypot(rx, ry) || 1; sx += (rx / mm) * 1.6; sy += (ry / mm) * 1.6; }
+    else if (m > 0) {
+      let ox = 0, oy = 0, no = 0, ax = 0, ay = 0, na = 0;
+      for (let q = 0; q < m; q++) {
+        const g = F[NJ[q]];
+        if (ND[q] < zo2) { ox += Math.cos(g.h); oy += Math.sin(g.h); no++; }
+        else { const d = Math.sqrt(ND[q]); ax += (g.x - f.x) / d; ay += (g.y - f.y) / d; na++; }
+      }
       if (no > 0) { sx += (ox / no) * 1.4; sy += (oy / no) * 1.4; }
-      if (na > 0) { sx += (ax / na) * 0.8; sy += (ay / na) * 0.8; }
-    }
-    // the shoal holds together round its middle, and its goal draws it along the patrol
-    { const dx = sh.cx - f.x, dy = sh.cy - f.y, d = Math.hypot(dx, dy), near = 1.5 * f.len;
-      if (d > near) { const k = p.huddle * Math.min(1, (d - near) / (3 * f.len)); sx += (dx / d) * k; sy += (dy / d) * k; } }
-    { const dx = sh.gx - f.x, dy = sh.gy - f.y, d = Math.hypot(dx, dy);
-      if (d > 1e-6) { const k = p.pull * Math.min(1, d / 60); sx += (dx / d) * k; sy += (dy / d) * k; } }
-    // passing another shoal, a fish sometimes changes sides
-    if (other && other.n < p.maxShoal && r() < p.swap * dt) { sh.n--; other.n++; f.sh = other; }
+      if (na > 0) { sx += (ax / na) * 0.5; sy += (ay / na) * 0.5; }
+    } else if (lone >= 0) { const g = F[lone], d = Math.sqrt(ld2); sx += ((g.x - f.x) / d) * 0.6; sy += ((g.y - f.y) / d) * 0.6; }
+    // its own destination, if it has one: kept until reached or until it loses interest
+    if (f.goal) {
+      f.keep -= dt;
+      const dx = f.goal.x - f.x, dy = f.goal.y - f.y, d = Math.hypot(dx, dy);
+      if (f.keep <= 0 || d < 40) f.goal = null;
+      else { const kk = p.will * f.will * (f.food ? 2.5 : 1); sx += (dx / d) * kk; sy += (dy / d) * kk; }
+    } else if (!(f.idle > 0) && r() < curious * dt) inform(w, f);
     // its own meander: a slow random walk of a preferred bearing
     f.wa += (r() - 0.5) * 3 * Math.sqrt(dt); if (f.wa > 1.2) f.wa = 1.2; else if (f.wa < -1.2) f.wa = -1.2;
     sx += Math.cos(f.h + f.wa) * p.wander; sy += Math.sin(f.h + f.wa) * p.wander;
@@ -412,15 +358,18 @@ export function step(w, dt) {
     const e = Math.max(1, p.edge);
     if (f.x < e) sx += ((e - f.x) / e) * 3; else if (f.x > w.w - e) sx -= ((f.x - (w.w - e)) / e) * 3;
     if (f.y < e) sy += ((e - f.y) / e) * 3; else if (f.y > w.h - e) sy -= ((f.y - (w.h - e)) / e) * 3;
-    // the nearest treat it can sense draws it in, harder the closer it is, and sets it bursting
+    // the nearest treat it can sense draws it in, harder the closer it is, sets it bursting, and becomes its
+    // destination for a while, so it keeps looking where the food was
     let tb = -1, tbd = p.sense;
-    for (let k = 0; k < w.treats.length; k++) { const t = w.treats[k], d = Math.hypot(t.x - f.x, t.y - f.y); if (d < tbd) { tbd = d; tb = k; } }
+    for (let q = 0; q < w.treats.length; q++) { const t = w.treats[q], d = Math.hypot(t.x - f.x, t.y - f.y); if (d < tbd) { tbd = d; tb = q; } }
     if (tb >= 0) {
       const t = w.treats[tb], d = tbd || 1;
       sx += ((t.x - f.x) / d) * 4; sy += ((t.y - f.y) / d) * 4;
       if (!w.reduced) f.en = Math.max(f.en, 1 - 0.5 * (d / Math.max(1, p.sense)));
+      if (!f.goal) f.goal = { x: 0, y: 0 };
+      f.goal.x = t.x; f.goal.y = t.y; f.keep = 6; f.will = 1; f.food = true; f.idle = 0;
     }
-    // a fast cursor through the school scatters the fish near it
+    // a fast cursor through the pond scatters the fish near it
     if (startle) {
       const dx = f.x - ptr.x, dy = f.y - ptr.y, d = Math.hypot(dx, dy);
       if (d < p.scare && d > 1e-6) { f.flee = 0.7; f.fx = dx / d; f.fy = dy / d; f.en = 1; }
@@ -431,18 +380,18 @@ export function step(w, dt) {
       const gap = shoreGap(o, f.x, f.y, p.shore);
       if (gap > p.look) continue;
       shoreNormal(o, f.x, f.y, NRM); const gx = NRM.x, gy = NRM.y;
-      const k = Math.min(1, Math.max(0, 1 - gap / Math.max(1, p.look))), toward = -(hx * gx + hy * gy);
+      const kk = Math.min(1, Math.max(0, 1 - gap / Math.max(1, p.look))), toward = -(hx * gx + hy * gy);
       if (toward > -0.2) {
         const side = hx * -gy + hy * gx >= 0 ? 1 : -1; // go round on whichever side it already leans to
-        sx += -gy * side * 4 * k + gx * 2 * k * k; sy += gx * side * 4 * k + gy * 2 * k * k;
+        sx += -gy * side * 4 * kk + gx * 2 * kk * kk; sy += gx * side * 4 * kk + gy * 2 * kk * kk;
       }
     }
-    // turn toward the wish at a limited rate: a burst turns sharper
+    // now and then a fish darts off on its own
     if (!w.reduced && !(f.idle > 0) && r() < p.whim * dt) { f.en = Math.max(f.en, 0.3 + 0.3 * r()); f.wa = (r() - 0.5) * 2.4; }
     if (w.reduced) f.en = 0;
     // a calm fish now and then stops to hover a few seconds; anything urgent wakes it
     if (f.idle > 0) { f.idle -= dt; if (f.en > 0.2) f.idle = 0; }
-    else if (f.en < 0.05 && r() < p.idle * dt) f.idle = p.idleFor * (0.3 + 0.7 * r());
+    else if (f.en < 0.05 && !f.goal && r() < p.idle * dt) f.idle = p.idleFor * (0.3 + 0.7 * r());
     const aim = wrapAngle(Math.atan2(sy, sx) - f.h);
     // a sharp turn from a glide or a hover is one strong stroke, a C-start: the head whips round and a single beat
     // drives it out of the turn. A slow turn is just a curve, taken whether the tail is beating or not
@@ -451,9 +400,8 @@ export function step(w, dt) {
     const turn = (w.reduced ? p.turn * 0.6 : p.turn + p.turnBurst * (f.en + (f.cs > 0 ? 2 : 0))) * dt;
     const dh = aim > turn ? turn : aim < -turn ? -turn : aim;
     f.h = wrapAngle(f.h + dh);
-    // the speed it wants: its own pace in the shoal's gear, raised by urgency, nothing while it hovers
-    const gear = sh.gear > 1 ? 1 + (sh.gear - 1) * 0.5 : sh.gear; // a dashing shoal swims faster, a resting one slower
-    const want = f.idle > 0 ? 0 : w.reduced ? p.cruise * p.reduced : p.cruise * f.pace * gear * (1 + f.en * (p.burst - 1));
+    // the speed it wants: its own pace, raised by urgency, nothing while it hovers
+    const want = f.idle > 0 ? 0 : w.reduced ? p.cruise * p.reduced : p.cruise * f.pace * (1 + f.en * (p.burst - 1));
     swim(w, f, want, dt);
     f.en *= decay;
   }
@@ -488,7 +436,7 @@ export function step(w, dt) {
     const bite = f.len * 0.3 + 4;
     for (let k = 0; k < w.treats.length; k++) {
       const t = w.treats[k];
-      if (Math.hypot(t.x - f.x, t.y - f.y) < bite) { w.treats.splice(k, 1); ripple(w, t.x, t.y, 14, 0.9); w.eaten++; if (!w.reduced) f.en = Math.max(f.en, 0.5); break; }
+      if (Math.hypot(t.x - f.x, t.y - f.y) < bite) { w.treats.splice(k, 1); ripple(w, t.x, t.y, 14, 0.9); w.eaten++; remember(w, t); if (!w.reduced) f.en = Math.max(f.en, 0.5); break; }
     }
   }
 }

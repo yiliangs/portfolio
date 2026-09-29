@@ -197,50 +197,102 @@ for (const seed of [3, 11]) {
   if (!(e.eaten - before >= laid * 0.6)) fail(`a line of ${laid} treats laid ahead of a shoal should mostly be eaten, ${e.eaten - before} were`);
 }
 
-// Shoals that patrol. One seeded minute on a 1440x900 page with two islands, sampled twice a second after a
-// settling spell. A cluster is a connected group of fish linked within three body lengths, and it counts as a shoal
-// once it holds three fish: a pair is not a shoal. What has to read: (1) several shoals at once, not one loose school
-// and not a scatter, (2) each shoal swimming as one while it travels, (3) the shoals ranging over the whole pond
-// rather than milling where they started, and (4) a visibly busier pond than the calm first version, whose cruise was
-// 26 px/s. SPEED_FLOOR is that line.
-export function patrolMetrics(seed) {
-  const w = createWorld(defaults(), { w: 1440, h: 900, seed });
-  setIslands(w, [{ x: 300, y: 250, w: 170, h: 340 }, { x: 900, y: 330, w: 240, h: 240 }]);
-  const link = 3 * w.params.length, link2 = link * link;
-  let frames = 0, good = 0, polSum = 0, polN = 0, speedSum = 0, speedN = 0, grouped = 0, fishSeen = 0;
-  const cells = new Set();
-  for (let s = 0; s < 60 * 60; s++) {
-    step(w, DT);
-    if (s < 60 * 5 || s % 30) continue;
-    const F = w.fish, n = F.length, id = new Int32Array(n).fill(-1);
-    let clusters = 0;
-    for (let i = 0; i < n; i++) {
-      if (id[i] >= 0) continue;
-      const stack = [i], members = []; id[i] = i;
-      while (stack.length) { const a = stack.pop(); members.push(a); for (let j = 0; j < n; j++) if (id[j] < 0) { const dx = F[j].x - F[a].x, dy = F[j].y - F[a].y; if (dx * dx + dy * dy < link2) { id[j] = i; stack.push(j); } } }
-      if (members.length < 3) continue;
-      clusters++; grouped += members.length;
-      let cx = 0, cy = 0, hx = 0, hy = 0, sp = 0;
-      for (const m of members) { cx += F[m].x; cy += F[m].y; hx += Math.cos(F[m].h); hy += Math.sin(F[m].h); sp += F[m].sp; }
-      const k = members.length; cx /= k; cy /= k; sp /= k;
-      cells.add(Math.min(2, Math.floor((cx / w.w) * 3)) * 3 + Math.min(2, Math.floor((cy / w.h) * 3)));
-      if (sp >= SPEED_FLOOR) { polSum += Math.hypot(hx, hy) / k; polN++; } // travelling
+// Fission-fusion. Groups are not objects in the pond; they are whatever the fish happen to form, so they are read off
+// the fish the way an observer would. Ninety seeded seconds on a 1440x900 page with two islands, sampled once a
+// second after a settling spell. A cluster links fish within three body lengths and counts once it holds three.
+// Clusters in consecutive samples are matched by the members they share, and an event must still hold HOLD seconds
+// later, so a fish flickering at the edge of a link, or two groups brushing past each other, is not read as a split
+// and a merge: a merge is fish that stay together, a split fish that stay apart.
+// (d) groups meet and part: at least 4 merges and 4 splits a minute; (e) partners change: at least half of the fish
+// spend STAY seconds in one cluster with a fish they were not with at the start; (f) no collapse: one cluster holds more than 70% of
+// the fish in under 20% of samples; (g) no scatter: at least 60% of the fish are in some cluster, on average; (h) the
+// groups range over the pond, visiting at least 7 of 9 cells, and a moving group swims as one, polarisation 0.6.
+const HOLD = 5, STAY = 10;
+function clustersOf(F) {
+  const n = F.length, id = new Int32Array(n).fill(-1), out = [];
+  for (let i = 0; i < n; i++) {
+    if (id[i] !== -1) continue;
+    const stack = [i], members = []; id[i] = -2;
+    while (stack.length) {
+      const a = stack.pop(); members.push(a);
+      for (let j = 0; j < n; j++) {
+        if (id[j] !== -1) continue;
+        const link = 1.5 * (F[a].len + F[j].len), dx = F[j].x - F[a].x, dy = F[j].y - F[a].y;
+        if (dx * dx + dy * dy < link * link) { id[j] = -2; stack.push(j); }
+      }
     }
-    for (const f of F) { speedSum += f.sp; speedN++; }
-    fishSeen += n; frames++;
-    if (clusters >= 3 && clusters <= 7) good++;
+    if (members.length >= 3) { for (const m of members) id[m] = out.length; out.push(members); } else for (const m of members) id[m] = -3;
   }
-  return { clustered: good / frames, polarisation: polN ? polSum / polN : 0, cells: cells.size, speed: speedSum / speedN, grouped: grouped / fishSeen };
+  for (let i = 0; i < n; i++) if (id[i] < 0) id[i] = -1;
+  return { list: out, of: id };
+}
+// how many of the fish in `set` share a cluster in sample S with at least two of `other`
+const together = (S, a, b) => S.list.some((c) => a.filter((m) => S.of[m] === S.of[c[0]]).length >= 2 && b.filter((m) => S.of[m] === S.of[c[0]]).length >= 2);
+export function fissionMetrics(seed) {
+  const w = createWorld(defaults(), { w: 1440, h: 900, seed });
+  setIslands(w, ISL2);
+  const S = [], cells = new Set();
+  let polSum = 0, polN = 0, collapsed = 0, grouped = 0;
+  for (let s = 0; s <= 60 * 95; s++) {
+    step(w, DT);
+    if (s < 60 * 5 || s % 60) continue;
+    const F = w.fish, n = F.length, C = clustersOf(F);
+    S.push(C);
+    let big = 0, inC = 0;
+    for (const c of C.list) {
+      big = Math.max(big, c.length); inC += c.length;
+      let cx = 0, cy = 0, hx = 0, hy = 0, sp = 0;
+      for (const m of c) { cx += F[m].x; cy += F[m].y; hx += Math.cos(F[m].h); hy += Math.sin(F[m].h); sp += F[m].sp; }
+      const k = c.length; cx /= k; cy /= k; sp /= k;
+      cells.add(Math.min(2, Math.floor((cx / w.w) * 3)) * 3 + Math.min(2, Math.floor((cy / w.h) * 3)));
+      if (sp >= 20) { polSum += Math.hypot(hx, hy) / k; polN++; }
+    }
+    if (big > 0.7 * n) collapsed++;
+    grouped += inC / n;
+  }
+  let merges = 0, splits = 0;
+  for (let t = 0; t + 1 + HOLD < S.length; t++) {
+    const A = S[t], B = S[t + 1], L = S[t + 1 + HOLD];
+    // a merge: a cluster drawing at least two fish from each of two earlier clusters, still together a second later
+    for (const b of B.list) {
+      const parts = new Map();
+      for (const m of b) if (A.of[m] >= 0) { const k = A.of[m]; if (!parts.has(k)) parts.set(k, []); parts.get(k).push(m); }
+      const big = [...parts.values()].filter((q) => q.length >= 2).sort((x, y) => y.length - x.length);
+      if (big.length >= 2 && together(L, big[0], big[1])) merges++;
+    }
+    // a split: a cluster whose fish go two ways, at least two each, and are still apart a second later
+    for (const a of A.list) {
+      const parts = new Map();
+      for (const m of a) if (B.of[m] >= 0) { const k = B.of[m]; if (!parts.has(k)) parts.set(k, []); parts.get(k).push(m); }
+      const big = [...parts.values()].filter((q) => q.length >= 2).sort((x, y) => y.length - x.length);
+      if (big.length >= 2 && !together(L, big[0], big[1])) splits++;
+    }
+  }
+  // turnover: a fish has changed company once it has swum STAY seconds in one cluster with a fish that was not in its
+  // cluster at the first sample; brushing past a stranger does not count
+  const n = w.fish.length, first = S[0], changed = new Uint8Array(n), run = new Int32Array(n * n);
+  for (let t = 1; t < S.length; t++) for (let m = 0; m < n; m++) for (let o = 0; o < n; o++) {
+    if (o === m) continue;
+    const km = first.of[m], stranger = km < 0 || first.of[o] !== km, with_ = S[t].of[m] >= 0 && S[t].of[m] === S[t].of[o];
+    run[m * n + o] = stranger && with_ ? run[m * n + o] + 1 : 0;
+    if (run[m * n + o] >= STAY) changed[m] = 1;
+  }
+  const minutes = (S.length - 1) / 60;
+  return {
+    merges: merges / minutes, splits: splits / minutes, turnover: changed.reduce((a, b) => a + b, 0) / n,
+    collapsed: collapsed / S.length, grouped: grouped / S.length, cells: cells.size, polarisation: polN ? polSum / polN : 0,
+  };
 }
 for (const seed of [2, 19]) {
-  const m = patrolMetrics(seed);
-  const show = `seed ${seed}: 3-7 shoals in ${(m.clustered * 100).toFixed(0)}% of frames, polarisation ${m.polarisation.toFixed(2)}, ${m.cells}/9 cells, mean speed ${m.speed.toFixed(1)} px/s, ${(m.grouped * 100).toFixed(0)}% of fish in shoals`;
-  if (process.env.POND_METRICS) console.log(show);
-  if (!(m.clustered >= 0.8)) fail(`${show}: 3 to 7 shoals should show in at least 80% of frames`);
-  if (!(m.polarisation >= 0.7)) fail(`${show}: a travelling shoal should hold polarisation 0.7`);
-  if (!(m.cells >= 7)) fail(`${show}: the shoals should visit at least 7 of 9 cells`);
-  if (!(m.speed >= SPEED_FLOOR)) fail(`${show}: mean speed should be at least ${SPEED_FLOOR} px/s`);
-  if (!(m.grouped >= 0.7)) fail(`${show}: at least 70% of fish should swim in a shoal`);
+  const m = fissionMetrics(seed);
+  const show = `seed ${seed}: ${m.merges.toFixed(1)} merges and ${m.splits.toFixed(1)} splits a minute, turnover ${(m.turnover * 100).toFixed(0)}%, collapsed ${(m.collapsed * 100).toFixed(0)}% of samples, ${(m.grouped * 100).toFixed(0)}% of fish grouped, ${m.cells}/9 cells, polarisation ${m.polarisation.toFixed(2)}`;
+  metric(show);
+  if (!(m.merges >= 4 && m.splits >= 4)) fail(`${show}: (d) groups should merge and split at least 4 times a minute each`);
+  if (!(m.turnover >= 0.5)) fail(`${show}: (e) at least half the fish should end up with a fish they were not with at the start`);
+  if (!(m.collapsed < 0.2)) fail(`${show}: (f) one group should hold over 70% of the fish in under 20% of samples`);
+  if (!(m.grouped >= 0.6)) fail(`${show}: (g) at least 60% of the fish should be in a group`);
+  if (!(m.cells >= 7)) fail(`${show}: (h) the groups should visit at least 7 of 9 cells`);
+  if (!(m.polarisation >= 0.6)) fail(`${show}: (h) a moving group should hold polarisation 0.6`);
 }
 
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }

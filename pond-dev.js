@@ -1,4 +1,4 @@
-// Dev panel for the home pond. One section per part of the system (school, motion, body, islands, treats), one row per
+// Dev panel for the home pond. One section per part of the system (school, lead, swim, motion, body, islands, treats), one row per
 // parameter with its name, its value and what it does, tuning the live object in place. Loaded only when the URL
 // carries ?dev, so it ships nothing to the page otherwise. Clear empties the water of treats and ripples. Copy writes
 // the current values as a PARAMS block ready to paste back into pond.js; Reset returns to the defaults it was mounted
