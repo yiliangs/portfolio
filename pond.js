@@ -102,27 +102,39 @@ export const lateral = (s, phase, amp) => amp * envelope(s) * Math.sin(phase - W
 const TAU = Math.PI * 2;
 
 // ----- the islands -----
-// An island is a smooth star-shaped coast around its source box: seen from its centre, the coast at bearing t lies at
-//   coast(t) = e(t) * (1 + sum over k = 2..5 of a_k cos(k t + phi_k)) * lift
-// where e(t) is the radius of the ellipse on the box grown by MARGIN, the a_k decay so the lobes stay gentle, and the
-// phases come from the island's index, so an island keeps its shape across reloads, resizes and scrolls. lift scales
-// the coast out until its narrowest point still clears that ellipse, so the object always stands on land.
+// An island is its object's box offset outward by MARGIN (a rounded rectangle), with a slow wobble laid on top: seen
+// from its centre, the coast at bearing t lies at
+//   coast(t, time) = offset(t) + WOBBLE * sum over k of w_k cos(k t + phi_k + om_k time) * breathe_k(time)
+// The w_k sum to 1, so the wobble never exceeds WOBBLE px either way, and MARGIN exceeds WOBBLE, so the object always
+// stands on land. Phases and drift rates come from the island's index, so an island moves the same way across
+// reloads, resizes and scrolls; time is the world's clock, which step() hands each island.
 // This is the one representation of an island: containment, push-out, steering, treats and the waves all read it.
-export const MARGIN = 12;
-const LOBES = [[2, 0.12], [3, 0.08], [4, 0.05], [5, 0.03]];
-const lobes = (ph, t) => { let g = 1; for (let i = 0; i < LOBES.length; i++) g += LOBES[i][1] * Math.cos(LOBES[i][0] * t + ph[i]); return g; };
-export function islandsFrom(boxes) {
+export const MARGIN = 30, WOBBLE = 9;
+const SWELLS = [[2, 0.4], [3, 0.28], [4, 0.2], [6, 0.12]]; // [harmonic, weight]
+export function islandsFrom(boxes, time = 0) {
   return (boxes || []).map((b, i) => {
-    const r = rng(0x5eed + i * 7919), ph = LOBES.map(() => r() * TAU);
-    let lo = Infinity; for (let k = 0; k < 360; k++) lo = Math.min(lo, lobes(ph, (k / 360) * TAU));
-    return { x: b.x + b.w / 2, y: b.y + b.h / 2, rx: Math.max(1, b.w / 2) + MARGIN, ry: Math.max(1, b.h / 2) + MARGIN, ph, lift: 1 / lo };
+    const r = rng(0x5eed + i * 7919), ph = SWELLS.map(() => r() * TAU);
+    // each swell drifts round the coast at its own slow rate, either way, and breathes on its own slower cycle
+    const om = SWELLS.map(() => (r() < 0.5 ? -1 : 1) * (0.04 + r() * 0.08)), br = SWELLS.map(() => 0.02 + r() * 0.04);
+    return { x: b.x + b.w / 2, y: b.y + b.h / 2, a: Math.max(1, b.w / 2), b: Math.max(1, b.h / 2), ph, om, br, time };
   });
 }
-// the coast's distance from the island's centre at bearing t
-export function coast(o, t) {
-  const c = Math.cos(t), s = Math.sin(t);
-  return ((o.rx * o.ry) / Math.sqrt((o.ry * c) ** 2 + (o.rx * s) ** 2)) * lobes(o.ph, t) * o.lift;
+// Distance from a box's centre, along bearing t, to the box of half sizes a, b grown by m px: a flat side, or the
+// quarter circle of radius m round a corner.
+export function offsetRay(a, b, m, t) {
+  const c = Math.abs(Math.cos(t)), s = Math.abs(Math.sin(t));
+  if (c > 1e-9) { const r = (a + m) / c; if (r * s <= b) return r; }
+  if (s > 1e-9) { const r = (b + m) / s; if (r * c <= a) return r; }
+  const q = a * c + b * s; return q + Math.sqrt(Math.max(0, q * q - (a * a + b * b - m * m)));
 }
+// the coast's wobble at bearing t, in px, within +-WOBBLE
+export function wobble(o, t) {
+  let g = 0;
+  for (let i = 0; i < SWELLS.length; i++) g += SWELLS[i][1] * Math.cos(SWELLS[i][0] * t + o.ph[i] + o.om[i] * o.time) * (0.7 + 0.3 * Math.sin(o.br[i] * o.time + o.ph[i]));
+  return WOBBLE * g;
+}
+// the coast's distance from the island's centre at bearing t
+export function coast(o, t) { return offsetRay(o.a, o.b, MARGIN, t) + wobble(o, t); }
 // Normalised radius of (x,y) against the coast grown by g px: 1 on it, below 1 inside. g is added, not scaled, so a
 // gap is the same width all the way round.
 export function shoreR(o, x, y, g) { const dx = x - o.x, dy = y - o.y; return Math.hypot(dx, dy) / (coast(o, Math.atan2(dy, dx)) + g); }
@@ -228,7 +240,7 @@ function populate(w) {
   if (w.fish.length > n) w.fish.length = n;
 }
 export function resizeWorld(w, width, height) { w.w = Math.max(1, width); w.h = Math.max(1, height); }
-export function setIslands(w, boxes) { w.islands = islandsFrom(boxes); }
+export function setIslands(w, boxes) { w.islands = islandsFrom(boxes, w.t); }
 export function setPointer(w, x, y, on) { w.ptr.x = x; w.ptr.y = y; w.ptr.on = !!on; }
 // A treat that lands on an island rolls off into the water at the nearest shore.
 export function dropTreat(w, x, y) {
@@ -301,6 +313,8 @@ export function step(w, dt) {
   if (!(dt > 0)) return;
   const p = w.params, r = w.rand, F = w.fish, n = F.length;
   w.t += dt;
+  // the coasts wobble on the world's clock; under reduced motion they hold the shape they had
+  if (!w.reduced) for (const o of w.islands) o.time = w.t;
   if (n !== target(w)) populate(w);
   // the cursor's speed over this step; a still or slow cursor startles nothing
   const ptr = w.ptr;

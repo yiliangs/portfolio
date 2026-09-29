@@ -12,7 +12,7 @@
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 const M = await import(process.env.POND_MODULE ? pathToFileURL(resolve(process.env.POND_MODULE)).href : '../pond.js');
-const { defaults, createWorld, step, setIslands, setPointer, dropTreat, strokeStart, strokeTo, strokeEnd, strokeCancel, envelope, thrustHz, lateral, shoreR, coast, islandsFrom, MARGIN, waterOf } = M;
+const { defaults, createWorld, step, setIslands, setPointer, dropTreat, strokeStart, strokeTo, strokeEnd, strokeCancel, envelope, thrustHz, lateral, shoreR, coast, islandsFrom, MARGIN, WOBBLE, offsetRay, wobble, waterOf } = M;
 
 const failures = [];
 const fail = (msg) => failures.push(msg);
@@ -113,21 +113,53 @@ for (const seed of [1, 7, 42]) {
   if (!(worst >= 1)) fail(`a fish entered an island: normalised radius ${worst.toFixed(3)} at ${where}`);
 }
 
-// the islands are organic, not ellipses, keep their shape wherever the page puts them, and hold the object on land
+// an island is its object's box offset by the margin with a slow wobble laid on: the object always stands on land, the
+// coast stays close to the plain offset, it is alive but slow, and its shape comes from its index, not from chance
 {
-  const [a] = islandsFrom([{ x: 0, y: 0, w: 200, h: 200 }]), [b] = islandsFrom([{ x: 500, y: 90, w: 200, h: 200 }]);
-  let lo = Infinity, hi = 0, same = true;
-  for (let k = 0; k < 360; k++) {
-    const t = (k / 360) * Math.PI * 2, r = coast(a, t);
-    lo = Math.min(lo, r); hi = Math.max(hi, r);
-    if (Math.abs(r - coast(b, t)) > 1e-9) same = false;
-  }
-  if (!(hi / lo > 1.2)) fail(`island coast should be irregular: radius ranges only ${lo.toFixed(1)} to ${hi.toFixed(1)} on a square box`);
-  if (!(lo >= 100 + MARGIN - 1e-9)) fail(`island coast should clear the box's own ellipse plus the margin, narrowest ${lo.toFixed(1)}`);
-  if (!same) fail('an island should keep its shape when the page moves it');
-  const [, c2] = islandsFrom([{ x: 0, y: 0, w: 200, h: 200 }, { x: 0, y: 0, w: 200, h: 200 }]);
-  let differ = false; for (let k = 0; k < 36; k++) if (Math.abs(coast(c2, k / 5.7) - coast(a, k / 5.7)) > 1) differ = true;
+  const BOXES = [{ x: 0, y: 0, w: 200, h: 120 }, { x: 500, y: 90, w: 60, h: 220 }];
+  const TIMES = [0, 7.3, 40, 300], N = 720;
+  if (!(MARGIN > WOBBLE)) fail(`the margin ${MARGIN} should exceed the wobble ${WOBBLE}, or the object could stand in water`);
+  islandsFrom(BOXES).forEach((o, i) => {
+    let low = Infinity, far = 0;
+    for (const t of TIMES) {
+      o.time = t;
+      for (let k = 0; k < N; k++) {
+        const th = (k / N) * TAU, c = coast(o, th);
+        low = Math.min(low, c - offsetRay(o.a, o.b, MARGIN - WOBBLE, th));
+        far = Math.max(far, Math.abs(c - offsetRay(o.a, o.b, MARGIN, th)));
+      }
+    }
+    if (!(low >= -1e-9)) fail(`island ${i}: the coast should always clear the box plus margin minus wobble, short by ${(-low).toFixed(3)} px`);
+    if (!(far <= WOBBLE + 1e-9)) fail(`island ${i}: the coast should stay within ${WOBBLE} px of the plain offset, strayed ${far.toFixed(3)} px`);
+    // alive: some bearing's coast moves by at least a pixel between time 0 and time 20
+    let alive = 0;
+    for (let k = 0; k < N; k++) { const th = (k / N) * TAU; o.time = 0; const c0 = coast(o, th); o.time = 20; alive = Math.max(alive, Math.abs(coast(o, th) - c0)); }
+    if (!(alive >= 1)) fail(`island ${i}: the coast should move over time, moved only ${alive.toFixed(3)} px in 20 s`);
+    // slow: no bearing's coast changes faster than 8 px/s over two minutes
+    let fast = 0;
+    const dt = 0.05, M2 = 360, prev = new Float64Array(M2);
+    o.time = 0; for (let k = 0; k < M2; k++) prev[k] = coast(o, (k / M2) * TAU);
+    for (let s = 1; s <= 120 / dt; s++) {
+      o.time = s * dt;
+      for (let k = 0; k < M2; k++) { const c = coast(o, (k / M2) * TAU); fast = Math.max(fast, Math.abs(c - prev[k]) / dt); prev[k] = c; }
+    }
+    if (!(fast <= 8)) fail(`island ${i}: the coast should change at most 8 px/s, changed ${fast.toFixed(2)} px/s`);
+  });
+  // identity: the same box list gives the same coasts, whatever the call; different indices give different coasts
+  const A = islandsFrom(BOXES), B = islandsFrom(BOXES);
+  A.forEach((o, i) => {
+    B[i].time = o.time = 13.7;
+    for (let k = 0; k < 360; k++) if (Math.abs(coast(o, (k / 360) * TAU) - coast(B[i], (k / 360) * TAU)) > 1e-9) { fail(`island ${i} should keep its shape across calls of islandsFrom`); break; }
+  });
+  const [, c2] = islandsFrom([{ x: 0, y: 0, w: 200, h: 200 }, { x: 0, y: 0, w: 200, h: 200 }]), [c1] = islandsFrom([{ x: 0, y: 0, w: 200, h: 200 }]);
+  let differ = false; for (let k = 0; k < 36; k++) if (Math.abs(coast(c2, k / 5.7) - coast(c1, k / 5.7)) > 1) differ = true;
   if (!differ) fail('the two islands should have different coasts');
+  // reduced motion: the coasts hold the shape they had
+  const rw = createWorld(defaults(), { w: 1280, h: 800, seed: 3, reduced: true });
+  setIslands(rw, [BOXES[0]]);
+  const t0 = rw.islands[0].time;
+  for (let s = 0; s < 60 * 5; s++) step(rw, DT);
+  if (rw.islands[0].time !== t0) fail(`reduced motion: an island's time should not advance, went ${t0} to ${rw.islands[0].time}`);
 }
 
 // (c) a treat dropped within sensing range is eaten within a bounded time, and a reduced-motion school still eats
