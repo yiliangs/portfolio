@@ -8,7 +8,8 @@
 // world's own seeded random source and touches nothing else, so a run from a seed is the same run every time and
 // tools/check-pond.mjs drives it headless. mount() is the browser shell around it: canvas, clock, colours, lifecycle.
 //
-// mount(container) -> { setSources([{x,y,w,h}]), setPointer(x,y,active), drop(x,y), params, clear(), destroy() }
+// mount(container) -> { setSources([{x,y,w,h}]), setPointer(x,y,active), drop(x,y), strokeStart(x,y), strokeTo(x,y),
+//   strokeEnd(), strokeCancel(), params, clear(), destroy() }
 // With ?dev in the URL the parameters open in a panel (pond-dev.js) and can be tuned live; `params` is that object.
 // Parameters by section: [default, min, max, step, label].
 export const PARAMS = {
@@ -67,7 +68,8 @@ export const PARAMS = {
   treats: {
     sense: [240, 0, 800, 10, 'how far a fish notices a treat, px'],
     sink: [8, 1, 30, 0.5, 'seconds before an uneaten treat sinks away'],
-    max: [12, 1, 40, 1, 'live treats at once'],
+    max: [48, 1, 120, 1, 'live treats at once; the oldest goes first'],
+    spacing: [22, 4, 200, 1, 'gap between treats dropped along a drag, px'],
     startle: [800, 100, 4000, 50, 'cursor speed that startles, px/s'],
     scare: [110, 0, 400, 5, 'startle radius, px'],
   },
@@ -201,7 +203,7 @@ export function createWorld(params, opts = {}) {
   const w = {
     params, w: opts.w || 1, h: opts.h || 1, t: 0, rand: rng(opts.seed == null ? 1 : opts.seed),
     coarse: !!opts.coarse, reduced: !!opts.reduced,
-    fish: [], shoals: [], islands: [], treats: [], ripples: [],
+    fish: [], shoals: [], islands: [], treats: [], ripples: [], stroke: null,
     ptr: { x: 0, y: 0, on: false, px: 0, py: 0, seen: false, speed: 0 },
     eaten: 0,
   };
@@ -281,8 +283,27 @@ export function dropTreat(w, x, y) {
   w.treats.push({ x, y, age: 0 });
   ripple(w, x, y, 34, 1.6);
 }
+// A feed stroke: pressing starts one, dragging drops a treat every `spacing` px along the pointer's path (the first
+// where the press began), and letting go of a press that never moved drops one where it was. Cancelling ends it with
+// no further drop.
+export function strokeStart(w, x, y) { w.stroke = { x, y, sx: x, sy: y, need: w.params.spacing, dropped: 0 }; }
+export function strokeTo(w, x, y) {
+  const s = w.stroke; if (!s) return;
+  let ax = s.x, ay = s.y; const L = Math.hypot(x - ax, y - ay);
+  if (L < 1e-9) return;
+  const ux = (x - ax) / L, uy = (y - ay) / L;
+  let left = L;
+  while (left >= s.need) {
+    ax += ux * s.need; ay += uy * s.need; left -= s.need; s.need = Math.max(1, w.params.spacing);
+    if (!s.dropped) { dropTreat(w, s.sx, s.sy); s.dropped++; }
+    dropTreat(w, ax, ay); s.dropped++;
+  }
+  s.need -= left; s.x = x; s.y = y;
+}
+export function strokeEnd(w) { const s = w.stroke; w.stroke = null; if (s && !s.dropped) dropTreat(w, s.sx, s.sy); }
+export function strokeCancel(w) { w.stroke = null; }
 function ripple(w, x, y, size, life) {
-  if (w.ripples.length >= 32) w.ripples.shift();
+  if (w.ripples.length >= 64) w.ripples.shift();
   w.ripples.push({ x, y, age: 0, size, life });
 }
 
@@ -570,6 +591,10 @@ export function mount(container) {
     setSources(list) { setIslands(world, list); },
     setPointer(x, y, on) { setPointer(world, x, y, on); },
     drop(x, y) { dropTreat(world, x, y); },
+    strokeStart(x, y) { strokeStart(world, x, y); },
+    strokeTo(x, y) { strokeTo(world, x, y); },
+    strokeEnd() { strokeEnd(world); },
+    strokeCancel() { strokeCancel(world); },
     params,
     // clear the water: every treat and ripple goes
     clear() { world.treats.length = 0; world.ripples.length = 0; },

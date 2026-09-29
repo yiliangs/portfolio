@@ -7,7 +7,7 @@
 //
 // Run with `npm run check`. Exits non-zero and prints every failure it found.
 
-import { defaults, createWorld, step, setIslands, setPointer, dropTreat, envelope, beatHz, lateral, shoreR, coast, islandsFrom, MARGIN } from '../pond.js';
+import { defaults, createWorld, step, setIslands, setPointer, dropTreat, strokeStart, strokeTo, strokeEnd, strokeCancel, envelope, beatHz, lateral, shoreR, coast, islandsFrom, MARGIN } from '../pond.js';
 
 const failures = [];
 const fail = (msg) => failures.push(msg);
@@ -110,6 +110,32 @@ for (const seed of [3, 11]) {
   let top = 0;
   for (let s = 0; s < 60 * 10; s++) { if (s % 90 === 0) dropTreat(w, 200 + (s * 7) % 900, 100 + (s * 13) % 600); step(w, DT); for (const f of w.fish) top = Math.max(top, f.sp); }
   if (!(top > w.params.cruise * 2)) fail(`full motion: a treat should set fish bursting, top speed only ${top.toFixed(1)} px/s`);
+}
+
+// Feeding by drag: a stroke drops a treat where it began and one every `spacing` px of travel after, whatever the size
+// of the pointer's steps; a press that never moves drops one; a cancelled stroke drops nothing more; and a long line
+// keeps its newest treats up to the cap.
+{
+  const w = pond(8, false), sp = w.params.spacing;
+  strokeStart(w, 100, 770); for (let x = 107; x <= 320; x += 7) strokeTo(w, x, 770); strokeTo(w, 320, 770); strokeEnd(w); // below both islands, so no treat rolls to a shore
+  const want = 1 + Math.floor(220 / sp);
+  if (w.treats.length !== want) fail(`a 220 px drag should drop ${want} treats, dropped ${w.treats.length}`);
+  const gaps = w.treats.slice(1).map((t, i) => t.x - w.treats[i].x);
+  if (gaps.some((g) => Math.abs(g - sp) > 1e-6)) fail(`treats along a drag should sit ${sp} px apart, gaps ${gaps.map((g) => g.toFixed(1)).join(',')}`);
+  const c = pond(8, false); strokeStart(c, 600, 600); strokeTo(c, 603, 601); strokeEnd(c);
+  if (c.treats.length !== 1) fail(`a press without a drag should drop one treat, dropped ${c.treats.length}`);
+  const k = pond(8, false); strokeStart(k, 600, 600); strokeTo(k, 610, 600); strokeCancel(k); strokeTo(k, 700, 600); strokeEnd(k);
+  if (k.treats.length !== 0) fail(`a cancelled stroke should drop nothing, dropped ${k.treats.length}`);
+  const m = pond(8, false); strokeStart(m, 40, 700); strokeTo(m, 1240, 700); strokeEnd(m);
+  if (m.treats.length !== m.params.max || !(m.treats[m.treats.length - 1].x > 1200)) fail(`a long line should keep the newest ${m.params.max} treats, kept ${m.treats.length}`);
+  // and a line of treats draws a shoal along it: a line laid ahead of the nearest shoal is mostly eaten
+  const e = pond(4, false);
+  for (let s = 0; s < 120; s++) step(e, DT);
+  const f0 = e.fish[0];
+  strokeStart(e, f0.x, f0.y); for (let d = 10; d <= 300; d += 10) strokeTo(e, f0.x + Math.cos(f0.h) * d, f0.y + Math.sin(f0.h) * d); strokeEnd(e);
+  const laid = e.treats.length, before = e.eaten;
+  for (let s = 0; s < 60 * 8; s++) step(e, DT);
+  if (!(e.eaten - before >= laid * 0.6)) fail(`a line of ${laid} treats laid ahead of a shoal should mostly be eaten, ${e.eaten - before} were`);
 }
 
 // Shoals that patrol. One seeded minute on a 1440x900 page with two islands, sampled twice a second after a
