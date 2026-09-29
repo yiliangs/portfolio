@@ -5,7 +5,7 @@
 // morphing 3D noise field, its two curls breathe out of phase, and the open span between them carries a travelling
 // flutter and a slight twist, the way old paper moves in a draught. All of that scales away as the roll unrolls, so
 // the platform the Development page lands on is the sheet it always was.
-// mount(container) -> { setTilt(nx, ny, over), destroy() }.
+// mount(container) -> { setTilt(nx, ny, over), outline(out), destroy() }.
 import * as THREE from './vendor/three-0.160.0.module.min.js';
 
 // ----- geometry -----
@@ -61,6 +61,34 @@ export function pointInto(u, v, W, H, k, t, out, o) {
 export function point(u, v, W, H, k = 0, t = 0) {
   profileInto(u, W, k, t, prof);
   return [prof[0], (v - 0.5) * H, lift(u, v, k, t, prof[1])];
+}
+
+// The sheet's size in its own units, which mount builds the roll at and sheetOutline traces.
+const SHEET_W = 2.9, SHEET_H = 1.55;
+// The scroll's silhouette on screen: the sheet's edge walked once round, along v = 0, up the u = 1 end, back along
+// v = 1 and down the u = 0 end, which is 56 points. The edge is the outline because the curls are wound from the
+// sheet itself, so its long edges trace the spirals and nothing of the roll stands outside them. matrix takes the
+// sheet's local space to clip space (projection times view times the sheet's world matrix), vw and vh are the
+// viewport in CSS px, and out takes x, y pairs in viewport px. Past half unrolled it is a platform lying beside the
+// tooling title rather than the scroll standing on the home page, so it reports nothing; the rule lives here rather
+// than in the api method so a check can hold it. Pure and allocation free, like pointInto, which it samples.
+const OL_U = 24, OL_V = 4;
+const olP = new Float32Array(3), olV = new THREE.Vector3();
+export function sheetOutline(k, t, matrix, vw, vh, out) {
+  if (k > 0.5 || out.length < (2 * OL_U + 2 * OL_V) * 2) return 0;
+  let n = 0;
+  for (let i = 0; i < OL_U; i++) n = olPut(i / (OL_U - 1), 0, k, t, matrix, vw, vh, out, n);
+  for (let j = 1; j <= OL_V; j++) n = olPut(1, j / (OL_V + 1), k, t, matrix, vw, vh, out, n);
+  for (let i = OL_U - 1; i >= 0; i--) n = olPut(i / (OL_U - 1), 1, k, t, matrix, vw, vh, out, n);
+  for (let j = OL_V; j >= 1; j--) n = olPut(0, j / (OL_V + 1), k, t, matrix, vw, vh, out, n);
+  return n;
+}
+// one edge point projected into out at pair n; a module function rather than a closure so a call allocates nothing
+function olPut(u, v, k, t, matrix, vw, vh, out, n) {
+  pointInto(u, v, SHEET_W, SHEET_H, k, t, olP, 0);
+  olV.set(olP[0], olP[1], olP[2]).applyMatrix4(matrix);
+  out[n * 2] = (olV.x + 1) / 2 * vw; out[n * 2 + 1] = (1 - olV.y) / 2 * vh;
+  return n + 1;
 }
 // The bounding sphere the roll used to recompute here was only ever read by the frustum test, and the roll is
 // placed on screen by fit() rather than left where the world puts it, so the test never had anything to cull.
@@ -190,7 +218,7 @@ export function mount(container) {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 200); camera.lookAt(0, 0, 0);
 
-  const W = 2.9, H = 1.55;
+  const W = SHEET_W, H = SHEET_H;
   // the platform's iso-curve lattice: 3 × 4 square cells (cell = H/3), centred along the sheet; each cell carries a
   // column of 0–3 identical cubes, so the field reads as terraces rather than a scatter
   const ROWS = 3, COLS = 4, CELL = H / ROWS, LAT_W = CELL * COLS;
@@ -349,6 +377,9 @@ export function mount(container) {
   // long the roll goes on being drawn into it before the tick stops at the gate. See the tick.
   const HIDDEN_AFTER = 500;
   let hiddenSince = -1;
+  // outline() reads the matrices the last render left, so it has nothing to say before there was one
+  let rendered = false;
+  const olM = new THREE.Matrix4();
   // drag orbit on the platform: turn (about the sheet normal) and elevation offsets, with inertia, decaying back home
   let dTurn = 0, dTilt = 0, vTurn = 0, vTilt = 0, dragging = false;
   let sources = []; // [{u, v, w}] points sampled off the glowing glyphs' ink boxes; w = intensity 0..1
@@ -499,6 +530,7 @@ export function mount(container) {
     group.position.x = ax - cxe * (0.3 - 0.2 * k) * as; group.position.y = ay + (-cye * (0.2 - 0.14 * k) + Math.sin(now / 3600) * 0.012) * as;
     group.updateMatrixWorld(); { const n = new THREE.Vector3(0, 0, 1).transformDirection(group.matrixWorld); clipPlane.setFromNormalAndCoplanarPoint(n, group.position.clone().addScaledVector(n, 0.004 * as)); }
     renderer.render(scene, camera);
+    rendered = true;
   };
   raf = requestAnimationFrame(tick);
   return {
@@ -542,6 +574,15 @@ export function mount(container) {
       }
     },
     setUnroll(k) { unroll = Math.max(0, Math.min(1, k)); },
+    // the scroll's on-screen silhouette as x, y pairs in viewport px (see sheetOutline, which also returns 0 once
+    // the sheet is past half unrolled); 0 as well while the layer is hidden, since the tick stops rendering then
+    // and the matrices it would read are stale. The sheet sits in the group with no transform of its own, so its
+    // world matrix is the group's, which the tick brings up to date before each render
+    outline(out) {
+      if (!alive || !rendered || container.style.opacity === '0') return 0;
+      olM.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse).multiply(sheet.matrixWorld);
+      return sheetOutline(unroll, t, olM, vw, vh, out);
+    },
     // a register change: whatever state the burn is in, rewind it at 10x so the roll arrives unburned
     quench() { sources = []; let any = false; for (let k = 0; k < GW * GH; k++) if (burnedAt[k] >= 0 || heat[k] > 0) { any = true; break; } if (!any) return; if (!reversing) { reversing = true; rewindT = -1; for (let k = 0; k < GW * GH; k++) if (burnedAt[k] > rewindT) rewindT = burnedAt[k]; if (rewindT < 0) rewindT = t; } rewindMul = 10; },
     // viewport-px box the roll should occupy
