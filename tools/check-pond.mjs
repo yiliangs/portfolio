@@ -12,7 +12,7 @@
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 const M = await import(process.env.POND_MODULE ? pathToFileURL(resolve(process.env.POND_MODULE)).href : '../pond.js');
-const { defaults, createWorld, step, setIslands, setPointer, dropTreat, strokeStart, strokeTo, strokeEnd, strokeCancel, envelope, thrustHz, lateral, shoreR, coast, islandsFrom, MARGIN, WOBBLE, offsetRay, wobble, waterOf } = M;
+const { defaults, createWorld, step, setIslands, setPointer, dropTreat, strokeStart, strokeTo, strokeEnd, strokeCancel, envelope, thrustHz, lateral, shoreR, coast, waterOf } = M;
 
 const failures = [];
 const fail = (msg) => failures.push(msg);
@@ -113,53 +113,130 @@ for (const seed of [1, 7, 42]) {
   if (!(worst >= 1)) fail(`a fish entered an island: normalised radius ${worst.toFixed(3)} at ${where}`);
 }
 
-// an island is its object's box offset by the margin with a slow wobble laid on: the object always stands on land, the
-// coast stays close to the plain offset, it is alive but slow, and its shape comes from its index, not from chance
+// an island follows its object's outline on screen: the object always stands on land, the coast follows a turning
+// object within a few follow times yet changes slowly, the swell distorts it well past the object's own profile, a box
+// stands in when the object shows nothing, and reduced motion freezes the swell but not the following
 {
-  const BOXES = [{ x: 0, y: 0, w: 200, h: 120 }, { x: 500, y: 90, w: 60, h: 220 }];
-  const TIMES = [0, 7.3, 40, 300], N = 720;
-  if (!(MARGIN > WOBBLE)) fail(`the margin ${MARGIN} should exceed the wobble ${WOBBLE}, or the object could stand in water`);
-  islandsFrom(BOXES).forEach((o, i) => {
-    let low = Infinity, far = 0;
-    for (const t of TIMES) {
-      o.time = t;
-      for (let k = 0; k < N; k++) {
-        const th = (k / N) * TAU, c = coast(o, th);
-        low = Math.min(low, c - offsetRay(o.a, o.b, MARGIN - WOBBLE, th));
-        far = Math.max(far, Math.abs(c - offsetRay(o.a, o.b, MARGIN, th)));
-      }
+  const has = typeof M.setOutlines === 'function';
+  const CX = 400, CY = 400, HALF = 60;
+  // 16 points of a square turned by angle a: its corners and three points along each side
+  const square = (a) => (out) => {
+    const c = Math.cos(a()), s = Math.sin(a()), q = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
+    let n = 0;
+    for (let e = 0; e < 4; e++) for (let j = 0; j < 4; j++) {
+      const u = j / 4, x = (q[e][0] + (q[(e + 1) % 4][0] - q[e][0]) * u) * HALF, y = (q[e][1] + (q[(e + 1) % 4][1] - q[e][1]) * u) * HALF;
+      out[2 * n] = CX + x * c - y * s; out[2 * n + 1] = CY + x * s + y * c; n++;
     }
-    if (!(low >= -1e-9)) fail(`island ${i}: the coast should always clear the box plus margin minus wobble, short by ${(-low).toFixed(3)} px`);
-    if (!(far <= WOBBLE + 1e-9)) fail(`island ${i}: the coast should stay within ${WOBBLE} px of the plain offset, strayed ${far.toFixed(3)} px`);
-    // alive: some bearing's coast moves by at least a pixel between time 0 and time 20
-    let alive = 0;
-    for (let k = 0; k < N; k++) { const th = (k / N) * TAU; o.time = 0; const c0 = coast(o, th); o.time = 20; alive = Math.max(alive, Math.abs(coast(o, th) - c0)); }
-    if (!(alive >= 1)) fail(`island ${i}: the coast should move over time, moved only ${alive.toFixed(3)} px in 20 s`);
-    // slow: no bearing's coast changes faster than 8 px/s over two minutes
-    let fast = 0;
-    const dt = 0.05, M2 = 360, prev = new Float64Array(M2);
-    o.time = 0; for (let k = 0; k < M2; k++) prev[k] = coast(o, (k / M2) * TAU);
-    for (let s = 1; s <= 120 / dt; s++) {
-      o.time = s * dt;
-      for (let k = 0; k < M2; k++) { const c = coast(o, (k / M2) * TAU); fast = Math.max(fast, Math.abs(c - prev[k]) / dt); prev[k] = c; }
+    return n;
+  };
+  // 60 points round a thin rectangle 300 x 40 that tilts back and forth, like the scroll under the cursor
+  const RX = 900, RY = 450;
+  const rect = (a) => (out) => {
+    const c = Math.cos(a()), s = Math.sin(a()), per = 2 * (300 + 40);
+    for (let n = 0; n < 60; n++) {
+      let d = (n / 60) * per, x, y;
+      if (d < 300) { x = -150 + d; y = -20; } else if ((d -= 300) < 40) { x = 150; y = -20 + d; } else if ((d -= 40) < 300) { x = 150 - d; y = 20; } else { d -= 300; x = -150; y = 20 - d; }
+      out[2 * n] = RX + x * c - y * s; out[2 * n + 1] = RY + x * s + y * c;
     }
-    if (!(fast <= 8)) fail(`island ${i}: the coast should change at most 8 px/s, changed ${fast.toFixed(2)} px/s`);
-  });
-  // identity: the same box list gives the same coasts, whatever the call; different indices give different coasts
-  const A = islandsFrom(BOXES), B = islandsFrom(BOXES);
-  A.forEach((o, i) => {
-    B[i].time = o.time = 13.7;
-    for (let k = 0; k < 360; k++) if (Math.abs(coast(o, (k / 360) * TAU) - coast(B[i], (k / 360) * TAU)) > 1e-9) { fail(`island ${i} should keep its shape across calls of islandsFrom`); break; }
-  });
-  const [, c2] = islandsFrom([{ x: 0, y: 0, w: 200, h: 200 }, { x: 0, y: 0, w: 200, h: 200 }]), [c1] = islandsFrom([{ x: 0, y: 0, w: 200, h: 200 }]);
-  let differ = false; for (let k = 0; k < 36; k++) if (Math.abs(coast(c2, k / 5.7) - coast(c1, k / 5.7)) > 1) differ = true;
-  if (!differ) fail('the two islands should have different coasts');
-  // reduced motion: the coasts hold the shape they had
-  const rw = createWorld(defaults(), { w: 1280, h: 800, seed: 3, reduced: true });
-  setIslands(rw, [BOXES[0]]);
-  const t0 = rw.islands[0].time;
-  for (let s = 0; s < 60 * 5; s++) step(rw, DT);
-  if (rw.islands[0].time !== t0) fail(`reduced motion: an island's time should not advance, went ${t0} to ${rw.islands[0].time}`);
+    return 60;
+  };
+  const SQ_BOX = { x: CX - HALF, y: CY - HALF, w: 2 * HALF, h: 2 * HALF }, RC_BOX = { x: RX - 150, y: RY - 20, w: 300, h: 40 };
+  const quiet = (reduced) => { const p = defaults(); p.count = 0; p.countTouch = 0; return createWorld(p, { w: 1440, h: 900, seed: 5, reduced }); };
+  const BUF = new Float32Array(512);
+  // least land in px between any outline point and the coast
+  const clearance = (o, fn) => {
+    const n = fn(BUF); let low = Infinity;
+    for (let j = 0; j < n; j++) { const dx = BUF[2 * j] - o.x, dy = BUF[2 * j + 1] - o.y; low = Math.min(low, coast(o, Math.atan2(dy, dx)) - Math.hypot(dx, dy)); }
+    return low;
+  };
+  const ring = (o, m = 360) => Array.from({ length: m }, (_, k) => coast(o, (k / m) * TAU));
+  const corr = (a, b) => {
+    const n = a.length, ma = a.reduce((s, v) => s + v, 0) / n, mb = b.reduce((s, v) => s + v, 0) / n;
+    let ab = 0, aa = 0, bb = 0; for (let k = 0; k < n; k++) { ab += (a[k] - ma) * (b[k] - mb); aa += (a[k] - ma) ** 2; bb += (b[k] - mb) ** 2; }
+    return ab / Math.sqrt(aa * bb || 1);
+  };
+  // (iv) distorted: the swell spans a good share of the radius and breaks the square's quarter-turn symmetry
+  const distortion = (o, base) => {
+    const c = ring(o), dev = c.map((v, k) => v - base(k)), mean = c.reduce((s, v) => s + v, 0) / c.length;
+    return { span: (Math.max(...dev) - Math.min(...dev)) / mean, sym: corr(c, c.map((_, k) => c[(k + 90) % 360])) };
+  };
+  let dist;
+  if (!has) {
+    const [o] = M.islandsFrom([SQ_BOX]); o.time = 10;
+    dist = distortion(o, (k) => M.offsetRay(o.a, o.b, M.MARGIN, (k / 360) * TAU));
+    fail('islands should follow outline functions (setOutlines); (i), (ii), (iii), (v), (vi) cannot run on this model');
+  } else {
+    const P = defaults();
+    // (i) on land, under a turning square and a tilting thin rectangle
+    {
+      const w = quiet(false);
+      const sq = square(() => 0.25 * w.t), rc = rect(() => 0.5 * Math.sin(0.4 * w.t));
+      M.setOutlines(w, [sq, rc]); setIslands(w, [SQ_BOX, RC_BOX]);
+      let low = [Infinity, Infinity];
+      for (let s = 1; s <= 60 * 40; s++) { step(w, DT); if (w.t > 2 && s % 6 === 0) { low[0] = Math.min(low[0], clearance(w.islands[0], sq)); low[1] = Math.min(low[1], clearance(w.islands[1], rc)); } }
+      ['square', 'rectangle'].forEach((name, i) => { if (!(low[i] >= P.floor - 1e-3)) fail(`(i) the ${name} should stand ${P.floor} px inside its coast, came within ${low[i].toFixed(2)} px`); });
+      metric(`islands: least land square ${low[0].toFixed(1)} px, rectangle ${low[1].toFixed(1)} px`);
+    }
+    // (ii) follows: turn the square 45 degrees; within 3 follow times the profile is within 2 px of its new target
+    {
+      const w = quiet(false); let a = 0;
+      M.setOutlines(w, [square(() => a)]); setIslands(w, [SQ_BOX]);
+      for (let s = 0; s < 60 * 3; s++) step(w, DT);
+      a = Math.PI / 4;
+      for (let s = 0; s < Math.ceil((3 * P.follow) / DT); s++) step(w, DT);
+      const o = w.islands[0], fresh = M.makeIsland(0, SQ_BOX); M.updateIsland(fresh, square(() => a), 0, P, false, w.t);
+      let off = 0; for (let j = 0; j < M.BEARINGS; j++) off = Math.max(off, Math.abs(o.S[j] - fresh.S[j]));
+      if (!(off <= 2)) fail(`(ii) after ${(3 * P.follow).toFixed(2)} s the coast should be within 2 px of the turned square's, is ${off.toFixed(2)} px off`);
+      // and it did move: the target for the turned square differs from the upright one
+      const up = M.makeIsland(0, SQ_BOX); M.updateIsland(up, square(() => 0), 0, P, false, w.t);
+      let moved = 0; for (let j = 0; j < M.BEARINGS; j++) moved = Math.max(moved, Math.abs(up.S[j] - fresh.S[j]));
+      metric(`islands: follow residue ${off.toFixed(2)} px of a ${moved.toFixed(2)} px change`);
+    }
+    // (iii) smooth: under a square turning at the tesseract's rate the coast changes at most 12 px/s at any bearing
+    {
+      const w = quiet(false);
+      M.setOutlines(w, [square(() => 0.25 * w.t)]); setIslands(w, [SQ_BOX]);
+      for (let s = 0; s < 60 * 3; s++) step(w, DT);
+      let prev = ring(w.islands[0]), fast = 0;
+      for (let s = 0; s < 60 * 30; s++) { step(w, DT); const c = ring(w.islands[0]); for (let k = 0; k < 360; k++) fast = Math.max(fast, Math.abs(c[k] - prev[k]) / DT); prev = c; }
+      if (!(fast <= 12)) fail(`(iii) the coast should change at most 12 px/s under a turning square, changed ${fast.toFixed(2)} px/s`);
+      metric(`islands: fastest coast change ${fast.toFixed(2)} px/s`);
+    }
+    {
+      const w = quiet(false);
+      M.setOutlines(w, [square(() => 0)]); setIslands(w, [SQ_BOX]);
+      for (let s = 0; s < 60 * 10; s++) step(w, DT);
+      const o = w.islands[0];
+      dist = distortion(o, (k) => { const u = (k / 360) * M.BEARINGS, i = Math.floor(u), f = u - i; return o.S[i % M.BEARINGS] * (1 - f) + o.S[(i + 1) % M.BEARINGS] * f; });
+    }
+    // (v) fallback: an object that shows nothing still has its box on land
+    {
+      const w = quiet(false), B = { x: 100, y: 100, w: 200, h: 120 };
+      M.setOutlines(w, [() => 0]); setIslands(w, [B]);
+      for (let s = 0; s < 60; s++) step(w, DT);
+      const corners = (out) => { const q = [B.x, B.y, B.x + B.w, B.y, B.x + B.w, B.y + B.h, B.x, B.y + B.h]; q.forEach((v, j) => (out[j] = v)); return 4; };
+      const low = clearance(w.islands[0], corners);
+      if (!(low >= P.floor - 1e-3)) fail(`(v) an island with no outline should keep its box ${P.floor} px inside the coast, came within ${low.toFixed(2)} px`);
+    }
+    // (vi) reduced motion: the swell holds still, yet the coast still follows its object
+    {
+      const w = quiet(true); let a = 0;
+      M.setOutlines(w, [square(() => a)]); setIslands(w, [SQ_BOX]);
+      for (let s = 0; s < 60 * 10; s++) step(w, DT);
+      const c0 = ring(w.islands[0]);
+      for (let s = 0; s < 60 * 5; s++) step(w, DT);
+      const c1 = ring(w.islands[0]); let drift = 0; for (let k = 0; k < 360; k++) drift = Math.max(drift, Math.abs(c1[k] - c0[k]));
+      if (!(drift <= 1e-3)) fail(`(vi) reduced motion: a still object's coast should hold, moved ${drift.toFixed(3)} px in 5 s`);
+      a = Math.PI / 4;
+      for (let s = 0; s < 60 * 8; s++) step(w, DT);
+      const o = w.islands[0], fresh = M.makeIsland(0, SQ_BOX); M.updateIsland(fresh, square(() => a), 0, w.params, true, w.t);
+      let off = 0; for (let j = 0; j < M.BEARINGS; j++) off = Math.max(off, Math.abs(o.S[j] - fresh.S[j]));
+      if (!(off <= 2)) fail(`(vi) reduced motion: the coast should still follow a turned object, ${off.toFixed(2)} px off after 8 s`);
+    }
+  }
+  if (!(dist.span >= 0.15)) fail(`(iv) the swell should span at least 0.15 of the mean radius, spans ${dist.span.toFixed(3)}`);
+  if (!(dist.sym < 0.9)) fail(`(iv) a square's coast should not repeat every quarter turn, correlation ${dist.sym.toFixed(3)}`);
+  metric(`islands: swell span ${dist.span.toFixed(3)} of the mean radius, quarter-turn correlation ${dist.sym.toFixed(3)}`);
 }
 
 // (c) a treat dropped within sensing range is eaten within a bounded time, and a reduced-motion school still eats

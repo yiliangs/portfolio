@@ -8,7 +8,7 @@
 // world's own seeded random source and touches nothing else, so a run from a seed is the same run every time and
 // tools/check-pond.mjs drives it headless. mount() is the browser shell around it: canvas, clock, colours, lifecycle.
 //
-// mount(container) -> { setSources([{x,y,w,h}]), setPointer(x,y,active), drop(x,y), strokeStart(x,y), strokeTo(x,y),
+// mount(container) -> { setSources([{x,y,w,h}]), setOutlines([(out) => count]), setPointer(x,y,active), drop(x,y), strokeStart(x,y), strokeTo(x,y),
 //   strokeEnd(), strokeCancel(), params, clear(), destroy() }
 // With ?dev in the URL the parameters open in a panel (pond-dev.js) and can be tuned live; `params` is that object.
 // Parameters by section: [default, min, max, step, label].
@@ -57,6 +57,11 @@ export const PARAMS = {
     width: [1, 0.3, 3, 0.05, 'line width, px'],
   },
   islands: {
+    shoreGap: [26, 0, 120, 1, 'land beyond the object\'s silhouette, px'],
+    rough: [0.25, 0, 0.6, 0.01, 'swell on the coast, share of the island\'s mean radius'],
+    blur: [28, 2, 90, 1, 'how widely the silhouette is blurred round the coast, deg'],
+    follow: [0.3, 0.02, 3, 0.01, 'time the coast takes to follow its object, s'],
+    floor: [6, 0, 40, 1, 'least land between the object and the coast, px'],
     shore: [14, 0, 80, 1, 'gap a fish keeps from an island, px'],
     look: [70, 0, 300, 5, 'distance at which a fish starts to steer around, px'],
     edge: [60, 0, 300, 5, 'screen margin where fish turn back, px'],
@@ -102,39 +107,103 @@ export const lateral = (s, phase, amp) => amp * envelope(s) * Math.sin(phase - W
 const TAU = Math.PI * 2;
 
 // ----- the islands -----
-// An island is its object's box offset outward by MARGIN (a rounded rectangle), with a slow wobble laid on top: seen
-// from its centre, the coast at bearing t lies at
-//   coast(t, time) = offset(t) + WOBBLE * sum over k of w_k cos(k t + phi_k + om_k time) * breathe_k(time)
-// The w_k sum to 1, so the wobble never exceeds WOBBLE px either way, and MARGIN exceeds WOBBLE, so the object always
-// stands on land. Phases and drift rates come from the island's index, so an island moves the same way across
-// reloads, resizes and scrolls; time is the world's clock, which step() hands each island.
-// This is the one representation of an island: containment, push-out, steering, treats and the waves all read it.
-export const MARGIN = 30, WOBBLE = 9;
-const SWELLS = [[2, 0.4], [3, 0.28], [4, 0.2], [6, 0.12]]; // [harmonic, weight]
-export function islandsFrom(boxes, time = 0) {
-  return (boxes || []).map((b, i) => {
-    const r = rng(0x5eed + i * 7919), ph = SWELLS.map(() => r() * TAU);
-    // each swell drifts round the coast at its own slow rate, either way, and breathes on its own slower cycle
-    const om = SWELLS.map(() => (r() < 0.5 ? -1 : 1) * (0.04 + r() * 0.08)), br = SWELLS.map(() => 0.02 + r() * 0.04);
-    return { x: b.x + b.w / 2, y: b.y + b.h / 2, a: Math.max(1, b.w / 2), b: Math.max(1, b.h / 2), ph, om, br, time };
-  });
+// An island is the land round one of the home objects, shaped each frame from the object's silhouette as it stands on
+// screen. The island reads its object's outline points (or, when the object has nothing to show, its box's corners
+// and edge midpoints) and, seen from a centre that eases toward their centroid, takes at each of BEARINGS bearings the
+// farthest point: the star hull, with bearings no point falls on filled between their neighbours. That profile is
+// widened a few bearings, blurred wide round the circle so no corner or edge of the object reads through, and grown by
+// shoreGap, with a broad cape blurred out over any narrow end the blur falls short of, and never let closer than floor px
+// to the hull. The displayed profile S eases toward that target with time
+// constant follow, so a turning object moves its coast without shimmer. On top of S lies a swell that only ever pushes
+// outward: harmonics 2..9 weighted 1/k, each drifting round the coast at its own slow rate and breathing on its own
+// slower cycle, stretched each frame to span rough times the island's mean radius. Phases and rates come from the island's index, so an
+// island moves the same way across reloads; its clock is the world's, frozen under reduced motion.
+// The coast is tabulated once a frame at the BEARINGS bearings (C) and read between them. This is the one representation of
+// an island: containment, push-out, steering, treats, the land and the waves all read it.
+export const BEARINGS = 96;
+const SWELL = [2, 3, 4, 5, 6, 7, 8, 9], SWELL_W = (() => { const w = SWELL.map((k) => 1 / k), s = w.reduce((a, b) => a + b, 0); return w.map((v) => v / s); })();
+const WIDEN = 2; // bins either side the hull is widened by before the blur
+export function makeIsland(i, box) {
+  const r = rng(0x5eed + i * 7919), ph = SWELL.map(() => r() * TAU);
+  const om = SWELL.map(() => (r() < 0.5 ? -1 : 1) * (0.03 + r() * 0.09)), br = SWELL.map(() => 0.02 + r() * 0.05);
+  const o = { i, x: 0, y: 0, bx: 0, by: 0, dx: 0, dy: 0, S: new Float32Array(BEARINGS), C: new Float32Array(BEARINGS), mean: 0, ph, om, br, time: 0, fresh: true };
+  placeBox(o, box); return o;
 }
-// Distance from a box's centre, along bearing t, to the box of half sizes a, b grown by m px: a flat side, or the
-// quarter circle of radius m round a corner.
-export function offsetRay(a, b, m, t) {
-  const c = Math.abs(Math.cos(t)), s = Math.abs(Math.sin(t));
-  if (c > 1e-9) { const r = (a + m) / c; if (r * s <= b) return r; }
-  if (s > 1e-9) { const r = (b + m) / s; if (r * c <= a) return r; }
-  const q = a * c + b * s; return q + Math.sqrt(Math.max(0, q * q - (a * a + b * b - m * m)));
+function placeBox(o, b) { o.box = b; o.bx = b.x + b.w / 2; o.by = b.y + b.h / 2; o.x = o.bx + o.dx; o.y = o.by + o.dy; }
+const OUT = new Float32Array(512), HULL = new Float32Array(BEARINGS), WIDE = new Float32Array(BEARINGS), BLUR = new Float32Array(BEARINGS), SW = new Float32Array(BEARINGS), CAPE = new Float32Array(BEARINGS);
+let KERNEL = null, kernelFor = NaN;
+function kernel(deg) {
+  if (deg === kernelFor) return KERNEL;
+  const sg = Math.max(0.3, (deg / 360) * BEARINGS), half = Math.min(BEARINGS >> 1, Math.ceil(3 * sg)), k = new Float32Array(2 * half + 1);
+  let s = 0; for (let j = -half; j <= half; j++) s += k[j + half] = Math.exp(-(j * j) / (2 * sg * sg));
+  for (let j = 0; j < k.length; j++) k[j] /= s;
+  kernelFor = deg; return (KERNEL = k);
 }
-// the coast's wobble at bearing t, in px, within +-WOBBLE
-export function wobble(o, t) {
+// the box's corners and edge midpoints, as outline points
+function boxPoints(b, out) {
+  const x0 = b.x, y0 = b.y, x1 = b.x + b.w, y1 = b.y + b.h, xm = (x0 + x1) / 2, ym = (y0 + y1) / 2;
+  const q = [x0, y0, xm, y0, x1, y0, x1, ym, x1, y1, xm, y1, x0, y1, x0, ym];
+  for (let j = 0; j < 16; j++) out[j] = q[j];
+  return 8;
+}
+// One frame of an island: its outline from fn (or its box), then centre, profile, easing and the tabulated coast.
+export function updateIsland(o, fn, dt, p, reduced, time) {
+  let n = fn ? fn(OUT) | 0 : 0;
+  if (n <= 0) n = boxPoints(o.box, OUT);
+  n = Math.min(n, OUT.length >> 1);
+  const tau = reduced ? Math.max(1.5, p.follow) : p.follow, e = o.fresh ? 1 : 1 - Math.exp(-dt / Math.max(1e-3, tau));
+  let sx = 0, sy = 0; for (let j = 0; j < n; j++) { sx += OUT[2 * j]; sy += OUT[2 * j + 1]; }
+  o.dx += (sx / n - o.bx - o.dx) * e; o.dy += (sy / n - o.by - o.dy) * e; o.x = o.bx + o.dx; o.y = o.by + o.dy;
+  // the star hull round the centre
+  HULL.fill(-1);
+  for (let j = 0; j < n; j++) {
+    const dx = OUT[2 * j] - o.x, dy = OUT[2 * j + 1] - o.y, d = Math.hypot(dx, dy);
+    const b = ((Math.round((Math.atan2(dy, dx) / TAU) * BEARINGS) % BEARINGS) + BEARINGS) % BEARINGS;
+    if (d > HULL[b]) HULL[b] = d;
+  }
+  let first = -1; for (let j = 0; j < BEARINGS; j++) if (HULL[j] >= 0) { first = j; break; }
+  if (first < 0) HULL.fill(0);
+  else for (let a = first, m = 0; m < BEARINGS; ) {
+    let b = a + 1; while (HULL[b % BEARINGS] < 0) b++;
+    const ra = HULL[a % BEARINGS], rb = HULL[b % BEARINGS];
+    for (let j = a + 1; j < b; j++) HULL[j % BEARINGS] = ra + ((rb - ra) * (j - a)) / (b - a);
+    m += b - a; a = b;
+  }
+  // widened, blurred, grown; never inside the hull plus floor
+  for (let j = 0; j < BEARINGS; j++) { let v = 0; for (let d = -WIDEN; d <= WIDEN; d++) v = Math.max(v, HULL[(j + d + BEARINGS) % BEARINGS]); WIDE[j] = v; }
+  const K = kernel(p.blur), h = K.length >> 1;
+  for (let j = 0; j < BEARINGS; j++) { let v = 0; for (let d = -h; d <= h; d++) v += K[d + h] * WIDE[(j + d + BEARINGS) % BEARINGS]; BLUR[j] = v; }
+  // where the blur falls short of a narrow end (a thin scroll seen end on), the shortfall is blurred too and raised
+  // to its own peak, so the end gets a broad round cape instead of a point
+  let dmax = 0, bmax = 0;
+  for (let j = 0; j < BEARINGS; j++) { const d = (SW[j] = Math.max(0, WIDE[j] + p.floor + 0.5 * p.shoreGap - BLUR[j] - p.shoreGap)); dmax = Math.max(dmax, d); }
+  for (let j = 0; j < BEARINGS; j++) { let v = 0; for (let d = -h; d <= h; d++) v += K[d + h] * SW[(j + d + BEARINGS) % BEARINGS]; CAPE[j] = v; bmax = Math.max(bmax, v); }
+  const lift = bmax > 1e-6 ? dmax / bmax : 0;
+  let mean = 0;
+  for (let j = 0; j < BEARINGS; j++) {
+    const lo = WIDE[j] + p.floor, T = Math.max(BLUR[j] + p.shoreGap + CAPE[j] * lift, lo);
+    o.S[j] = Math.max(o.S[j] + (T - o.S[j]) * e, lo); mean += o.S[j];
+  }
+  o.mean = mean / BEARINGS; o.fresh = false;
+  if (!reduced) o.time = time;
+  // the swell, stretched round the ring to run from 0 to 1, so rough is the share of the radius it spans
+  let lo = Infinity, hi = -Infinity;
+  for (let j = 0; j < BEARINGS; j++) { const g = (SW[j] = swell(o, (j / BEARINGS) * TAU)); lo = Math.min(lo, g); hi = Math.max(hi, g); }
+  const amp = (p.rough * o.mean) / Math.max(1e-6, hi - lo);
+  for (let j = 0; j < BEARINGS; j++) o.C[j] = o.S[j] + amp * (SW[j] - lo);
+}
+// the swell at bearing t, within -1..1
+export function swell(o, t) {
   let g = 0;
-  for (let i = 0; i < SWELLS.length; i++) g += SWELLS[i][1] * Math.cos(SWELLS[i][0] * t + o.ph[i] + o.om[i] * o.time) * (0.7 + 0.3 * Math.sin(o.br[i] * o.time + o.ph[i]));
-  return WOBBLE * g;
+  for (let i = 0; i < SWELL.length; i++) g += SWELL_W[i] * Math.cos(SWELL[i] * t + o.ph[i] + o.om[i] * o.time) * (0.7 + 0.3 * Math.sin(o.br[i] * o.time + o.ph[i]));
+  return g;
 }
 // the coast's distance from the island's centre at bearing t
-export function coast(o, t) { return offsetRay(o.a, o.b, MARGIN, t) + wobble(o, t); }
+export function coast(o, t) {
+  let u = (t / TAU) * BEARINGS; u -= Math.floor(u / BEARINGS) * BEARINGS;
+  const i = Math.floor(u), f = u - i, C = o.C;
+  return C[i % BEARINGS] * (1 - f) + C[(i + 1) % BEARINGS] * f;
+}
 // Normalised radius of (x,y) against the coast grown by g px: 1 on it, below 1 inside. g is added, not scaled, so a
 // gap is the same width all the way round.
 export function shoreR(o, x, y, g) { const dx = x - o.x, dy = y - o.y; return Math.hypot(dx, dy) / (coast(o, Math.atan2(dy, dx)) + g); }
@@ -220,7 +289,7 @@ export function createWorld(params, opts = {}) {
   const w = {
     params, w: opts.w || 1, h: opts.h || 1, t: 0, rand: rng(opts.seed == null ? 1 : opts.seed),
     coarse: !!opts.coarse, reduced: !!opts.reduced,
-    fish: [], islands: [], treats: [], ripples: [], stroke: null, fed: [],
+    fish: [], islands: [], outlines: [], treats: [], ripples: [], stroke: null, fed: [],
     ptr: { x: 0, y: 0, on: false, px: 0, py: 0, seen: false, speed: 0 },
     eaten: 0,
   };
@@ -240,7 +309,14 @@ function populate(w) {
   if (w.fish.length > n) w.fish.length = n;
 }
 export function resizeWorld(w, width, height) { w.w = Math.max(1, width); w.h = Math.max(1, height); }
-export function setIslands(w, boxes) { w.islands = islandsFrom(boxes, w.t); }
+// The islands follow the boxes by index: an island keeps its shape and swell when its box moves, and a new one is
+// shaped at once. The outline functions, one per island by index, are read every step.
+export function setIslands(w, boxes) {
+  const list = boxes || [];
+  w.islands.length = Math.min(w.islands.length, list.length);
+  list.forEach((b, i) => { if (w.islands[i]) placeBox(w.islands[i], b); else { const o = makeIsland(i, b); updateIsland(o, w.outlines[i], 0, w.params, w.reduced, w.t); w.islands.push(o); } });
+}
+export function setOutlines(w, fns) { w.outlines = fns || []; }
 export function setPointer(w, x, y, on) { w.ptr.x = x; w.ptr.y = y; w.ptr.on = !!on; }
 // A treat that lands on an island rolls off into the water at the nearest shore.
 export function dropTreat(w, x, y) {
@@ -313,8 +389,8 @@ export function step(w, dt) {
   if (!(dt > 0)) return;
   const p = w.params, r = w.rand, F = w.fish, n = F.length;
   w.t += dt;
-  // the coasts wobble on the world's clock; under reduced motion they hold the shape they had
-  if (!w.reduced) for (const o of w.islands) o.time = w.t;
+  // the coasts follow their objects; the swell runs on the world's clock and holds still under reduced motion
+  for (const o of w.islands) updateIsland(o, w.outlines[o.i], dt, p, w.reduced, w.t);
   if (n !== target(w)) populate(w);
   // the cursor's speed over this step; a still or slow cursor startles nothing
   const ptr = w.ptr;
@@ -629,6 +705,7 @@ export function mount(container) {
   let dev = null;
   const api = {
     setSources(list) { setIslands(world, list); },
+    setOutlines(fns) { setOutlines(world, fns); },
     setPointer(x, y, on) { setPointer(world, x, y, on); },
     drop(x, y) { dropTreat(world, x, y); },
     strokeStart(x, y) { strokeStart(world, x, y); },
