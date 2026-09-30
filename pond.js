@@ -95,8 +95,8 @@ export const PARAMS = {
     rest: [0.01, 0, 0.2, 0.005, 'chance per s that a calm fish goes to rest under a pad'],
   },
   surface: {
-    floraAlpha: [0.55, 0, 1, 0.01, 'opacity of the green things on the surface'],
-    shadow: [0.08, 0, 0.4, 0.005, 'opacity of the shadow a thing on the surface casts on the water'],
+    floraAlpha: [0.08, 0, 1, 0.01, 'opacity of the film filling a stone, pad or flower'],
+    surfaceStroke: [0.4, 0, 1, 0.01, 'opacity of the outline of a stone, pad or flower'],
     rocks: [7, 0, 16, 1, 'stones standing in the water on a fine pointer'],
     rocksTouch: [4, 0, 16, 1, 'stones on a coarse pointer'],
     flowers: [2, 0, 8, 1, 'lotus flowers on the pads on a fine pointer'],
@@ -562,9 +562,9 @@ function rockFree(w, x, y, r, list = w.rocks, clear = CLEAR) {
 }
 const ROCK_N = 7, RX = new Float32Array(ROCK_N), RY = new Float32Array(ROCK_N);
 // A stone's outline, offset by (ox,oy), added to the current path as a closed curve through the vertices' midpoints.
-function rockPath(ctx, q, ox, oy) {
+function rockPath(ctx, q) {
   const n = q.k.length;
-  for (let i = 0; i < n; i++) { const t = q.t[i], R = q.r * q.k[i]; RX[i] = q.x + ox + Math.cos(t) * R; RY[i] = q.y + oy + Math.sin(t) * R; }
+  for (let i = 0; i < n; i++) { const t = q.t[i], R = q.r * q.k[i]; RX[i] = q.x + Math.cos(t) * R; RY[i] = q.y + Math.sin(t) * R; }
   ctx.moveTo((RX[n - 1] + RX[0]) / 2, (RY[n - 1] + RY[0]) / 2);
   for (let i = 0; i < n; i++) { const j = (i + 1) % n; ctx.quadraticCurveTo(RX[i], RY[i], (RX[i] + RX[j]) / 2, (RY[i] + RY[j]) / 2); }
   ctx.closePath();
@@ -1029,7 +1029,7 @@ function scare(w, f, ux, uy) { f.flee = 0.7; f.fx = ux; f.fy = uy; f.en = 1; if 
 // the rest alternating down the two arms, each arm 30 to 50 degrees off the line of flight, 14 to 26 px between a bird
 // and the one ahead on its arm; the heading wanders a little and each bird drifts a px or so about its place. Each
 // bird flaps at 2 to 3 Hz from a phase of its own, with glides of 1 to 2 s on held wings. The birds are in the air: each
-// casts a shadow on the water SUN_X, SUN_Y px off, the way the surface shadows fall, and a shadow passing within
+// casts a shadow on the water SUN_X, SUN_Y px off (down and to the right), and a shadow passing within
 // BIRD_SCARE px of a fish startles it, once per flock. Reduced motion: no birds. The flock has its own seeded source.
 const SUN_X = 16, SUN_Y = 24, BIRD_SHADOW_K = 1.15, BIRD_SCARE = 50, BIRD_OFF = 50, BIRD_VIEW = 20;
 // how far a bird drifts about its place in the V, px on each axis; two neighbours 14 px apart stay 10 px apart or more
@@ -1436,17 +1436,24 @@ export function drawGround(ctx, w, ink, paper, water = paper) {
   ctx.globalAlpha = 1;
 }
 // The surface. Each thing is drawn in the hand of the layer it lives in. The water layer, the fish, is an ink outline
-// over a paper fill. The surface layer (stones, pads, flowers, striders) is flat translucent colour with no outline, and
-// what lies flat on the water casts a shadow: the same shape in ink, offset down and to the right, unblurred (a blur
-// costs the GPU far more than the offset, which reads as a shadow on its own).
+// over a paper fill. The surface layer (stones, pads, flowers, striders) is drawn light, so the fish stay the moving
+// core of the picture: a stone, pad or flower is a thin outline in its own tone over a faint film of the same tone,
+// through which a fish beneath stays visible, and casts no shadow.
 export const FLORA = '#5f7f66';
-const SHADOW_X = 2, SHADOW_Y = 3, SLIT = (18 / 180) * Math.PI;
+const SLIT = (18 / 180) * Math.PI;
 // A stone's tone: the ink mixed this far toward the paper, so it holds on any page colours.
-const STONE = 0.55, STONE_ALPHA = 0.85;
+const STONE = 0.55;
+// A strider is already a few thin strokes, so it keeps the stronger alpha the surface had before it went light.
+const STRIDER_ALPHA = 0.55;
 let stone = null, stoneFor = null;
+// a thing on the surface: its film, then its outline, in the current fill and stroke style
+function film(ctx, p) {
+  ctx.globalAlpha = p.floraAlpha; ctx.fill();
+  ctx.globalAlpha = p.surfaceStroke; ctx.stroke();
+}
 // A pad: a disc with a narrow slit cut toward its heading, the slit ending short of the centre in a rounded end.
-function padPath(ctx, q, ox, oy) {
-  const x = q.x + ox, y = q.y + oy, a = q.a, h = SLIT / 2, d0 = 0.18 * q.r, rr = 0.05 * q.r + 0.4;
+function padPath(ctx, q) {
+  const x = q.x, y = q.y, a = q.a, h = SLIT / 2, d0 = 0.18 * q.r, rr = 0.05 * q.r + 0.4;
   const cx = x + Math.cos(a) * d0, cy = y + Math.sin(a) * d0, nx = -Math.sin(a), ny = Math.cos(a);
   ctx.moveTo(x + Math.cos(a + h) * q.r, y + Math.sin(a + h) * q.r);
   ctx.arc(x, y, q.r, a + h, a + TAU - h);
@@ -1460,31 +1467,32 @@ function mixOf(a, b, k) {
   const m = A.map((v, i) => Math.round(v + (B[i] - v) * k));
   return `rgb(${m[0]}, ${m[1]}, ${m[2]})`;
 }
-let petalFor = '', petal = '';
-// A lotus: a bud is a small pointed ellipse in paper with a gold tip; open, six petals of paper tinted toward gold
-// round a gold centre, spreading with the open fraction.
-const bloomR = (f) => 2.4 + 4.6 * f.open;
-function drawFlower(ctx, f, paper, gold) {
+// A lotus: a bud is a small pointed ellipse with a gold tip; open, six petals round a gold centre, spreading with the
+// open fraction. The bud and the petals are outlined over a film in FLORA (the caller's styles); the gold is solid.
+function drawFlower(ctx, f, p, gold) {
   const o = f.open, a = f.rot + f.q.a;
-  ctx.globalAlpha = 0.9;
   if (o < 0.12) {
     const c = Math.cos(a), s = Math.sin(a), L = 3, H = 1.9;
-    ctx.fillStyle = paper; ctx.beginPath();
+    ctx.beginPath();
     ctx.moveTo(f.x - c * L, f.y - s * L);
     ctx.quadraticCurveTo(f.x - s * H * 2, f.y + c * H * 2, f.x + c * L, f.y + s * L);
     ctx.quadraticCurveTo(f.x + s * H * 2, f.y - c * H * 2, f.x - c * L, f.y - s * L);
-    ctx.fill();
-    ctx.fillStyle = gold; ctx.beginPath(); ctx.arc(f.x + c * (L - 1), f.y + s * (L - 1), 0.9, 0, TAU); ctx.fill();
+    film(ctx, p);
+    ctx.fillStyle = gold; ctx.globalAlpha = 0.9;
+    ctx.beginPath(); ctx.arc(f.x + c * (L - 1), f.y + s * (L - 1), 0.9, 0, TAU); ctx.fill();
+    ctx.fillStyle = FLORA;
     return;
   }
   const rl = 2.2 + 3.6 * o, rw = 1.3 + 0.8 * o, d = 0.6 + 2.6 * o;
-  ctx.fillStyle = petal; ctx.beginPath();
+  ctx.beginPath();
   for (let k = 0; k < 6; k++) {
     const b = a + (k * TAU) / 6, cx = f.x + Math.cos(b) * d, cy = f.y + Math.sin(b) * d;
     ctx.moveTo(cx + Math.cos(b) * rl, cy + Math.sin(b) * rl); ctx.ellipse(cx, cy, rl, rw, b, 0, TAU);
   }
-  ctx.fill();
-  ctx.fillStyle = gold; ctx.beginPath(); ctx.arc(f.x, f.y, 1.1 + 0.5 * o, 0, TAU); ctx.fill();
+  film(ctx, p);
+  ctx.fillStyle = gold; ctx.globalAlpha = 0.9;
+  ctx.beginPath(); ctx.arc(f.x, f.y, 1.1 + 0.5 * o, 0, TAU); ctx.fill();
+  ctx.fillStyle = FLORA;
 }
 // The live layer, over the ground: the fish, the ripples and treats in the water, then the surface over them.
 // A gull seen from below, heading a, centred on (x,y), scaled by k: the leading edge a shallow M of three curves (each
@@ -1523,28 +1531,21 @@ export function drawLive(ctx, w, ink, paper, gold) {
     ctx.globalAlpha = 0.9 * (1 - k * k);
     ctx.beginPath(); ctx.arc(t.x, t.y, 2.4 * (1 - 0.55 * k), 0, TAU); ctx.fill();
   }
-  // the surface: every shadow first, so no shadow falls across a pad, then the pads over the fish, hiding a fish that
-  // swims under one. Every thing on the surface is its own path: one path gathering things spread over the page has
-  // bounds as big as the page, and the GPU process pays for an antialiased path by its bounds (at 1440p2 the surface
+  // the surface: the stones, then the pads over the fish, a film a fish swimming under one still shows through, then
+  // the flowers on the pads. Every thing on the surface is its own path: one path gathering things spread over the page
+  // has bounds as big as the page, and the GPU process pays for an antialiased path by its bounds (at 1440p2 the surface
   // drawn as a few page-wide paths cost the GPU process about 6 ms a frame; drawn thing by thing, within its noise)
-  ctx.fillStyle = ink; ctx.globalAlpha = p.shadow;
-  for (const q of w.rocks) { ctx.beginPath(); rockPath(ctx, q, SHADOW_X, SHADOW_Y); ctx.fill(); }
-  for (const q of w.pads) { ctx.beginPath(); padPath(ctx, q, SHADOW_X, SHADOW_Y); ctx.fill(); }
-  for (const f of w.flowers) { ctx.beginPath(); ctx.arc(f.x + SHADOW_X, f.y + SHADOW_Y, bloomR(f), 0, TAU); ctx.fill(); }
+  ctx.lineWidth = 1;
   if (w.rocks.length) {
     if (stoneFor !== ink + paper) { stoneFor = ink + paper; stone = mixOf(ink, paper, STONE); }
-    ctx.fillStyle = stone; ctx.globalAlpha = STONE_ALPHA;
-    for (const q of w.rocks) { ctx.beginPath(); rockPath(ctx, q, 0, 0); ctx.fill(); }
+    ctx.fillStyle = stone; ctx.strokeStyle = stone;
+    for (const q of w.rocks) { ctx.beginPath(); rockPath(ctx, q); film(ctx, p); }
   }
-  ctx.fillStyle = FLORA; ctx.globalAlpha = p.floraAlpha;
-  for (const q of w.pads) { ctx.beginPath(); padPath(ctx, q, 0, 0); ctx.fill(); }
-  if (w.flowers.length) {
-    if (petalFor !== paper + gold) { petalFor = paper + gold; petal = mixOf(paper, gold, 0.25); }
-    for (const f of w.flowers) drawFlower(ctx, f, paper, gold);
-    ctx.globalAlpha = p.floraAlpha;
-  }
-  // the striders: four legs and a short thick body, no shadow; their dimples are the ripples above
-  ctx.strokeStyle = FLORA;
+  ctx.fillStyle = FLORA; ctx.strokeStyle = FLORA;
+  for (const q of w.pads) { ctx.beginPath(); padPath(ctx, q); film(ctx, p); }
+  for (const f of w.flowers) drawFlower(ctx, f, p, gold);
+  // the striders: four legs and a short thick body; their dimples are the ripples above
+  ctx.globalAlpha = STRIDER_ALPHA;
   for (const s of w.striders) {
     ctx.lineWidth = 0.8; ctx.beginPath();
     for (const b of LEGS) { const a = s.a + b; ctx.moveTo(s.x, s.y); ctx.lineTo(s.x + Math.cos(a) * 6, s.y + Math.sin(a) * 6); }
@@ -1553,7 +1554,7 @@ export function drawLive(ctx, w, ink, paper, gold) {
     ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(s.x - c, s.y - d); ctx.lineTo(s.x + c, s.y + d); ctx.stroke();
   }
   // the birds: in the air, over everything on the surface. Every shadow first, cast on the water and on whatever floats
-  // there from the same sun as the surface shadows, a little larger than the bird; then each bird, a pale silhouette
+  // there, SUN_X, SUN_Y px off, a little larger than the bird; then each bird, a pale silhouette
   // with no outline
   if (w.flock) {
     const F = w.flock;

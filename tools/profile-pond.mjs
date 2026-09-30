@@ -49,7 +49,7 @@ if (args.help) {
   --mode=off,on           pond-off baseline and pond-on
   --coast-res=1,2         pond-on runs at each coastRes (coast layer resolution, CSS px scale); default: the page's own
   --sections              time each section of drawGround() and drawLive(), and the ground's copy (JS time only)
-  --ablate=a,b            extra pond-on runs, each with draw() sections skipped: water,land,floor,shore,fish,treats,surface (pad and flower shadows, pads, flowers),striders,birds,rings;
+  --ablate=a,b            extra pond-on runs, each with draw() sections skipped: water,land,floor,shore,fish,treats,surface (stones, pads, flowers),striders,birds,rings;
                           join with + to skip several in one run (land+shore), or 'all' for an empty draw()
   --cpu-profile           V8 CPU profile during pond-on runs; prints top self-time functions
   --headless              headless Chrome (software raster: inflates fill cost)
@@ -99,7 +99,7 @@ function instrumentedPond() {
     src = sectionFn(src, 'export function drawLive(ctx, w, ink, paper, gold) {', [
       ['fish', (l) => l.startsWith('// the school')],
       ['treats', (l) => l.startsWith('// ripples, then')],
-      ['surface', (l) => l.startsWith('// the surface: every shadow first')],
+      ['surface', (l) => l.startsWith('// the surface: the stones, then the pads')],
       ['striders', (l) => l.startsWith('// the striders:')],
       ['birds', (l) => l.startsWith('// the birds:')],
     ], null);
