@@ -440,8 +440,8 @@ export function strokeTo(w, x, y) {
 }
 export function strokeEnd(w) { const s = w.stroke; w.stroke = null; if (s && !s.dropped) dropTreat(w, s.sx, s.sy); }
 export function strokeCancel(w) { w.stroke = null; }
-// A ripple ring: size is how far it spreads, life how long it lasts, k its strength (how dark it is and how hard it
-// pushes a pad), 1 for a treat's.
+// A ripple ring: size is how far it spreads, life how long it lasts, k its strength (how dark it is), 1 for a treat's.
+// The push it gives a pad scales with both its strength and its size, a treat's ring (34 px) pushing in full.
 function ripple(w, x, y, size, life, k = 1) {
   if (w.ripples.length >= 64) w.ripples.shift();
   w.ripples.push({ x, y, age: 0, size, life, k });
@@ -457,7 +457,7 @@ const rippleR = (q, age) => 2 + q.size * Math.sqrt(Math.min(1, Math.max(0, age) 
 // runs on the pads' own seeded source (prand), apart from the fishes', so pads never change how the fish draw theirs.
 // pad: { x, y, r, a (heading of the notch), vx, vy (the push still carried from ripples), va, ph, since (s since a push) }
 const padTarget = (w) => Math.max(0, Math.round(w.coarse ? w.params.padsTouch : w.params.pads));
-const PAD_GAP = 4, PAD_COAST = 30, PAD_EDGE = 30, PAD_MAX = 5, PAD_DRAG = 0.6;
+const RIPPLE_FULL = 34, PAD_GAP = 4, PAD_COAST = 30, PAD_EDGE = 30, PAD_MAX = 5, PAD_DRAG = 0.6;
 // Whether a pad of radius r at (x,y) may be laid there: clear of the edges, the coasts and the other pads.
 function padFree(w, x, y, r, coastGap, edgeGap) {
   if (x < edgeGap + r || x > w.w - edgeGap - r || y < edgeGap + r || y > w.h - edgeGap - r) return false;
@@ -511,7 +511,8 @@ function stepPads(w, dt) {
       for (const g of w.ripples) {
         const dx = q.x - g.x, dy = q.y - g.y, d = Math.hypot(dx, dy);
         if (d > 1e-6 && d <= rippleR(g, g.age) && (g.age - dt <= 0 || d > rippleR(g, g.age - dt))) {
-          q.vx += (dx / d) * p.push * g.k; q.vy += (dy / d) * p.push * g.k; q.va += (r() - 0.5) * 0.8 * g.k; q.since = 0;
+          const k = g.k * Math.min(1, g.size / RIPPLE_FULL);
+          q.vx += (dx / d) * p.push * k; q.vy += (dy / d) * p.push * k; q.va += (r() - 0.5) * 0.8 * k; q.since = 0;
         }
       }
       // rings that follow close on each other (a treat dropped, then eaten) do not stack past one push
