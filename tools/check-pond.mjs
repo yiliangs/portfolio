@@ -772,5 +772,48 @@ for (const [W, H] of [[1920, 1080], [1280, 720]]) for (const seed of [2, 19]) {
   if (!gave && !(pm * rm < 0)) fail(`${show}: (q) the pads and the stones should sit on opposite sides of the middle`);
 }
 
+// (r) The pond floor, at seeds 2 and 19 on 1920x1080 and 1280x720 pages with the two islands placed in proportion, once
+// the plan is laid round them, and once on a coarse pointer: as many pebble beds, leaves and branches as the params
+// ask; each bed 5 to 9 pebbles 3 to 7 px long, each leaf 10 to 16 px, the branch 60 to 120 px with 2 or 3 forks; every
+// thing, measured from its own drawn shape, 12 px or more past the islands' outermost drawn extent, 30 px off every
+// stone and every pad's home, 30 px inside the screen, and clear of the top 80 px and the bottom 100 px; and two worlds
+// of one seed lay the same floor.
+const floorReach = (q) => {
+  if (q.kind === 'pebbles') return Math.max(...q.stones.map((s) => Math.hypot(s.dx, s.dy) + s.a));
+  if (q.kind === 'leaf') return 0.65 * q.L; // the stalk runs 0.15 L past the tip; the blade's control points lie inside
+  return Math.max(...q.lines.flatMap((g) => [0, 2, 4].map((k) => Math.hypot(g[k], g[k + 1]))));
+};
+for (const [W, H, coarse] of [[1920, 1080, false], [1280, 720, false], [1920, 1080, true]]) for (const seed of [2, 19]) {
+  if (coarse && seed === 19) continue;
+  const lay = () => {
+    const w = createWorld(defaults(), { w: W, h: H, seed, coarse });
+    setIslands(w, ISL2.map((b) => ({ x: (b.x * W) / 1440, y: (b.y * H) / 900, w: (b.w * W) / 1440, h: (b.h * H) / 900 })));
+    for (let s = 0; s < 120; s++) step(w, DT);
+    return w;
+  };
+  const w = lay(), p = w.params, F = w.floor || [];
+  const tag = `${W}x${H}${coarse ? ' coarse' : ''} seed ${seed}: (r)`;
+  const count = (k) => F.filter((q) => q.kind === k).length;
+  const want = [coarse ? p.pebblesTouch : p.pebbles, coarse ? p.leavesTouch : p.leaves, p.branch];
+  const have = [count('pebbles'), count('leaf'), count('branch')];
+  if (have.join() !== want.join()) { fail(`${tag} the floor should hold ${want.join('/')} beds/leaves/branches, holds ${have.join('/')}`); continue; }
+  let land = Infinity, near = Infinity, edge = Infinity, band = Infinity, shape = true;
+  for (const q of F) {
+    const R = floorReach(q), d = { x: q.x, y: q.y, r: R };
+    land = Math.min(land, beyond(w, d));
+    for (const o of w.rocks) near = Math.min(near, Math.hypot(o.x - q.x, o.y - q.y) - o.r - R);
+    for (const o of w.pads) near = Math.min(near, Math.hypot(o.hx - q.x, o.hy - q.y) - o.r - R);
+    edge = Math.min(edge, q.x - R, W - q.x - R, q.y - R, H - q.y - R);
+    band = Math.min(band, q.y - R - 80, H - 100 - q.y - R);
+    if (q.kind === 'pebbles') shape &&= q.stones.length >= 5 && q.stones.length <= 9 && q.stones.every((s) => s.a >= 1.5 - 1e-9 && s.a <= 3.5 + 1e-9);
+    if (q.kind === 'leaf') shape &&= q.L >= 10 && q.L <= 16;
+    if (q.kind === 'branch') { const m = q.lines[0], L = Math.hypot(m[4] - m[0], m[5] - m[1]); shape &&= L >= 60 - 1e-9 && L <= 120 + 1e-9 && q.lines.length >= 3 && q.lines.length <= 4; }
+  }
+  metric(`${tag} floor land ${land.toFixed(1)} near ${near.toFixed(1)} edge ${edge.toFixed(1)} band ${band.toFixed(1)}`);
+  if (!(land >= 12 - 1e-6 && near >= 30 - 1e-6 && edge >= 30 - 1e-6 && band >= -1e-6)) fail(`${tag} every floor thing should stand 12 px past the islands' extent (${land.toFixed(1)}), 30 px off stones and pads (${near.toFixed(1)}), 30 px inside the screen (${edge.toFixed(1)}) and clear of the header and footer bands (${band.toFixed(1)})`);
+  if (!shape) fail(`${tag} a floor thing is out of its size range`);
+  if (JSON.stringify(lay().floor) !== JSON.stringify(F)) fail(`${tag} two worlds of one seed should lay the same floor`);
+}
+
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }
-console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads, flowers, striders, stones and their layout hold');
+console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads, flowers, striders, stones and their layout, the pond floor hold');

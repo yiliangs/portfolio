@@ -48,8 +48,8 @@ if (args.help) {
   --load=idle,busy        idle: fish only; busy: a scripted drag dropping treats across the water
   --mode=off,on           pond-off baseline and pond-on
   --coast-res=1,2         pond-on runs at each coastRes (coast layer resolution, CSS px scale); default: the page's own
-  --sections              time each section of drawCoasts() and drawLive(), and the coast copy (JS time only)
-  --ablate=a,b            extra pond-on runs, each with draw() sections skipped: water,land,shore,fish,treats,surface (pad and flower shadows, pads, flowers),striders,rings;
+  --sections              time each section of drawGround() and drawLive(), and the ground's copy (JS time only)
+  --ablate=a,b            extra pond-on runs, each with draw() sections skipped: water,land,floor,shore,fish,treats,surface (pad and flower shadows, pads, flowers),striders,rings;
                           join with + to skip several in one run (land+shore), or 'all' for an empty draw()
   --cpu-profile           V8 CPU profile during pond-on runs; prints top self-time functions
   --headless              headless Chrome (software raster: inflates fill cost)
@@ -66,7 +66,7 @@ const LOADS = list(args.load, 'idle,busy');
 const MODES = list(args.mode, 'off,on');
 const ABLATE = args.ablate ? list(args.ablate) : [];
 const COAST_RES = args['coast-res'] ? list(args['coast-res']).map(Number) : [null];
-const SECTIONS = ['water', 'land', 'shore', 'fish', 'treats', 'surface', 'striders'];
+const SECTIONS = ['water', 'land', 'floor', 'shore', 'fish', 'treats', 'surface', 'striders'];
 const ablation = (item) => (item === 'all' ? [...SECTIONS] : item.split('+'));
 for (const a of ABLATE) for (const p of ablation(a)) if (!SECTIONS.includes(p) && p !== 'rings') throw new Error('unknown --ablate ' + p);
 
@@ -88,11 +88,12 @@ function instrumentedPond() {
   src = once(src, '\n    paint();\n', '\n    const __t2 = performance.now(); paint(); if (globalThis.__prof) __prof.tick(__t1 - __t0, performance.now() - __t2);\n');
   src = once(src, '\n  return api;\n}', '\n  globalThis.__pondApi = api;\n  return api;\n}');
   if (args.sections || ABLATE.length) {
-    // the coast layer's sections; then 'copy' runs from the end of the coasts to the first live section (the scaled
+    // the ground's sections; then 'copy' runs from the end of the ground to the first live section (the scaled
     // copy onto the canvas when the coasts are drawn apart, nearly nothing when they are drawn straight on)
-    src = sectionFn(src, 'export function drawCoasts(ctx, w, ink, paper, water = paper) {', [
+    src = sectionFn(src, 'export function drawGround(ctx, w, ink, paper, water = paper) {', [
       ['water', (l) => l.startsWith('ctx.globalAlpha = 1; ctx.fillStyle = water;')],
       ['land', (l) => l === 'ctx.fillStyle = paper;'],
+      ['floor', (l) => l.startsWith('// the pond floor:')],
       ['shore', (l) => l.startsWith('ctx.strokeStyle = ink;')],
     ], 'copy');
     src = sectionFn(src, 'export function drawLive(ctx, w, ink, paper, gold) {', [
@@ -104,7 +105,7 @@ function instrumentedPond() {
   }
   return src;
 }
-// Cuts one of pond.js's draw functions (drawCoasts, drawLive) at the first line of each section. Each section is a run
+// Cuts one of pond.js's draw functions (drawGround, drawLive) at the first line of each section. Each section is a run
 // of whole statements, so wrapping it in an if-block to skip it keeps the braces balanced. The function's end opens
 // the section named by after; null closes the frame's timing. drawLive sets its own stroke style, so skipping a coast
 // section leaves the fish as they are.
@@ -368,7 +369,7 @@ if (ABLATE.length) {
 }
 if (args.sections) {
   console.log('\ndraw() sections, JS ms per frame (mean)');
-  for (const x of rows) if (x.r.mode === 'on' && !x.r.ablate && x.r.dump.secN) console.log(`  ${pad(key(x.r), 20)} ` + [...SECTIONS.slice(0, 3), 'copy', ...SECTIONS.slice(3)].map((k) => `${k} ${f((x.r.dump.secAcc[k] || 0) / x.r.dump.secN, 3)}`).join('  '));
+  for (const x of rows) if (x.r.mode === 'on' && !x.r.ablate && x.r.dump.secN) console.log(`  ${pad(key(x.r), 20)} ` + [...SECTIONS.slice(0, 4), 'copy', ...SECTIONS.slice(4)].map((k) => `${k} ${f((x.r.dump.secAcc[k] || 0) / x.r.dump.secN, 3)}`).join('  '));
 }
 if (args['cpu-profile']) {
   console.log('\nCPU profile, top self time (ms per frame)');

@@ -1,6 +1,6 @@
 // Home pond: the page seen from above as still water, with the two home objects standing in it as islands. A few
 // dozen line-drawn fish swim between them in groups that form, merge and part on their own, a few of them koi with gold
-// patches, water laps inward at each shore, stones stand in the water, water striders skate, lily pads drift, a lotus or two among them, on the
+// patches, water laps inward at each shore, pebbles, a branch and leaves lie on the bottom, stones stand in the water, water striders skate, lily pads drift, a lotus or two among them, on the
 // open water and give a frightened fish somewhere to hide, and a click drops a treat the fish race for and eat. The layer sits behind reading text, so the resting
 // picture is calm: the fish swim in easy beats and glides and only burst into speed for a reason (a treat, a fast
 // cursor, or now and then on their own) before they settle again.
@@ -75,7 +75,7 @@ export const PARAMS = {
     shoreAlpha: [0.16, 0, 1, 0.01, 'shoreline opacity'],
     water: [0.08, 0, 0.4, 0.005, 'how much darker the water is than the land'],
     shallows: [0.6, 0, 1, 0.05, 'how far the shallows lighten back toward the land'],
-    coastRes: [1.5, 1, 2, 0.25, 'resolution of the coasts on a dense screen: 1 CSS px, 2 the full backing store'],
+    coastRes: [1.5, 1, 2, 0.25, 'resolution of the ground (water, land, floor, shores) on a dense screen: 1 CSS px, 2 the full backing store'],
   },
   treats: {
     sense: [240, 0, 800, 10, 'how far a fish notices a treat, px'],
@@ -104,6 +104,14 @@ export const PARAMS = {
     striders: [4, 0, 16, 1, 'water striders on a fine pointer'],
     stridersTouch: [2, 0, 16, 1, 'water striders on a coarse pointer'],
     dart: [80, 10, 300, 5, 'a water strider\'s dart speed, px/s'],
+  },
+  floor: {
+    pebbles: [3, 0, 8, 1, 'pebble beds on the pond floor on a fine pointer'],
+    pebblesTouch: [2, 0, 8, 1, 'pebble beds on a coarse pointer'],
+    leaves: [3, 0, 8, 1, 'sunken leaves on a fine pointer'],
+    leavesTouch: [2, 0, 8, 1, 'sunken leaves on a coarse pointer'],
+    branch: [1, 0, 1, 1, 'a sunken branch'],
+    floorAlpha: [0.22, 0, 1, 0.01, 'opacity of the things on the pond floor'],
   },
 };
 export const defaults = () => Object.fromEntries(Object.values(PARAMS).flatMap((section) => Object.entries(section).map(([k, v]) => [k, v[0]])));
@@ -380,7 +388,7 @@ export function createWorld(params, opts = {}) {
     fish: [], islands: [], outlines: [], treats: [], ripples: [], stroke: null, fed: [],
     ptr: { x: 0, y: 0, on: false, px: 0, py: 0, seen: false, speed: 0 },
     eaten: 0,
-    seed: opts.seed == null ? 1 : opts.seed, rocks: [], flowers: [], bloomRand: null, striders: [], srand: null,
+    seed: opts.seed == null ? 1 : opts.seed, rocks: [], floor: [], flowers: [], bloomRand: null, striders: [], srand: null,
     pads: [], padSeed: ((opts.seed == null ? 1 : opts.seed) ^ 0x9ad5eed) >>> 0, prand: null, flow: null, laidIsl: 0, laidFor: '', relay: 0,
   };
   populate(w);
@@ -603,7 +611,7 @@ function padOk(w, P, x, y, r) {
 }
 function layPond(w) {
   const r = rng((w.seed ^ 0x1a7d5ca) >>> 0), nr = rockTarget(w), np = padTarget(w), rs = r() < 0.5 ? -1 : 1;
-  w.laidIsl = w.islands.length; w.laidFor = nr + ':' + np; w.relay = 0;
+  w.laidIsl = w.islands.length; w.laidFor = planKey(w); w.relay = 0;
   // the stones: sizes first, largest to smallest
   const nOut = nr < 3 ? nr : Math.min(5, Math.max(3, Math.round(nr * 0.6))), nSup = nOut >= 4 && r() < 0.5 ? 2 : 1;
   const sizes = (n, sup, k) => { const L = []; for (let i = 0; i < n; i++) L.push(k * (i === 0 ? 30 + 10 * r() : i <= sup ? 16 + 10 * r() : 8 + 6 * r())); return L; };
@@ -630,6 +638,96 @@ function layPond(w) {
   w.flow = { a0: pr() * TAU, p1: pr() * TAU, p2: pr() * TAU };
   if (w.pads.length === P.length) P.forEach((q, i) => Object.assign(w.pads[i], q));
   else { w.pads = P; for (const f of w.fish) f.pad = null; }
+  // the pond floor, last, in the water the stones and pads leave open
+  layFloor(w, r);
+}
+// What the plan was laid for: the counts of everything it places. A change in any of them lays it again.
+const planKey = (w) => [rockTarget(w), padTarget(w), ...floorTarget(w)].join(':');
+
+// ----- the pond floor -----
+// Things resting on the bottom: pebble beds, a sunken branch, sunken leaves. They are static, laid with the plan, and
+// drawn with the ground as faint ink strokes. Each keeps its centre (x,y), its shape relative to that centre, and r, the
+// radius of a disc round the centre holding every point of the shape (control points included). Each stands
+// FLOOR_LAND px off every island's outermost drawn extent, FLOOR_NEAR px off every stone and every pad's home, and
+// FLOOR_EDGE px inside the screen, and clear of the header band (FLOOR_TOP) and the footer band (FLOOR_FOOT).
+const FLOOR_LAND = 12, FLOOR_NEAR = 30, FLOOR_EDGE = 30, FLOOR_TOP = 80, FLOOR_FOOT = 100;
+// [pebble beds, leaves, branches]
+const floorTarget = (w) => { const p = w.params; return [Math.max(0, Math.round(w.coarse ? p.pebblesTouch : p.pebbles)), Math.max(0, Math.round(w.coarse ? p.leavesTouch : p.leaves)), p.branch >= 0.5 ? 1 : 0]; };
+function floorOk(w, x, y, r) {
+  if (x - r < FLOOR_EDGE || w.w - x - r < FLOOR_EDGE || y - r < Math.max(FLOOR_EDGE, FLOOR_TOP) || w.h - y - r < Math.max(FLOOR_EDGE, FLOOR_FOOT)) return false;
+  if (landClear(w, x, y) < r + FLOOR_LAND) return false;
+  for (const q of w.rocks) if (Math.hypot(q.x - x, q.y - y) - q.r - r < FLOOR_NEAR) return false;
+  for (const q of w.pads) if (Math.hypot(q.hx - x, q.hy - y) - q.r - r < FLOOR_NEAR) return false;
+  return true;
+}
+// A pebble bed: 5 to 9 ovals 3 to 7 px long, each laid against one already there, a few touching, the rest a little apart.
+function makePebbles(r) {
+  const n = 5 + Math.floor(r() * 5), S = [];
+  for (let i = 0; i < n; i++) {
+    const a = (3 + 4 * r()) / 2, b = a * (0.6 + 0.3 * r()), t = r() * TAU;
+    let dx = 0, dy = 0;
+    for (let k = 0; k < 30 && S.length; k++) {
+      const par = S[Math.floor(r() * S.length)], ang = r() * TAU, d = par.a + a + (r() < 0.35 ? 0 : 1 + 4 * r());
+      const x = par.dx + Math.cos(ang) * d, y = par.dy + Math.sin(ang) * d;
+      if (S.every((s) => Math.hypot(s.dx - x, s.dy - y) >= s.a + a - 0.01)) { dx = x; dy = y; break; }
+      if (k === 29) { dx = NaN; }
+    }
+    if (dx === dx) S.push({ dx, dy, a, b, t });
+  }
+  return { kind: 'pebbles', stones: S, r: Math.max(...S.map((s) => Math.hypot(s.dx, s.dy) + s.a)) };
+}
+// A sunken leaf: a pointed ellipse 10 to 16 px long with a midrib running on a little past one tip as its stalk.
+function makeLeaf(r) {
+  const L = 10 + 6 * r();
+  return { kind: 'leaf', L, wd: L * (0.32 + 0.1 * r()), t: r() * TAU, r: 0.65 * L };
+}
+// A sunken branch: a curved main line 60 to 120 px long (k scales the part over 60 px) with two or three short forks
+// off it, each a quadratic curve stored as [x0, y0, cx, cy, x1, y1] relative to the centre.
+function makeBranch(r, k = 1) {
+  const L = 60 + 60 * k * r(), t = r() * TAU, c = Math.cos(t), s = Math.sin(t), bend = (r() < 0.5 ? -1 : 1) * (0.1 + 0.15 * r()) * L;
+  const main = [-c * L / 2, -s * L / 2, -s * bend, c * bend, c * L / 2, s * L / 2], lines = [main];
+  const at = (u, k) => (1 - u) * (1 - u) * main[k] + 2 * u * (1 - u) * main[k + 2] + u * u * main[k + 4];
+  for (let n = 2 + (r() < 0.5 ? 1 : 0), i = 0; i < n; i++) {
+    const u = 0.3 + 0.55 * ((i + r()) / n), x0 = at(u, 0), y0 = at(u, 1);
+    const tx = 2 * (1 - u) * (main[2] - main[0]) + 2 * u * (main[4] - main[2]), ty = 2 * (1 - u) * (main[3] - main[1]) + 2 * u * (main[5] - main[3]);
+    const a = Math.atan2(ty, tx) + (i % 2 ? 1 : -1) * (0.4 + 0.5 * r()), l = 10 + 15 * r(), k = (r() - 0.5) * 0.4;
+    lines.push([x0, y0, x0 + Math.cos(a + k) * l / 2, y0 + Math.sin(a + k) * l / 2, x0 + Math.cos(a) * l, y0 + Math.sin(a) * l]);
+  }
+  let R = 0;
+  for (const g of lines) for (let k = 0; k < 6; k += 2) R = Math.max(R, Math.hypot(g[k], g[k + 1]));
+  return { kind: 'branch', lines, r: R };
+}
+// Lays the floor, largest first: each thing where the best of its seeded tries keeps it furthest from the others and
+// from the land, so the floor spreads over the open water. A thing with no room is made again, a branch shorter each
+// time (three rounds); one with no room still is left out.
+function layFloor(w, r) {
+  const [nb, nl, nr] = floorTarget(w), makers = [];
+  for (let i = 0; i < nr; i++) makers.push((k) => makeBranch(r, k));
+  for (let i = 0; i < nb; i++) makers.push(() => makePebbles(r));
+  for (let i = 0; i < nl; i++) makers.push(() => makeLeaf(r));
+  const F = (w.floor = []);
+  for (const make of makers) for (const k of [1, 0.5, 0]) {
+    const q = make(k);
+    let best = null, bs = -Infinity;
+    for (let t = 0; t < 80; t++) {
+      const x = r() * w.w, y = r() * w.h;
+      if (!floorOk(w, x, y, q.r)) continue;
+      let apart = 300;
+      for (const o of F) apart = Math.min(apart, Math.hypot(o.x - x, o.y - y) - o.r - q.r);
+      const sc = apart + Math.min(landClear(w, x, y) - q.r, 200) / 2 + 30 * r();
+      if (sc > bs) { bs = sc; best = { x, y }; }
+    }
+    if (best) { F.push(Object.assign(q, best)); break; }
+  }
+}
+function floorPath(ctx, q) {
+  const { x, y } = q;
+  if (q.kind === 'pebbles') for (const s of q.stones) { ctx.moveTo(x + s.dx + Math.cos(s.t) * s.a, y + s.dy + Math.sin(s.t) * s.a); ctx.ellipse(x + s.dx, y + s.dy, s.a, s.b, s.t, 0, TAU); }
+  else if (q.kind === 'leaf') {
+    const c = Math.cos(q.t), s = Math.sin(q.t), h = q.L / 2, ax = x - c * h, ay = y - s * h, bx = x + c * h, by = y + s * h;
+    ctx.moveTo(ax, ay); ctx.quadraticCurveTo(x - s * q.wd, y + c * q.wd, bx, by); ctx.quadraticCurveTo(x + s * q.wd, y - c * q.wd, ax, ay);
+    ctx.moveTo(x + c * 0.65 * q.L, y + s * 0.65 * q.L); ctx.lineTo(ax, ay);
+  } else for (const g of q.lines) { ctx.moveTo(x + g[0], y + g[1]); ctx.quadraticCurveTo(x + g[2], y + g[3], x + g[4], y + g[5]); }
 }
 // The outcrop: the island on the stones' side (the one furthest that way), and the first bearing from a seeded start
 // round which the whole outcrop fits; failing that, the bearing that fits the most.
@@ -733,7 +831,7 @@ function cluster(w, r, P, c, sizes, cl) {
   }
 }
 function stepLayout(w, dt) {
-  if (w.laidFor !== rockTarget(w) + ':' + padTarget(w) || (w.relay > 0 && (w.relay -= dt) <= 0)) layPond(w);
+  if (w.laidFor !== planKey(w) ||(w.relay > 0 && (w.relay -= dt) <= 0)) layPond(w);
 }
 function flowAt(w, x, y) {
   const f = w.flow, t = w.t;
@@ -1233,14 +1331,14 @@ const SHALLOWS = [[36, 0.16], [20, 0.2], [9, 0.28]];
 
 // Draws the world onto ctx (already scaled to CSS px). ink and paper are CSS colours (paper is the land); water is the
 // pond's colour and defaults to the land's; gold is the treats' and the koi's colour. The world is two layers, drawn in order: the
-// coasts (opaque: the water, the land, the shores and the waves lapping at them) and the live layer over them (the
-// fish, the ripples and the treats, then the things on the surface). The shell may draw the coasts at a lower resolution than the live layer.
+// ground (opaque: the water, the land, the things on the pond floor, the shores and the waves lapping at them) and the live layer over them (the
+// fish, the ripples and the treats, then the things on the surface). The shell may draw the ground at a lower resolution than the live layer.
 export function draw(ctx, w, ink, paper, gold, water = paper) {
-  drawCoasts(ctx, w, ink, paper, water);
+  drawGround(ctx, w, ink, paper, water);
   drawLive(ctx, w, ink, paper, gold);
 }
-// The coast layer: covers the whole canvas, so it needs nothing under it.
-export function drawCoasts(ctx, w, ink, paper, water = paper) {
+// The ground: covers the whole canvas, so it needs nothing under it.
+export function drawGround(ctx, w, ink, paper, water = paper) {
   const p = w.params, still = w.reduced;
   // the water, then each island as land with shallows lightening toward its coast
   ctx.globalAlpha = 1; ctx.fillStyle = water; ctx.fillRect(0, 0, w.w, w.h);
@@ -1248,6 +1346,12 @@ export function drawCoasts(ctx, w, ink, paper, water = paper) {
   for (const o of w.islands) {
     for (const [g, a] of SHALLOWS) { ctx.globalAlpha = p.shallows * a; coastPath(ctx, o, g); ctx.fill(); }
     ctx.globalAlpha = 1; coastPath(ctx, o, 0); ctx.fill();
+  }
+  // the pond floor: pebbles, a branch and leaves resting on the bottom, in ink stroke only, fainter than the fish, each
+  // its own path; drawn with the ground, so at its resolution
+  if (w.floor.length) {
+    ctx.globalAlpha = p.floorAlpha; ctx.strokeStyle = ink; ctx.lineWidth = 1; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    for (const q of w.floor) { ctx.beginPath(); floorPath(ctx, q); ctx.stroke(); }
   }
   ctx.strokeStyle = ink; ctx.lineWidth = p.width; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   // the shores and the water lapping in toward them
@@ -1317,7 +1421,7 @@ function drawFlower(ctx, f, paper, gold) {
   ctx.fill();
   ctx.fillStyle = gold; ctx.beginPath(); ctx.arc(f.x, f.y, 1.1 + 0.5 * o, 0, TAU); ctx.fill();
 }
-// The live layer, over the coasts: the fish, the ripples and treats in the water, then the surface over them.
+// The live layer, over the ground: the fish, the ripples and treats in the water, then the surface over them.
 export function drawLive(ctx, w, ink, paper, gold) {
   const p = w.params, still = w.reduced;
   // the school: a paper fill under each outline, so crossing fish read as one over the other
@@ -1394,19 +1498,19 @@ export function mount(container) {
     resizeWorld(world, vw, vh);
   };
   const ro = new ResizeObserver(resize); ro.observe(container); resize();
-  // On a dense screen the coasts are drawn into a copy at coastRes backing pixels per CSS px (1.5 by default) and scaled
+  // On a dense screen the ground is drawn into a copy at coastRes backing pixels per CSS px (1.5 by default) and scaled
   // up onto the canvas: their big soft paths cost the GPU by the pixel. At 1 the faint shoreline and waves visibly
   // soften, so the default keeps some of the resolution back. The live layer is drawn over them at full resolution. At coastRes >= dpr they go straight on.
   let coastCanvas = null, coastCtx = null;
   const paint = () => {
     const res = Math.min(dpr, Math.max(1, params.coastRes || 1));
-    if (res >= dpr) drawCoasts(ctx, world, ink, paper, water);
+    if (res >= dpr) drawGround(ctx, world, ink, paper, water);
     else {
       if (!coastCtx) { coastCanvas = document.createElement('canvas'); coastCtx = coastCanvas.getContext('2d', { alpha: false }); }
       const cw = Math.max(1, Math.round(vw * res)), ch = Math.max(1, Math.round(vh * res));
       if (coastCanvas.width !== cw || coastCanvas.height !== ch) { coastCanvas.width = cw; coastCanvas.height = ch; }
       coastCtx.setTransform(res, 0, 0, res, 0, 0);
-      drawCoasts(coastCtx, world, ink, paper, water);
+      drawGround(coastCtx, world, ink, paper, water);
       ctx.imageSmoothingEnabled = true; ctx.drawImage(coastCanvas, 0, 0, vw, vh);
     }
     drawLive(ctx, world, ink, paper, GOLD);
