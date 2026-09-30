@@ -49,7 +49,7 @@ if (args.help) {
   --mode=off,on           pond-off baseline and pond-on
   --coast-res=1,2         pond-on runs at each coastRes (coast layer resolution, CSS px scale); default: the page's own
   --sections              time each section of drawCoasts() and drawLive(), and the coast copy (JS time only)
-  --ablate=a,b            extra pond-on runs, each with draw() sections skipped: water,land,shore,fish,treats,rings;
+  --ablate=a,b            extra pond-on runs, each with draw() sections skipped: water,land,shore,fish,treats,surface (pad and flower shadows, pads, flowers),reeds,striders,fly,rings;
                           join with + to skip several in one run (land+shore), or 'all' for an empty draw()
   --cpu-profile           V8 CPU profile during pond-on runs; prints top self-time functions
   --headless              headless Chrome (software raster: inflates fill cost)
@@ -66,7 +66,7 @@ const LOADS = list(args.load, 'idle,busy');
 const MODES = list(args.mode, 'off,on');
 const ABLATE = args.ablate ? list(args.ablate) : [];
 const COAST_RES = args['coast-res'] ? list(args['coast-res']).map(Number) : [null];
-const SECTIONS = ['water', 'land', 'shore', 'fish', 'treats'];
+const SECTIONS = ['water', 'land', 'shore', 'fish', 'treats', 'surface', 'reeds', 'striders', 'fly'];
 const ablation = (item) => (item === 'all' ? [...SECTIONS] : item.split('+'));
 for (const a of ABLATE) for (const p of ablation(a)) if (!SECTIONS.includes(p) && p !== 'rings') throw new Error('unknown --ablate ' + p);
 
@@ -98,6 +98,10 @@ function instrumentedPond() {
     src = sectionFn(src, 'export function drawLive(ctx, w, ink, paper, gold) {', [
       ['fish', (l) => l.startsWith('// the school')],
       ['treats', (l) => l.startsWith('// ripples, then')],
+      ['surface', (l) => l.startsWith('// the surface: every shadow first')],
+      ['reeds', (l) => l.startsWith('// the reeds:')],
+      ['striders', (l) => l.startsWith('// the striders:')],
+      ['fly', (l) => l.startsWith('// the air:')],
     ], null);
   }
   return src;
