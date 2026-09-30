@@ -111,7 +111,7 @@ const TAU = Math.PI * 2;
 // An island is the land round one of the home objects, shaped each frame from the object's silhouette as it stands on
 // screen. The island reads its object's outline points (or, when the object has nothing to show, its box's corners
 // and edge midpoints) and, seen from a centre that eases toward their centroid, takes at each of BEARINGS bearings the
-// farthest point: the star hull, with bearings no point falls on filled between their neighbours. That profile is
+// distance out to the points' convex hull, so the profile moves only as fast as the object's own points do. That profile is
 // widened a few bearings, blurred wide round the circle so no corner or edge of the object reads through, and grown by
 // shoreGap, with a broad cape blurred out over any narrow end the blur falls short of, and never let closer than floor px
 // to the hull. The displayed profile S eases toward that target with time
@@ -147,6 +147,43 @@ function boxPoints(b, out) {
   for (let j = 0; j < 16; j++) out[j] = q[j];
   return 8;
 }
+// The convex hull of the n points in P (x, y pairs) into HX/HY, counter-clockwise; returns its vertex count.
+const IDX = new Uint16Array(256), HX = new Float32Array(514), HY = new Float32Array(514);
+const turn = (ax, ay, bx, by, cx, cy) => (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
+function convexHull(P, n) {
+  for (let i = 0; i < n; i++) {
+    const v = i, x = P[2 * v], y = P[2 * v + 1]; let j = i - 1;
+    while (j >= 0 && (P[2 * IDX[j]] > x || (P[2 * IDX[j]] === x && P[2 * IDX[j] + 1] > y))) { IDX[j + 1] = IDX[j]; j--; }
+    IDX[j + 1] = v;
+  }
+  let k = 0;
+  for (let i = 0; i < n; i++) {
+    const x = P[2 * IDX[i]], y = P[2 * IDX[i] + 1];
+    while (k >= 2 && turn(HX[k - 2], HY[k - 2], HX[k - 1], HY[k - 1], x, y) <= 0) k--;
+    HX[k] = x; HY[k] = y; k++;
+  }
+  for (let i = n - 2, t = k + 1; i >= 0; i--) {
+    const x = P[2 * IDX[i]], y = P[2 * IDX[i] + 1];
+    while (k >= t && turn(HX[k - 2], HY[k - 2], HX[k - 1], HY[k - 1], x, y) <= 0) k--;
+    HX[k] = x; HY[k] = y; k++;
+  }
+  return Math.max(1, k - 1); // the walk ends on its first point again
+}
+// How far the hull of m vertices reaches from (cx, cy) at bearing t: the farthest crossing of the ray with its edges,
+// or, should the centre lag outside the hull, how far the hull reaches along the bearing.
+function hullReach(cx, cy, t, m) {
+  const ux = Math.cos(t), uy = Math.sin(t);
+  let r = -1, h = 0;
+  for (let i = 0; i < m; i++) {
+    const ax = HX[i] - cx, ay = HY[i] - cy, j = (i + 1) % m, ex = HX[j] - HX[i], ey = HY[j] - HY[i];
+    h = Math.max(h, ax * ux + ay * uy);
+    const den = ux * ey - uy * ex;
+    if (Math.abs(den) < 1e-9) continue;
+    const s = (ax * uy - ay * ux) / den, d = (ax * ey - ay * ex) / den;
+    if (s >= 0 && s <= 1 && d >= 0 && d > r) r = d;
+  }
+  return r >= 0 ? r : h;
+}
 // One frame of an island: its outline from fn (or its box), then centre, profile, easing and the tabulated coast.
 export function updateIsland(o, fn, dt, p, reduced, time) {
   let n = fn ? fn(OUT) | 0 : 0;
@@ -155,21 +192,11 @@ export function updateIsland(o, fn, dt, p, reduced, time) {
   const tau = reduced ? Math.max(1.5, p.follow) : p.follow, e = o.fresh ? 1 : 1 - Math.exp(-dt / Math.max(1e-3, tau));
   let sx = 0, sy = 0; for (let j = 0; j < n; j++) { sx += OUT[2 * j]; sy += OUT[2 * j + 1]; }
   o.dx += (sx / n - o.bx - o.dx) * e; o.dy += (sy / n - o.by - o.dy) * e; o.x = o.bx + o.dx; o.y = o.by + o.dy;
-  // the star hull round the centre
-  HULL.fill(-1);
-  for (let j = 0; j < n; j++) {
-    const dx = OUT[2 * j] - o.x, dy = OUT[2 * j + 1] - o.y, d = Math.hypot(dx, dy);
-    const b = ((Math.round((Math.atan2(dy, dx) / TAU) * BEARINGS) % BEARINGS) + BEARINGS) % BEARINGS;
-    if (d > HULL[b]) HULL[b] = d;
-  }
-  let first = -1; for (let j = 0; j < BEARINGS; j++) if (HULL[j] >= 0) { first = j; break; }
-  if (first < 0) HULL.fill(0);
-  else for (let a = first, m = 0; m < BEARINGS; ) {
-    let b = a + 1; while (HULL[b % BEARINGS] < 0) b++;
-    const ra = HULL[a % BEARINGS], rb = HULL[b % BEARINGS];
-    for (let j = a + 1; j < b; j++) HULL[j % BEARINGS] = ra + ((rb - ra) * (j - a)) / (b - a);
-    m += b - a; a = b;
-  }
+  // the convex hull round the centre. Binning the points themselves by bearing notched the profile wherever an inner
+  // point (a hypercube's near vertex) held a bearing alone and popped it back out when the point moved on, and the floor
+  // below passes a pop straight to the coast; the hull's edges move only as fast as the points do.
+  const m = convexHull(OUT, n);
+  for (let j = 0; j < BEARINGS; j++) HULL[j] = hullReach(o.x, o.y, (j / BEARINGS) * TAU, m);
   // widened, blurred, grown; never inside the hull plus floor
   for (let j = 0; j < BEARINGS; j++) { let v = 0; for (let d = -WIDEN; d <= WIDEN; d++) v = Math.max(v, HULL[(j + d + BEARINGS) % BEARINGS]); WIDE[j] = v; }
   const K = kernel(p.blur), h = K.length >> 1;
