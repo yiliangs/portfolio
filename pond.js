@@ -72,7 +72,7 @@ export const PARAMS = {
     shoreAlpha: [0.16, 0, 1, 0.01, 'shoreline opacity'],
     water: [0.08, 0, 0.4, 0.005, 'how much darker the water is than the land'],
     shallows: [0.6, 0, 1, 0.05, 'how far the shallows lighten back toward the land'],
-    coastRes: [1, 1, 2, 0.25, 'resolution of the coasts on a dense screen: 1 CSS px, 2 the full backing store'],
+    coastRes: [1.5, 1, 2, 0.25, 'resolution of the coasts on a dense screen: 1 CSS px, 2 the full backing store'],
   },
   treats: {
     sense: [240, 0, 800, 10, 'how far a fish notices a treat, px'],
@@ -737,9 +737,9 @@ export function mount(container) {
     resizeWorld(world, vw, vh);
   };
   const ro = new ResizeObserver(resize); ro.observe(container); resize();
-  // On a dense screen the coasts are drawn into a copy at coastRes backing pixels per CSS px (1 by default) and scaled
-  // up onto the canvas: their big soft paths cost the GPU by the pixel, and nothing in them is fine enough to need the
-  // full resolution. The live layer is drawn over them at full resolution. At coastRes >= dpr they go straight on.
+  // On a dense screen the coasts are drawn into a copy at coastRes backing pixels per CSS px (1.5 by default) and scaled
+  // up onto the canvas: their big soft paths cost the GPU by the pixel. At 1 the faint shoreline and waves visibly
+  // soften, so the default keeps some of the resolution back. The live layer is drawn over them at full resolution. At coastRes >= dpr they go straight on.
   let coastCanvas = null, coastCtx = null;
   const paint = () => {
     const res = Math.min(dpr, Math.max(1, params.coastRes || 1));
