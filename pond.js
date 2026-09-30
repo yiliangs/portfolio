@@ -55,6 +55,8 @@ export const PARAMS = {
     stride: [1.5, 0.2, 4, 0.05, 'body lengths a thrust aims to cover per beat'],
     alpha: [0.5, 0.05, 1, 0.01, 'ink opacity'],
     width: [1, 0.3, 3, 0.05, 'line width, px'],
+    koi: [4, 0, 24, 1, 'koi, the fish with gold patches, on a fine pointer'],
+    koiTouch: [2, 0, 24, 1, 'koi on a coarse pointer'],
   },
   islands: {
     shoreGap: [26, 0, 120, 1, 'land beyond the object\'s silhouette, px'],
@@ -104,8 +106,33 @@ export const envelope = (s) => 0.2 - 0.6 * s + 1.4 * s * s;
 export const thrustHz = (top, len, p) => Math.min(p.maxHz, Math.max(0.5, top / (len * p.stride)));
 // The lateral offset of spine point s at the given phase, for a fish whose tail sweeps `amp` px.
 export const lateral = (s, phase, amp) => amp * envelope(s) * Math.sin(phase - WAVE_K * s);
+// The body's half-width at spine position u (0 head, 1 where the tail fin starts), as a share of HALF body lengths:
+// a blunt head, the widest point a third of the way back, and a narrow wrist at the tail.
+export const HALF = 0.12;
+export const bodyWidth = (u) => 0.25 * u + 0.75 * Math.sin(Math.PI * Math.min(1, Math.max(0, u) ** 0.62));
 
 const TAU = Math.PI * 2;
+
+// ----- koi -----
+// The first `koi` fish carry gold patches. A patch is an ellipse in the body's own frame: u its place down the spine
+// (0.15 to 0.85), lat its offset across the body as a share of the half-width there (so its centre is always inside
+// the body), rx and ry its radii in body lengths, tilt its turn off the spine. Seeded from the fish's index, so a koi
+// wears the same patches across reloads and whatever the world's seed.
+export function koiPatches(i) {
+  const r = rng(0xc0e1 + i * 7919), n = 1 + Math.floor(r() * 3), out = [];
+  for (let k = 0; k < n; k++) {
+    const rx = 0.12 + 0.13 * r();
+    out.push({ u: 0.15 + 0.7 * r(), lat: (2 * r() - 1) * 0.7, rx, ry: rx * (0.5 + 0.3 * r()), tilt: (r() - 0.5) * 0.8 });
+  }
+  return out;
+}
+const koiTarget = (w) => Math.max(0, Math.round(w.coarse ? w.params.koiTouch : w.params.koi));
+// Marks the first koiTarget fish as koi and the rest as plain; cheap enough to run whenever the count may have changed.
+function markKoi(w) {
+  const n = koiTarget(w);
+  w.fish.forEach((f, i) => { if (i < n) { if (!f.koi) f.koi = koiPatches(i); } else f.koi = null; });
+  w.koiN = n; w.koiOf = w.fish.length;
+}
 
 // ----- the islands -----
 // An island is the land round one of the home objects, shaped each frame from the object's silhouette as it stands on
@@ -335,6 +362,7 @@ function populate(w) {
   }
   while (w.fish.length < n) { const g = w.fish[Math.floor(r() * w.fish.length)]; w.fish.push(spawnFish(w, {}, g ? g.x : r() * w.w, g ? g.y : r() * w.h)); }
   if (w.fish.length > n) w.fish.length = n;
+  markKoi(w);
 }
 export function resizeWorld(w, width, height) { w.w = Math.max(1, width); w.h = Math.max(1, height); }
 // The islands follow the boxes by index: an island keeps its shape and swell when its box moves, and a new one is
@@ -429,6 +457,7 @@ export function step(w, dt) {
   // the coasts follow their objects; the swell runs on the world's clock and holds still under reduced motion
   for (const o of w.islands) updateIsland(o, w.outlines[o.i], dt, p, w.reduced, w.t);
   if (n !== target(w)) populate(w);
+  else if (w.koiN !== koiTarget(w) || w.koiOf !== n) markKoi(w);
   // the cursor's speed over this step; a still or slow cursor startles nothing
   const ptr = w.ptr;
   if (ptr.on && ptr.seen) { const d = Math.hypot(ptr.x - ptr.px, ptr.y - ptr.py); ptr.speed = d / dt; } else ptr.speed = 0;
@@ -572,14 +601,51 @@ export function step(w, dt) {
 
 // ----- drawing -----
 const PX = new Float32Array(SPINE), PY = new Float32Array(SPINE), NX = new Float32Array(SPINE), NY = new Float32Array(SPINE);
-const WIDTH = Float32Array.from({ length: SPINE }, (_, i) => { const s = i / (SPINE - 1); return 0.25 * s + 0.75 * Math.sin(Math.PI * Math.min(1, s ** 0.62)); });
+const WIDTH = Float32Array.from({ length: SPINE }, (_, i) => bodyWidth(i / (SPINE - 1)));
 // smooth a run of points by curving through their midpoints
 function curveThrough(ctx, xs, ys, count) {
   for (let i = 1; i < count - 1; i++) ctx.quadraticCurveTo(xs[i], ys[i], (xs[i] + xs[i + 1]) / 2, (ys[i] + ys[i + 1]) / 2);
   ctx.lineTo(xs[count - 1], ys[count - 1]);
 }
 const LX = new Float32Array(SPINE), LY = new Float32Array(SPINE);
-function drawFish(ctx, f, p, swim) {
+// the body's outline from the waved spine in PX/PY and its normals in NX/NY, as the current path
+function bodyPath(ctx, len) {
+  const hw = len * HALF;
+  ctx.beginPath();
+  ctx.moveTo(PX[0] + (PX[0] - PX[1]) * 0.25, PY[0] + (PY[0] - PY[1]) * 0.25); // a rounded snout just ahead of the head point
+  for (let i = 0; i < SPINE; i++) { LX[i] = PX[i] + NX[i] * WIDTH[i] * hw; LY[i] = PY[i] + NY[i] * WIDTH[i] * hw; }
+  LX[0] = PX[0] + (PX[0] - PX[1]) * 0.25; LY[0] = PY[0] + (PY[0] - PY[1]) * 0.25;
+  curveThrough(ctx, LX, LY, SPINE);
+  // the forked tail, off the end of the spine along its last segment
+  const e = SPINE - 1;
+  let dx = PX[e] - PX[e - 1], dy = PY[e] - PY[e - 1]; const dm = Math.hypot(dx, dy) || 1; dx /= dm; dy /= dm;
+  const tl = len * 0.26, sp = len * 0.14;
+  ctx.lineTo(PX[e] + dx * tl + NX[e] * sp, PY[e] + dy * tl + NY[e] * sp);
+  ctx.lineTo(PX[e] + dx * tl * 0.45, PY[e] + dy * tl * 0.45);
+  ctx.lineTo(PX[e] + dx * tl - NX[e] * sp, PY[e] + dy * tl - NY[e] * sp);
+  for (let i = 0; i < SPINE; i++) { LX[i] = PX[e - i] - NX[e - i] * WIDTH[e - i] * hw; LY[i] = PY[e - i] - NY[e - i] * WIDTH[e - i] * hw; }
+  LX[e] = PX[0] + (PX[0] - PX[1]) * 0.25; LY[e] = PY[0] + (PY[0] - PY[1]) * 0.25;
+  ctx.lineTo(LX[0], LY[0]);
+  curveThrough(ctx, LX, LY, SPINE);
+  ctx.closePath();
+}
+// A koi's patches, clipped to its body: each ellipse sits on the waved spine, so it swims with the body's wave.
+function drawPatches(ctx, f, gold) {
+  const hw = f.len * HALF;
+  ctx.save(); ctx.clip();
+  ctx.beginPath();
+  for (const q of f.koi) {
+    const k = q.u * (SPINE - 1), i = Math.min(SPINE - 2, Math.floor(k)), t = k - i;
+    const px = PX[i] + (PX[i + 1] - PX[i]) * t, py = PY[i] + (PY[i + 1] - PY[i]) * t;
+    const nx = NX[i] + (NX[i + 1] - NX[i]) * t, ny = NY[i] + (NY[i + 1] - NY[i]) * t, off = q.lat * bodyWidth(q.u) * hw;
+    const cx = px + nx * off, cy = py + ny * off, rot = Math.atan2(PY[i] - PY[i + 1], PX[i] - PX[i + 1]) + q.tilt;
+    ctx.moveTo(cx + Math.cos(rot) * q.rx * f.len, cy + Math.sin(rot) * q.rx * f.len);
+    ctx.ellipse(cx, cy, q.rx * f.len, q.ry * f.len, rot, 0, TAU);
+  }
+  ctx.fillStyle = gold; ctx.globalAlpha = 0.75; ctx.fill();
+  ctx.restore();
+}
+function drawFish(ctx, f, p, swim, gold) {
   const amp = f.len * p.amp * f.amp * swim;
   const rope = f.rope;
   for (let i = 0; i < SPINE; i++) {
@@ -596,25 +662,11 @@ function drawFish(ctx, f, p, swim) {
     let tx = PX[a] - PX[b], ty = PY[a] - PY[b]; const m = Math.hypot(tx, ty) || 1; tx /= m; ty /= m;
     NX[i] = -ty; NY[i] = tx;
   }
-  const hw = f.len * 0.12;
-  ctx.beginPath();
-  ctx.moveTo(PX[0] + (PX[0] - PX[1]) * 0.25, PY[0] + (PY[0] - PY[1]) * 0.25); // a rounded snout just ahead of the head point
-  for (let i = 0; i < SPINE; i++) { LX[i] = PX[i] + NX[i] * WIDTH[i] * hw; LY[i] = PY[i] + NY[i] * WIDTH[i] * hw; }
-  LX[0] = PX[0] + (PX[0] - PX[1]) * 0.25; LY[0] = PY[0] + (PY[0] - PY[1]) * 0.25;
-  curveThrough(ctx, LX, LY, SPINE);
-  // the forked tail, off the end of the spine along its last segment
-  const e = SPINE - 1;
-  let dx = PX[e] - PX[e - 1], dy = PY[e] - PY[e - 1]; const dm = Math.hypot(dx, dy) || 1; dx /= dm; dy /= dm;
-  const tl = f.len * 0.26, sp = f.len * 0.14;
-  ctx.lineTo(PX[e] + dx * tl + NX[e] * sp, PY[e] + dy * tl + NY[e] * sp);
-  ctx.lineTo(PX[e] + dx * tl * 0.45, PY[e] + dy * tl * 0.45);
-  ctx.lineTo(PX[e] + dx * tl - NX[e] * sp, PY[e] + dy * tl - NY[e] * sp);
-  for (let i = 0; i < SPINE; i++) { LX[i] = PX[e - i] - NX[e - i] * WIDTH[e - i] * hw; LY[i] = PY[e - i] - NY[e - i] * WIDTH[e - i] * hw; }
-  LX[e] = PX[0] + (PX[0] - PX[1]) * 0.25; LY[e] = PY[0] + (PY[0] - PY[1]) * 0.25;
-  ctx.lineTo(LX[0], LY[0]);
-  curveThrough(ctx, LX, LY, SPINE);
-  ctx.closePath();
+  const hw = f.len * HALF;
+  bodyPath(ctx, f.len);
   ctx.globalAlpha = 0.92; ctx.fill();
+  // a koi's patches go over the paper and under the outline; the clip is paid by the koi alone
+  if (f.koi) { drawPatches(ctx, f, gold); bodyPath(ctx, f.len); }
   ctx.globalAlpha = p.alpha; ctx.stroke();
   // pectoral fins, sculling wider when the fish is slow
   const flap = (0.2 + 0.25 * Math.max(0, 1 - f.sp / Math.max(1, p.cruise))) * Math.sin(f.fin) * swim, fl = f.len * 0.13, k = 2;
@@ -656,7 +708,7 @@ export function waterOf(paper, depth) {
 const SHALLOWS = [[36, 0.16], [20, 0.2], [9, 0.28]];
 
 // Draws the world onto ctx (already scaled to CSS px). ink and paper are CSS colours (paper is the land); water is the
-// pond's colour and defaults to the land's; gold is the treats' colour. The world is two layers, drawn in order: the
+// pond's colour and defaults to the land's; gold is the treats' and the koi's colour. The world is two layers, drawn in order: the
 // coasts (opaque: the water, the land, the shores and the waves lapping at them) and the live layer over them (the
 // fish, the ripples and the treats). The shell may draw the coasts at a lower resolution than the live layer.
 export function draw(ctx, w, ink, paper, gold, water = paper) {
@@ -696,7 +748,7 @@ export function drawLive(ctx, w, ink, paper, gold) {
   // the school: a paper fill under each outline, so crossing fish read as one over the other
   ctx.strokeStyle = ink; ctx.lineWidth = p.width; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   ctx.fillStyle = paper;
-  for (const f of w.fish) drawFish(ctx, f, p, still ? 0.4 : 1);
+  for (const f of w.fish) drawFish(ctx, f, p, still ? 0.4 : 1, gold);
   // ripples, then the treats on the surface above everything
   for (const q of w.ripples) {
     const k = q.age / q.life;

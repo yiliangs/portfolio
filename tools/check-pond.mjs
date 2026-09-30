@@ -480,5 +480,39 @@ for (const m of fission.filter((f) => f.seed === 2 || f.seed === 19)) {
   }
 }
 
+// Koi. (k) the first `koi` fish (koiTouch on a coarse pointer) wear patches and no other fish does, the same patches
+// whatever the world's seed and after a minute of swimming; each has 1 to 3 patches, placed 0.15 to 0.85 down the spine
+// with radii 0.12 to 0.25 of the length, and every patch centre lies inside the body's half-width there. The patches
+// are drawn clipped to the body path in drawFish, which has no headless seam; this checks the geometry it draws from.
+{
+  if (typeof M.koiPatches !== 'function' || typeof M.bodyWidth !== 'function') fail('(k) pond.js should export koiPatches and bodyWidth');
+  else {
+    const koiOf = (w) => w.fish.map((f, i) => (f.koi ? i : -1)).filter((i) => i >= 0);
+    const sig = (w) => JSON.stringify(w.fish.map((f) => f.koi));
+    for (const coarse of [false, true]) {
+      const a = createWorld(defaults(), { w: 1440, h: 900, seed: 2, coarse }), b = createWorld(defaults(), { w: 1440, h: 900, seed: 19, coarse });
+      const want = coarse ? a.params.koiTouch : a.params.koi, got = koiOf(a);
+      if (got.length !== want || got.some((i, k) => i !== k)) fail(`(k) ${coarse ? 'coarse' : 'fine'} pointer: the first ${want} fish should be koi, koi are ${got.join(',')}`);
+      if (sig(a) !== sig(b)) fail(`(k) ${coarse ? 'coarse' : 'fine'} pointer: koi patches should not depend on the world's seed`);
+      const before = sig(a); for (let s = 0; s < 60 * 60; s++) step(a, DT);
+      if (sig(a) !== before) fail('(k) a koi\'s patches should not change as it swims');
+    }
+    let bad = 0, worst = 0;
+    for (let i = 0; i < 64; i++) {
+      const P = M.koiPatches(i);
+      if (P.length < 1 || P.length > 3) { bad++; continue; }
+      for (const q of P) {
+        worst = Math.max(worst, Math.abs(q.lat));
+        if (!(q.u >= 0.15 && q.u <= 0.85 && q.rx >= 0.12 && q.rx <= 0.25 && q.ry <= q.rx && Math.abs(q.lat) <= 1)) bad++;
+      }
+    }
+    metric(`koi: widest patch offset ${worst.toFixed(2)} of the half-width`);
+    if (bad) fail(`(k) ${bad} koi patches fall outside 1 to 3 per fish, u 0.15..0.85, radius 0.12..0.25 of the length, or centre inside the half-width`);
+    // and dropping the count in the dev panel takes the patches off at once
+    const w = createWorld(defaults(), { w: 1440, h: 900, seed: 2 }); w.params.koi = 1; step(w, DT);
+    if (koiOf(w).length !== 1) fail(`(k) after koi is set to 1 there should be one koi, there are ${koiOf(w).length}`);
+  }
+}
+
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }
 console.log('check-pond: stroke, islands, treats and reduced motion hold');
