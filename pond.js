@@ -1,8 +1,7 @@
 // Home pond: the page seen from above as still water, with the two home objects standing in it as islands. A few
 // dozen line-drawn fish swim between them in groups that form, merge and part on their own, a few of them koi with gold
-// patches, water laps inward at each shore, reeds stand in the shallows, water striders skate, lily pads drift, a lotus
-// or two among them, on the open water and give a frightened fish somewhere to
-// hide, a dragonfly visits now and then, and a click drops a treat the fish race for and eat. The layer sits behind reading text, so the resting
+// patches, water laps inward at each shore, water striders skate, lily pads drift, a lotus or two among them, on the
+// open water and give a frightened fish somewhere to hide, and a click drops a treat the fish race for and eat. The layer sits behind reading text, so the resting
 // picture is calm: the fish swim in easy beats and glides and only burst into speed for a reason (a treat, a fast
 // cursor, or now and then on their own) before they settle again.
 //
@@ -98,19 +97,11 @@ export const PARAMS = {
   surface: {
     floraAlpha: [0.55, 0, 1, 0.01, 'opacity of the green things on the surface'],
     shadow: [0.08, 0, 0.4, 0.005, 'opacity of the shadow a thing on the surface casts on the water'],
-    reeds: [3, 0, 8, 1, 'reed clumps in each island\'s shallows on a fine pointer'],
-    reedsTouch: [2, 0, 8, 1, 'reed clumps per island on a coarse pointer'],
-    sway: [4.5, 0, 12, 0.5, 'mean sway of a reed\'s tip, px'],
-    bend: [12, 0, 30, 1, 'most a passing fish or the cursor bends a reed\'s tip, px'],
     flowers: [2, 0, 8, 1, 'lotus flowers on the pads on a fine pointer'],
     flowersTouch: [1, 0, 8, 1, 'lotus flowers on a coarse pointer'],
     striders: [4, 0, 16, 1, 'water striders on a fine pointer'],
     stridersTouch: [2, 0, 16, 1, 'water striders on a coarse pointer'],
     dart: [80, 10, 300, 5, 'a water strider\'s dart speed, px/s'],
-    dragonfly: [75, 10, 600, 5, 'mean seconds between dragonfly visits on a fine pointer'],
-    dragonflyTouch: [120, 10, 600, 5, 'mean seconds between dragonfly visits on a coarse pointer'],
-    visit: [10, 1, 60, 1, 'mean seconds a dragonfly stays landed'],
-    flight: [160, 40, 400, 10, 'a dragonfly\'s dart speed, px/s'],
   },
 };
 export const defaults = () => Object.fromEntries(Object.values(PARAMS).flatMap((section) => Object.entries(section).map(([k, v]) => [k, v[0]])));
@@ -376,7 +367,7 @@ export function createWorld(params, opts = {}) {
     fish: [], islands: [], outlines: [], treats: [], ripples: [], stroke: null, fed: [],
     ptr: { x: 0, y: 0, on: false, px: 0, py: 0, seen: false, speed: 0 },
     eaten: 0,
-    seed: opts.seed == null ? 1 : opts.seed, reeds: [], flowers: [], bloomRand: null, striders: [], srand: null, fly: null, flyWait: 0, drand: null, visits: 0,
+    seed: opts.seed == null ? 1 : opts.seed, flowers: [], bloomRand: null, striders: [], srand: null,
     pads: [], padSeed: ((opts.seed == null ? 1 : opts.seed) ^ 0x9ad5eed) >>> 0, padIsl: 0, prand: null, flow: null,
   };
   populate(w);
@@ -566,66 +557,6 @@ function seekPad(w, f, chance) {
   return true;
 }
 
-// ----- reeds -----
-// A few clumps of reeds stand in each island's shallows. A clump roots at its own bearing from the island's centre, a
-// few px past the coast, and every step finds its roots again from the coast, so the reeds ride the swell and follow
-// the island when its object moves. Seen from above a stem is a short curve from its root, leaning outward. Each stem
-// sways on its own slow beat, and a fish swimming past its root or the cursor near it bends the tip away, easing back
-// after; the fish do not steer round the reeds. Each island's reeds come from a seeded source of their own, so an
-// island keeps its reeds whatever else changes, and nothing else in the world moves differently for them.
-// clump: { b (bearing), stems: [{ j (root along the coast, px), off (root past the coast, px), h, lean, hz, amp, ph,
-//   bx, by (the bend now), rx, ry, cx, cy, tx, ty (root, control point and tip this step) }] }
-const reedTarget = (w) => Math.max(0, Math.round(w.coarse ? w.params.reedsTouch : w.params.reeds));
-const REED_FISH = 24, REED_PTR = 40, REED_IN = 0.08, REED_BACK = 0.5, BEND = { x: 0, y: 0 };
-function growReeds(w, i, n) {
-  const r = rng(((w.seed ^ 0x2eed5) + i * 7919) >>> 0), base = r() * TAU, out = [];
-  for (let c = 0; c < n; c++) {
-    const b = base + ((c + 0.6 * (r() - 0.5)) / n) * TAU, off = 8 + 12 * r(), stems = [];
-    for (let k = 3 + Math.floor(r() * 5); k > 0; k--) stems.push({
-      j: (r() - 0.5) * 10, off: Math.min(21, Math.max(7, off + (r() - 0.5) * 6)), h: 18 + 30 * r(), lean: (r() - 0.5) * 1.1,
-      hz: 0.3 + 0.3 * r(), amp: 0.67 + 0.66 * r(), ph: r() * TAU, bx: 0, by: 0, rx: 0, ry: 0, cx: 0, cy: 0, tx: 0, ty: 0,
-    });
-    out.push({ b, stems });
-  }
-  return out;
-}
-// adds to BEND the push away from (x,y) a stem's root feels within reach: 1 at the root, 0 at reach
-function bendAway(s, x, y, reach) {
-  const dx = s.rx - x, dy = s.ry - y, d = Math.hypot(dx, dy);
-  if (d < reach && d > 1e-6) { const k = 1 - d / reach; BEND.x += (dx / d) * k; BEND.y += (dy / d) * k; }
-}
-function stepReeds(w, dt) {
-  const p = w.params, n = reedTarget(w), R = w.reeds, still = w.reduced, ptr = w.ptr, box = REED_FISH + 16;
-  R.length = Math.min(R.length, w.islands.length);
-  w.islands.forEach((o, i) => {
-    if (!R[i] || R[i].length !== n) R[i] = growReeds(w, i, n);
-    for (const c of R[i]) {
-      // the fish near the clump at all; each stem then asks only these
-      const near = [];
-      if (!still) {
-        const d0 = coast(o, c.b) + 14, x0 = o.x + Math.cos(c.b) * d0, y0 = o.y + Math.sin(c.b) * d0;
-        for (const f of w.fish) if (Math.abs(f.x - x0) < box && Math.abs(f.y - y0) < box) near.push(f);
-      }
-      for (const s of c.stems) {
-        const t = c.b + s.j / Math.max(20, coast(o, c.b)), d = coast(o, t) + s.off;
-        s.rx = o.x + Math.cos(t) * d; s.ry = o.y + Math.sin(t) * d;
-        const a = t + s.lean, ux = Math.cos(a), uy = Math.sin(a), sw = still ? 0 : p.sway * s.amp * Math.sin(TAU * s.hz * w.t + s.ph);
-        BEND.x = 0; BEND.y = 0;
-        if (!still) { for (const f of near) bendAway(s, f.x, f.y, REED_FISH); if (ptr.on) bendAway(s, ptr.x, ptr.y, REED_PTR); }
-        const m = Math.hypot(BEND.x, BEND.y), g = m > 1 ? p.bend / m : p.bend, gx = BEND.x * g, gy = BEND.y * g;
-        if (still) { s.bx = 0; s.by = 0; }
-        else {
-          // a push bends the tip at once; it eases back slowly once the push is gone
-          const k = 1 - Math.exp(-dt / (Math.hypot(gx, gy) > Math.hypot(s.bx, s.by) ? REED_IN : REED_BACK));
-          s.bx += (gx - s.bx) * k; s.by += (gy - s.by) * k;
-        }
-        s.tx = s.rx + ux * s.h - uy * sw + s.bx; s.ty = s.ry + uy * s.h + ux * sw + s.by;
-        s.cx = s.rx + ux * s.h * 0.55 - uy * sw * 0.3 + s.bx * 0.3; s.cy = s.ry + uy * s.h * 0.55 + ux * sw * 0.3 + s.by * 0.3;
-      }
-    }
-  });
-}
-
 // ----- lotus flowers -----
 // A few pads carry a lotus flower, each on a pad from a different cluster, a little off the pad's centre on the side
 // away from its slit, so it rides and turns with the pad. A flower lives a slow seeded cycle: a bud for 90 to 180 s,
@@ -720,90 +651,6 @@ function stepStriders(w, dt) {
     s.x = Math.min(Math.max(s.x, Math.min(STR_EDGE, w.w / 2)), Math.max(w.w - STR_EDGE, w.w / 2));
     s.y = Math.min(Math.max(s.y, Math.min(STR_EDGE, w.h / 2)), Math.max(w.h - STR_EDGE, w.h / 2));
   }
-}
-
-// ----- the dragonfly -----
-// Now and then a dragonfly visits, one at a time, `dragonfly` s apart on average. It arrives from a seeded screen edge
-// and darts toward a perch (a pad, or the tip of a reed) in straight runs of 40 to 120 px at `flight` px/s with short
-// hovers between, skims the water once on the way (a treat-sized ripple), lands on the perch and stays about `visit` s
-// with its wings still, riding the pad or the swaying tip, then darts off by the nearest edge. Under reduced motion it
-// does not visit. It draws from a seeded source of its own.
-// fly: { stage ('arrive', 'land', 'leave'), x, y, a (heading), tx, ty (where this run ends), fin (this run ends on the
-//   perch), hover (s of hover left), perch ({ q } a pad or { s } a reed stem), skim (skimmed yet), left (s landed left),
-//   up (0 landed .. 1 flying), px, py (where on the perch it lands, this step) }
-const flyGap = (w) => (w.coarse ? w.params.dragonflyTouch : w.params.dragonfly);
-const FLY_OFF = 30;
-// Updates the landing point from the perch; false if the perch is gone.
-function perchAt(w, f) {
-  const P = f.perch;
-  if (P.q) { if (!w.pads.includes(P.q)) return false; const q = P.q; f.px = q.x + Math.cos(q.a) * 0.3 * q.r; f.py = q.y + Math.sin(q.a) * 0.3 * q.r; return true; }
-  if (!w.reeds.some((C) => C && C.some((c) => c.stems.includes(P.s)))) return false;
-  f.px = P.s.tx; f.py = P.s.ty; return true;
-}
-// Open water it may skim: on screen, off the land and off the pads.
-function skimmable(w, x, y) {
-  if (x < 20 || x > w.w - 20 || y < 20 || y > w.h - 20) return false;
-  for (const o of w.islands) if (shoreGap(o, x, y, 4) < 0) return false;
-  for (const q of w.pads) if (Math.hypot(q.x - x, q.y - y) < q.r + 4) return false;
-  return true;
-}
-// Sets the next run: toward the perch while arriving (the last run ends on it), toward the nearest edge while leaving.
-function nextRun(w, f) {
-  const r = w.drand;
-  let hx = f.px, hy = f.py;
-  if (f.stage === 'leave') {
-    const e = [f.x, w.w - f.x, f.y, w.h - f.y], m = e.indexOf(Math.min(...e)), out = FLY_OFF + 20;
-    hx = m === 0 ? -out : m === 1 ? w.w + out : f.x; hy = m === 2 ? -out : m === 3 ? w.h + out : f.y;
-  }
-  const d = Math.hypot(hx - f.x, hy - f.y), L = 40 + 80 * r();
-  if (f.stage === 'arrive' && d <= 120) { f.fin = true; f.tx = hx; f.ty = hy; }
-  else {
-    const a = Math.atan2(hy - f.y, hx - f.x) + (r() - 0.5) * 0.9, l = f.stage === 'arrive' ? Math.min(L, d - 30) : L;
-    f.fin = false; f.tx = f.x + Math.cos(a) * l; f.ty = f.y + Math.sin(a) * l;
-  }
-  f.a = Math.atan2(f.ty - f.y, f.tx - f.x);
-}
-function stepFly(w, dt) {
-  if (!w.drand) { w.drand = rng((w.seed ^ 0xd2a60f1) >>> 0); w.flyWait = flyGap(w) * (0.1 + 0.3 * w.drand()); }
-  if (w.reduced) { w.fly = null; return; }
-  const p = w.params, r = w.drand;
-  let f = w.fly;
-  if (!f) {
-    if ((w.flyWait -= dt) > 0) return;
-    // a perch: any pad, or the tallest stem of a reed clump
-    const perches = w.pads.map((q) => ({ q }));
-    for (const C of w.reeds) if (C) for (const c of C) perches.push({ s: c.stems.reduce((a, b) => (b.h > a.h ? b : a)) });
-    if (!perches.length) { w.flyWait = flyGap(w) * (0.5 + r()); return; }
-    const e = Math.floor(r() * 4), u = 0.1 + 0.8 * r();
-    const x = e === 0 ? -FLY_OFF : e === 1 ? w.w + FLY_OFF : u * w.w, y = e === 2 ? -FLY_OFF : e === 3 ? w.h + FLY_OFF : u * w.h;
-    f = w.fly = { stage: 'arrive', x, y, a: 0, tx: x, ty: y, fin: false, hover: 0, perch: perches[Math.floor(r() * perches.length)], skim: false, left: 0, up: 1, px: x, py: y };
-    perchAt(w, f); nextRun(w, f);
-  }
-  const ok = perchAt(w, f);
-  if (f.stage === 'land') {
-    f.up = Math.max(0, f.up - dt / 0.4);
-    if (ok) { f.x = f.px; f.y = f.py; }
-    if (!ok || (f.left -= dt) <= 0) { f.stage = 'leave'; f.hover = 0; nextRun(w, f); }
-    return;
-  }
-  // a perch that goes while it is on its way (the pads laid out again) sends it away
-  if (!ok && f.stage === 'arrive') { f.stage = 'leave'; f.hover = 0; nextRun(w, f); }
-  f.up = Math.min(1, f.up + dt / 0.3);
-  if (f.hover > 0) { if ((f.hover -= dt) <= 0) nextRun(w, f); return; }
-  if (f.fin) { f.tx = f.px; f.ty = f.py; }
-  const dx = f.tx - f.x, dy = f.ty - f.y, d = Math.hypot(dx, dy), go = p.flight * dt;
-  if (d > go) { f.x += (dx / d) * go; f.y += (dy / d) * go; f.a = Math.atan2(dy, dx); return; }
-  f.x = f.tx; f.y = f.ty;
-  if (f.stage === 'leave' && (f.x < -FLY_OFF || f.x > w.w + FLY_OFF || f.y < -FLY_OFF || f.y > w.h + FLY_OFF)) {
-    w.fly = null; w.visits++; w.flyWait = flyGap(w) * (0.5 + r()); return;
-  }
-  if (f.fin) {
-    // it skims once on every visit: here, if no hover on the way was over open water
-    if (!f.skim) { ripple(w, f.x, f.y, 34, 1.6); f.skim = true; }
-    f.stage = 'land'; f.left = p.visit * (0.6 + 0.8 * r()); return;
-  }
-  if (f.stage === 'arrive' && !f.skim && skimmable(w, f.x, f.y)) { ripple(w, f.x, f.y, 34, 1.6); f.skim = true; }
-  f.hover = 0.3 + 0.7 * r();
 }
 
 // ----- beat and glide -----
@@ -1001,11 +848,9 @@ export function step(w, dt) {
       if (Math.hypot(t.x - f.x, t.y - f.y) < bite) { w.treats.splice(k, 1); ripple(w, t.x, t.y, 14, 0.9); w.eaten++; remember(w, t); if (!w.reduced) f.en = Math.max(f.en, 0.5); break; }
     }
   }
-  // the surface, after the fish, so a reed bends from where a fish is now
-  stepReeds(w, dt);
+  // the surface, after the fish
   stepFlowers(w, dt);
   stepStriders(w, dt);
-  stepFly(w, dt);
 }
 
 // ----- drawing -----
@@ -1156,10 +1001,9 @@ export function drawCoasts(ctx, w, ink, paper, water = paper) {
   ctx.globalAlpha = 1;
 }
 // The surface. Each thing is drawn in the hand of the layer it lives in. The water layer, the fish, is an ink outline
-// over a paper fill. The surface layer (pads, flowers, reeds, striders) is flat translucent flora with no outline, and
+// over a paper fill. The surface layer (pads, flowers, striders) is flat translucent flora with no outline, and
 // what lies flat on the water casts a shadow: the same shape in ink, offset down and to the right, unblurred (a blur
-// costs the GPU far more than the offset, which reads as a shadow on its own). The air layer, the dragonfly, is an ink
-// line with paper wings, its shadow further off while it flies.
+// costs the GPU far more than the offset, which reads as a shadow on its own).
 export const FLORA = '#5f7f66';
 const SHADOW_X = 2, SHADOW_Y = 3, SLIT = (18 / 180) * Math.PI;
 // A pad: a disc with a narrow slit cut toward its heading, the slit ending short of the centre in a rounded end.
@@ -1237,14 +1081,8 @@ export function drawLive(ctx, w, ink, paper, gold) {
     for (const f of w.flowers) drawFlower(ctx, f, paper, gold);
     ctx.globalAlpha = p.floraAlpha;
   }
-  // the reeds: a flora line each, too thin to cast a shadow worth drawing
-  ctx.strokeStyle = FLORA; ctx.lineWidth = 1.5;
-  for (const C of w.reeds) if (C) for (const c of C) {
-    ctx.beginPath();
-    for (const s of c.stems) { ctx.moveTo(s.rx, s.ry); ctx.quadraticCurveTo(s.cx, s.cy, s.tx, s.ty); }
-    ctx.stroke();
-  }
   // the striders: four legs and a short thick body, no shadow; their dimples are the ripples above
+  ctx.strokeStyle = FLORA;
   for (const s of w.striders) {
     ctx.lineWidth = 0.8; ctx.beginPath();
     for (const b of LEGS) { const a = s.a + b; ctx.moveTo(s.x, s.y); ctx.lineTo(s.x + Math.cos(a) * 6, s.y + Math.sin(a) * 6); }
@@ -1252,42 +1090,9 @@ export function drawLive(ctx, w, ink, paper, gold) {
     const c = Math.cos(s.a) * 1.5, d = Math.sin(s.a) * 1.5;
     ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(s.x - c, s.y - d); ctx.lineTo(s.x + c, s.y + d); ctx.stroke();
   }
-  // the air: the dragonfly's shadow, then the dragonfly
-  if (w.fly) drawFly(ctx, w.fly, p, ink, paper);
   ctx.globalAlpha = 1;
 }
 const LEGS = [0.7, -0.7, 2.3, -2.3];
-// A dragonfly's two pairs of wings, swept back from the body and turned by flap (rad), added to the current path.
-const WINGS = [[2.5, 4.8, 0.15], [-0.5, 4.4, 0.4]], SIDES = [1, -1], FLAPS = [-0.14, 0.14], STILL = [0];
-function wingsPath(ctx, f, ox, oy, flap) {
-  const c = Math.cos(f.a), s = Math.sin(f.a);
-  for (const [at, len, sweep] of WINGS) {
-    const bx = f.x + ox + c * at, by = f.y + oy + s * at;
-    for (const side of SIDES) {
-      const rot = f.a + side * (Math.PI / 2 + sweep + flap), cx = bx + Math.cos(rot) * len, cy = by + Math.sin(rot) * len;
-      ctx.moveTo(cx + Math.cos(rot) * len, cy + Math.sin(rot) * len); ctx.ellipse(cx, cy, len, 1.4, rot, 0, TAU);
-    }
-  }
-}
-function flyBody(ctx, f, ox, oy) {
-  const c = Math.cos(f.a), s = Math.sin(f.a);
-  ctx.moveTo(f.x + ox + c * 5.5, f.y + oy + s * 5.5); ctx.lineTo(f.x + ox - c * 8.5, f.y + oy - s * 8.5);
-}
-// The air layer: an ink body and translucent paper wings, blurred by drawing them at two angles while it flies, over a
-// shadow that sits further off while it flies (up 1) and closes to a surface shadow's offset as it lands (up 0).
-function drawFly(ctx, f, p, ink, paper) {
-  const k = f.up, ox = SHADOW_X + 4 * k, oy = SHADOW_Y + 6 * k, c = Math.cos(f.a), s = Math.sin(f.a);
-  ctx.fillStyle = ink; ctx.strokeStyle = ink; ctx.globalAlpha = p.shadow * (1 - 0.4 * k);
-  ctx.beginPath(); wingsPath(ctx, f, ox, oy, 0); ctx.fill();
-  ctx.lineWidth = 2; ctx.beginPath(); flyBody(ctx, f, ox, oy); ctx.stroke();
-  ctx.fillStyle = paper; ctx.lineWidth = 0.6;
-  for (const flap of k > 0.5 ? FLAPS : STILL) {
-    ctx.beginPath(); wingsPath(ctx, f, 0, 0, flap);
-    ctx.globalAlpha = 0.5; ctx.fill(); ctx.globalAlpha = 0.25; ctx.stroke();
-  }
-  ctx.globalAlpha = 0.8; ctx.lineWidth = 1.4; ctx.beginPath(); flyBody(ctx, f, 0, 0); ctx.stroke();
-  ctx.fillStyle = ink; ctx.beginPath(); ctx.arc(f.x + c * 6.5, f.y + s * 6.5, 1.6, 0, TAU); ctx.fill();
-}
 
 // ----- the browser shell -----
 const GOLD = '#b68235'; // the treats keep gold in both themes; the dark theme's accent is the text colour
