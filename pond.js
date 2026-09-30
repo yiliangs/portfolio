@@ -267,6 +267,7 @@ export function updateIsland(o, fn, dt, p, reduced, time) {
   for (let j = 0; j < BEARINGS; j++) { const g = (SW[j] = swell(o, (j / BEARINGS) * TAU)); lo = Math.min(lo, g); hi = Math.max(hi, g); }
   const amp = (p.rough * o.mean) / Math.max(1e-6, hi - lo);
   for (let j = 0; j < BEARINGS; j++) o.C[j] = o.S[j] + amp * (SW[j] - lo);
+  o.calm = (p.rough * o.mean) / 2;
 }
 // the swell at bearing t, within -1..1
 export function swell(o, t) {
@@ -274,6 +275,16 @@ export function swell(o, t) {
   for (let i = 0; i < SWELL.length; i++) g += SWELL_W[i] * Math.cos(SWELL[i] * t + o.ph[i] + o.om[i] * o.time) * (0.7 + 0.3 * Math.sin(o.br[i] * o.time + o.ph[i]));
   return g;
 }
+// The calm line at bearing t: the coast halfway through the swell's span, where the water's edge stands on average.
+// The swell carries the coast a quarter of the island's mean radius out and back, too far for anything that stands
+// still to keep both off the land and close to it by the live coast, so the stones are laid against this line.
+export function calmCoast(o, t) {
+  let u = (t / TAU) * BEARINGS; u -= Math.floor(u / BEARINGS) * BEARINGS;
+  const i = Math.floor(u), f = u - i, S = o.S;
+  return S[i % BEARINGS] * (1 - f) + S[(i + 1) % BEARINGS] * f + (o.calm || 0);
+}
+// The distance from (x,y) out past the calm line grown by g px, along the bearing from the island's centre.
+export function calmGap(o, x, y, g) { return Math.hypot(x - o.x, y - o.y) - calmCoast(o, Math.atan2(y - o.y, x - o.x)) - g; }
 // the coast's distance from the island's centre at bearing t
 export function coast(o, t) {
   let u = (t / TAU) * BEARINGS; u -= Math.floor(u / BEARINGS) * BEARINGS;
@@ -370,11 +381,10 @@ export function createWorld(params, opts = {}) {
     ptr: { x: 0, y: 0, on: false, px: 0, py: 0, seen: false, speed: 0 },
     eaten: 0,
     seed: opts.seed == null ? 1 : opts.seed, rocks: [], flowers: [], bloomRand: null, striders: [], srand: null,
-    pads: [], padSeed: ((opts.seed == null ? 1 : opts.seed) ^ 0x9ad5eed) >>> 0, padIsl: 0, prand: null, flow: null,
+    pads: [], padSeed: ((opts.seed == null ? 1 : opts.seed) ^ 0x9ad5eed) >>> 0, prand: null, flow: null, laidIsl: 0, laidFor: '', relay: 0,
   };
   populate(w);
-  layRocks(w);
-  spawnPads(w);
+  layPond(w);
   return w;
 }
 const target = (w) => Math.max(0, Math.round(w.coarse ? w.params.countTouch : w.params.count));
@@ -390,15 +400,20 @@ function populate(w) {
   if (w.fish.length > n) w.fish.length = n;
   markKoi(w);
 }
-export function resizeWorld(w, width, height) { w.w = Math.max(1, width); w.h = Math.max(1, height); }
+// A resize lays the stones and the pads out again a moment later, once the islands have followed their objects.
+export function resizeWorld(w, width, height) {
+  const W = Math.max(1, width), H = Math.max(1, height);
+  if (W !== w.w || H !== w.h) w.relay = RELAY;
+  w.w = W; w.h = H;
+}
 // The islands follow the boxes by index: an island keeps its shape and swell when its box moves, and a new one is
 // shaped at once. The outline functions, one per island by index, are read every step.
 export function setIslands(w, boxes) {
   const list = boxes || [];
   w.islands.length = Math.min(w.islands.length, list.length);
   list.forEach((b, i) => { if (w.islands[i]) placeBox(w.islands[i], b); else { const o = makeIsland(i, b); updateIsland(o, w.outlines[i], 0, w.params, w.reduced, w.t); w.islands.push(o); } });
-  // pads laid out before the page had any islands are laid out again round the first ones, while the pond is new
-  if (!w.padIsl && w.islands.length && w.t < 1) { layRocks(w); spawnPads(w); }
+  // stones and pads laid out before the page had any islands are laid out again round the first ones, while the pond is new
+  if (!w.laidIsl && w.islands.length && w.t < 1) layPond(w);
 }
 export function setOutlines(w, fns) { w.outlines = fns || []; }
 export function setPointer(w, x, y, on) { w.ptr.x = x; w.ptr.y = y; w.ptr.on = !!on; }
@@ -448,19 +463,12 @@ function ripple(w, x, y, size, life, k = 1) {
 // A ripple's ring radius at a given age.
 const rippleR = (q, age) => 2 + q.size * Math.sqrt(Math.min(1, Math.max(0, age) / q.life));
 
-// ----- lily pads -----
-// A pad is a disc with a slit cut toward its own heading, floating on open water. The pads start in two or three loose
-// clusters, drift on a slow flow that turns over the page and over time (nearby pads share it, so a cluster keeps
-// roughly together while it drifts and rearranges), turn a little as they go, nudge each other apart, keep off the
-// islands and the screen edges, and take a push outward from each ripple ring that passes under them. Everything here
-// runs on the pads' own seeded source (prand), apart from the fishes', so pads never change how the fish draw theirs.
-// pad: { x, y, r, a (heading of the notch), vx, vy (the push still carried from ripples), va, ph, since (s since a push) }
 // ----- rocks -----
 // A few stones stand in the water. Seen from above a stone is a rounded irregular blob: 6 to 9 seeded vertices round
 // its centre at 0.75 to 1 of its size, drawn as a curve through their midpoints. Stones do not move; they are fixed
 // circles of radius r (the size, so the whole blob lies inside) that the fish steer round like a shore, the striders
-// skate round and the pads are pushed off. They draw from a seeded source of their own.
-// rock: { x, y, r (size, px), a (turn), k (radius of each vertex, of r) }
+// skate round and the pads are pushed off. Where they stand is the layout's (below).
+// rock: { x, y, r (size, px), a (turn), k (radius of each vertex, of r), grp (0 the outcrop, 1 the group in open water) }
 const rockTarget = (w) => Math.max(0, Math.round(w.coarse ? w.params.rocksTouch : w.params.rocks));
 const ROCK_LAND = 12, ROCK_EDGE = 30, ROCK_OVER = 0.25;
 // The distance from (x,y) to the circle g px outside the disc q, a stone or a pad (negative inside it); the unit
@@ -470,39 +478,36 @@ function discGap(q, x, y, g, out) {
   if (d > 1e-6) { out.x = dx / d; out.y = dy / d; } else { out.x = 1; out.y = 0; }
   return d - q.r - g;
 }
+// Holds (x,y) 2 px out of every stone, into out. Where that would put it on the land (a coast swollen against a stone
+// by the shore closes the gap between them) it goes to the stone's seaward side instead, straight out from the island.
+const OFF = { x: 0, y: 0 };
+function offStones(w, x, y, out) {
+  out.x = x; out.y = y;
+  for (const q of w.rocks) {
+    if (discGap(q, out.x, out.y, 2, NRM) >= 0) continue;
+    let nx = q.x + NRM.x * (q.r + 2), ny = q.y + NRM.y * (q.r + 2);
+    for (const o of w.islands) {
+      if (shoreR(o, nx, ny, 0) >= 1) continue;
+      const dx = q.x - o.x, dy = q.y - o.y, d = Math.hypot(dx, dy) || 1;
+      nx = q.x + (dx / d) * (q.r + 2); ny = q.y + (dy / d) * (q.r + 2);
+    }
+    out.x = nx; out.y = ny;
+  }
+}
 function makeRock(r, x, y, size) {
   const k = [];
   for (let i = 6 + Math.floor(r() * 4); i > 0; i--) k.push(0.75 + 0.25 * r());
   return { x, y, r: size, a: r() * TAU, k };
 }
-// Whether a stone of size r may stand at (x,y): open water, ROCK_LAND off the land, ROCK_EDGE inside the screen, and
+// Whether a stone of size r may stand at (x,y): open water, ROCK_LAND off the calm line (at the top of the swell the
+// land may lap over a stone by the shore, as a real shore does), ROCK_EDGE inside the screen, and
 // overlapping no stone by more than ROCK_OVER of the smaller.
-function rockFree(w, x, y, r) {
+function rockFree(w, x, y, r, list = w.rocks) {
   if (x < ROCK_EDGE + r || x > w.w - ROCK_EDGE - r || y < ROCK_EDGE + r || y > w.h - ROCK_EDGE - r) return false;
-  for (const o of w.islands) if (shoreGap(o, x, y, ROCK_LAND + r) < 0) return false;
-  for (const q of w.rocks) if (Math.hypot(q.x - x, q.y - y) < q.r + r - ROCK_OVER * Math.min(q.r, r)) return false;
+  for (const o of w.islands) if (calmGap(o, x, y, ROCK_LAND + r) < 0) return false;
+  for (const q of list) if (Math.hypot(q.x - x, q.y - y) < q.r + r - ROCK_OVER * Math.min(q.r, r)) return false;
   return true;
 }
-// Lays the stones out afresh: one seeded group round a centre on open water, largest first.
-function layRocks(w) {
-  const r = rng((w.seed ^ 0x57013e) >>> 0), n = rockTarget(w);
-  w.rocks = [];
-  let c = null;
-  for (let t = 0; t < 60 && !c; t++) { const x = (0.1 + 0.8 * r()) * w.w, y = (0.1 + 0.8 * r()) * w.h; if (rockFree(w, x, y, 60)) c = { x, y }; }
-  c = c || { x: w.w / 2, y: w.h / 2 };
-  const sizes = []; for (let i = 0; i < n; i++) sizes.push(7 + 19 * r());
-  sizes.sort((a, b) => b - a);
-  for (const size of sizes) {
-    let x = c.x, y = c.y;
-    for (let t = 0; t < 200; t++) {
-      const d = t < 100 ? Math.sqrt(r()) * 70 : Math.sqrt(r()) * Math.max(w.w, w.h), b = r() * TAU;
-      x = c.x + Math.cos(b) * d; y = c.y + Math.sin(b) * d;
-      if (rockFree(w, x, y, size)) break;
-    }
-    w.rocks.push(makeRock(r, x, y, size));
-  }
-}
-function stepRocks(w) { if (w.rocks.length !== rockTarget(w)) { layRocks(w); spawnPads(w); } }
 const ROCK_N = 9, RX = new Float32Array(ROCK_N), RY = new Float32Array(ROCK_N);
 // A stone's outline, offset by (ox,oy), added to the current path as a closed curve through the vertices' midpoints.
 function rockPath(ctx, q, ox, oy) {
@@ -513,55 +518,183 @@ function rockPath(ctx, q, ox, oy) {
   ctx.closePath();
 }
 
+// ----- lily pads -----
+// A pad is a disc with a slit cut toward its own heading, floating on open water. The pads are laid out in clusters by
+// the layout below, each tethered to its planned spot by a weak spring, so a cluster keeps its composition while its
+// pads drift a little on a slow flow that turns over the page and over time, turn a little as they go, nudge each
+// other apart, keep off the islands, the stones and the screen edges, and take a push outward from each ripple ring
+// that passes under them. Everything here
+// runs on the pads' own seeded source (prand), apart from the fishes', so pads never change how the fish draw theirs.
+// pad: { x, y, r, hx, hy (its planned spot), cl (its cluster, 0 the main one), a (heading of the notch), vx, vy (the push
+//   still carried from ripples), va, ph, since (s since a push) }
 const padTarget = (w) => Math.max(0, Math.round(w.coarse ? w.params.padsTouch : w.params.pads));
-const RIPPLE_FULL = 34, PAD_GAP = 4, PAD_COAST = 30, PAD_EDGE = 30, PAD_MAX = 5, PAD_DRAG = 0.6;
-// Whether a pad of radius r at (x,y) may be laid there: clear of the edges, the coasts and the other pads.
-function padFree(w, x, y, r, coastGap, edgeGap) {
-  if (x < edgeGap + r || x > w.w - edgeGap - r || y < edgeGap + r || y > w.h - edgeGap - r) return false;
-  for (const o of w.islands) if (shoreGap(o, x, y, coastGap + r) < 0) return false;
-  for (const q of w.rocks) if (Math.hypot(q.x - x, q.y - y) < q.r + r + coastGap) return false;
-  for (const q of w.pads) if (Math.hypot(q.x - x, q.y - y) < q.r + r + PAD_GAP) return false;
+const RIPPLE_FULL = 34, PAD_COAST = 30, PAD_EDGE = 30, PAD_MAX = 5, PAD_DRAG = 0.6, PAD_TETHER = 0.25, PAD_APART = 0.3;
+// ----- the layout of the stones and the pads -----
+// The stones and the pads are laid out together from one seeded plan, so the pond reads as a composed scene rather
+// than things strewn at random. The screen is split at its middle across its longer side; the stones take one half
+// and the pads the other. The stones: an outcrop of 3 to 5 trailing from the shore of the island on their side at a
+// seeded bearing, touching the shallows, one large stone by the shore and medium and small ones further out, each
+// off the line on its own side by its own amount and at its own gap, so the outcrop is a scalene group and never a
+// row; the rest stand as a smaller group in open water on the same side. The pads: a main cluster of 5 or 6 (one or
+// two large, the rest medium and small, 0.3 to 0.8 of a radius apart) and a satellite of 2 or 3 further along.
+// No pad comes within PLAN_ROCK px of a stone, no cluster centre within PLAN_COAST px of a coast (bar the outcrop,
+// which is meant to touch the shallows), nothing within PLAN_EDGE px of the screen's edge or on the land. The pads
+// get some room on top of those limits for their wander.
+// Where the screen is too small for all of that, the satellites go first (the stone group's stones then trail from the
+// outcrop, the satellite's pads join the main cluster, and a pad with no room in its cluster takes any open water),
+// and whatever still finds no room is left out: the counts shrink rather than the rules bend.
+// The plan is laid again when the islands first arrive, a moment after a resize, and when a count changes. It has a
+// seeded source of its own; the pads' drift keeps theirs (prand), and the fish's is untouched.
+const PLAN_ROCK = 90 + 20, PLAN_COAST = 60 + 15, PLAN_EDGE = 30, PAD_LAND = 40, RELAY = 0.6;
+// Where (x,y) lies against the screen's middle, across its longer side: below 0 on the left (or the top).
+const sideOf = (w, x, y) => (w.w >= w.h ? x - w.w / 2 : y - w.h / 2);
+function landClear(w, x, y) { let c = Infinity; for (const o of w.islands) c = Math.min(c, shoreGap(o, x, y, 0)); return c; }
+const edgeClear = (w, x, y) => Math.min(x, w.w - x, y, w.h - y);
+function rockClear(w, x, y) { let c = Infinity; for (const q of w.rocks) c = Math.min(c, Math.hypot(q.x - x, q.y - y) - q.r); return c; }
+// Whether a pad of radius r may be laid at (x,y) among the pads P: open water, clear of the stones by PLAN_ROCK and of
+// the other pads by the cluster's closest spacing.
+function padOk(w, P, x, y, r) {
+  if (edgeClear(w, x, y) < PLAN_EDGE + r) return false;
+  for (const o of w.islands) if (shoreGap(o, x, y, PAD_LAND + r) < 0) return false;
+  if (rockClear(w, x, y) < PLAN_ROCK + r) return false;
+  for (const q of P) if (Math.hypot(q.x - x, q.y - y) < q.r + r + PAD_APART * Math.min(q.r, r)) return false;
   return true;
 }
-// Lays the pads out afresh from the pads' seed: two or three cluster centres on open water, then each pad by rejection
-// round its centre, on open water anywhere should the cluster be full.
-function spawnPads(w) {
-  w.prand = rng(w.padSeed); w.pads = []; w.padIsl = w.islands.length;
-  for (const f of w.fish) f.pad = null;
-  const r = w.prand;
-  w.flow = { a0: r() * TAU, p1: r() * TAU, p2: r() * TAU };
-  const k = 2 + Math.floor(r() * 2);
-  w.padCl = [];
-  for (let c = 0; c < k; c++) {
-    let best = null;
-    for (let t = 0; t < 40 && !best; t++) { const x = (0.1 + 0.8 * r()) * w.w, y = (0.1 + 0.8 * r()) * w.h; if (padFree(w, x, y, 50, 40, PAD_EDGE)) best = { x, y }; }
-    w.padCl.push(best || { x: (0.2 + 0.6 * r()) * w.w, y: (0.2 + 0.6 * r()) * w.h });
-  }
-  addPads(w, padTarget(w));
+function layPond(w) {
+  const r = rng((w.seed ^ 0x1a7d5ca) >>> 0), nr = rockTarget(w), np = padTarget(w), rs = r() < 0.5 ? -1 : 1;
+  w.laidIsl = w.islands.length; w.laidFor = nr + ':' + np; w.relay = 0;
+  // the stones: sizes first, largest to smallest
+  const nOut = nr < 3 ? nr : Math.min(5, Math.max(3, Math.round(nr * 0.6))), nMed = nOut >= 4 && r() < 0.5 ? 2 : 1;
+  const out = [], grp = [];
+  for (let i = 0; i < nOut; i++) out.push(i === 0 ? 20 + 6 * r() : i <= nMed ? 13 + 5 * r() : 7 + 4 * r());
+  for (let i = nOut; i < nr; i++) grp.push(8 + 7 * r());
+  grp.sort((a, b) => b - a);
+  w.rocks = [];
+  layOutcrop(w, r, rs, out);
+  if (grp.length && !layGroup(w, r, rs, grp)) trail(w, r, w.rocks, grp, w.rocks.length ? Math.atan2(w.rocks[w.rocks.length - 1].y - w.rocks[0].y, w.rocks[w.rocks.length - 1].x - w.rocks[0].x) : r() * TAU, rs);
+  // the pads, on the other side
+  const nSat = np >= 8 ? 2 + (r() < 0.5 ? 1 : 0) : np >= 5 ? 2 : 0, nMain = np - nSat, nBig = nMain >= 4 && r() < 0.5 ? 2 : 1;
+  const main = [], sat = [];
+  for (let i = 0; i < nMain; i++) main.push(i < nBig ? 18 + 4 * r() : r() < 0.55 ? 13 + 4 * r() : 10 + 2 * r());
+  for (let i = 0; i < nSat; i++) sat.push(r() < 0.5 ? 13 + 4 * r() : 10 + 2 * r());
+  const P = [], c0 = padCentre(w, r, -rs, null);
+  cluster(w, r, P, c0, main, 0);
+  const c1 = nSat ? padCentre(w, r, -rs, c0) : null;
+  cluster(w, r, P, c1 || c0, sat, c1 ? 1 : 0);
+  // the pads' drift keeps its own source; a relaid plan with as many pads keeps the same pads, so the flowers and the
+  // fish hiding under them keep theirs
+  w.prand = rng(w.padSeed);
+  const pr = w.prand;
+  w.flow = { a0: pr() * TAU, p1: pr() * TAU, p2: pr() * TAU };
+  if (w.pads.length === P.length) P.forEach((q, i) => Object.assign(w.pads[i], q));
+  else { w.pads = P; for (const f of w.fish) f.pad = null; }
 }
-function addPads(w, n) {
-  const r = w.prand;
-  for (let i = 0; i < n; i++) {
-    const rad = 10 + 12 * r(), c = w.padCl[w.pads.length % w.padCl.length];
-    let x = c.x, y = c.y, ok = false;
-    for (let t = 0; t < 120 && !ok; t++) {
-      if (t < 60) { const d = Math.sqrt(r()) * 90, b = r() * TAU; x = c.x + Math.cos(b) * d; y = c.y + Math.sin(b) * d; }
-      else { x = (0.05 + 0.9 * r()) * w.w; y = (0.05 + 0.9 * r()) * w.h; }
-      ok = padFree(w, x, y, rad, 40, PAD_EDGE);
+// The outcrop: the island on the stones' side (the one furthest that way), and the first bearing from a seeded start
+// round which the whole outcrop fits; failing that, the bearing that fits the most.
+function layOutcrop(w, r, rs, sizes) {
+  if (!sizes.length) return;
+  const o = w.islands.slice().sort((a, b) => rs * (sideOf(w, b.x, b.y) - sideOf(w, a.x, a.y)))[0], b0 = r() * TAU;
+  let best = [];
+  for (let t = 0; t < 24 && best.length < sizes.length; t++) {
+    const b = b0 + (t / 24) * TAU, L = [], s0 = sizes[0];
+    // the large stone, 13 to 15 px off the calm line; with no island yet, in open water on its side
+    let x, y;
+    if (o) { const d = calmCoast(o, b) + ROCK_LAND + 1 + 2 * r() + s0; x = o.x + Math.cos(b) * d; y = o.y + Math.sin(b) * d; } else { x = w.w / 2 + rs * (0.25 + 0.1 * r()) * (w.w >= w.h ? w.w : 0); y = w.h / 2 + rs * (0.25 + 0.1 * r()) * (w.w >= w.h ? 0 : w.h); }
+    if (!(sideOf(w, x, y) * rs > 0) || !rockFree(w, x, y, s0, L)) continue;
+    L.push(Object.assign(makeRock(r, x, y, s0), { grp: 0 }));
+    trail(w, r, L, sizes.slice(1), b, rs);
+    if (L.length > best.length) best = L;
+  }
+  w.rocks.push(...best);
+}
+// Adds stones of the given sizes to the stones L, trailing along bearing b: each against a stone already laid, at a
+// gap from a fifth of the smaller's radius overlapping to three fifths apart, turned 0.35 to 1.25 rad off the line to
+// alternate sides. A stone that finds no room is left out.
+function trail(w, r, L, sizes, b, rs) {
+  let side = r() < 0.5 ? -1 : 1;
+  for (const s of sizes) {
+    let ok = null;
+    for (let t = 0; t < 40 && !ok; t++) {
+      const par = L.length ? L[t < 20 ? L.length - 1 : Math.floor(r() * L.length)] : null;
+      if (!par) break;
+      const a = b + side * (0.35 + 0.9 * r()), d = par.r + s + (-0.2 + 0.8 * r()) * Math.min(par.r, s);
+      const x = par.x + Math.cos(a) * d, y = par.y + Math.sin(a) * d;
+      if (sideOf(w, x, y) * rs > 0 && rockFree(w, x, y, s, L === w.rocks ? w.rocks : [...w.rocks, ...L])) ok = { x, y };
     }
-    w.pads.push({ x, y, r: rad, a: r() * TAU, vx: 0, vy: 0, va: 0, ph: r() * TAU, since: Infinity });
+    if (!ok) continue;
+    L.push(Object.assign(makeRock(r, ok.x, ok.y, s), { grp: L[0] ? L[0].grp : 0 }));
+    side = -side;
   }
 }
-// The drift of the water at (x,y): a heading that turns slowly over the page and over time.
+// The second group: a centre on open water on the stones' side, PLAN_COAST off the coasts and 120 px clear of the
+// outcrop, as near 240 px from it as the seeded tries find; the stones round it by rejection within 45 px, largest
+// first. False if there is no such centre.
+function layGroup(w, r, rs, sizes) {
+  const R = w.rocks, ox = R.length ? R.reduce((a, q) => a + q.x, 0) / R.length : w.w / 2, oy = R.length ? R.reduce((a, q) => a + q.y, 0) / R.length : w.h / 2;
+  let c = null, cs = -Infinity;
+  for (let t = 0; t < 120; t++) {
+    const x = (0.05 + 0.9 * r()) * w.w, y = (0.05 + 0.9 * r()) * w.h;
+    if (!(sideOf(w, x, y) * rs > 0) || landClear(w, x, y) < PLAN_COAST || edgeClear(w, x, y) < PLAN_EDGE + 45 || rockClear(w, x, y) < 120) continue;
+    const sc = -Math.abs(Math.hypot(x - ox, y - oy) - 240) + 40 * r();
+    if (sc > cs) { cs = sc; c = { x, y }; }
+  }
+  if (!c) return false;
+  const L = [];
+  for (const s of sizes) {
+    for (let t = 0; t < 60; t++) {
+      const d = L.length ? Math.sqrt(r()) * 45 : 6 * r(), a = r() * TAU, x = c.x + Math.cos(a) * d, y = c.y + Math.sin(a) * d;
+      if (rockFree(w, x, y, s, [...R, ...L])) { L.push(Object.assign(makeRock(r, x, y, s), { grp: 1 })); break; }
+    }
+  }
+  R.push(...L);
+  return true;
+}
+// A pad cluster's centre on open water on side ps (the main one), or 150 to 280 px along from the main one (a
+// satellite, from): PLAN_COAST off the coasts, PLAN_ROCK and a cluster's reach off the stones, room to the edge. The
+// main one takes the openest of the seeded tries, a satellite the nearest to 210 px along; failing the side, anywhere.
+function padCentre(w, r, ps, from) {
+  let c = null, cs = -Infinity;
+  for (let pass = 0; pass < 2 && !c; pass++) for (let t = 0; t < 120; t++) {
+    const x = (0.05 + 0.9 * r()) * w.w, y = (0.05 + 0.9 * r()) * w.h, land = landClear(w, x, y);
+    if ((pass === 0 && !(sideOf(w, x, y) * ps > 0)) || land < PLAN_COAST || edgeClear(w, x, y) < PLAN_EDGE + 40 || rockClear(w, x, y) < PLAN_ROCK + 45) continue;
+    const d = from ? Math.hypot(x - from.x, y - from.y) : 0;
+    if (from && (d < 150 || d > 280)) continue;
+    const sc = (from ? -Math.abs(d - 210) : Math.min(land, 160) + Math.min(rockClear(w, x, y), 300) / 4) + 40 * r();
+    if (sc > cs) { cs = sc; c = { x, y }; }
+  }
+  if (c || from) return c;
+  return { x: w.w / 2 + ps * (w.w >= w.h ? w.w / 4 : 0), y: w.h / 2 + ps * (w.w >= w.h ? 0 : w.h / 4) };
+}
+// Lays pads of the given sizes round centre c as cluster cl: each the nearest to c of a dozen seeded spots against a
+// pad of the cluster already laid, 0.3 to 0.8 of the smaller radius apart; one with no room there takes open water
+// anywhere, and one with none at all is left out.
+function cluster(w, r, P, c, sizes, cl) {
+  for (const s of sizes) {
+    const mine = P.filter((q) => q.cl === cl);
+    let ok = null, od = Infinity;
+    for (let t = 0; t < 12 * 5; t++) {
+      let x, y;
+      if (!mine.length) { const a = r() * TAU, d = 8 * r(); x = c.x + Math.cos(a) * d; y = c.y + Math.sin(a) * d; }
+      else { const par = mine[Math.floor(r() * mine.length)], a = r() * TAU, d = par.r + s + (PAD_APART + 0.5 * r()) * Math.min(par.r, s); x = par.x + Math.cos(a) * d; y = par.y + Math.sin(a) * d; }
+      if (!padOk(w, P, x, y, s)) continue;
+      const dc = Math.hypot(x - c.x, y - c.y);
+      if (dc < od) { od = dc; ok = { x, y }; }
+      if (t >= 11 && ok) break;
+    }
+    for (let t = 0; t < 120 && !ok; t++) { const x = (0.05 + 0.9 * r()) * w.w, y = (0.05 + 0.9 * r()) * w.h; if (padOk(w, P, x, y, s)) ok = { x, y }; }
+    if (!ok) continue;
+    P.push({ x: ok.x, y: ok.y, hx: ok.x, hy: ok.y, r: s, cl, a: r() * TAU, vx: 0, vy: 0, va: 0, ph: r() * TAU, since: Infinity });
+  }
+}
+function stepLayout(w, dt) {
+  if (w.laidFor !== rockTarget(w) + ':' + padTarget(w) || (w.relay > 0 && (w.relay -= dt) <= 0)) layPond(w);
+}
 function flowAt(w, x, y) {
   const f = w.flow, t = w.t;
   return f.a0 + 0.03 * t + 1.1 * Math.sin(0.0035 * x + 0.05 * t + f.p1) + 1.1 * Math.sin(0.0041 * y - 0.04 * t + f.p2);
 }
 function stepPads(w, dt) {
   const p = w.params, P = w.pads, r = w.prand;
-  const n = padTarget(w);
-  if (P.length < n) addPads(w, n - P.length);
-  else if (P.length > n) { P.length = n; for (const f of w.fish) f.pad = null; }
   if (!w.reduced) {
     const drag = Math.exp(-dt / PAD_DRAG);
     for (const q of P) {
@@ -577,11 +710,12 @@ function stepPads(w, dt) {
       const m = Math.hypot(q.vx, q.vy), cap = p.push; if (m > cap) { q.vx *= cap / m; q.vy *= cap / m; }
       // the drift and the soft pushes, bounded together so a pad never hurries on its own account
       const h = flowAt(w, q.x, q.y), s = p.drift * (1 + 0.33 * Math.sin(0.13 * w.t + q.ph));
-      let ux = Math.cos(h) * s, uy = Math.sin(h) * s;
+      // the tether: about 12 px of wander at the mean drift before the spring holds the pad to its spot
+      let ux = Math.cos(h) * s + (q.hx - q.x) * PAD_TETHER, uy = Math.sin(h) * s + (q.hy - q.y) * PAD_TETHER;
       for (const o of P) {
         if (o === q) continue;
-        const dx = q.x - o.x, dy = q.y - o.y, d = Math.hypot(dx, dy) || 1e-6, room = d - q.r - o.r;
-        if (room < 12) { const k = Math.min(1.5, (12 - room) / 12) * 4; ux += (dx / d) * k; uy += (dy / d) * k; }
+        const dx = q.x - o.x, dy = q.y - o.y, d = Math.hypot(dx, dy) || 1e-6, room = d - q.r - o.r, want = PAD_APART * Math.min(q.r, o.r);
+        if (room < want) { const k = Math.min(1.5, (want - room) / want) * 4; ux += (dx / d) * k; uy += (dy / d) * k; }
       }
       for (const o of w.islands) {
         const gap = shoreGap(o, q.x, q.y, PAD_COAST);
@@ -636,11 +770,11 @@ function seekPad(w, f, chance) {
 const flowerTarget = (w) => Math.max(0, Math.round(w.coarse ? w.params.flowersTouch : w.params.flowers));
 const stageLen = (r, s) => (s === 0 ? 90 + 90 * r() : s === 2 ? 120 + 120 * r() : 30);
 function layFlowers(w, n) {
-  const r = rng((w.seed ^ 0xf10e5) >>> 0), P = w.pads, k = Math.max(1, (w.padCl || []).length), taken = new Set();
+  const r = rng((w.seed ^ 0xf10e5) >>> 0), P = w.pads, k = 1 + P.reduce((m, q) => Math.max(m, q.cl), 0), taken = new Set();
   w.flowers = []; w.bloomRand = r;
   for (let j = 0; j < n; j++) {
-    // a pad from the next cluster (addPads deals pad i to cluster i % k), or any free pad once that cluster runs out
-    let can = P.filter((q, i) => i % k === j % k && !taken.has(q));
+    // a pad from the next cluster, or any free pad once that cluster runs out
+    let can = P.filter((q) => q.cl === j % k && !taken.has(q));
     if (!can.length) can = P.filter((q) => !taken.has(q));
     if (!can.length) break;
     const q = can[Math.floor(r() * can.length)], b = Math.PI + (r() - 0.5) * 1.2, d = (0.25 + 0.15 * r()) * q.r;
@@ -773,7 +907,7 @@ export function step(w, dt) {
   // treats age and sink; ripples spread
   for (let i = w.treats.length - 1; i >= 0; i--) { const t = w.treats[i]; t.age += dt; if (t.age > p.sink) w.treats.splice(i, 1); }
   for (let i = w.ripples.length - 1; i >= 0; i--) { const q = w.ripples[i]; q.age += dt; if (q.age > q.life) w.ripples.splice(i, 1); }
-  stepRocks(w);
+  stepLayout(w, dt);
   stepPads(w, dt);
 
   const cosFov = Math.cos((p.fov * Math.PI) / 360);
@@ -885,26 +1019,28 @@ export function step(w, dt) {
     swim(w, f, want, dt);
     f.en *= decay;
   }
-  // move, then hold every head out of the islands and the stones and inside the page
+  // move, then hold every head out of the stones and the islands and inside the page. Where the swell brings a coast
+  // close to a stone by the shore there is no room for both margins: the coast's wins, and then the stone itself
   for (let i = 0; i < n; i++) {
     const f = F[i];
     f.x += Math.cos(f.h) * f.sp * dt; f.y += Math.sin(f.h) * f.sp * dt;
-    for (let j = 0, ni = w.islands.length, nj = ni + w.rocks.length; j < nj; j++) {
-      if (j < ni) {
-        const o = w.islands[j];
+    for (let j = 0, nr = w.rocks.length, nj = nr + w.islands.length; j < nj; j++) {
+      if (j < nr) {
+        const q = w.rocks[j];
+        if (discGap(q, f.x, f.y, p.shore, NRM) >= 0) continue;
+        f.x = q.x + NRM.x * (q.r + p.shore); f.y = q.y + NRM.y * (q.r + p.shore);
+      } else {
+        const o = w.islands[j - nr];
         if (shoreR(o, f.x, f.y, p.shore) >= 1) continue;
         onShore(o, f.x, f.y, p.shore, PT); f.x = PT.x; f.y = PT.y;
         shoreNormal(o, f.x, f.y, NRM);
-      } else {
-        const q = w.rocks[j - ni];
-        if (discGap(q, f.x, f.y, p.shore, NRM) >= 0) continue;
-        f.x = q.x + NRM.x * (q.r + p.shore); f.y = q.y + NRM.y * (q.r + p.shore);
       }
       // shed the motion aimed inward: the fish slides along the shore
       const gx = NRM.x, gy = NRM.y;
       let vx = Math.cos(f.h), vy = Math.sin(f.h); const into = vx * gx + vy * gy;
       if (into < 0) { vx -= into * gx; vy -= into * gy; if (Math.hypot(vx, vy) > 1e-6) f.h = Math.atan2(vy, vx); }
     }
+    offStones(w, f.x, f.y, OFF); f.x = OFF.x; f.y = OFF.y;
     if (f.x < 0) f.x = 0; else if (f.x > w.w) f.x = w.w;
     if (f.y < 0) f.y = 0; else if (f.y > w.h) f.y = w.h;
     // the body trails the head like a rope, which is what bends it through a turn
@@ -919,9 +1055,7 @@ export function step(w, dt) {
       for (const o of w.islands) {
         if (shoreR(o, rope[k * 2], rope[k * 2 + 1], 2) < 1) { onShore(o, rope[k * 2], rope[k * 2 + 1], 2, PT); rope[k * 2] = PT.x; rope[k * 2 + 1] = PT.y; }
       }
-      for (const q of w.rocks) {
-        if (discGap(q, rope[k * 2], rope[k * 2 + 1], 2, NRM) < 0) { rope[k * 2] = q.x + NRM.x * (q.r + 2); rope[k * 2 + 1] = q.y + NRM.y * (q.r + 2); }
-      }
+      offStones(w, rope[k * 2], rope[k * 2 + 1], OFF); rope[k * 2] = OFF.x; rope[k * 2 + 1] = OFF.y;
     }
     // the first mouth to reach a treat takes it
     const bite = f.len * 0.3 + 4;

@@ -566,7 +566,9 @@ for (const seed of [2, 19]) {
   setIslands(w, ISL2);
   const P = padsOf(w);
   if (!P) { fail(`seed ${seed}: (h) the world should carry lily pads (w.pads)`); continue; }
-  for (let s = 0; s < 60 * 5; s++) step(w, DT);
+  // the pads keep to their clusters, so the school may be elsewhere at 5 s: wait up to a minute for fish near one
+  const nearPad = () => w.fish.some((f) => P.some((q) => Math.hypot(q.x - f.x, q.y - f.y) < 180));
+  for (let s = 0; s < 60 * 5 || (s < 60 * 60 && !nearPad()); s++) step(w, DT);
   const under = (f) => P.some((q) => Math.hypot(q.x - f.x, q.y - f.y) < q.r);
   // the pass goes through the fish near a pad with the most company within 100 px
   let at = null, most = -1;
@@ -575,7 +577,7 @@ for (const seed of [2, 19]) {
     const c = w.fish.filter((g) => Math.hypot(g.x - f.x, g.y - f.y) < 100).length;
     if (c > most) { most = c; at = f; }
   }
-  if (!at) { fail(`seed ${seed}: (h) no fish within 180 px of a pad after 5 s`); continue; }
+  if (!at) { fail(`seed ${seed}: (h) no fish within 180 px of a pad in a minute`); continue; }
   const was = new Set(w.fish.filter(under)), run = new Map(), hid = new Set(), X = at.x, Y = at.y;
   for (let s = 0; s < 60 * 6; s++) {
     setPointer(w, X - 300 + s * 30, Y, s < 20);
@@ -598,7 +600,7 @@ for (const seed of [2, 19]) {
   if (!Array.isArray(w.flowers)) { fail(`seed ${seed}: (m) the world should carry lotus flowers (w.flowers)`); continue; }
   const cw = createWorld(defaults(), { w: 1440, h: 900, seed, coarse: true }); setIslands(cw, ISL2); step(cw, DT);
   if (w.flowers.length !== p.flowers || cw.flowers.length !== p.flowersTouch) fail(`seed ${seed}: (m) want ${p.flowers} flowers on a fine pointer and ${p.flowersTouch} on a coarse one, got ${w.flowers.length} and ${cw.flowers.length}`);
-  const k = w.padCl.length, cl = new Set(w.flowers.map((f) => w.pads.indexOf(f.q) % k)), own = new Set(w.flowers.map((f) => f.q));
+  const k = new Set(w.pads.map((q) => q.cl)).size, cl = new Set(w.flowers.map((f) => f.q.cl)), own = new Set(w.flowers.map((f) => f.q));
   if (cl.size !== Math.min(k, w.flowers.length) || own.size !== w.flowers.length) fail(`seed ${seed}: (m) each flower should sit on a pad of its own in a different cluster`);
   const seen = w.flowers.map(() => new Set()), pads0 = w.flowers.map((f) => f.q);
   let off = 0, stray = 0;
@@ -670,7 +672,8 @@ for (const seed of [2, 19]) {
 }
 
 // Stones, on a 1440x900 page with two islands at seeds 2 and 19. (p) `rocks` stones (rocksTouch on a coarse pointer),
-// each 7 to 26 px with 6 to 9 vertices, stand on open water as laid: 12 px off the land and 20 px inside the screen
+// each 7 to 26 px with 6 to 9 vertices, stand on open water as laid: 12 px off the land (its calm line, halfway through
+// the swell) and 20 px inside the screen
 // edge, and two may touch but never overlap by more than a quarter of the smaller one's radius. Through 70 simulated
 // seconds of cursor passes and treats dropped beside the stones, after the first 10 s no fish's head or body comes
 // within a stone's radius, and no pad or strider ever stands on one.
@@ -683,7 +686,7 @@ for (const seed of [2, 19]) {
   let bad = 0, land = Infinity, edge = Infinity, over = -Infinity;
   R.forEach((q, i) => {
     if (!(q.r >= 7 && q.r <= 26) || !(q.k.length >= 6 && q.k.length <= 9)) bad++;
-    for (const o of w.islands) land = Math.min(land, M.shoreGap(o, q.x, q.y, q.r));
+    for (const o of w.islands) land = Math.min(land, (M.calmGap || M.shoreGap)(o, q.x, q.y, q.r));
     edge = Math.min(edge, q.x - q.r, w.w - q.r - q.x, q.y - q.r, w.h - q.r - q.y);
     for (let j = i + 1; j < R.length; j++) { const o = R[j]; over = Math.max(over, (q.r + o.r - Math.hypot(o.x - q.x, o.y - q.y)) / Math.min(q.r, o.r)); }
   });
@@ -707,5 +710,37 @@ for (const seed of [2, 19]) {
   if (!(near >= 0 && padOn >= -0.5 && strOn >= 0)) fail(`${show}: (p) no fish, pad or strider should stand on a stone`);
 }
 
+// The layout, at seeds 2 and 19 on 1920x1080 and 1280x720 pages with the two islands placed in proportion. (q) after
+// 60 simulated seconds of drift: the outcrop holds 3 to 5 stones and one of them lies within 20 px of the coast (its
+// calm line, halfway through the swell, which the stones are laid against: they stand still while the coast swells); no pad
+// comes within 90 px of a stone (edge to edge); no cluster's centre (a pad cluster's, or the stone group's in open
+// water) lies within 60 px of a coast; nothing lies within 30 px of the screen's edge or on the land; and the pads'
+// centroid and the stones' lie on opposite sides of the screen's middle.
+for (const [W, H] of [[1920, 1080], [1280, 720]]) for (const seed of [2, 19]) {
+  const w = createWorld(defaults(), { w: W, h: H, seed });
+  setIslands(w, ISL2.map((b) => ({ x: (b.x * W) / 1440, y: (b.y * H) / 900, w: (b.w * W) / 1440, h: (b.h * H) / 900 })));
+  for (let s = 0; s < 60 * 60; s++) step(w, DT);
+  const R = w.rocks || [], P = w.pads || [];
+  if (!R.length || !P.length || R.some((q) => q.grp == null) || P.some((q) => q.cl == null)) { fail(`${W}x${H} seed ${seed}: (q) the stones and the pads should carry their groups (grp, cl)`); continue; }
+  const gap = (a, b) => Math.hypot(a.x - b.x, a.y - b.y) - a.r - b.r;
+  const land = (x, y, g) => Math.min(...w.islands.map((o) => M.shoreGap(o, x, y, g)));
+  const mean = (L) => ({ x: L.reduce((a, q) => a + q.x, 0) / L.length, y: L.reduce((a, q) => a + q.y, 0) / L.length });
+  let padRock = Infinity;
+  for (const q of P) for (const o of R) padRock = Math.min(padRock, gap(q, o));
+  const centres = [...new Set(P.map((q) => q.cl))].map((c) => mean(P.filter((q) => q.cl === c))), group = R.filter((q) => q.grp === 1), crop = R.filter((q) => q.grp === 0);
+  if (group.length) centres.push(mean(group));
+  const centreCoast = Math.min(...centres.map((c) => land(c.x, c.y, 0)));
+  let edge = Infinity, onLand = Infinity;
+  const calm = (q) => Math.min(...w.islands.map((o) => M.calmGap(o, q.x, q.y, q.r)));
+  for (const q of [...P, ...R]) { edge = Math.min(edge, q.x - q.r, W - q.r - q.x, q.y - q.r, H - q.r - q.y); onLand = Math.min(onLand, R.includes(q) ? calm(q) : land(q.x, q.y, q.r)); }
+  const shallows = Math.min(...crop.map(calm));
+  const mid = (c) => (W >= H ? c.x - W / 2 : c.y - H / 2), pm = mid(mean(P)), rm = mid(mean(R));
+  const show = `${W}x${H} seed ${seed}: ${crop.length} stones in the outcrop and ${group.length} in open water, ${P.length} pads in ${centres.length - (group.length ? 1 : 0)} clusters; pad to stone ${padRock.toFixed(1)} px, cluster centre to coast ${centreCoast.toFixed(1)} px, edge ${edge.toFixed(1)} px, land ${onLand.toFixed(1)} px, outcrop to the calm line ${shallows.toFixed(1)} px; centroids ${pm.toFixed(0)} px (pads) and ${rm.toFixed(0)} px (stones) off the middle`;
+  metric(show);
+  if (!(crop.length >= 3 && crop.length <= 5 && shallows <= 20)) fail(`${show}: (q) the outcrop should hold 3 to 5 stones, one within 20 px of the coast`);
+  if (!(padRock >= 90 && centreCoast >= 60 && edge >= 30 && onLand >= 0)) fail(`${show}: (q) pads 90 px off the stones, cluster centres 60 px off the coasts, nothing within 30 px of the edge or on the land`);
+  if (!(pm * rm < 0)) fail(`${show}: (q) the pads and the stones should sit on opposite sides of the middle`);
+}
+
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }
-console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads, flowers, striders and stones hold');
+console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads, flowers, striders, stones and their layout hold');
