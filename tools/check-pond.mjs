@@ -664,5 +664,61 @@ for (const seed of [2, 19]) {
   if (!(off < 1) || stray) fail(`${show}: (m) a flower should stay on its own pad`);
 }
 
+// Water striders, on a 1440x900 page with two islands at seeds 2 and 19. (n) `striders` striders (stridersTouch on a
+// coarse pointer) through three simulated minutes of cursor passes and treats: every strider stays on open water (off
+// the pads, 20 px off the land, 20 px inside the edges); each dart runs 20 to 60 px at the dart speed and starts exactly
+// one dimple (a ripple of size 8 at the strider); with the cursor away every pause lasts 0.5 to 3 s; the cursor within
+// 60 px sends a pausing strider darting away from it. Under reduced motion no strider moves and no dimple starts.
+for (const seed of [2, 19]) {
+  for (const cursor of [true, false]) {
+    const p = defaults(); p.count = 12;
+    const w = createWorld(p, { w: 1440, h: 900, seed }); setIslands(w, ISL2); step(w, DT);
+    if (!Array.isArray(w.striders)) { fail(`seed ${seed}: (n) the world should carry water striders (w.striders)`); break; }
+    if (cursor) { const cw = createWorld(defaults(), { w: 1440, h: 900, seed, coarse: true }); setIslands(cw, ISL2); step(cw, DT); if (w.striders.length !== p.striders || cw.striders.length !== p.stridersTouch) fail(`seed ${seed}: (n) want ${p.striders} striders on a fine pointer and ${p.stridersTouch} on a coarse one, got ${w.striders.length} and ${cw.striders.length}`); }
+    const S = w.striders, seenR = new WeakSet(w.ripples);
+    let pad = Infinity, land = Infinity, edge = Infinity, fast = 0, lenLo = Infinity, lenHi = 0, darts = 0, dimples = 0, stray = 0, pLo = Infinity, pHi = 0;
+    const was = S.map((s) => s.dart), paused = S.map(() => 0), prev = S.map((s) => [s.x, s.y]), count = S.map((s) => s.darts);
+    for (let s = 0; s < 60 * 180; s++) {
+      if (cursor) { const k = s % 420; setPointer(w, 100 + k * 40, 300 + (s % 840 < 420 ? 0 : 300), k < 30); if (s % 600 === 300) dropTreat(w, 700, 450); }
+      step(w, DT);
+      const fresh = w.ripples.filter((g) => !seenR.has(g)); fresh.forEach((g) => seenR.add(g));
+      for (const g of fresh) if (g.size === 8) { dimples++; if (!S.some((t) => Math.hypot(t.x - g.x, t.y - g.y) <= p.dart * DT + 1e-6)) stray++; }
+      S.forEach((t, i) => {
+        const v = Math.hypot(t.x - prev[i][0], t.y - prev[i][1]) / DT; prev[i][0] = t.x; prev[i][1] = t.y;
+        if (t.dart || was[i]) fast = Math.max(fast, v);
+        if (t.darts !== count[i]) { darts += t.darts - count[i]; count[i] = t.darts; lenLo = Math.min(lenLo, t.len); lenHi = Math.max(lenHi, t.len); if (!cursor && !was[i] && s > 0) { pLo = Math.min(pLo, paused[i]); pHi = Math.max(pHi, paused[i]); } paused[i] = 0; }
+        else if (!t.dart) paused[i] += DT;
+        was[i] = t.dart;
+        for (const q of w.pads) pad = Math.min(pad, Math.hypot(q.x - t.x, q.y - t.y) - q.r);
+        for (const o of w.islands) land = Math.min(land, M.shoreGap(o, t.x, t.y, 20));
+        edge = Math.min(edge, t.x - 20, w.w - 20 - t.x, t.y - 20, w.h - 20 - t.y);
+      });
+    }
+    const show = `seed ${seed} ${cursor ? 'with cursor and treats' : 'calm'}: striders' least pad gap ${pad.toFixed(1)} px, land ${land.toFixed(1)} px, edge ${edge.toFixed(1)} px; ${darts} darts of ${lenLo.toFixed(1)} to ${lenHi.toFixed(1)} px, top speed ${fast.toFixed(1)} px/s, ${dimples} dimples (${stray} away from a strider)${cursor ? '' : `, pauses ${pLo.toFixed(2)} to ${pHi.toFixed(2)} s`}`;
+    metric(show);
+    if (!(pad >= 3 && land >= -0.5 && edge >= -0.5)) fail(`${show}: (n) a strider should stay on open water, off the pads`);
+    if (!(darts >= 20 && lenLo >= 20 && lenHi <= 60 && fast <= p.dart * 1.25)) fail(`${show}: (n) darts should run 20 to 60 px at the dart speed ${p.dart} px/s`);
+    if (dimples !== darts || stray) fail(`${show}: (n) each dart should start exactly one dimple at the strider`);
+    if (!cursor && !(pLo >= 0.5 - DT && pHi <= 3 + DT)) fail(`${show}: (n) a pause should last 0.5 to 3 s`);
+  }
+}
+{
+  const p = defaults(); p.count = 0;
+  const w = createWorld(p, { w: 1440, h: 900, seed: 2 }); setIslands(w, ISL2); step(w, DT);
+  // the strider with the most open water round it, so a dart away from the cursor has somewhere to go
+  const room = (t) => Math.min(t.x, w.w - t.x, t.y, w.h - t.y, ...w.islands.map((o) => M.shoreGap(o, t.x, t.y, 0)), ...w.pads.map((q) => Math.hypot(q.x - t.x, q.y - t.y) - q.r));
+  const s = w.striders && w.striders.slice().sort((a, b) => room(b) - room(a))[0];
+  if (s) {
+    s.dart = false; s.left = 10;
+    setPointer(w, s.x + 30, s.y, true); step(w, DT);
+    if (!s.dart || !(Math.cos(s.a) < 0)) fail(`(n) the cursor 30 px from a pausing strider should send it darting away (darting ${s.dart}, heading ${s.a.toFixed(2)})`);
+    const r = createWorld(p, { w: 1440, h: 900, seed: 2, reduced: true }); setIslands(r, ISL2); step(r, DT);
+    const at = r.striders.map((t) => [t.x, t.y]), rip = r.ripples.length;
+    for (let k = 0; k < 60 * 20; k++) { setPointer(r, at[0][0] + 20, at[0][1], k % 60 < 5); step(r, DT); }
+    const moved = Math.max(0, ...r.striders.map((t, i) => Math.hypot(t.x - at[i][0], t.y - at[i][1])));
+    if (moved > 1e-6 || r.ripples.length !== rip) fail(`(n) under reduced motion striders should stay still and start no dimple: moved ${moved.toFixed(2)} px, ${r.ripples.length - rip} ripples`);
+  }
+}
+
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }
-console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads, reeds and flowers hold');
+console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads, reeds, flowers and striders hold');

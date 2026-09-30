@@ -1,6 +1,7 @@
 // Home pond: the page seen from above as still water, with the two home objects standing in it as islands. A few
 // dozen line-drawn fish swim between them in groups that form, merge and part on their own, a few of them koi with gold
-// patches, water laps inward at each shore, reeds stand in the shallows, lily pads drift, a lotus or two among them, on the open water and give a frightened fish somewhere to
+// patches, water laps inward at each shore, reeds stand in the shallows, water striders skate, lily pads drift, a lotus
+// or two among them, on the open water and give a frightened fish somewhere to
 // hide, and a click drops a treat the fish race for and eat. The layer sits behind reading text, so the resting
 // picture is calm: the fish swim in easy beats and glides and only burst into speed for a reason (a treat, a fast
 // cursor, or now and then on their own) before they settle again.
@@ -103,6 +104,9 @@ export const PARAMS = {
     bend: [12, 0, 30, 1, 'most a passing fish or the cursor bends a reed\'s tip, px'],
     flowers: [2, 0, 8, 1, 'lotus flowers on the pads on a fine pointer'],
     flowersTouch: [1, 0, 8, 1, 'lotus flowers on a coarse pointer'],
+    striders: [4, 0, 16, 1, 'water striders on a fine pointer'],
+    stridersTouch: [2, 0, 16, 1, 'water striders on a coarse pointer'],
+    dart: [80, 10, 300, 5, 'a water strider\'s dart speed, px/s'],
   },
 };
 export const defaults = () => Object.fromEntries(Object.values(PARAMS).flatMap((section) => Object.entries(section).map(([k, v]) => [k, v[0]])));
@@ -368,7 +372,7 @@ export function createWorld(params, opts = {}) {
     fish: [], islands: [], outlines: [], treats: [], ripples: [], stroke: null, fed: [],
     ptr: { x: 0, y: 0, on: false, px: 0, py: 0, seen: false, speed: 0 },
     eaten: 0,
-    seed: opts.seed == null ? 1 : opts.seed, reeds: [], flowers: [], bloomRand: null,
+    seed: opts.seed == null ? 1 : opts.seed, reeds: [], flowers: [], bloomRand: null, striders: [], srand: null,
     pads: [], padSeed: ((opts.seed == null ? 1 : opts.seed) ^ 0x9ad5eed) >>> 0, padIsl: 0, prand: null, flow: null,
   };
   populate(w);
@@ -436,9 +440,11 @@ export function strokeTo(w, x, y) {
 }
 export function strokeEnd(w) { const s = w.stroke; w.stroke = null; if (s && !s.dropped) dropTreat(w, s.sx, s.sy); }
 export function strokeCancel(w) { w.stroke = null; }
-function ripple(w, x, y, size, life) {
+// A ripple ring: size is how far it spreads, life how long it lasts, k its strength (how dark it is and how hard it
+// pushes a pad), 1 for a treat's.
+function ripple(w, x, y, size, life, k = 1) {
   if (w.ripples.length >= 64) w.ripples.shift();
-  w.ripples.push({ x, y, age: 0, size, life });
+  w.ripples.push({ x, y, age: 0, size, life, k });
 }
 // A ripple's ring radius at a given age.
 const rippleR = (q, age) => 2 + q.size * Math.sqrt(Math.min(1, Math.max(0, age) / q.life));
@@ -505,7 +511,7 @@ function stepPads(w, dt) {
       for (const g of w.ripples) {
         const dx = q.x - g.x, dy = q.y - g.y, d = Math.hypot(dx, dy);
         if (d > 1e-6 && d <= rippleR(g, g.age) && (g.age - dt <= 0 || d > rippleR(g, g.age - dt))) {
-          q.vx += (dx / d) * p.push; q.vy += (dy / d) * p.push; q.va += (r() - 0.5) * 0.8; q.since = 0;
+          q.vx += (dx / d) * p.push * g.k; q.vy += (dy / d) * p.push * g.k; q.va += (r() - 0.5) * 0.8 * g.k; q.since = 0;
         }
       }
       // rings that follow close on each other (a treat dropped, then eaten) do not stack past one push
@@ -649,6 +655,65 @@ function stepFlowers(w, dt) {
     f.open = u * u * (3 - 2 * u);
     const q = f.q, c = Math.cos(q.a), s = Math.sin(q.a);
     f.x = q.x + f.u * c - f.v * s; f.y = q.y + f.u * s + f.v * c;
+  }
+}
+
+// ----- water striders -----
+// A few water striders skate the open water in glides and stops: a dart of 20 to 60 px at `dart` px/s, then a pause of
+// 0.5 to 3 s. Each dart starts with a dimple, a small faint ripple that the pads take like any other, scaled down. A
+// strider keeps to open water: a dart ends clear of the pads, 20 px off the land and 20 px inside the screen, and a pad
+// drifting onto it or a coast swelling under it pushes it aside, so it skates round them. The cursor within 60 px
+// sends it darting away. Under reduced motion they stay still. They draw from a seeded source of their own.
+// strider: { x, y, a (heading), dart (true while darting), tx, ty (where the dart ends), len, left (s of pause left), darts }
+const striderTarget = (w) => Math.max(0, Math.round(w.coarse ? w.params.stridersTouch : w.params.striders));
+const STR_LAND = 20, STR_EDGE = 20, STR_PAD = 6, STR_HARD = 4, STR_FLEE = 60;
+function striderFree(w, x, y) {
+  if (x < STR_EDGE || x > w.w - STR_EDGE || y < STR_EDGE || y > w.h - STR_EDGE) return false;
+  for (const o of w.islands) if (shoreGap(o, x, y, STR_LAND) < 0) return false;
+  for (const q of w.pads) if (Math.hypot(q.x - x, q.y - y) < q.r + STR_PAD) return false;
+  return true;
+}
+// Starts a dart along a clear line, away from a heading if one is given; true if one started.
+function startDart(w, s, away) {
+  const r = w.srand;
+  for (let t = 0; t < 16; t++) {
+    const a = away == null ? r() * TAU : away + (r() - 0.5) * 1.4, L = 20 + 40 * r(), tx = s.x + Math.cos(a) * L, ty = s.y + Math.sin(a) * L;
+    let ok = true;
+    for (let k = 1; k <= 4 && ok; k++) ok = striderFree(w, s.x + ((tx - s.x) * k) / 4, s.y + ((ty - s.y) * k) / 4);
+    if (!ok) continue;
+    s.dart = true; s.a = a; s.tx = tx; s.ty = ty; s.len = L; s.darts++;
+    ripple(w, s.x, s.y, 8, 0.7, 0.5);
+    return true;
+  }
+  return false;
+}
+function stepStriders(w, dt) {
+  const p = w.params, n = striderTarget(w), S = w.striders, ptr = w.ptr;
+  if (!w.srand) w.srand = rng((w.seed ^ 0x5717de5) >>> 0);
+  const r = w.srand;
+  for (let t = 0; S.length < n && t < 40; t++) {
+    const x = (0.05 + 0.9 * r()) * w.w, y = (0.05 + 0.9 * r()) * w.h;
+    if (striderFree(w, x, y)) S.push({ x, y, a: r() * TAU, dart: false, tx: x, ty: y, len: 0, left: 0.5 + 2.5 * r(), darts: 0 });
+  }
+  if (S.length > n) S.length = n;
+  for (const s of S) {
+    if (!w.reduced) {
+      if (!s.dart && ptr.on && Math.hypot(s.x - ptr.x, s.y - ptr.y) < STR_FLEE) startDart(w, s, Math.atan2(s.y - ptr.y, s.x - ptr.x));
+      if (s.dart) {
+        // a dart whose end a pad has drifted over stops where it is
+        const dx = s.tx - s.x, dy = s.ty - s.y, d = Math.hypot(dx, dy), go = p.dart * dt;
+        if (d <= go || !striderFree(w, s.tx, s.ty)) { if (d <= go) { s.x = s.tx; s.y = s.ty; } s.dart = false; s.left = 0.5 + 2.5 * r(); }
+        else { s.x += (dx / d) * go; s.y += (dy / d) * go; }
+      } else if ((s.left -= dt) <= 0 && !startDart(w, s)) s.left = 0.5 + 2.5 * r();
+    }
+    // hard limits, reduced motion or not: off the pads, off the land, on screen
+    for (const q of w.pads) {
+      const dx = s.x - q.x, dy = s.y - q.y, d = Math.hypot(dx, dy), need = q.r + STR_HARD;
+      if (d < need) { const ux = d > 1e-6 ? dx / d : 1, uy = d > 1e-6 ? dy / d : 0; s.x = q.x + ux * need; s.y = q.y + uy * need; }
+    }
+    for (const o of w.islands) if (shoreGap(o, s.x, s.y, STR_LAND) < 0) { onShore(o, s.x, s.y, STR_LAND, PT); s.x = PT.x; s.y = PT.y; }
+    s.x = Math.min(Math.max(s.x, Math.min(STR_EDGE, w.w / 2)), Math.max(w.w - STR_EDGE, w.w / 2));
+    s.y = Math.min(Math.max(s.y, Math.min(STR_EDGE, w.h / 2)), Math.max(w.h - STR_EDGE, w.h / 2));
   }
 }
 
@@ -850,6 +915,7 @@ export function step(w, dt) {
   // the surface, after the fish, so a reed bends from where a fish is now
   stepReeds(w, dt);
   stepFlowers(w, dt);
+  stepStriders(w, dt);
 }
 
 // ----- drawing -----
@@ -1058,7 +1124,7 @@ export function drawLive(ctx, w, ink, paper, gold) {
   // ripples, then the treats, in the water under whatever floats
   for (const q of w.ripples) {
     const k = q.age / q.life;
-    ctx.globalAlpha = p.ringAlpha * 2 * (1 - k);
+    ctx.globalAlpha = p.ringAlpha * 2 * (1 - k) * q.k;
     ctx.beginPath(); ctx.arc(q.x, q.y, 2 + q.size * Math.sqrt(k), 0, TAU); ctx.stroke();
   }
   ctx.fillStyle = gold;
@@ -1083,8 +1149,18 @@ export function drawLive(ctx, w, ink, paper, gold) {
   ctx.strokeStyle = FLORA; ctx.lineWidth = 1.5; ctx.beginPath();
   for (const C of w.reeds) if (C) for (const c of C) for (const s of c.stems) { ctx.moveTo(s.rx, s.ry); ctx.quadraticCurveTo(s.cx, s.cy, s.tx, s.ty); }
   ctx.stroke();
+  // the striders: four legs and a short thick body, no shadow; their dimples are the ripples above
+  if (w.striders.length) {
+    ctx.lineWidth = 0.8; ctx.beginPath();
+    for (const s of w.striders) for (const b of LEGS) { const a = s.a + b; ctx.moveTo(s.x, s.y); ctx.lineTo(s.x + Math.cos(a) * 6, s.y + Math.sin(a) * 6); }
+    ctx.stroke();
+    ctx.lineWidth = 2; ctx.beginPath();
+    for (const s of w.striders) { const c = Math.cos(s.a) * 1.5, d = Math.sin(s.a) * 1.5; ctx.moveTo(s.x - c, s.y - d); ctx.lineTo(s.x + c, s.y + d); }
+    ctx.stroke();
+  }
   ctx.globalAlpha = 1;
 }
+const LEGS = [0.7, -0.7, 2.3, -2.3];
 
 // ----- the browser shell -----
 const GOLD = '#b68235'; // the treats keep gold in both themes; the dark theme's accent is the text colour
