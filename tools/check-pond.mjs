@@ -720,5 +720,42 @@ for (const seed of [2, 19]) {
   }
 }
 
+// The dragonfly, on a 1440x900 page with two islands at seeds 2 and 19. (o) through ten simulated minutes at least 4
+// visits each pass arrive, land, leave and gone in that order (a single slot, so never two at once), skim exactly once
+// (one treat-sized ripple) before landing, and land within the perch (inside the pad, or within 4 px of the reed tip).
+// Under reduced motion none visits.
+const NEXT = { null: 'arrive', arrive: 'land', land: 'leave', leave: null };
+for (const seed of [2, 19]) {
+  const p = defaults(); p.count = 4;
+  const w = createWorld(p, { w: 1440, h: 900, seed }); setIslands(w, ISL2); step(w, DT);
+  if (!('fly' in w)) { fail(`seed ${seed}: (o) the world should carry a dragonfly slot (w.fly)`); continue; }
+  const seenR = new WeakSet(w.ripples), bad = [];
+  let stage = w.fly ? w.fly.stage : null, cur = null, done = 0, pads = 0, reeds = 0;
+  for (let s = 0; s < 60 * 600; s++) {
+    step(w, DT);
+    const f = w.fly, now = f ? f.stage : null;
+    for (const g of w.ripples) if (!seenR.has(g)) { seenR.add(g); if (g.size === 34 && cur) cur.skims++; }
+    if (now === stage) continue;
+    if (NEXT[stage] !== now) bad.push(`${stage} to ${now}`);
+    if (now === 'arrive') cur = { skims: 0, atLand: -1, perched: false };
+    if (now === 'land' && cur) {
+      const P = f.perch; cur.atLand = cur.skims;
+      cur.perched = P.q ? Math.hypot(f.x - P.q.x, f.y - P.q.y) <= P.q.r : Math.hypot(f.x - P.s.tx, f.y - P.s.ty) <= 4;
+      if (P.q) pads++; else reeds++;
+    }
+    if (now === null && cur) { if (cur.skims === 1 && cur.atLand === 1 && cur.perched) done++; else bad.push(JSON.stringify(cur)); cur = null; }
+    stage = now;
+  }
+  const show = `seed ${seed}: ${done} whole dragonfly visits in 10 min (${pads} on pads, ${reeds} on reeds), ${bad.length} faults${bad.length ? ': ' + bad.slice(0, 3).join('; ') : ''}`;
+  metric(show);
+  if (!(done >= 4) || bad.length) fail(`${show}: (o) want at least 4 visits, each arrive, one skim, land on its perch, leave`);
+}
+{
+  const p = defaults(); p.count = 0;
+  const w = createWorld(p, { w: 1440, h: 900, seed: 2, reduced: true }); setIslands(w, ISL2);
+  let seen = 0; for (let s = 0; s < 60 * 300; s++) { step(w, DT); if (w.fly) seen++; }
+  if (seen) fail(`(o) under reduced motion no dragonfly should visit, one was about for ${seen} frames`);
+}
+
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }
-console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads, reeds, flowers and striders hold');
+console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads, reeds, flowers, striders and the dragonfly hold');
