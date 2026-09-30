@@ -669,5 +669,43 @@ for (const seed of [2, 19]) {
   }
 }
 
+// Stones, on a 1440x900 page with two islands at seeds 2 and 19. (p) `rocks` stones (rocksTouch on a coarse pointer),
+// each 7 to 26 px with 6 to 9 vertices, stand on open water as laid: 12 px off the land and 20 px inside the screen
+// edge, and two may touch but never overlap by more than a quarter of the smaller one's radius. Through 70 simulated
+// seconds of cursor passes and treats dropped beside the stones, after the first 10 s no fish's head or body comes
+// within a stone's radius, and no pad or strider ever stands on one.
+for (const seed of [2, 19]) {
+  const w = createWorld(defaults(), { w: 1440, h: 900, seed }); setIslands(w, ISL2); step(w, DT);
+  const R = Array.isArray(w.rocks) ? w.rocks : null;
+  if (!R) { fail(`seed ${seed}: (p) the world should carry stones (w.rocks)`); continue; }
+  const coarse = createWorld(defaults(), { w: 1440, h: 900, seed, coarse: true }); setIslands(coarse, ISL2); step(coarse, DT);
+  if (R.length !== w.params.rocks || coarse.rocks.length !== w.params.rocksTouch) fail(`seed ${seed}: (p) want ${w.params.rocks} stones on a fine pointer and ${w.params.rocksTouch} on a coarse one, got ${R.length} and ${coarse.rocks.length}`);
+  let bad = 0, land = Infinity, edge = Infinity, over = -Infinity;
+  R.forEach((q, i) => {
+    if (!(q.r >= 7 && q.r <= 26) || !(q.k.length >= 6 && q.k.length <= 9)) bad++;
+    for (const o of w.islands) land = Math.min(land, M.shoreGap(o, q.x, q.y, q.r));
+    edge = Math.min(edge, q.x - q.r, w.w - q.r - q.x, q.y - q.r, w.h - q.r - q.y);
+    for (let j = i + 1; j < R.length; j++) { const o = R[j]; over = Math.max(over, (q.r + o.r - Math.hypot(o.x - q.x, o.y - q.y)) / Math.min(q.r, o.r)); }
+  });
+  let near = Infinity, padOn = Infinity, strOn = Infinity, landRun = Infinity;
+  for (let s = 0; s < 60 * 70; s++) {
+    if (s % 600 === 300) { const q = R[(s / 600) % R.length | 0]; dropTreat(w, q.x + q.r + 30, q.y); }
+    const k = s % 420; setPointer(w, 100 + k * 40, 300 + (s % 840 < 420 ? 0 : 300), k < 30);
+    step(w, DT);
+    if (s < 600) continue;
+    for (const q of R) {
+      for (const f of w.fish) for (let m = 0; m < f.rope.length; m += 2) near = Math.min(near, Math.hypot(f.rope[m] - q.x, f.rope[m + 1] - q.y) - q.r);
+      for (const o of w.pads) padOn = Math.min(padOn, Math.hypot(o.x - q.x, o.y - q.y) - o.r - q.r);
+      for (const o of w.striders) strOn = Math.min(strOn, Math.hypot(o.x - q.x, o.y - q.y) - q.r);
+      if (s % 60 === 0) for (const o of w.islands) landRun = Math.min(landRun, M.shoreGap(o, q.x, q.y, q.r));
+    }
+  }
+  const show = `seed ${seed}: ${R.length} stones laid ${land.toFixed(1)} px off the land (${landRun.toFixed(1)} px through the swell), ${edge.toFixed(1)} px inside the edge, overlapping at most ${(Math.max(0, over) * 100).toFixed(0)}% of the smaller; after 10 s the fish came within ${near.toFixed(1)} px of a stone's edge, pads ${padOn.toFixed(1)} px, striders ${strOn.toFixed(1)} px`;
+  metric(show);
+  if (bad) fail(`${show}: (p) ${bad} stones outside 7 to 26 px or 6 to 9 vertices`);
+  if (!(land >= 12 - 1e-6 && edge >= 20 && over <= 0.25 + 1e-9)) fail(`${show}: (p) stones should be laid 12 px off the land, 20 px inside the edge, overlapping by at most a quarter`);
+  if (!(near >= 0 && padOn >= -0.5 && strOn >= 0)) fail(`${show}: (p) no fish, pad or strider should stand on a stone`);
+}
+
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }
-console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads, flowers and striders hold');
+console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads, flowers, striders and stones hold');

@@ -1,6 +1,6 @@
 // Home pond: the page seen from above as still water, with the two home objects standing in it as islands. A few
 // dozen line-drawn fish swim between them in groups that form, merge and part on their own, a few of them koi with gold
-// patches, water laps inward at each shore, water striders skate, lily pads drift, a lotus or two among them, on the
+// patches, water laps inward at each shore, stones stand in the water, water striders skate, lily pads drift, a lotus or two among them, on the
 // open water and give a frightened fish somewhere to hide, and a click drops a treat the fish race for and eat. The layer sits behind reading text, so the resting
 // picture is calm: the fish swim in easy beats and glides and only burst into speed for a reason (a treat, a fast
 // cursor, or now and then on their own) before they settle again.
@@ -97,6 +97,8 @@ export const PARAMS = {
   surface: {
     floraAlpha: [0.55, 0, 1, 0.01, 'opacity of the green things on the surface'],
     shadow: [0.08, 0, 0.4, 0.005, 'opacity of the shadow a thing on the surface casts on the water'],
+    rocks: [7, 0, 16, 1, 'stones standing in the water on a fine pointer'],
+    rocksTouch: [4, 0, 16, 1, 'stones on a coarse pointer'],
     flowers: [2, 0, 8, 1, 'lotus flowers on the pads on a fine pointer'],
     flowersTouch: [1, 0, 8, 1, 'lotus flowers on a coarse pointer'],
     striders: [4, 0, 16, 1, 'water striders on a fine pointer'],
@@ -367,10 +369,11 @@ export function createWorld(params, opts = {}) {
     fish: [], islands: [], outlines: [], treats: [], ripples: [], stroke: null, fed: [],
     ptr: { x: 0, y: 0, on: false, px: 0, py: 0, seen: false, speed: 0 },
     eaten: 0,
-    seed: opts.seed == null ? 1 : opts.seed, flowers: [], bloomRand: null, striders: [], srand: null,
+    seed: opts.seed == null ? 1 : opts.seed, rocks: [], flowers: [], bloomRand: null, striders: [], srand: null,
     pads: [], padSeed: ((opts.seed == null ? 1 : opts.seed) ^ 0x9ad5eed) >>> 0, padIsl: 0, prand: null, flow: null,
   };
   populate(w);
+  layRocks(w);
   spawnPads(w);
   return w;
 }
@@ -395,7 +398,7 @@ export function setIslands(w, boxes) {
   w.islands.length = Math.min(w.islands.length, list.length);
   list.forEach((b, i) => { if (w.islands[i]) placeBox(w.islands[i], b); else { const o = makeIsland(i, b); updateIsland(o, w.outlines[i], 0, w.params, w.reduced, w.t); w.islands.push(o); } });
   // pads laid out before the page had any islands are laid out again round the first ones, while the pond is new
-  if (!w.padIsl && w.islands.length && w.t < 1) spawnPads(w);
+  if (!w.padIsl && w.islands.length && w.t < 1) { layRocks(w); spawnPads(w); }
 }
 export function setOutlines(w, fns) { w.outlines = fns || []; }
 export function setPointer(w, x, y, on) { w.ptr.x = x; w.ptr.y = y; w.ptr.on = !!on; }
@@ -410,6 +413,7 @@ export function islandAt(w, x, y) {
 export function dropTreat(w, x, y) {
   const g = w.params.shore + 4;
   for (const o of w.islands) if (shoreR(o, x, y, g) < 1) { onShore(o, x, y, g, PT); x = PT.x; y = PT.y; }
+  for (const q of w.rocks) if (discGap(q, x, y, g, NRM) < 0) { x = q.x + NRM.x * (q.r + g); y = q.y + NRM.y * (q.r + g); }
   if (w.treats.length >= w.params.max) w.treats.splice(0, w.treats.length - w.params.max + 1);
   w.treats.push({ x, y, age: 0 });
   ripple(w, x, y, 34, 1.6);
@@ -451,12 +455,71 @@ const rippleR = (q, age) => 2 + q.size * Math.sqrt(Math.min(1, Math.max(0, age) 
 // islands and the screen edges, and take a push outward from each ripple ring that passes under them. Everything here
 // runs on the pads' own seeded source (prand), apart from the fishes', so pads never change how the fish draw theirs.
 // pad: { x, y, r, a (heading of the notch), vx, vy (the push still carried from ripples), va, ph, since (s since a push) }
+// ----- rocks -----
+// A few stones stand in the water. Seen from above a stone is a rounded irregular blob: 6 to 9 seeded vertices round
+// its centre at 0.75 to 1 of its size, drawn as a curve through their midpoints. Stones do not move; they are fixed
+// circles of radius r (the size, so the whole blob lies inside) that the fish steer round like a shore, the striders
+// skate round and the pads are pushed off. They draw from a seeded source of their own.
+// rock: { x, y, r (size, px), a (turn), k (radius of each vertex, of r) }
+const rockTarget = (w) => Math.max(0, Math.round(w.coarse ? w.params.rocksTouch : w.params.rocks));
+const ROCK_LAND = 12, ROCK_EDGE = 30, ROCK_OVER = 0.25;
+// The distance from (x,y) to the circle g px outside the disc q, a stone or a pad (negative inside it); the unit
+// normal out of the disc at (x,y) goes to out.
+function discGap(q, x, y, g, out) {
+  const dx = x - q.x, dy = y - q.y, d = Math.hypot(dx, dy);
+  if (d > 1e-6) { out.x = dx / d; out.y = dy / d; } else { out.x = 1; out.y = 0; }
+  return d - q.r - g;
+}
+function makeRock(r, x, y, size) {
+  const k = [];
+  for (let i = 6 + Math.floor(r() * 4); i > 0; i--) k.push(0.75 + 0.25 * r());
+  return { x, y, r: size, a: r() * TAU, k };
+}
+// Whether a stone of size r may stand at (x,y): open water, ROCK_LAND off the land, ROCK_EDGE inside the screen, and
+// overlapping no stone by more than ROCK_OVER of the smaller.
+function rockFree(w, x, y, r) {
+  if (x < ROCK_EDGE + r || x > w.w - ROCK_EDGE - r || y < ROCK_EDGE + r || y > w.h - ROCK_EDGE - r) return false;
+  for (const o of w.islands) if (shoreGap(o, x, y, ROCK_LAND + r) < 0) return false;
+  for (const q of w.rocks) if (Math.hypot(q.x - x, q.y - y) < q.r + r - ROCK_OVER * Math.min(q.r, r)) return false;
+  return true;
+}
+// Lays the stones out afresh: one seeded group round a centre on open water, largest first.
+function layRocks(w) {
+  const r = rng((w.seed ^ 0x57013e) >>> 0), n = rockTarget(w);
+  w.rocks = [];
+  let c = null;
+  for (let t = 0; t < 60 && !c; t++) { const x = (0.1 + 0.8 * r()) * w.w, y = (0.1 + 0.8 * r()) * w.h; if (rockFree(w, x, y, 60)) c = { x, y }; }
+  c = c || { x: w.w / 2, y: w.h / 2 };
+  const sizes = []; for (let i = 0; i < n; i++) sizes.push(7 + 19 * r());
+  sizes.sort((a, b) => b - a);
+  for (const size of sizes) {
+    let x = c.x, y = c.y;
+    for (let t = 0; t < 200; t++) {
+      const d = t < 100 ? Math.sqrt(r()) * 70 : Math.sqrt(r()) * Math.max(w.w, w.h), b = r() * TAU;
+      x = c.x + Math.cos(b) * d; y = c.y + Math.sin(b) * d;
+      if (rockFree(w, x, y, size)) break;
+    }
+    w.rocks.push(makeRock(r, x, y, size));
+  }
+}
+function stepRocks(w) { if (w.rocks.length !== rockTarget(w)) { layRocks(w); spawnPads(w); } }
+const ROCK_N = 9, RX = new Float32Array(ROCK_N), RY = new Float32Array(ROCK_N);
+// A stone's outline, offset by (ox,oy), added to the current path as a closed curve through the vertices' midpoints.
+function rockPath(ctx, q, ox, oy) {
+  const n = q.k.length;
+  for (let i = 0; i < n; i++) { const t = q.a + (i / n) * TAU, R = q.r * q.k[i]; RX[i] = q.x + ox + Math.cos(t) * R; RY[i] = q.y + oy + Math.sin(t) * R; }
+  ctx.moveTo((RX[n - 1] + RX[0]) / 2, (RY[n - 1] + RY[0]) / 2);
+  for (let i = 0; i < n; i++) { const j = (i + 1) % n; ctx.quadraticCurveTo(RX[i], RY[i], (RX[i] + RX[j]) / 2, (RY[i] + RY[j]) / 2); }
+  ctx.closePath();
+}
+
 const padTarget = (w) => Math.max(0, Math.round(w.coarse ? w.params.padsTouch : w.params.pads));
 const RIPPLE_FULL = 34, PAD_GAP = 4, PAD_COAST = 30, PAD_EDGE = 30, PAD_MAX = 5, PAD_DRAG = 0.6;
 // Whether a pad of radius r at (x,y) may be laid there: clear of the edges, the coasts and the other pads.
 function padFree(w, x, y, r, coastGap, edgeGap) {
   if (x < edgeGap + r || x > w.w - edgeGap - r || y < edgeGap + r || y > w.h - edgeGap - r) return false;
   for (const o of w.islands) if (shoreGap(o, x, y, coastGap + r) < 0) return false;
+  for (const q of w.rocks) if (Math.hypot(q.x - x, q.y - y) < q.r + r + coastGap) return false;
   for (const q of w.pads) if (Math.hypot(q.x - x, q.y - y) < q.r + r + PAD_GAP) return false;
   return true;
 }
@@ -524,6 +587,10 @@ function stepPads(w, dt) {
         const gap = shoreGap(o, q.x, q.y, PAD_COAST);
         if (gap < 30) { shoreNormal(o, q.x, q.y, NRM); const k = Math.min(1.5, 1 - gap / 30) * 6; ux += NRM.x * k; uy += NRM.y * k; }
       }
+      for (const o of w.rocks) {
+        const gap = discGap(o, q.x, q.y, q.r, NRM);
+        if (gap < 30) { const k = Math.min(1.5, 1 - gap / 30) * 6; ux += NRM.x * k; uy += NRM.y * k; }
+      }
       const e = PAD_EDGE + q.r + 30;
       if (q.x < e) ux += ((e - q.x) / 30) * 3; else if (q.x > w.w - e) ux -= ((q.x - (w.w - e)) / 30) * 3;
       if (q.y < e) uy += ((e - q.y) / 30) * 3; else if (q.y > w.h - e) uy -= ((q.y - (w.h - e)) / 30) * 3;
@@ -533,7 +600,8 @@ function stepPads(w, dt) {
       q.vx *= drag; q.vy *= drag; q.va *= drag; q.since += dt;
     }
   }
-  // then hard limits, which the soft pushes above keep from ever acting in calm water: apart, off the land, on screen.
+  // then hard limits, which the soft pushes above keep from ever acting in calm water: apart, off the land and the
+  // stones, on screen.
   // They also carry the pads through a resize or an island that moves under them, reduced motion or not
   for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
     const a = P[i], b = P[j], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy), need = a.r + b.r;
@@ -543,6 +611,7 @@ function stepPads(w, dt) {
   }
   for (const q of P) {
     for (const o of w.islands) if (shoreGap(o, q.x, q.y, q.r) < 0) { onShore(o, q.x, q.y, q.r, PT); q.x = PT.x; q.y = PT.y; }
+    for (const o of w.rocks) if (discGap(o, q.x, q.y, q.r, NRM) < 0) { q.x = o.x + NRM.x * (o.r + q.r); q.y = o.y + NRM.y * (o.r + q.r); }
     q.x = Math.min(Math.max(q.x, Math.min(q.r, w.w / 2)), Math.max(w.w - q.r, w.w / 2));
     q.y = Math.min(Math.max(q.y, Math.min(q.r, w.h / 2)), Math.max(w.h - q.r, w.h / 2));
   }
@@ -607,6 +676,7 @@ function striderFree(w, x, y) {
   if (x < STR_EDGE || x > w.w - STR_EDGE || y < STR_EDGE || y > w.h - STR_EDGE) return false;
   for (const o of w.islands) if (shoreGap(o, x, y, STR_LAND) < 0) return false;
   for (const q of w.pads) if (Math.hypot(q.x - x, q.y - y) < q.r + STR_PAD) return false;
+  for (const q of w.rocks) if (Math.hypot(q.x - x, q.y - y) < q.r + STR_PAD) return false;
   return true;
 }
 // Starts a dart along a clear line, away from a heading if one is given; true if one started.
@@ -642,11 +712,9 @@ function stepStriders(w, dt) {
         else { s.x += (dx / d) * go; s.y += (dy / d) * go; }
       } else if ((s.left -= dt) <= 0 && !startDart(w, s)) s.left = 0.5 + 2.5 * r();
     }
-    // hard limits, reduced motion or not: off the pads, off the land, on screen
-    for (const q of w.pads) {
-      const dx = s.x - q.x, dy = s.y - q.y, d = Math.hypot(dx, dy), need = q.r + STR_HARD;
-      if (d < need) { const ux = d > 1e-6 ? dx / d : 1, uy = d > 1e-6 ? dy / d : 0; s.x = q.x + ux * need; s.y = q.y + uy * need; }
-    }
+    // hard limits, reduced motion or not: off the pads and the stones, off the land, on screen
+    for (const q of w.pads) if (discGap(q, s.x, s.y, STR_HARD, NRM) < 0) { s.x = q.x + NRM.x * (q.r + STR_HARD); s.y = q.y + NRM.y * (q.r + STR_HARD); }
+    for (const q of w.rocks) if (discGap(q, s.x, s.y, STR_HARD, NRM) < 0) { s.x = q.x + NRM.x * (q.r + STR_HARD); s.y = q.y + NRM.y * (q.r + STR_HARD); }
     for (const o of w.islands) if (shoreGap(o, s.x, s.y, STR_LAND) < 0) { onShore(o, s.x, s.y, STR_LAND, PT); s.x = PT.x; s.y = PT.y; }
     s.x = Math.min(Math.max(s.x, Math.min(STR_EDGE, w.w / 2)), Math.max(w.w - STR_EDGE, w.w / 2));
     s.y = Math.min(Math.max(s.y, Math.min(STR_EDGE, w.h / 2)), Math.max(w.h - STR_EDGE, w.h / 2));
@@ -705,6 +773,7 @@ export function step(w, dt) {
   // treats age and sink; ripples spread
   for (let i = w.treats.length - 1; i >= 0; i--) { const t = w.treats[i]; t.age += dt; if (t.age > p.sink) w.treats.splice(i, 1); }
   for (let i = w.ripples.length - 1; i >= 0; i--) { const q = w.ripples[i]; q.age += dt; if (q.age > q.life) w.ripples.splice(i, 1); }
+  stepRocks(w);
   stepPads(w, dt);
 
   const cosFov = Math.cos((p.fov * Math.PI) / 360);
@@ -774,11 +843,13 @@ export function step(w, dt) {
     // and a calm fish now and then goes to rest under one on its own
     else if (!f.pad && !(f.idle > 0) && f.en < 0.05 && !f.food && w.pads.length && w.prand() < p.rest * dt) seekPad(w, f, 1);
     if (f.flee > 0) { f.flee -= dt; sx += f.fx * 5 * Math.max(0, f.flee); sy += f.fy * 5 * Math.max(0, f.flee); }
-    // islands: inside the look zone the part of the heading aimed at the shore is turned along it
-    for (const o of w.islands) {
-      const gap = shoreGap(o, f.x, f.y, p.shore);
+    // islands and stones: inside the look zone the part of the heading aimed at the shore is turned along it
+    for (let j = 0, ni = w.islands.length, nj = ni + w.rocks.length; j < nj; j++) {
+      let gap;
+      if (j < ni) { const o = w.islands[j]; gap = shoreGap(o, f.x, f.y, p.shore); if (gap > p.look) continue; shoreNormal(o, f.x, f.y, NRM); }
+      else gap = discGap(w.rocks[j - ni], f.x, f.y, p.shore, NRM);
       if (gap > p.look) continue;
-      shoreNormal(o, f.x, f.y, NRM); const gx = NRM.x, gy = NRM.y;
+      const gx = NRM.x, gy = NRM.y;
       const kk = Math.min(1, Math.max(0, 1 - gap / Math.max(1, p.look))), toward = -(hx * gx + hy * gy);
       if (toward > -0.2) {
         const side = hx * -gy + hy * gx >= 0 ? 1 : -1; // go round on whichever side it already leans to
@@ -814,15 +885,23 @@ export function step(w, dt) {
     swim(w, f, want, dt);
     f.en *= decay;
   }
-  // move, then hold every head out of the islands and inside the page
+  // move, then hold every head out of the islands and the stones and inside the page
   for (let i = 0; i < n; i++) {
     const f = F[i];
     f.x += Math.cos(f.h) * f.sp * dt; f.y += Math.sin(f.h) * f.sp * dt;
-    for (const o of w.islands) {
-      if (shoreR(o, f.x, f.y, p.shore) >= 1) continue;
-      onShore(o, f.x, f.y, p.shore, PT); f.x = PT.x; f.y = PT.y;
+    for (let j = 0, ni = w.islands.length, nj = ni + w.rocks.length; j < nj; j++) {
+      if (j < ni) {
+        const o = w.islands[j];
+        if (shoreR(o, f.x, f.y, p.shore) >= 1) continue;
+        onShore(o, f.x, f.y, p.shore, PT); f.x = PT.x; f.y = PT.y;
+        shoreNormal(o, f.x, f.y, NRM);
+      } else {
+        const q = w.rocks[j - ni];
+        if (discGap(q, f.x, f.y, p.shore, NRM) >= 0) continue;
+        f.x = q.x + NRM.x * (q.r + p.shore); f.y = q.y + NRM.y * (q.r + p.shore);
+      }
       // shed the motion aimed inward: the fish slides along the shore
-      shoreNormal(o, f.x, f.y, NRM); const gx = NRM.x, gy = NRM.y;
+      const gx = NRM.x, gy = NRM.y;
       let vx = Math.cos(f.h), vy = Math.sin(f.h); const into = vx * gx + vy * gy;
       if (into < 0) { vx -= into * gx; vy -= into * gy; if (Math.hypot(vx, vy) > 1e-6) f.h = Math.atan2(vy, vx); }
     }
@@ -839,6 +918,9 @@ export function step(w, dt) {
       // the body stays in the water too: an island that moves under a fish (the page scrolled) pushes it aside
       for (const o of w.islands) {
         if (shoreR(o, rope[k * 2], rope[k * 2 + 1], 2) < 1) { onShore(o, rope[k * 2], rope[k * 2 + 1], 2, PT); rope[k * 2] = PT.x; rope[k * 2 + 1] = PT.y; }
+      }
+      for (const q of w.rocks) {
+        if (discGap(q, rope[k * 2], rope[k * 2 + 1], 2, NRM) < 0) { rope[k * 2] = q.x + NRM.x * (q.r + 2); rope[k * 2 + 1] = q.y + NRM.y * (q.r + 2); }
       }
     }
     // the first mouth to reach a treat takes it
@@ -1001,11 +1083,14 @@ export function drawCoasts(ctx, w, ink, paper, water = paper) {
   ctx.globalAlpha = 1;
 }
 // The surface. Each thing is drawn in the hand of the layer it lives in. The water layer, the fish, is an ink outline
-// over a paper fill. The surface layer (pads, flowers, striders) is flat translucent flora with no outline, and
+// over a paper fill. The surface layer (stones, pads, flowers, striders) is flat translucent colour with no outline, and
 // what lies flat on the water casts a shadow: the same shape in ink, offset down and to the right, unblurred (a blur
 // costs the GPU far more than the offset, which reads as a shadow on its own).
 export const FLORA = '#5f7f66';
 const SHADOW_X = 2, SHADOW_Y = 3, SLIT = (18 / 180) * Math.PI;
+// A stone's tone: the ink mixed this far toward the paper, so it holds on any page colours.
+const STONE = 0.55, STONE_ALPHA = 0.85;
+let stone = null, stoneFor = null;
 // A pad: a disc with a narrow slit cut toward its heading, the slit ending short of the centre in a rounded end.
 function padPath(ctx, q, ox, oy) {
   const x = q.x + ox, y = q.y + oy, a = q.a, h = SLIT / 2, d0 = 0.18 * q.r, rr = 0.05 * q.r + 0.4;
@@ -1072,8 +1157,14 @@ export function drawLive(ctx, w, ink, paper, gold) {
   // bounds as big as the page, and the GPU process pays for an antialiased path by its bounds (at 1440p2 the surface
   // drawn as a few page-wide paths cost the GPU process about 6 ms a frame; drawn thing by thing, within its noise)
   ctx.fillStyle = ink; ctx.globalAlpha = p.shadow;
+  for (const q of w.rocks) { ctx.beginPath(); rockPath(ctx, q, SHADOW_X, SHADOW_Y); ctx.fill(); }
   for (const q of w.pads) { ctx.beginPath(); padPath(ctx, q, SHADOW_X, SHADOW_Y); ctx.fill(); }
   for (const f of w.flowers) { ctx.beginPath(); ctx.arc(f.x + SHADOW_X, f.y + SHADOW_Y, bloomR(f), 0, TAU); ctx.fill(); }
+  if (w.rocks.length) {
+    if (stoneFor !== ink + paper) { stoneFor = ink + paper; stone = mixOf(ink, paper, STONE); }
+    ctx.fillStyle = stone; ctx.globalAlpha = STONE_ALPHA;
+    for (const q of w.rocks) { ctx.beginPath(); rockPath(ctx, q, 0, 0); ctx.fill(); }
+  }
   ctx.fillStyle = FLORA; ctx.globalAlpha = p.floraAlpha;
   for (const q of w.pads) { ctx.beginPath(); padPath(ctx, q, 0, 0); ctx.fill(); }
   if (w.flowers.length) {
