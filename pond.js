@@ -476,9 +476,12 @@ const rockTarget = (w) => Math.max(0, Math.round(w.coarse ? w.params.rocksTouch 
 // A fish keeps ROCK_SHORE px off a stone, less than the `shore` it keeps off an island: a stone is small enough to slip
 // round, and the full shore margin round the larger stones made the fish bunch.
 const ROCK_LAND = 0, ROCK_EDGE = 30, ROCK_OVER = 0.35, ROCK_FULL = 0.95, ROCK_SHORE = 6;
-// The outcrop's main stone stands on the shore: its centre ROCK_SEAT of its radius past the calm line, and never so far
-// in that its seaward edge falls short of ROCK_REACH px past the calm line (the 36 px shallows and 20 px of open water).
-const ROCK_SEAT = 0.3, ROCK_REACH = 36 + 20;
+// The outcrop's main stone stands on the shore: its centre ROCK_SEAT of its radius past the low-swell coast (S, which
+// the drawn coast never falls inside), so at low swell most of it stands in the water and at high swell the land
+// rises round it and it sits on the beach (stones draw over the land).
+const ROCK_SEAT = 0.3;
+// The distance from (x,y) out past the low-swell coast grown by g px, along the bearing from the island's centre.
+const lowGap = (o, x, y, g) => calmGap(o, x, y, g) + (o.calm || 0);
 // The distance from (x,y) to the circle g px outside the disc q, a stone or a pad (negative inside it); the unit
 // normal out of the disc at (x,y) goes to out.
 function discGap(q, x, y, g, out) {
@@ -524,12 +527,12 @@ function bulge(q, b) {
   q.t.forEach((t, i) => { const d = Math.abs(Math.atan2(Math.sin(t - b), Math.cos(t - b))); if (d < bd) { bd = d; j = i; } });
   q.k[j] = Math.max(q.k[j], ROCK_FULL);
 }
-// Whether a stone of size r may stand at (x,y): open water, off the calm line (at the top of the swell the land may
-// lap over a stone by the shore, as a real shore does), ROCK_EDGE inside the screen, and overlapping no stone by more
+// Whether a stone of size r may stand at (x,y): open water, `land` px off the low-swell coast (the whole stone by
+// default; the land may rise round a stone by the shore as the swell comes in, as a real shore does), ROCK_EDGE inside the screen, and overlapping no stone by more
 // than ROCK_OVER of the smaller: the lumps draw inside their circles, so two that touch must overlap as circles.
 function rockFree(w, x, y, r, list = w.rocks, land = ROCK_LAND + r) {
   if (x < ROCK_EDGE + r || x > w.w - ROCK_EDGE - r || y < ROCK_EDGE + r || y > w.h - ROCK_EDGE - r) return false;
-  for (const o of w.islands) if (calmGap(o, x, y, land) < 0) return false;
+  for (const o of w.islands) if (lowGap(o, x, y, land) < 0) return false;
   for (const q of list) if (Math.hypot(q.x - x, q.y - y) < q.r + r - ROCK_OVER * Math.min(q.r, r)) return false;
   return true;
 }
@@ -558,10 +561,8 @@ const RIPPLE_FULL = 34, PAD_COAST = 30, PAD_EDGE = 30, PAD_MAX = 5, PAD_DRAG = 0
 // The stones and the pads are laid out together from one seeded plan, so the pond reads as a composed scene rather
 // than things strewn at random. The screen is split at its middle across its longer side; the stones take one half
 // and the pads the other. The stones: an outcrop of 3 to 5 growing out of the shore of the island on their side at a
-// seeded bearing: a main stone (38 to 40 px, as large as the fish allow, so that seated to reach open water it still meets the land
-// when the swell is low) standing on the shore, its centre ROCK_SEAT of its radius past the calm
-// line (more for a smaller stone, so it still reaches ROCK_REACH out into open water), the shoreline breathing round
-// it as the swell comes and goes, since the stones draw over the land; one or two supports (16 to 26 px) trailing seaward against it, off the line to
+// seeded bearing: a main stone (30 to 40 px) standing on the shore, its centre ROCK_SEAT of its radius past the
+// low-swell coast, the shoreline breathing round it as the swell comes and goes; one or two supports (16 to 26 px) trailing seaward against it, off the line to
 // alternate sides by their own amounts; and satellites (8 to 14 px) against any of them. Each stone touches the one it
 // leans on, overlapping it as circles by 10 to 35 percent of the smaller radius, so the group reads as one outcrop
 // and never a row. The rest stand as a smaller group in open water on the same side, built the same way at 0.6 of the
@@ -595,7 +596,7 @@ function layPond(w) {
   w.laidIsl = w.islands.length; w.laidFor = nr + ':' + np; w.relay = 0;
   // the stones: sizes first, largest to smallest
   const nOut = nr < 3 ? nr : Math.min(5, Math.max(3, Math.round(nr * 0.6))), nSup = nOut >= 4 && r() < 0.5 ? 2 : 1;
-  const sizes = (n, sup, k) => { const L = []; for (let i = 0; i < n; i++) L.push(k * (i === 0 ? 38 + 2 * r() : i <= sup ? 16 + 10 * r() : 8 + 6 * r())); return L; };
+  const sizes = (n, sup, k) => { const L = []; for (let i = 0; i < n; i++) L.push(k * (i === 0 ? 30 + 10 * r() : i <= sup ? 16 + 10 * r() : 8 + 6 * r())); return L; };
   const out = sizes(nOut, nSup, 1), grp = sizes(nr - nOut, 1, 0.6);
   w.rocks = [];
   layOutcrop(w, r, rs, out, nSup);
@@ -627,7 +628,7 @@ function layOutcrop(w, r, rs, sizes, nSup) {
     const b = b0 + (t / 24) * TAU, L = [], s0 = sizes[0];
     // the main stone on the shore, its centre just seaward of the calm line; with no island yet, in open water on its side
     let x, y;
-    if (o) { const d = calmCoast(o, b) + Math.max(ROCK_SEAT * s0, ROCK_REACH + 2 - s0); x = o.x + Math.cos(b) * d; y = o.y + Math.sin(b) * d; } else { x = w.w / 2 + rs * (0.25 + 0.1 * r()) * (w.w >= w.h ? w.w : 0); y = w.h / 2 + rs * (0.25 + 0.1 * r()) * (w.w >= w.h ? 0 : w.h); }
+    if (o) { const d = calmCoast(o, b) - (o.calm || 0) + ROCK_SEAT * s0; x = o.x + Math.cos(b) * d; y = o.y + Math.sin(b) * d; } else { x = w.w / 2 + rs * (0.25 + 0.1 * r()) * (w.w >= w.h ? w.w : 0); y = w.h / 2 + rs * (0.25 + 0.1 * r()) * (w.w >= w.h ? 0 : w.h); }
     if (!(sideOf(w, x, y) * rs > 0) || !rockFree(w, x, y, s0, L, 0)) continue;
     L.push(Object.assign(makeRock(r, x, y, s0), { grp: 0 }));
     trail(w, r, L, sizes.slice(1), b, rs, nSup);
