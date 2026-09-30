@@ -1,6 +1,6 @@
 // Home pond: the page seen from above as still water, with the two home objects standing in it as islands. A few
 // dozen line-drawn fish swim between them in groups that form, merge and part on their own, a few of them koi with gold
-// patches, water laps inward at each shore, lily pads drift on the open water and give a frightened fish somewhere to
+// patches, water laps inward at each shore, reeds stand in the shallows, lily pads drift on the open water and give a frightened fish somewhere to
 // hide, and a click drops a treat the fish race for and eat. The layer sits behind reading text, so the resting
 // picture is calm: the fish swim in easy beats and glides and only burst into speed for a reason (a treat, a fast
 // cursor, or now and then on their own) before they settle again.
@@ -97,6 +97,10 @@ export const PARAMS = {
   surface: {
     floraAlpha: [0.55, 0, 1, 0.01, 'opacity of the green things on the surface'],
     shadow: [0.08, 0, 0.4, 0.005, 'opacity of the shadow a thing on the surface casts on the water'],
+    reeds: [3, 0, 8, 1, 'reed clumps in each island\'s shallows on a fine pointer'],
+    reedsTouch: [2, 0, 8, 1, 'reed clumps per island on a coarse pointer'],
+    sway: [4.5, 0, 12, 0.5, 'mean sway of a reed\'s tip, px'],
+    bend: [12, 0, 30, 1, 'most a passing fish or the cursor bends a reed\'s tip, px'],
   },
 };
 export const defaults = () => Object.fromEntries(Object.values(PARAMS).flatMap((section) => Object.entries(section).map(([k, v]) => [k, v[0]])));
@@ -362,6 +366,7 @@ export function createWorld(params, opts = {}) {
     fish: [], islands: [], outlines: [], treats: [], ripples: [], stroke: null, fed: [],
     ptr: { x: 0, y: 0, on: false, px: 0, py: 0, seen: false, speed: 0 },
     eaten: 0,
+    seed: opts.seed == null ? 1 : opts.seed, reeds: [],
     pads: [], padSeed: ((opts.seed == null ? 1 : opts.seed) ^ 0x9ad5eed) >>> 0, padIsl: 0, prand: null, flow: null,
   };
   populate(w);
@@ -546,6 +551,66 @@ function seekPad(w, f, chance) {
   if (!best || !(r() < chance)) return false;
   f.pad = best; f.hide = 3 + 5 * r(); f.under = false; f.seek = 10; f.idle = 0;
   return true;
+}
+
+// ----- reeds -----
+// A few clumps of reeds stand in each island's shallows. A clump roots at its own bearing from the island's centre, a
+// few px past the coast, and every step finds its roots again from the coast, so the reeds ride the swell and follow
+// the island when its object moves. Seen from above a stem is a short curve from its root, leaning outward. Each stem
+// sways on its own slow beat, and a fish swimming past its root or the cursor near it bends the tip away, easing back
+// after; the fish do not steer round the reeds. Each island's reeds come from a seeded source of their own, so an
+// island keeps its reeds whatever else changes, and nothing else in the world moves differently for them.
+// clump: { b (bearing), stems: [{ j (root along the coast, px), off (root past the coast, px), h, lean, hz, amp, ph,
+//   bx, by (the bend now), rx, ry, cx, cy, tx, ty (root, control point and tip this step) }] }
+const reedTarget = (w) => Math.max(0, Math.round(w.coarse ? w.params.reedsTouch : w.params.reeds));
+const REED_FISH = 24, REED_PTR = 40, REED_IN = 0.08, REED_BACK = 0.5, BEND = { x: 0, y: 0 };
+function growReeds(w, i, n) {
+  const r = rng(((w.seed ^ 0x2eed5) + i * 7919) >>> 0), base = r() * TAU, out = [];
+  for (let c = 0; c < n; c++) {
+    const b = base + ((c + 0.6 * (r() - 0.5)) / n) * TAU, off = 8 + 12 * r(), stems = [];
+    for (let k = 3 + Math.floor(r() * 5); k > 0; k--) stems.push({
+      j: (r() - 0.5) * 10, off: Math.min(21, Math.max(7, off + (r() - 0.5) * 6)), h: 18 + 30 * r(), lean: (r() - 0.5) * 1.1,
+      hz: 0.3 + 0.3 * r(), amp: 0.67 + 0.66 * r(), ph: r() * TAU, bx: 0, by: 0, rx: 0, ry: 0, cx: 0, cy: 0, tx: 0, ty: 0,
+    });
+    out.push({ b, stems });
+  }
+  return out;
+}
+// adds to BEND the push away from (x,y) a stem's root feels within reach: 1 at the root, 0 at reach
+function bendAway(s, x, y, reach) {
+  const dx = s.rx - x, dy = s.ry - y, d = Math.hypot(dx, dy);
+  if (d < reach && d > 1e-6) { const k = 1 - d / reach; BEND.x += (dx / d) * k; BEND.y += (dy / d) * k; }
+}
+function stepReeds(w, dt) {
+  const p = w.params, n = reedTarget(w), R = w.reeds, still = w.reduced, ptr = w.ptr, box = REED_FISH + 16;
+  R.length = Math.min(R.length, w.islands.length);
+  w.islands.forEach((o, i) => {
+    if (!R[i] || R[i].length !== n) R[i] = growReeds(w, i, n);
+    for (const c of R[i]) {
+      // the fish near the clump at all; each stem then asks only these
+      const near = [];
+      if (!still) {
+        const d0 = coast(o, c.b) + 14, x0 = o.x + Math.cos(c.b) * d0, y0 = o.y + Math.sin(c.b) * d0;
+        for (const f of w.fish) if (Math.abs(f.x - x0) < box && Math.abs(f.y - y0) < box) near.push(f);
+      }
+      for (const s of c.stems) {
+        const t = c.b + s.j / Math.max(20, coast(o, c.b)), d = coast(o, t) + s.off;
+        s.rx = o.x + Math.cos(t) * d; s.ry = o.y + Math.sin(t) * d;
+        const a = t + s.lean, ux = Math.cos(a), uy = Math.sin(a), sw = still ? 0 : p.sway * s.amp * Math.sin(TAU * s.hz * w.t + s.ph);
+        BEND.x = 0; BEND.y = 0;
+        if (!still) { for (const f of near) bendAway(s, f.x, f.y, REED_FISH); if (ptr.on) bendAway(s, ptr.x, ptr.y, REED_PTR); }
+        const m = Math.hypot(BEND.x, BEND.y), g = m > 1 ? p.bend / m : p.bend, gx = BEND.x * g, gy = BEND.y * g;
+        if (still) { s.bx = 0; s.by = 0; }
+        else {
+          // a push bends the tip at once; it eases back slowly once the push is gone
+          const k = 1 - Math.exp(-dt / (Math.hypot(gx, gy) > Math.hypot(s.bx, s.by) ? REED_IN : REED_BACK));
+          s.bx += (gx - s.bx) * k; s.by += (gy - s.by) * k;
+        }
+        s.tx = s.rx + ux * s.h - uy * sw + s.bx; s.ty = s.ry + uy * s.h + ux * sw + s.by;
+        s.cx = s.rx + ux * s.h * 0.55 - uy * sw * 0.3 + s.bx * 0.3; s.cy = s.ry + uy * s.h * 0.55 + ux * sw * 0.3 + s.by * 0.3;
+      }
+    }
+  });
 }
 
 // ----- beat and glide -----
@@ -743,6 +808,8 @@ export function step(w, dt) {
       if (Math.hypot(t.x - f.x, t.y - f.y) < bite) { w.treats.splice(k, 1); ripple(w, t.x, t.y, 14, 0.9); w.eaten++; remember(w, t); if (!w.reduced) f.en = Math.max(f.en, 0.5); break; }
     }
   }
+  // the surface, after the fish, so a reed bends from where a fish is now
+  stepReeds(w, dt);
 }
 
 // ----- drawing -----
@@ -930,6 +997,10 @@ export function drawLive(ctx, w, ink, paper, gold) {
   ctx.beginPath(); for (const q of w.pads) padPath(ctx, q, SHADOW_X, SHADOW_Y); ctx.fill();
   ctx.fillStyle = FLORA; ctx.globalAlpha = p.floraAlpha;
   ctx.beginPath(); for (const q of w.pads) padPath(ctx, q, 0, 0); ctx.fill();
+  // the reeds: a flora line each, too thin to cast a shadow worth drawing
+  ctx.strokeStyle = FLORA; ctx.lineWidth = 1.5; ctx.beginPath();
+  for (const C of w.reeds) if (C) for (const c of C) for (const s of c.stems) { ctx.moveTo(s.rx, s.ry); ctx.quadraticCurveTo(s.cx, s.cy, s.tx, s.ty); }
+  ctx.stroke();
   ctx.globalAlpha = 1;
 }
 

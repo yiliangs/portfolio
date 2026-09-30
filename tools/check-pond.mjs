@@ -586,5 +586,59 @@ for (const seed of [2, 19]) {
   if (!(hid.size >= 2)) fail(`seed ${seed}: (h) a fast cursor pass through ${most} fish near the pads should send at least 2 under a pad within 6 s, sent ${hid.size}`);
 }
 
+// Reeds, on a 1440x900 page with two islands at seeds 2 and 19. (l) each island carries `reeds` clumps of 3 to 7 stems
+// 18 to 48 px tall; through three simulated minutes of cursor passes, with the islands' boxes moved once, every root
+// stays 6 to 22 px past its own island's coast and off all land, and across the move each root travels with its island.
+// A fish passing 8 px from a root bends that stem's tip at least 5 px, and 2 s after the fish has gone the tip is back
+// within 1 px; the cursor near a root bends it too. Under reduced motion no tip moves, sway or bend.
+const stemsOf = (w) => (Array.isArray(w.reeds) ? w.reeds.flatMap((C, i) => (C || []).flatMap((c) => c.stems.map((s) => ({ s, i })))) : null);
+for (const seed of [2, 19]) {
+  const w = createWorld(defaults(), { w: 1440, h: 900, seed }); setIslands(w, ISL2); step(w, DT);
+  const S = stemsOf(w);
+  if (!S) { fail(`seed ${seed}: (l) the world should carry reeds (w.reeds)`); continue; }
+  const per = w.reeds.map((C) => C.length), bad = w.reeds.flat().filter((c) => c.stems.length < 3 || c.stems.length > 7).length + S.filter(({ s }) => s.h < 18 || s.h > 48).length;
+  if (per.length !== 2 || per.some((k) => k !== w.params.reeds)) fail(`seed ${seed}: (l) want ${w.params.reeds} reed clumps on each of 2 islands, got ${per.join(',')}`);
+  if (bad) fail(`seed ${seed}: (l) ${bad} clumps or stems outside 3 to 7 stems of 18 to 48 px`);
+  let lo = Infinity, hi = -Infinity, land = Infinity, drag = 0, before = null;
+  const MOVE = 60 * 90, moved = ISL2.map((b) => ({ ...b, x: b.x + 60, y: b.y + 30 }));
+  for (let s = 0; s < 60 * 180; s++) {
+    const k = s % 420; setPointer(w, 100 + k * 40, 300 + (s % 840 < 420 ? 0 : 300), k < 30);
+    if (s === MOVE - 60) before = { roots: S.map(({ s: st }) => [st.rx, st.ry]), isl: w.islands.map((o) => [o.x, o.y]) };
+    if (s === MOVE) setIslands(w, moved);
+    step(w, DT);
+    if (s === MOVE + 60) S.forEach(({ s: st, i }, j) => { const o = w.islands[i]; drag = Math.max(drag, Math.hypot(st.rx - before.roots[j][0] - (o.x - before.isl[i][0]), st.ry - before.roots[j][1] - (o.y - before.isl[i][1]))); });
+    for (const { s: st, i } of S) {
+      const o = w.islands[i], g = Math.hypot(st.rx - o.x, st.ry - o.y) - coast(o, Math.atan2(st.ry - o.y, st.rx - o.x));
+      lo = Math.min(lo, g); hi = Math.max(hi, g);
+      for (const q of w.islands) land = Math.min(land, M.shoreGap(q, st.rx, st.ry, 0));
+    }
+  }
+  const show = `seed ${seed}: reed roots ${lo.toFixed(1)} to ${hi.toFixed(1)} px past their coast, least land gap ${land.toFixed(1)} px, ${drag.toFixed(1)} px off their island across a 67 px move`;
+  metric(show);
+  if (!(lo >= 6 - 1e-6 && hi <= 22 + 1e-6 && land >= 0)) fail(`${show}: (l) every root should stay 6 to 22 px past its coast and off the land`);
+  if (!(drag < 8)) fail(`${show}: (l) the roots should travel with their island`);
+}
+for (const reduced of [false, true]) {
+  const p = defaults(); p.count = 1;
+  const w = createWorld(p, { w: 1440, h: 900, seed: 2, reduced }); setIslands(w, ISL2);
+  for (let s = 0; s < 120; s++) step(w, DT);
+  const S = stemsOf(w);
+  if (!S || !S.length) { fail('(l) the world should carry reed stems'); break; }
+  const st = S[0].s, o = w.islands[S[0].i], f = w.fish[0];
+  const out = Math.atan2(st.ry - o.y, st.rx - o.x), ax = -Math.sin(out), ay = Math.cos(out);
+  const tip0 = [st.tx, st.ty], bent = () => Math.hypot(st.bx, st.by);
+  let top = 0, moved = 0, back = Infinity, ptrTop = 0;
+  const park = () => { f.x = 1400; f.y = 880; };
+  // the fish passes along the coast 8 px outside the root at 60 px/s
+  for (let s = 0; s < 60; s++) { const u = s - 30; f.x = st.rx + Math.cos(out) * 8 + ax * u; f.y = st.ry + Math.sin(out) * 8 + ay * u; step(w, DT); top = Math.max(top, bent()); moved = Math.max(moved, Math.hypot(st.tx - tip0[0], st.ty - tip0[1])); }
+  for (let s = 0; s < 120; s++) { park(); step(w, DT); moved = Math.max(moved, Math.hypot(st.tx - tip0[0], st.ty - tip0[1])); }
+  back = bent();
+  for (let s = 0; s < 30; s++) { park(); setPointer(w, st.rx + Math.cos(out) * 20, st.ry + Math.sin(out) * 20, true); step(w, DT); ptrTop = Math.max(ptrTop, bent()); moved = Math.max(moved, Math.hypot(st.tx - tip0[0], st.ty - tip0[1])); }
+  const show = `${reduced ? 'reduced motion' : 'full motion'}: a fish 8 px from a reed's root bent its tip ${top.toFixed(1)} px, ${back.toFixed(2)} px left 2 s after; the cursor 20 px off bent it ${ptrTop.toFixed(1)} px; the tip moved at most ${moved.toFixed(2)} px`;
+  metric(show);
+  if (reduced) { if (!(moved < 0.01)) fail(`${show}: (l) under reduced motion a reed should neither sway nor bend`); }
+  else if (!(top >= 5 && back < 1 && ptrTop >= 5)) fail(`${show}: (l) a passing fish and the cursor should bend a reed at least 5 px, and it should recover within 2 s`);
+}
+
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }
-console.log('check-pond: stroke, islands, treats, reduced motion, koi and lily pads hold');
+console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads and reeds hold');
