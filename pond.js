@@ -1,6 +1,6 @@
 // Home pond: the page seen from above as still water, with the two home objects standing in it as islands. A few
 // dozen line-drawn fish swim between them in groups that form, merge and part on their own, a few of them koi with gold
-// patches, water laps inward at each shore, pebbles, a branch and leaves lie on the bottom, stones stand in the water, water striders skate, lily pads drift, a lotus or two among them, on the
+// patches, water laps inward at each shore, pebbles, a branch and leaves lie on the bottom, stones stand in the water, water striders skate, lily pads drift, a lotus or two among them, now and then a flock of birds passes over, on the
 // open water and give a frightened fish somewhere to hide, and a click drops a treat the fish race for and eat. The layer sits behind reading text, so the resting
 // picture is calm: the fish swim in easy beats and glides and only burst into speed for a reason (a treat, a fast
 // cursor, or now and then on their own) before they settle again.
@@ -112,6 +112,13 @@ export const PARAMS = {
     leavesTouch: [2, 0, 8, 1, 'sunken leaves on a coarse pointer'],
     branch: [1, 0, 1, 1, 'a sunken branch'],
     floorAlpha: [0.22, 0, 1, 0.01, 'opacity of the things on the pond floor'],
+  },
+  air: {
+    birdGap: [70, 10, 600, 5, 'mean wait between flocks of birds passing over on a fine pointer, s'],
+    birdGapTouch: [110, 10, 600, 5, 'mean wait between flocks on a coarse pointer, s'],
+    flock: [5, 3, 7, 1, 'birds in a flock, on average'],
+    birdAlpha: [0.85, 0, 1, 0.01, 'opacity of a bird\'s pale silhouette'],
+    birdShadow: [0.1, 0, 0.4, 0.005, 'opacity of the shadow a bird casts on the water'],
   },
 };
 export const defaults = () => Object.fromEntries(Object.values(PARAMS).flatMap((section) => Object.entries(section).map(([k, v]) => [k, v[0]])));
@@ -389,10 +396,12 @@ export function createWorld(params, opts = {}) {
     ptr: { x: 0, y: 0, on: false, px: 0, py: 0, seen: false, speed: 0 },
     eaten: 0,
     seed: opts.seed == null ? 1 : opts.seed, rocks: [], floor: [], flowers: [], bloomRand: null, striders: [], srand: null,
+    flock: null, flockId: 0, flocksDone: 0, birdWait: 0, brand: rng(((opts.seed == null ? 1 : opts.seed) ^ 0xb12d5eed) >>> 0),
     pads: [], padSeed: ((opts.seed == null ? 1 : opts.seed) ^ 0x9ad5eed) >>> 0, prand: null, flow: null, laidIsl: 0, laidFor: '', relay: 0,
   };
   populate(w);
   layPond(w);
+  w.birdWait = birdGap(w) * (0.1 + 0.4 * w.brand());
   return w;
 }
 const target = (w) => Math.max(0, Math.round(w.coarse ? w.params.countTouch : w.params.count));
@@ -1011,6 +1020,60 @@ function stepStriders(w, dt) {
 // through the stride; urgency raises the aim and so the rate, up to maxHz. With nothing wanted the fish hovers,
 // sculling with its pectoral fins and giving one slow beat now and then to hold its place.
 // Starts a thrust of n beats at hz aiming at speed top, with the tail sweeping `sweep` of its full amplitude.
+// A startled fish bursts away along (ux,uy), a unit vector, and may make for the nearest pad to hide under.
+function scare(w, f, ux, uy) { f.flee = 0.7; f.fx = ux; f.fy = uy; f.en = 1; if (!f.pad) seekPad(w, f, w.params.shelterChance); }
+
+// ----- birds passing over -----
+// A flock every birdGap s on average (birdGapTouch on a coarse pointer; the wait runs from one flock leaving to the next
+// arriving), one at a time. It enters from a seeded edge and crosses to the far side in a loose V: the lead in front,
+// the rest alternating down the two arms, each arm 30 to 50 degrees off the line of flight, 14 to 26 px between a bird
+// and the one ahead on its arm; the heading wanders a little and each bird drifts a px or so about its place. Each
+// bird flaps at 2 to 3 Hz from a phase of its own, with glides of 1 to 2 s on held wings. The birds are in the air: each
+// casts a shadow on the water SUN_X, SUN_Y px off, the way the surface shadows fall, and a shadow passing within
+// BIRD_SCARE px of a fish startles it, once per flock. Reduced motion: no birds. The flock has its own seeded source.
+const SUN_X = 16, SUN_Y = 24, BIRD_SHADOW_K = 1.15, BIRD_SCARE = 50, BIRD_OFF = 50, BIRD_VIEW = 20;
+// how far a bird drifts about its place in the V, px on each axis; two neighbours 14 px apart stay 10 px apart or more
+const BIRD_DRIFT = 1.4;
+const birdGap = (w) => Math.max(1, w.coarse ? w.params.birdGapTouch : w.params.birdGap);
+function makeFlock(w) {
+  const r = w.brand, n = Math.max(3, Math.min(7, Math.round(w.params.flock + (2 * r() - 1) * 2)));
+  const e = Math.floor(r() * 4), h = [0, Math.PI, Math.PI / 2, -Math.PI / 2][e] + (2 * r() - 1) * 0.25, u = 0.15 + 0.7 * r();
+  // the lead starts BIRD_OFF px behind its edge, so the whole flock and its shadows start out of view
+  const x = (e === 0 ? 0 : e === 1 ? w.w : u * w.w) - Math.cos(h) * BIRD_OFF, y = (e < 2 ? u * w.h : e === 2 ? 0 : w.h) - Math.sin(h) * BIRD_OFF;
+  const gap = 14 + 12 * r(), arm = ((30 + 20 * r()) / 180) * Math.PI, birds = [];
+  for (let i = 0; i < n; i++) {
+    const k = Math.ceil(i / 2), side = i % 2 ? 1 : -1;
+    birds.push({ ox: -k * gap * Math.cos(arm), oy: side * k * gap * Math.sin(arm), jp: r() * TAU, span: 12 + 6 * r(), fl: r() * TAU, hz: 2 + r(), glide: 0, flap: 1 + 4 * r(), wing: 0, x, y });
+  }
+  return { id: ++w.flockId, birds, x, y, h, a: h, wp: r() * TAU, v: 70 + 40 * r(), t: 0, seen: false };
+}
+const inView = (w, x, y) => x > -BIRD_VIEW && x < w.w + BIRD_VIEW && y > -BIRD_VIEW && y < w.h + BIRD_VIEW;
+function stepBirds(w, dt) {
+  if (w.reduced) { w.flock = null; return; }
+  if (!w.flock) { if ((w.birdWait -= dt) > 0) return; w.flock = makeFlock(w); }
+  const F = w.flock, r = w.brand;
+  F.t += dt;
+  const a = (F.a = F.h + 0.08 * Math.sin(0.35 * F.t + F.wp)), c = Math.cos(a), s = Math.sin(a);
+  F.x += c * F.v * dt; F.y += s * F.v * dt;
+  let on = false;
+  for (const b of F.birds) {
+    const jx = BIRD_DRIFT * Math.sin(0.9 * F.t + b.jp), jy = BIRD_DRIFT * Math.cos(0.7 * F.t + 1.3 * b.jp);
+    b.x = F.x + c * b.ox - s * b.oy + jx; b.y = F.y + s * b.ox + c * b.oy + jy;
+    if (b.glide > 0) { b.glide -= dt; b.wing *= Math.exp(-6 * dt); if (b.glide <= 0) b.flap = 2 + 3 * r(); }
+    else { b.fl += TAU * b.hz * dt; b.wing = Math.sin(b.fl); if ((b.flap -= dt) <= 0) b.glide = 1 + r(); }
+    if (inView(w, b.x, b.y) || inView(w, b.x + SUN_X, b.y + SUN_Y)) on = true;
+  }
+  if (on) F.seen = true;
+  else if (F.seen || F.t > 300) { w.flock = null; if (F.seen) w.flocksDone++; w.birdWait = birdGap(w) * (0.5 + r()); return; }
+  // the shadows startle the fish they pass over
+  for (const f of w.fish) {
+    if (f.scaredBy === F.id) continue;
+    for (const b of F.birds) {
+      const dx = f.x - b.x - SUN_X, dy = f.y - b.y - SUN_Y, d = Math.hypot(dx, dy);
+      if (d < BIRD_SCARE && d > 1e-6) { f.scaredBy = F.id; scare(w, f, dx / d, dy / d); break; }
+    }
+  }
+}
 function kick(w, f, top, n, hz, sweep) { f.top = top; f.left = n; f.hz = hz; f.sweep = sweep; }
 function swim(w, f, want, dt) {
   const p = w.params, r = w.rand;
@@ -1120,7 +1183,7 @@ export function step(w, dt) {
     // a fast cursor through the pond scatters the fish near it, and some of them make for the nearest pad to hide
     if (startle) {
       const dx = f.x - ptr.x, dy = f.y - ptr.y, d = Math.hypot(dx, dy);
-      if (d < p.scare && d > 1e-6) { f.flee = 0.7; f.fx = dx / d; f.fy = dy / d; f.en = 1; if (!f.pad) seekPad(w, f, p.shelterChance); }
+      if (d < p.scare && d > 1e-6) scare(w, f, dx / d, dy / d);
     }
     // and a calm fish now and then goes to rest under one on its own
     else if (!f.pad && !(f.idle > 0) && f.en < 0.05 && !f.food && w.pads.length && w.prand() < p.rest * dt) seekPad(w, f, 1);
@@ -1215,6 +1278,8 @@ export function step(w, dt) {
   // the surface, after the fish
   stepFlowers(w, dt);
   stepStriders(w, dt);
+  // and the air over it
+  stepBirds(w, dt);
 }
 
 // ----- drawing -----
@@ -1422,6 +1487,24 @@ function drawFlower(ctx, f, paper, gold) {
   ctx.fillStyle = gold; ctx.beginPath(); ctx.arc(f.x, f.y, 1.1 + 0.5 * o, 0, TAU); ctx.fill();
 }
 // The live layer, over the ground: the fish, the ripples and treats in the water, then the surface over them.
+// A gull seen from below, heading a, centred on (x,y), scaled by k: the leading edge a shallow M of three curves (each
+// outer wing out to its tip, and between the wrists a dip to the body), the trailing edge back round a short tail. The
+// flap (b.wing, -1 to 1) swings the tips forward and back and draws the span in a little.
+function birdPath(ctx, b, a, x, y, k) {
+  const h = (b.span / 2) * k, f = b.wing, c = Math.cos(a), s = Math.sin(a);
+  const X = (u, v) => x + (c * u - s * v) * h, Y = (u, v) => y + (s * u + c * v) * h;
+  const tu = -0.12 + 0.2 * f, tv = 1 - 0.18 * f * f, wu = 0.14 + 0.08 * f, wv = 0.45, cu = wu - 0.26;
+  const to = (u1, v1, u2, v2) => ctx.quadraticCurveTo(X(u1, v1), Y(u1, v1), X(u2, v2), Y(u2, v2));
+  ctx.moveTo(X(tu, -tv), Y(tu, -tv));
+  to((tu + wu) / 2 + 0.08, -(tv + wv) / 2, wu, -wv);
+  to(wu - 0.14, 0, wu, wv);
+  to((tu + wu) / 2 + 0.08, (tv + wv) / 2, tu, tv);
+  to((tu + cu) / 2 - 0.04, (tv + wv) / 2, cu, wv);
+  to(cu - 0.1, 0.2, -0.4, 0);
+  to(cu - 0.1, -0.2, cu, -wv);
+  to((tu + cu) / 2 - 0.04, -(tv + wv) / 2, tu, -tv);
+  ctx.closePath();
+}
 export function drawLive(ctx, w, ink, paper, gold) {
   const p = w.params, still = w.reduced;
   // the school: a paper fill under each outline, so crossing fish read as one over the other
@@ -1468,6 +1551,16 @@ export function drawLive(ctx, w, ink, paper, gold) {
     ctx.stroke();
     const c = Math.cos(s.a) * 1.5, d = Math.sin(s.a) * 1.5;
     ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(s.x - c, s.y - d); ctx.lineTo(s.x + c, s.y + d); ctx.stroke();
+  }
+  // the birds: in the air, over everything on the surface. Every shadow first, cast on the water and on whatever floats
+  // there from the same sun as the surface shadows, a little larger than the bird; then each bird, a pale silhouette
+  // with no outline
+  if (w.flock) {
+    const F = w.flock;
+    ctx.fillStyle = ink; ctx.globalAlpha = p.birdShadow;
+    for (const b of F.birds) { ctx.beginPath(); birdPath(ctx, b, F.a, b.x + SUN_X, b.y + SUN_Y, BIRD_SHADOW_K); ctx.fill(); }
+    ctx.fillStyle = paper; ctx.globalAlpha = p.birdAlpha;
+    for (const b of F.birds) { ctx.beginPath(); birdPath(ctx, b, F.a, b.x, b.y, 1); ctx.fill(); }
   }
   ctx.globalAlpha = 1;
 }

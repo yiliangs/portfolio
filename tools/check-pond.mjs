@@ -815,5 +815,50 @@ for (const [W, H, coarse] of [[1920, 1080, false], [1280, 720, false], [1920, 10
   if (JSON.stringify(lay().floor) !== JSON.stringify(F)) fail(`${tag} two worlds of one seed should lay the same floor`);
 }
 
+// (s) Birds passing over, 10 simulated minutes at seeds 2 and 19 on a 1440x900 page with the two islands: at least 5
+// flocks cross completely (seen in view, then gone with every bird and its shadow, cast (16, 24) px off, out of view)
+// and never two at once (a new flock only a step after the last has gone); every bird's nearest flockmate stays 10 to
+// 34 px away throughout; at least one calm fish bursts within 2 s of a bird's shadow passing within 50 px of it; and
+// under reduced motion no flock ever appears.
+const SUN = [16, 24];
+for (const seed of [2, 19]) {
+  const w = createWorld(defaults(), { w: 1440, h: 900, seed });
+  setIslands(w, ISL2);
+  const out = (x, y) => x < 0 || x > 1440 || y < 0 || y > 900;
+  let last = null, seen = false, crossed = 0, swapped = 0, near = Infinity, far = -Infinity, bursts = 0;
+  const pend = new Map();
+  for (let s = 0; s < 600 * 60; s++) {
+    const calm = new Map(w.fish.map((f) => [f, f.en < 0.5])); // before the step, which may startle
+    step(w, DT);
+    const F = w.flock || null;
+    if (F !== last) {
+      if (last && seen && last.birds.every((b) => out(b.x, b.y) && out(b.x + SUN[0], b.y + SUN[1]))) crossed++;
+      if (last && F) swapped++;
+      last = F; seen = false;
+    }
+    if (!F) continue;
+    if (F.birds.some((b) => !out(b.x, b.y))) seen = true;
+    for (const b of F.birds) {
+      const d = Math.min(...F.birds.filter((o) => o !== b).map((o) => Math.hypot(o.x - b.x, o.y - b.y)));
+      near = Math.min(near, d); far = Math.max(far, d);
+    }
+    for (const f of w.fish) {
+      const d = Math.min(...F.birds.map((b) => Math.hypot(f.x - b.x - SUN[0], f.y - b.y - SUN[1])));
+      if (d < 50 && calm.get(f) && !pend.has(f)) pend.set(f, w.t);
+    }
+    for (const [f, t] of pend) { if (f.en > 0.9) { bursts++; pend.delete(f); } else if (w.t - t > 2) pend.delete(f); }
+  }
+  const show = `seed ${seed}: (s) flocks crossed ${crossed}, swapped ${swapped}, nearest flockmate ${near.toFixed(1)}..${far.toFixed(1)} px, bursts ${bursts}`;
+  metric(show);
+  if (!(crossed >= 5 && swapped === 0)) fail(`${show}: at least 5 flocks should cross completely in 10 minutes, one at a time`);
+  if (!(near >= 10 && far <= 34)) fail(`${show}: each bird's nearest flockmate should stay 10 to 34 px away`);
+  if (!(bursts >= 1)) fail(`${show}: a fish should burst when a bird's shadow passes over it`);
+  const q = createWorld(defaults(), { w: 1440, h: 900, seed, reduced: true });
+  setIslands(q, ISL2);
+  let any = false;
+  for (let s = 0; s < 600 * 60 && !any; s++) { step(q, DT); any = !!q.flock; }
+  if (any) fail(`seed ${seed}: (s) no flock should appear under reduced motion`);
+}
+
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }
-console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads, flowers, striders, stones and their layout, the pond floor hold');
+console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads, flowers, striders, stones and their layout, the pond floor, the birds hold');
