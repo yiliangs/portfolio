@@ -1224,29 +1224,33 @@ export function drawLive(ctx, w, ink, paper, gold) {
     ctx.beginPath(); ctx.arc(t.x, t.y, 2.4 * (1 - 0.55 * k), 0, TAU); ctx.fill();
   }
   // the surface: every shadow first, so no shadow falls across a pad, then the pads over the fish, hiding a fish that
-  // swims under one
+  // swims under one. Every thing on the surface is its own path: one path gathering things spread over the page has
+  // bounds as big as the page, and the GPU process pays for an antialiased path by its bounds (at 1440p2 the surface
+  // drawn as a few page-wide paths cost the GPU process about 6 ms a frame; drawn thing by thing, within its noise)
   ctx.fillStyle = ink; ctx.globalAlpha = p.shadow;
-  ctx.beginPath(); for (const q of w.pads) padPath(ctx, q, SHADOW_X, SHADOW_Y); ctx.fill();
-  if (w.flowers.length) { ctx.beginPath(); for (const f of w.flowers) { ctx.moveTo(f.x + SHADOW_X + bloomR(f), f.y + SHADOW_Y); ctx.arc(f.x + SHADOW_X, f.y + SHADOW_Y, bloomR(f), 0, TAU); } ctx.fill(); }
+  for (const q of w.pads) { ctx.beginPath(); padPath(ctx, q, SHADOW_X, SHADOW_Y); ctx.fill(); }
+  for (const f of w.flowers) { ctx.beginPath(); ctx.arc(f.x + SHADOW_X, f.y + SHADOW_Y, bloomR(f), 0, TAU); ctx.fill(); }
   ctx.fillStyle = FLORA; ctx.globalAlpha = p.floraAlpha;
-  ctx.beginPath(); for (const q of w.pads) padPath(ctx, q, 0, 0); ctx.fill();
+  for (const q of w.pads) { ctx.beginPath(); padPath(ctx, q, 0, 0); ctx.fill(); }
   if (w.flowers.length) {
     if (petalFor !== paper + gold) { petalFor = paper + gold; petal = mixOf(paper, gold, 0.25); }
     for (const f of w.flowers) drawFlower(ctx, f, paper, gold);
     ctx.globalAlpha = p.floraAlpha;
   }
   // the reeds: a flora line each, too thin to cast a shadow worth drawing
-  ctx.strokeStyle = FLORA; ctx.lineWidth = 1.5; ctx.beginPath();
-  for (const C of w.reeds) if (C) for (const c of C) for (const s of c.stems) { ctx.moveTo(s.rx, s.ry); ctx.quadraticCurveTo(s.cx, s.cy, s.tx, s.ty); }
-  ctx.stroke();
+  ctx.strokeStyle = FLORA; ctx.lineWidth = 1.5;
+  for (const C of w.reeds) if (C) for (const c of C) {
+    ctx.beginPath();
+    for (const s of c.stems) { ctx.moveTo(s.rx, s.ry); ctx.quadraticCurveTo(s.cx, s.cy, s.tx, s.ty); }
+    ctx.stroke();
+  }
   // the striders: four legs and a short thick body, no shadow; their dimples are the ripples above
-  if (w.striders.length) {
+  for (const s of w.striders) {
     ctx.lineWidth = 0.8; ctx.beginPath();
-    for (const s of w.striders) for (const b of LEGS) { const a = s.a + b; ctx.moveTo(s.x, s.y); ctx.lineTo(s.x + Math.cos(a) * 6, s.y + Math.sin(a) * 6); }
+    for (const b of LEGS) { const a = s.a + b; ctx.moveTo(s.x, s.y); ctx.lineTo(s.x + Math.cos(a) * 6, s.y + Math.sin(a) * 6); }
     ctx.stroke();
-    ctx.lineWidth = 2; ctx.beginPath();
-    for (const s of w.striders) { const c = Math.cos(s.a) * 1.5, d = Math.sin(s.a) * 1.5; ctx.moveTo(s.x - c, s.y - d); ctx.lineTo(s.x + c, s.y + d); }
-    ctx.stroke();
+    const c = Math.cos(s.a) * 1.5, d = Math.sin(s.a) * 1.5;
+    ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(s.x - c, s.y - d); ctx.lineTo(s.x + c, s.y + d); ctx.stroke();
   }
   // the air: the dragonfly's shadow, then the dragonfly
   if (w.fly) drawFly(ctx, w.fly, p, ink, paper);
