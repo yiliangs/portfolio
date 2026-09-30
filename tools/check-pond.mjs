@@ -640,5 +640,29 @@ for (const reduced of [false, true]) {
   else if (!(top >= 5 && back < 1 && ptrTop >= 5)) fail(`${show}: (l) a passing fish and the cursor should bend a reed at least 5 px, and it should recover within 2 s`);
 }
 
+// Lotus flowers, on a 1440x900 page with two islands at seeds 2 and 19. (m) `flowers` flowers (flowersTouch on a coarse
+// pointer) each sit on a pad of their own, in different clusters, and through ten simulated minutes of drift and
+// ripples each passes through bud, opening, open and closing and never leaves its pad (its centre stays inside it).
+for (const seed of [2, 19]) {
+  const p = defaults(); p.count = 4;
+  const w = createWorld(p, { w: 1440, h: 900, seed }); setIslands(w, ISL2); step(w, DT);
+  if (!Array.isArray(w.flowers)) { fail(`seed ${seed}: (m) the world should carry lotus flowers (w.flowers)`); continue; }
+  const cw = createWorld(defaults(), { w: 1440, h: 900, seed, coarse: true }); setIslands(cw, ISL2); step(cw, DT);
+  if (w.flowers.length !== p.flowers || cw.flowers.length !== p.flowersTouch) fail(`seed ${seed}: (m) want ${p.flowers} flowers on a fine pointer and ${p.flowersTouch} on a coarse one, got ${w.flowers.length} and ${cw.flowers.length}`);
+  const k = w.padCl.length, cl = new Set(w.flowers.map((f) => w.pads.indexOf(f.q) % k)), own = new Set(w.flowers.map((f) => f.q));
+  if (cl.size !== Math.min(k, w.flowers.length) || own.size !== w.flowers.length) fail(`seed ${seed}: (m) each flower should sit on a pad of its own in a different cluster`);
+  const seen = w.flowers.map(() => new Set()), pads0 = w.flowers.map((f) => f.q);
+  let off = 0, stray = 0;
+  for (let s = 0; s < 60 * 600; s++) {
+    if (s % 900 === 450) { const q = pads0[(s / 900 | 0) % pads0.length]; dropTreat(w, q.x + 25, q.y - 10); }
+    step(w, DT);
+    w.flowers.forEach((f, i) => { seen[i].add(f.stage); if (f.q !== pads0[i]) stray++; off = Math.max(off, Math.hypot(f.x - f.q.x, f.y - f.q.y) / f.q.r); });
+  }
+  const show = `seed ${seed}: flowers saw ${seen.map((S) => S.size).join(',')} of 4 stages in 10 min, farthest ${off.toFixed(2)} of a pad's radius from its centre`;
+  metric(show);
+  if (seen.some((S) => S.size < 4)) fail(`${show}: (m) every flower should pass through all four stages`);
+  if (!(off < 1) || stray) fail(`${show}: (m) a flower should stay on its own pad`);
+}
+
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }
-console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads and reeds hold');
+console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads, reeds and flowers hold');

@@ -1,6 +1,6 @@
 // Home pond: the page seen from above as still water, with the two home objects standing in it as islands. A few
 // dozen line-drawn fish swim between them in groups that form, merge and part on their own, a few of them koi with gold
-// patches, water laps inward at each shore, reeds stand in the shallows, lily pads drift on the open water and give a frightened fish somewhere to
+// patches, water laps inward at each shore, reeds stand in the shallows, lily pads drift, a lotus or two among them, on the open water and give a frightened fish somewhere to
 // hide, and a click drops a treat the fish race for and eat. The layer sits behind reading text, so the resting
 // picture is calm: the fish swim in easy beats and glides and only burst into speed for a reason (a treat, a fast
 // cursor, or now and then on their own) before they settle again.
@@ -101,6 +101,8 @@ export const PARAMS = {
     reedsTouch: [2, 0, 8, 1, 'reed clumps per island on a coarse pointer'],
     sway: [4.5, 0, 12, 0.5, 'mean sway of a reed\'s tip, px'],
     bend: [12, 0, 30, 1, 'most a passing fish or the cursor bends a reed\'s tip, px'],
+    flowers: [2, 0, 8, 1, 'lotus flowers on the pads on a fine pointer'],
+    flowersTouch: [1, 0, 8, 1, 'lotus flowers on a coarse pointer'],
   },
 };
 export const defaults = () => Object.fromEntries(Object.values(PARAMS).flatMap((section) => Object.entries(section).map(([k, v]) => [k, v[0]])));
@@ -366,7 +368,7 @@ export function createWorld(params, opts = {}) {
     fish: [], islands: [], outlines: [], treats: [], ripples: [], stroke: null, fed: [],
     ptr: { x: 0, y: 0, on: false, px: 0, py: 0, seen: false, speed: 0 },
     eaten: 0,
-    seed: opts.seed == null ? 1 : opts.seed, reeds: [],
+    seed: opts.seed == null ? 1 : opts.seed, reeds: [], flowers: [], bloomRand: null,
     pads: [], padSeed: ((opts.seed == null ? 1 : opts.seed) ^ 0x9ad5eed) >>> 0, padIsl: 0, prand: null, flow: null,
   };
   populate(w);
@@ -613,6 +615,43 @@ function stepReeds(w, dt) {
   });
 }
 
+// ----- lotus flowers -----
+// A few pads carry a lotus flower, each on a pad from a different cluster, a little off the pad's centre on the side
+// away from its slit, so it rides and turns with the pad. A flower lives a slow seeded cycle: a bud for 90 to 180 s,
+// opening over 30 s, open for 120 to 240 s, closing over 30 s, then a bud again. The flowers draw from a seeded source
+// of their own; when a flower's pad goes (the pads laid out again, or fewer asked for) the flowers are laid again.
+// flower: { q (its pad), u, v (offset from the pad's centre in the pad's frame), rot, stage (0 bud, 1 opening, 2 open,
+//   3 closing), left, of (s left in the stage, and its length), open (0 bud .. 1 open), x, y }
+const flowerTarget = (w) => Math.max(0, Math.round(w.coarse ? w.params.flowersTouch : w.params.flowers));
+const stageLen = (r, s) => (s === 0 ? 90 + 90 * r() : s === 2 ? 120 + 120 * r() : 30);
+function layFlowers(w, n) {
+  const r = rng((w.seed ^ 0xf10e5) >>> 0), P = w.pads, k = Math.max(1, (w.padCl || []).length), taken = new Set();
+  w.flowers = []; w.bloomRand = r;
+  for (let j = 0; j < n; j++) {
+    // a pad from the next cluster (addPads deals pad i to cluster i % k), or any free pad once that cluster runs out
+    let can = P.filter((q, i) => i % k === j % k && !taken.has(q));
+    if (!can.length) can = P.filter((q) => !taken.has(q));
+    if (!can.length) break;
+    const q = can[Math.floor(r() * can.length)], b = Math.PI + (r() - 0.5) * 1.2, d = (0.25 + 0.15 * r()) * q.r;
+    taken.add(q);
+    const stage = r() < 0.5 ? 0 : 2, of = stageLen(r, stage);
+    w.flowers.push({ q, u: Math.cos(b) * d, v: Math.sin(b) * d, rot: r() * TAU, stage, of, left: of * (0.2 + 0.8 * r()), open: stage === 2 ? 1 : 0, x: q.x, y: q.y });
+  }
+}
+function stepFlowers(w, dt) {
+  const n = Math.min(flowerTarget(w), w.pads.length);
+  if (w.flowers.length !== n || w.flowers.some((f) => !w.pads.includes(f.q))) layFlowers(w, n);
+  const r = w.bloomRand;
+  for (const f of w.flowers) {
+    f.left -= dt;
+    while (f.left <= 0) { f.stage = (f.stage + 1) % 4; f.of = stageLen(r, f.stage); f.left += f.of; }
+    const u = f.stage === 1 ? 1 - f.left / f.of : f.stage === 3 ? f.left / f.of : f.stage === 2 ? 1 : 0;
+    f.open = u * u * (3 - 2 * u);
+    const q = f.q, c = Math.cos(q.a), s = Math.sin(q.a);
+    f.x = q.x + f.u * c - f.v * s; f.y = q.y + f.u * s + f.v * c;
+  }
+}
+
 // ----- beat and glide -----
 // A pond fish does not beat its tail all the time. It swims in bouts: a thrust of a few beats that lifts it a little
 // above the speed it wants, then a glide with the tail still and the body straightening while drag bleeds the speed
@@ -810,6 +849,7 @@ export function step(w, dt) {
   }
   // the surface, after the fish, so a reed bends from where a fish is now
   stepReeds(w, dt);
+  stepFlowers(w, dt);
 }
 
 // ----- drawing -----
@@ -907,11 +947,15 @@ function coastPath(ctx, o, off) {
 // The water's colour: the land's (the page background) taken toward a deep cool slate by `depth`. On a light page the
 // slate darkens it; on a dark page a near-black slate does, so the water sits below the land in both themes.
 // Accepts #rgb, #rrggbb and rgb()/rgba(); anything else leaves the water the colour of the land.
-export function waterOf(paper, depth) {
-  const s = String(paper).trim(); let c = null;
+// The [r, g, b] of a CSS colour, or null.
+function rgbOf(css) {
+  const s = String(css).trim(); let c = null;
   if (s[0] === '#') { const h = s.length === 4 ? s.slice(1).split('').map((d) => d + d).join('') : s.slice(1, 7); if (/^[0-9a-f]{6}$/i.test(h)) c = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)); }
   else { const m = s.match(/rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/i); if (m) c = [+m[1], +m[2], +m[3]]; }
-  if (!c) return s;
+  return c;
+}
+export function waterOf(paper, depth) {
+  const c = rgbOf(paper); if (!c) return String(paper).trim();
   const light = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 > 0.5, deep = light ? [44, 74, 85] : [4, 10, 13];
   // a dark page has little room below it, so the same depth pulls three times as far to read as the same step
   const k = light ? depth : Math.min(1, depth * 3), mix = c.map((v, i) => Math.round(v + (deep[i] - v) * k));
@@ -972,6 +1016,38 @@ function padPath(ctx, q, ox, oy) {
   ctx.arc(cx, cy, rr, a - Math.PI / 2, a + Math.PI / 2, true);
   ctx.closePath();
 }
+// a mix of two CSS colours, k of the way from a to b
+function mixOf(a, b, k) {
+  const A = rgbOf(a), B = rgbOf(b); if (!A || !B) return a;
+  const m = A.map((v, i) => Math.round(v + (B[i] - v) * k));
+  return `rgb(${m[0]}, ${m[1]}, ${m[2]})`;
+}
+let petalFor = '', petal = '';
+// A lotus: a bud is a small pointed ellipse in paper with a gold tip; open, six petals of paper tinted toward gold
+// round a gold centre, spreading with the open fraction.
+const bloomR = (f) => 2.4 + 4.6 * f.open;
+function drawFlower(ctx, f, paper, gold) {
+  const o = f.open, a = f.rot + f.q.a;
+  ctx.globalAlpha = 0.9;
+  if (o < 0.12) {
+    const c = Math.cos(a), s = Math.sin(a), L = 3, H = 1.9;
+    ctx.fillStyle = paper; ctx.beginPath();
+    ctx.moveTo(f.x - c * L, f.y - s * L);
+    ctx.quadraticCurveTo(f.x - s * H * 2, f.y + c * H * 2, f.x + c * L, f.y + s * L);
+    ctx.quadraticCurveTo(f.x + s * H * 2, f.y - c * H * 2, f.x - c * L, f.y - s * L);
+    ctx.fill();
+    ctx.fillStyle = gold; ctx.beginPath(); ctx.arc(f.x + c * (L - 1), f.y + s * (L - 1), 0.9, 0, TAU); ctx.fill();
+    return;
+  }
+  const rl = 2.2 + 3.6 * o, rw = 1.3 + 0.8 * o, d = 0.6 + 2.6 * o;
+  ctx.fillStyle = petal; ctx.beginPath();
+  for (let k = 0; k < 6; k++) {
+    const b = a + (k * TAU) / 6, cx = f.x + Math.cos(b) * d, cy = f.y + Math.sin(b) * d;
+    ctx.moveTo(cx + Math.cos(b) * rl, cy + Math.sin(b) * rl); ctx.ellipse(cx, cy, rl, rw, b, 0, TAU);
+  }
+  ctx.fill();
+  ctx.fillStyle = gold; ctx.beginPath(); ctx.arc(f.x, f.y, 1.1 + 0.5 * o, 0, TAU); ctx.fill();
+}
 // The live layer, over the coasts: the fish, the ripples and treats in the water, then the surface over them.
 export function drawLive(ctx, w, ink, paper, gold) {
   const p = w.params, still = w.reduced;
@@ -995,8 +1071,14 @@ export function drawLive(ctx, w, ink, paper, gold) {
   // swims under one
   ctx.fillStyle = ink; ctx.globalAlpha = p.shadow;
   ctx.beginPath(); for (const q of w.pads) padPath(ctx, q, SHADOW_X, SHADOW_Y); ctx.fill();
+  if (w.flowers.length) { ctx.beginPath(); for (const f of w.flowers) { ctx.moveTo(f.x + SHADOW_X + bloomR(f), f.y + SHADOW_Y); ctx.arc(f.x + SHADOW_X, f.y + SHADOW_Y, bloomR(f), 0, TAU); } ctx.fill(); }
   ctx.fillStyle = FLORA; ctx.globalAlpha = p.floraAlpha;
   ctx.beginPath(); for (const q of w.pads) padPath(ctx, q, 0, 0); ctx.fill();
+  if (w.flowers.length) {
+    if (petalFor !== paper + gold) { petalFor = paper + gold; petal = mixOf(paper, gold, 0.25); }
+    for (const f of w.flowers) drawFlower(ctx, f, paper, gold);
+    ctx.globalAlpha = p.floraAlpha;
+  }
   // the reeds: a flora line each, too thin to cast a shadow worth drawing
   ctx.strokeStyle = FLORA; ctx.lineWidth = 1.5; ctx.beginPath();
   for (const C of w.reeds) if (C) for (const c of C) for (const s of c.stems) { ctx.moveTo(s.rx, s.ry); ctx.quadraticCurveTo(s.cx, s.cy, s.tx, s.ty); }
