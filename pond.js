@@ -276,8 +276,8 @@ export function swell(o, t) {
   return g;
 }
 // The calm line at bearing t: the coast halfway through the swell's span, where the water's edge stands on average.
-// The swell carries the coast a quarter of the island's mean radius out and back, too far for anything that stands
-// still to keep both off the land and close to it by the live coast, so the stones are laid against this line.
+// The swell carries the coast a quarter of the island's mean radius out and back; the calm line plus half that span
+// is the coast at the top of the swell, which the stones and the pads are kept off (outerCoast).
 export function calmCoast(o, t) {
   let u = (t / TAU) * BEARINGS; u -= Math.floor(u / BEARINGS) * BEARINGS;
   const i = Math.floor(u), f = u - i, S = o.S;
@@ -475,13 +475,20 @@ const rippleR = (q, age) => 2 + q.size * Math.sqrt(Math.min(1, Math.max(0, age) 
 const rockTarget = (w) => Math.max(0, Math.round(w.coarse ? w.params.rocksTouch : w.params.rocks));
 // A fish keeps ROCK_SHORE px off a stone, less than the `shore` it keeps off an island: a stone is small enough to slip
 // round, and the full shore margin round the larger stones made the fish bunch.
-const ROCK_LAND = 0, ROCK_EDGE = 30, ROCK_OVER = 0.35, ROCK_FULL = 0.95, ROCK_SHORE = 6;
-// The outcrop's main stone stands on the shore: its centre ROCK_SEAT of its radius past the low-swell coast (S, which
-// the drawn coast never falls inside), so at low swell most of it stands in the water and at high swell the land
-// rises round it and it sits on the beach (stones draw over the land).
-const ROCK_SEAT = 0.3;
-// The distance from (x,y) out past the low-swell coast grown by g px, along the bearing from the island's centre.
-const lowGap = (o, x, y, g) => calmGap(o, x, y, g) + (o.calm || 0);
+const ROCK_EDGE = 30, ROCK_OVER = 0.35, ROCK_FULL = 0.95, ROCK_SHORE = 6;
+// Nothing laid in the water (a stone or a pad) comes within CLEAR px of an island's outermost drawn extent: the coast
+// at the top of the swell (the low-swell coast S plus the swell's full span), then the widest band of shallows, then
+// the reach of the lapping rings. The stones and the pads stand away from the island at every point of the swell.
+const CLEAR = 24;
+// The outcrop stands OUTCROP_NEAR to OUTCROP_FAR px off that extent: near enough to belong to that shore, with a
+// channel between wide enough for the school to pass without funnelling. Its main stone's edge is laid in that span and
+// the stones leaning on it keep OUTCROP_NEAR off the extent, so the outcrop's nearest edge stays in it.
+const OUTCROP_NEAR = 60, OUTCROP_FAR = 100;
+// The island's outermost drawn extent at bearing t, from its centre: the coast at the top of the swell, then the wider
+// of the shallows' outer band and the lapping rings' outermost ring (3 + reach px out; the two overlap, not stack).
+export function outerCoast(o, t, p) { return calmCoast(o, t) + (o.calm || 0) + Math.max(SHALLOWS[0][0], 3 + p.reach); }
+// The distance from (x,y) out past that extent grown by g px, along the bearing from the island's centre.
+export function outerGap(o, x, y, g, p) { return Math.hypot(x - o.x, y - o.y) - outerCoast(o, Math.atan2(y - o.y, x - o.x), p) - g; }
 // The distance from (x,y) to the circle g px outside the disc q, a stone or a pad (negative inside it); the unit
 // normal out of the disc at (x,y) goes to out.
 function discGap(q, x, y, g, out) {
@@ -527,12 +534,12 @@ function bulge(q, b) {
   q.t.forEach((t, i) => { const d = Math.abs(Math.atan2(Math.sin(t - b), Math.cos(t - b))); if (d < bd) { bd = d; j = i; } });
   q.k[j] = Math.max(q.k[j], ROCK_FULL);
 }
-// Whether a stone of size r may stand at (x,y): open water, `land` px off the low-swell coast (the whole stone by
-// default; the land may rise round a stone by the shore as the swell comes in, as a real shore does), ROCK_EDGE inside the screen, and overlapping no stone by more
-// than ROCK_OVER of the smaller: the lumps draw inside their circles, so two that touch must overlap as circles.
-function rockFree(w, x, y, r, list = w.rocks, land = ROCK_LAND + r) {
+// Whether a stone of size r may stand at (x,y): open water, its edge `clear` px (CLEAR by default) off every island's
+// outermost drawn extent, ROCK_EDGE inside the screen, and overlapping no stone by more than ROCK_OVER of the smaller:
+// the lumps draw inside their circles, so two that touch must overlap as circles.
+function rockFree(w, x, y, r, list = w.rocks, clear = CLEAR) {
   if (x < ROCK_EDGE + r || x > w.w - ROCK_EDGE - r || y < ROCK_EDGE + r || y > w.h - ROCK_EDGE - r) return false;
-  for (const o of w.islands) if (lowGap(o, x, y, land) < 0) return false;
+  for (const o of w.islands) if (outerGap(o, x, y, r + clear, w.params) < 0) return false;
   for (const q of list) if (Math.hypot(q.x - x, q.y - y) < q.r + r - ROCK_OVER * Math.min(q.r, r)) return false;
   return true;
 }
@@ -556,37 +563,40 @@ function rockPath(ctx, q, ox, oy) {
 // pad: { x, y, r, hx, hy (its planned spot), cl (its cluster, 0 the main one), a (heading of the notch), vx, vy (the push
 //   still carried from ripples), va, ph, since (s since a push) }
 const padTarget = (w) => Math.max(0, Math.round(w.coarse ? w.params.padsTouch : w.params.pads));
-const RIPPLE_FULL = 34, PAD_COAST = 30, PAD_EDGE = 30, PAD_MAX = 5, PAD_DRAG = 0.6, PAD_TETHER = 0.25, PAD_APART = 0.3;
+const RIPPLE_FULL = 34, PAD_EDGE = 30, PAD_MAX = 5, PAD_DRAG = 0.6, PAD_TETHER = 0.25, PAD_APART = 0.3;
 // ----- the layout of the stones and the pads -----
 // The stones and the pads are laid out together from one seeded plan, so the pond reads as a composed scene rather
 // than things strewn at random. The screen is split at its middle across its longer side; the stones take one half
-// and the pads the other. The stones: an outcrop of 3 to 5 growing out of the shore of the island on their side at a
-// seeded bearing: a main stone (30 to 40 px) standing on the shore, its centre ROCK_SEAT of its radius past the
-// low-swell coast, the shoreline breathing round it as the swell comes and goes; one or two supports (16 to 26 px) trailing seaward against it, off the line to
-// alternate sides by their own amounts; and satellites (8 to 14 px) against any of them. Each stone touches the one it
+// and the pads the other. No stone and no pad comes within CLEAR px of an island's outermost drawn extent (outerCoast:
+// the coast at high swell, its shallows and its lapping rings). The stones: an outcrop of 3 to 5 standing off the shore
+// of the island on their side at a seeded bearing: a main stone (30 to 40 px), its edge CLEAR to CLEAR + OUTCROP_SEAT
+// px past that extent; one or two supports (16 to 26 px) trailing seaward against it, off the line to alternate sides by their own amounts; and satellites (8 to 14 px) against any of them. Each stone touches the one it
 // leans on, overlapping it as circles by 10 to 35 percent of the smaller radius, so the group reads as one outcrop
 // and never a row. The rest stand as a smaller group in open water on the same side, built the same way at 0.6 of the
 // size. The pads: a main cluster of 5 or 6 (one or two large, the rest medium and small, 0.3 to 0.8 of a radius
 // apart) and a satellite of 2 or 3 further along, each centred PAD_CENTRE px or more inside the screen.
-// No pad comes within PLAN_ROCK px of a stone, no cluster centre within PLAN_COAST px of a coast (bar the outcrop,
-// which is meant to touch the shallows), nothing within PLAN_EDGE px of the screen's edge or on the land. The pads
+// No pad comes within PLAN_ROCK px of a stone, no cluster centre within PLAN_COAST px of an island's outermost drawn
+// extent (bar the outcrop's), nothing within PLAN_EDGE px of the screen's edge. The pads
 // get some room on top of those limits for their wander.
-// Where the screen is too small for all of that, the satellites go first (the stone group's stones then trail from the
-// outcrop, the satellite's pads join the main cluster, and a pad with no room in its cluster takes any open water),
-// and whatever still finds no room is left out: the counts shrink rather than the rules bend.
+// Where the screen is too small for all of that, the composition gives way in order: the open-water stone group is
+// dropped (its stones are not placed), then the pads may cross the middle when their half has no room for a cluster
+// centre, still PLAN_ROCK off the stones and CLEAR off the islands; the satellite's pads join the main cluster, and a
+// pad with no room in its cluster takes any open water. plan.gaveWay records that it had to. Whatever still finds no
+// room is left out: the counts shrink rather than the rules bend. A cluster centre keeps PAD_CENTRE off the screen's
+// edge on a screen PAD_WIDE px wide or more, PAD_CENTRE_NARROW below that.
 // The plan is laid again when the islands first arrive, a moment after a resize, and when a count changes. It has a
 // seeded source of its own; the pads' drift keeps theirs (prand), and the fish's is untouched.
-const PLAN_ROCK = 90 + 20, PLAN_COAST = 60 + 15, PLAN_EDGE = 30, PAD_LAND = 40, PAD_CENTRE = 90 + 30, RELAY = 0.6;
+const PLAN_ROCK = 90 + 20, PLAN_COAST = CLEAR + 30, PLAN_EDGE = 30, PAD_CENTRE = 90 + 30, PAD_CENTRE_NARROW = 90, PAD_WIDE = 1600, RELAY = 0.6;
 // Where (x,y) lies against the screen's middle, across its longer side: below 0 on the left (or the top).
 const sideOf = (w, x, y) => (w.w >= w.h ? x - w.w / 2 : y - w.h / 2);
-function landClear(w, x, y) { let c = Infinity; for (const o of w.islands) c = Math.min(c, shoreGap(o, x, y, 0)); return c; }
+function landClear(w, x, y) { let c = Infinity; for (const o of w.islands) c = Math.min(c, outerGap(o, x, y, 0, w.params)); return c; }
 const edgeClear = (w, x, y) => Math.min(x, w.w - x, y, w.h - y);
 function rockClear(w, x, y) { let c = Infinity; for (const q of w.rocks) c = Math.min(c, Math.hypot(q.x - x, q.y - y) - q.r); return c; }
 // Whether a pad of radius r may be laid at (x,y) among the pads P: open water, clear of the stones by PLAN_ROCK and of
 // the other pads by the cluster's closest spacing.
 function padOk(w, P, x, y, r) {
   if (edgeClear(w, x, y) < PLAN_EDGE + r) return false;
-  for (const o of w.islands) if (shoreGap(o, x, y, PAD_LAND + r) < 0) return false;
+  for (const o of w.islands) if (outerGap(o, x, y, r + CLEAR, w.params) < 0) return false;
   if (rockClear(w, x, y) < PLAN_ROCK + r) return false;
   for (const q of P) if (Math.hypot(q.x - x, q.y - y) < q.r + r + PAD_APART * Math.min(q.r, r)) return false;
   return true;
@@ -599,8 +609,11 @@ function layPond(w) {
   const sizes = (n, sup, k) => { const L = []; for (let i = 0; i < n; i++) L.push(k * (i === 0 ? 30 + 10 * r() : i <= sup ? 16 + 10 * r() : 8 + 6 * r())); return L; };
   const out = sizes(nOut, nSup, 1), grp = sizes(nr - nOut, 1, 0.6);
   w.rocks = [];
+  // plan.gaveWay: the screen had no room for the whole composition, and the open-water group was dropped or the pads
+  // crossed the middle
+  const plan = (w.plan = { gaveWay: false });
   layOutcrop(w, r, rs, out, nSup);
-  if (grp.length && !layGroup(w, r, rs, grp)) trail(w, r, w.rocks, grp, w.rocks.length ? Math.atan2(w.rocks[w.rocks.length - 1].y - w.rocks[0].y, w.rocks[w.rocks.length - 1].x - w.rocks[0].x) : r() * TAU, rs, 0);
+  if (grp.length && !layGroup(w, r, rs, grp)) plan.gaveWay = true;
   // the pads, on the other side
   const nSat = np >= 8 ? 2 + (r() < 0.5 ? 1 : 0) : np >= 5 ? 2 : 0, nMain = np - nSat, nBig = nMain >= 4 && r() < 0.5 ? 2 : 1;
   const main = [], sat = [];
@@ -626,12 +639,13 @@ function layOutcrop(w, r, rs, sizes, nSup) {
   let best = [];
   for (let t = 0; t < 24 && best.length < sizes.length; t++) {
     const b = b0 + (t / 24) * TAU, L = [], s0 = sizes[0];
-    // the main stone on the shore, its centre just seaward of the calm line; with no island yet, in open water on its side
+    // the main stone off the shore, its edge OUTCROP_NEAR to OUTCROP_FAR px past the island's outermost drawn extent;
+    // with no island yet, in open water on its side
     let x, y;
-    if (o) { const d = calmCoast(o, b) - (o.calm || 0) + ROCK_SEAT * s0; x = o.x + Math.cos(b) * d; y = o.y + Math.sin(b) * d; } else { x = w.w / 2 + rs * (0.25 + 0.1 * r()) * (w.w >= w.h ? w.w : 0); y = w.h / 2 + rs * (0.25 + 0.1 * r()) * (w.w >= w.h ? 0 : w.h); }
-    if (!(sideOf(w, x, y) * rs > 0) || !rockFree(w, x, y, s0, L, 0)) continue;
+    if (o) { const d = outerCoast(o, b, w.params) + OUTCROP_NEAR + (OUTCROP_FAR - OUTCROP_NEAR) * r() + s0; x = o.x + Math.cos(b) * d; y = o.y + Math.sin(b) * d; } else { x = w.w / 2 + rs * (0.25 + 0.1 * r()) * (w.w >= w.h ? w.w : 0); y = w.h / 2 + rs * (0.25 + 0.1 * r()) * (w.w >= w.h ? 0 : w.h); }
+    if (!(sideOf(w, x, y) * rs > 0) || !rockFree(w, x, y, s0, L, OUTCROP_NEAR)) continue;
     L.push(Object.assign(makeRock(r, x, y, s0), { grp: 0 }));
-    trail(w, r, L, sizes.slice(1), b, rs, nSup);
+    trail(w, r, L, sizes.slice(1), b, rs, nSup, OUTCROP_NEAR);
     if (L.length > best.length) best = L;
   }
   w.rocks.push(...best);
@@ -641,7 +655,7 @@ function layOutcrop(w, r, rs, sizes, nSup) {
 // satellites) against any stone of the group, within 1.8 rad of the line. Each overlaps the stone it leans on, as
 // circles, by 10 to 35 percent of the smaller radius (its centre 0.85 to 1 of the two radii summed away), and the two
 // turn a full vertex to each other. A stone that finds no room is left out.
-function trail(w, r, L, sizes, b, rs, nSup) {
+function trail(w, r, L, sizes, b, rs, nSup, clear = CLEAR) {
   let side = r() < 0.5 ? -1 : 1;
   const grp = L[0] ? L[0].grp : 0;
   sizes.forEach((s, i) => {
@@ -650,7 +664,7 @@ function trail(w, r, L, sizes, b, rs, nSup) {
       const sup = i < nSup, par = sup ? L[0] : L[Math.floor(r() * L.length)];
       const a = sup ? b + side * (0.3 + 0.8 * r()) : b + (2 * r() - 1) * 1.8, S = par.r + s;
       const d = Math.max(0.85 * S, S - (0.1 + 0.25 * r()) * Math.min(par.r, s)), x = par.x + Math.cos(a) * d, y = par.y + Math.sin(a) * d;
-      if (sideOf(w, x, y) * rs > 0 && rockFree(w, x, y, s, L === w.rocks ? w.rocks : [...w.rocks, ...L])) ok = { x, y, par, a };
+      if (sideOf(w, x, y) * rs > 0 && rockFree(w, x, y, s, L === w.rocks ? w.rocks : [...w.rocks, ...L], clear)) ok = { x, y, par, a };
     }
     if (!ok) return;
     L.push(Object.assign(makeRock(r, ok.x, ok.y, s, ok.a + Math.PI), { grp }));
@@ -679,19 +693,22 @@ function layGroup(w, r, rs, sizes) {
   return true;
 }
 // A pad cluster's centre on open water on side ps (the main one), or 150 to 280 px along from the main one (a
-// satellite, from): PLAN_COAST off the coasts, PLAN_ROCK and a cluster's reach off the stones, PAD_CENTRE off the screen's edge. The
-// main one takes the openest of the seeded tries, a satellite the nearest to 210 px along; failing the side, anywhere.
+// satellite, from): PLAN_COAST off the coasts, PLAN_ROCK and a cluster's reach off the stones, PAD_CENTRE (PAD_CENTRE_NARROW on a narrower screen) off the screen's edge. The
+// main one takes the openest of the seeded tries, a satellite the nearest to 210 px along; failing the side, anywhere, and the plan gives way.
 function padCentre(w, r, ps, from) {
   let c = null, cs = -Infinity;
+  const margin = w.w >= PAD_WIDE ? PAD_CENTRE : PAD_CENTRE_NARROW;
   for (let pass = 0; pass < 2 && !c; pass++) for (let t = 0; t < 120; t++) {
     const x = (0.05 + 0.9 * r()) * w.w, y = (0.05 + 0.9 * r()) * w.h, land = landClear(w, x, y);
-    if ((pass === 0 && !(sideOf(w, x, y) * ps > 0)) || land < PLAN_COAST || edgeClear(w, x, y) < PAD_CENTRE || rockClear(w, x, y) < PLAN_ROCK + 45) continue;
+    if ((pass === 0 && !(sideOf(w, x, y) * ps > 0)) || land < PLAN_COAST || edgeClear(w, x, y) < margin || rockClear(w, x, y) < PLAN_ROCK + 45) continue;
     const d = from ? Math.hypot(x - from.x, y - from.y) : 0;
     if (from && (d < 150 || d > 280)) continue;
     const sc = (from ? -Math.abs(d - 210) : Math.min(land, 160) + Math.min(rockClear(w, x, y), 300) / 4) + 40 * r();
     if (sc > cs) { cs = sc; c = { x, y }; }
   }
+  if (c && !(sideOf(w, c.x, c.y) * ps > 0)) w.plan.gaveWay = true;
   if (c || from) return c;
+  w.plan.gaveWay = true;
   return { x: w.w / 2 + ps * (w.w >= w.h ? w.w / 4 : 0), y: w.h / 2 + ps * (w.w >= w.h ? 0 : w.h / 4) };
 }
 // Lays pads of the given sizes round centre c as cluster cl: each the nearest to c of a dozen seeded spots against a
@@ -747,7 +764,7 @@ function stepPads(w, dt) {
         if (room < want) { const k = Math.min(1.5, (want - room) / want) * 4; ux += (dx / d) * k; uy += (dy / d) * k; }
       }
       for (const o of w.islands) {
-        const gap = shoreGap(o, q.x, q.y, PAD_COAST);
+        const gap = outerGap(o, q.x, q.y, q.r + CLEAR, w.params);
         if (gap < 30) { shoreNormal(o, q.x, q.y, NRM); const k = Math.min(1.5, 1 - gap / 30) * 6; ux += NRM.x * k; uy += NRM.y * k; }
       }
       for (const o of w.rocks) {
@@ -773,7 +790,11 @@ function stepPads(w, dt) {
     a.x -= ux * k; a.y -= uy * k; b.x += ux * k; b.y += uy * k;
   }
   for (const q of P) {
-    for (const o of w.islands) if (shoreGap(o, q.x, q.y, q.r) < 0) { onShore(o, q.x, q.y, q.r, PT); q.x = PT.x; q.y = PT.y; }
+    for (const o of w.islands) {
+      if (outerGap(o, q.x, q.y, q.r + CLEAR, w.params) >= 0) continue;
+      const dx = q.x - o.x, dy = q.y - o.y, d = Math.hypot(dx, dy) || 1e-6, t = Math.atan2(dy, dx), g = outerCoast(o, t, w.params) + q.r + CLEAR;
+      q.x = o.x + (dx / d) * g; q.y = o.y + (dy / d) * g;
+    }
     for (const o of w.rocks) if (discGap(o, q.x, q.y, q.r, NRM) < 0) { q.x = o.x + NRM.x * (o.r + q.r); q.y = o.y + NRM.y * (o.r + q.r); }
     q.x = Math.min(Math.max(q.x, Math.min(q.r, w.w / 2)), Math.max(w.w - q.r, w.w / 2));
     q.y = Math.min(Math.max(q.y, Math.min(q.r, w.h / 2)), Math.max(w.h - q.r, w.h / 2));
