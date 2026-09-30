@@ -93,7 +93,10 @@ export const PARAMS = {
     shelter: [220, 0, 600, 10, 'how far a startled fish looks for a pad to hide under, px'],
     shelterChance: [0.6, 0, 1, 0.05, 'chance a startled fish hides under a pad'],
     rest: [0.01, 0, 0.2, 0.005, 'chance per s that a calm fish goes to rest under a pad'],
-    padAlpha: [0.35, 0, 1, 0.01, 'pad outline opacity'],
+  },
+  surface: {
+    floraAlpha: [0.55, 0, 1, 0.01, 'opacity of the green things on the surface'],
+    shadow: [0.08, 0, 0.4, 0.005, 'opacity of the shadow a thing on the surface casts on the water'],
   },
 };
 export const defaults = () => Object.fromEntries(Object.values(PARAMS).flatMap((section) => Object.entries(section).map(([k, v]) => [k, v[0]])));
@@ -434,7 +437,7 @@ function ripple(w, x, y, size, life) {
 const rippleR = (q, age) => 2 + q.size * Math.sqrt(Math.min(1, Math.max(0, age) / q.life));
 
 // ----- lily pads -----
-// A pad is a disc with a wedge cut toward its own heading, floating on open water. The pads start in two or three loose
+// A pad is a disc with a slit cut toward its own heading, floating on open water. The pads start in two or three loose
 // clusters, drift on a slow flow that turns over the page and over time (nearby pads share it, so a cluster keeps
 // roughly together while it drifts and rearranges), turn a little as they go, nudge each other apart, keep off the
 // islands and the screen edges, and take a push outward from each ripple ring that passes under them. Everything here
@@ -853,7 +856,7 @@ const SHALLOWS = [[36, 0.16], [20, 0.2], [9, 0.28]];
 // Draws the world onto ctx (already scaled to CSS px). ink and paper are CSS colours (paper is the land); water is the
 // pond's colour and defaults to the land's; gold is the treats' and the koi's colour. The world is two layers, drawn in order: the
 // coasts (opaque: the water, the land, the shores and the waves lapping at them) and the live layer over them (the
-// fish, the pads, the ripples and the treats). The shell may draw the coasts at a lower resolution than the live layer.
+// fish, the ripples and the treats, then the things on the surface). The shell may draw the coasts at a lower resolution than the live layer.
 export function draw(ctx, w, ink, paper, gold, water = paper) {
   drawCoasts(ctx, w, ink, paper, water);
   drawLive(ctx, w, ink, paper, gold);
@@ -885,21 +888,31 @@ export function drawCoasts(ctx, w, ink, paper, water = paper) {
   }
   ctx.globalAlpha = 1;
 }
-// The live layer: the fish, the pads over them, the ripples and the treats, over the coasts.
+// The surface. Each thing is drawn in the hand of the layer it lives in. The water layer, the fish, is an ink outline
+// over a paper fill. The surface layer (pads, flowers, reeds, striders) is flat translucent flora with no outline, and
+// what lies flat on the water casts a shadow: the same shape in ink, offset down and to the right, unblurred (a blur
+// costs the GPU far more than the offset, which reads as a shadow on its own). The air layer, the dragonfly, is an ink
+// line with paper wings, its shadow further off while it flies.
+export const FLORA = '#5f7f66';
+const SHADOW_X = 2, SHADOW_Y = 3, SLIT = (18 / 180) * Math.PI;
+// A pad: a disc with a narrow slit cut toward its heading, the slit ending short of the centre in a rounded end.
+function padPath(ctx, q, ox, oy) {
+  const x = q.x + ox, y = q.y + oy, a = q.a, h = SLIT / 2, d0 = 0.18 * q.r, rr = 0.05 * q.r + 0.4;
+  const cx = x + Math.cos(a) * d0, cy = y + Math.sin(a) * d0, nx = -Math.sin(a), ny = Math.cos(a);
+  ctx.moveTo(x + Math.cos(a + h) * q.r, y + Math.sin(a + h) * q.r);
+  ctx.arc(x, y, q.r, a + h, a + TAU - h);
+  ctx.lineTo(cx - nx * rr, cy - ny * rr);
+  ctx.arc(cx, cy, rr, a - Math.PI / 2, a + Math.PI / 2, true);
+  ctx.closePath();
+}
+// The live layer, over the coasts: the fish, the ripples and treats in the water, then the surface over them.
 export function drawLive(ctx, w, ink, paper, gold) {
   const p = w.params, still = w.reduced;
   // the school: a paper fill under each outline, so crossing fish read as one over the other
   ctx.strokeStyle = ink; ctx.lineWidth = p.width; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   ctx.fillStyle = paper;
   for (const f of w.fish) drawFish(ctx, f, p, still ? 0.4 : 1, gold);
-  // the pads float over the fish, so a fish that swims under one is hidden by it
-  const notch = (40 / 180) * Math.PI;
-  for (const q of w.pads) {
-    ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.arc(q.x, q.y, q.r, q.a + notch / 2, q.a + TAU - notch / 2); ctx.closePath();
-    ctx.globalAlpha = 1; ctx.fill();
-    ctx.globalAlpha = p.padAlpha; ctx.stroke();
-  }
-  // ripples, then the treats on the surface above everything
+  // ripples, then the treats, in the water under whatever floats
   for (const q of w.ripples) {
     const k = q.age / q.life;
     ctx.globalAlpha = p.ringAlpha * 2 * (1 - k);
@@ -911,6 +924,12 @@ export function drawLive(ctx, w, ink, paper, gold) {
     ctx.globalAlpha = 0.9 * (1 - k * k);
     ctx.beginPath(); ctx.arc(t.x, t.y, 2.4 * (1 - 0.55 * k), 0, TAU); ctx.fill();
   }
+  // the surface: every shadow first, so no shadow falls across a pad, then the pads over the fish, hiding a fish that
+  // swims under one
+  ctx.fillStyle = ink; ctx.globalAlpha = p.shadow;
+  ctx.beginPath(); for (const q of w.pads) padPath(ctx, q, SHADOW_X, SHADOW_Y); ctx.fill();
+  ctx.fillStyle = FLORA; ctx.globalAlpha = p.floraAlpha;
+  ctx.beginPath(); for (const q of w.pads) padPath(ctx, q, 0, 0); ctx.fill();
   ctx.globalAlpha = 1;
 }
 
