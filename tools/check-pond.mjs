@@ -514,5 +514,77 @@ for (const m of fission.filter((f) => f.seed === 2 || f.seed === 19)) {
   }
 }
 
+// Lily pads, on a 1440x900 page with two islands at seeds 2 and 19. (g) the pads are laid out on open water, 40 px
+// clear of every coast and 30 px inside the edges, apart from each other, and through three simulated minutes of drift,
+// ripples from treats dropped among them, cursor passes and a resize (given a second to settle), every pad stays on the
+// water, on screen and clear of the others. (i) a pad drifts under 6 px/s except within 2 s of a ripple's push, and a
+// ripple does push it, or (i) proves nothing. (h) a fast cursor pass through fish near the pads sends at least 2 of
+// them to hide under a pad (head under it for a full second) within 6 s.
+const padsOf = (w) => (Array.isArray(w.pads) ? w.pads : null);
+for (const seed of [2, 19]) {
+  const w = createWorld(defaults(), { w: 1440, h: 900, seed });
+  setIslands(w, ISL2);
+  const P = padsOf(w);
+  if (!P) { fail(`seed ${seed}: (g) the world should carry lily pads (w.pads)`); continue; }
+  const coarse = padsOf(createWorld(defaults(), { w: 1440, h: 900, seed, coarse: true }));
+  if (P.length !== w.params.pads || coarse.length !== w.params.padsTouch) fail(`seed ${seed}: (g) want ${w.params.pads} pads on a fine pointer and ${w.params.padsTouch} on a coarse one, got ${P.length} and ${coarse.length}`);
+  let spawnBad = 0;
+  P.forEach((q, i) => {
+    if (q.x < 30 + q.r || q.x > w.w - 30 - q.r || q.y < 30 + q.r || q.y > w.h - 30 - q.r) spawnBad++;
+    else if (w.islands.some((o) => M.shoreGap(o, q.x, q.y, 40 + q.r) < 0)) spawnBad++;
+    else if (P.some((o, j) => j !== i && Math.hypot(o.x - q.x, o.y - q.y) < o.r + q.r)) spawnBad++;
+    if (!(q.r >= 10 && q.r <= 22)) spawnBad++;
+  });
+  if (spawnBad) fail(`seed ${seed}: (g) ${spawnBad} pads were laid out off open water, within 40 px of a coast, 30 px of an edge, on another pad, or outside 10 to 22 px radius`);
+  let land = Infinity, edge = Infinity, apart = Infinity, clear = Infinity, calm = 0, pushed = 0, grace = 0;
+  const prev = P.map((q) => [q.x, q.y]);
+  for (let s = 0; s < 60 * 180; s++) {
+    if (s % 600 === 300) { const q = P[(s / 600) % P.length | 0]; dropTreat(w, q.x + 25, q.y - 10); }
+    const k = s % 420; setPointer(w, 100 + k * 40, 300 + (s % 840 < 420 ? 0 : 300), k < 30);
+    if (s === 60 * 120) { M.resizeWorld(w, 1200, 780); grace = 60; }
+    step(w, DT);
+    if (grace > 0) { grace--; P.forEach((q, i) => { prev[i][0] = q.x; prev[i][1] = q.y; }); continue; }
+    P.forEach((q, i) => {
+      const v = Math.hypot(q.x - prev[i][0], q.y - prev[i][1]) / DT; prev[i][0] = q.x; prev[i][1] = q.y;
+      if (q.since < 2) pushed = Math.max(pushed, v); else calm = Math.max(calm, v);
+      for (const o of w.islands) { land = Math.min(land, M.shoreGap(o, q.x, q.y, q.r)); clear = Math.min(clear, M.shoreGap(o, q.x, q.y, 0)); }
+      edge = Math.min(edge, q.x - q.r, w.w - q.r - q.x, q.y - q.r, w.h - q.r - q.y);
+      for (let j = i + 1; j < P.length; j++) apart = Math.min(apart, Math.hypot(P[j].x - q.x, P[j].y - q.y) - P[j].r - q.r);
+    });
+  }
+  const show = `seed ${seed}: pads' least water ${land.toFixed(1)} px, centre to coast ${clear.toFixed(1)} px, edge ${edge.toFixed(1)} px, gap ${apart.toFixed(1)} px; top drift ${calm.toFixed(2)} px/s, top pushed ${pushed.toFixed(2)} px/s`;
+  metric(show);
+  if (!(land >= -0.5 && edge >= -0.5 && apart >= -0.5)) fail(`${show}: (g) every pad should stay on the water, on screen and clear of the others`);
+  if (!(calm < 6)) fail(`${show}: (i) a pad should drift under 6 px/s unless a ripple pushed it in the last 2 s`);
+  if (!(pushed >= 7)) fail(`${show}: (i) a ripple should push a pad well past its drift`);
+}
+for (const seed of [2, 19]) {
+  const w = createWorld(defaults(), { w: 1440, h: 900, seed });
+  setIslands(w, ISL2);
+  const P = padsOf(w);
+  if (!P) { fail(`seed ${seed}: (h) the world should carry lily pads (w.pads)`); continue; }
+  for (let s = 0; s < 60 * 5; s++) step(w, DT);
+  const under = (f) => P.some((q) => Math.hypot(q.x - f.x, q.y - f.y) < q.r);
+  // the pass goes through the fish near a pad with the most company within 100 px
+  let at = null, most = -1;
+  for (const f of w.fish) {
+    if (!P.some((q) => Math.hypot(q.x - f.x, q.y - f.y) < 180)) continue;
+    const c = w.fish.filter((g) => Math.hypot(g.x - f.x, g.y - f.y) < 100).length;
+    if (c > most) { most = c; at = f; }
+  }
+  if (!at) { fail(`seed ${seed}: (h) no fish within 180 px of a pad after 5 s`); continue; }
+  const was = new Set(w.fish.filter(under)), run = new Map(), hid = new Set(), X = at.x, Y = at.y;
+  for (let s = 0; s < 60 * 6; s++) {
+    setPointer(w, X - 300 + s * 30, Y, s < 20);
+    step(w, DT);
+    for (const f of w.fish) {
+      const n = under(f) ? (run.get(f) || 0) + 1 : 0; run.set(f, n);
+      if (n >= 60 && !was.has(f)) hid.add(f);
+    }
+  }
+  metric(`seed ${seed}: ${hid.size} fish hid under a pad within 6 s of a cursor pass through ${most} fish`);
+  if (!(hid.size >= 2)) fail(`seed ${seed}: (h) a fast cursor pass through ${most} fish near the pads should send at least 2 under a pad within 6 s, sent ${hid.size}`);
+}
+
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }
-console.log('check-pond: stroke, islands, treats and reduced motion hold');
+console.log('check-pond: stroke, islands, treats, reduced motion, koi and lily pads hold');

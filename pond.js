@@ -1,6 +1,7 @@
 // Home pond: the page seen from above as still water, with the two home objects standing in it as islands. A few
-// dozen line-drawn fish swim between them in groups that form, merge and part on their own, water laps inward at each
-// shore, and a click drops a treat the fish race for and eat. The layer sits behind reading text, so the resting
+// dozen line-drawn fish swim between them in groups that form, merge and part on their own, a few of them koi with gold
+// patches, water laps inward at each shore, lily pads drift on the open water and give a frightened fish somewhere to
+// hide, and a click drops a treat the fish race for and eat. The layer sits behind reading text, so the resting
 // picture is calm: the fish swim in easy beats and glides and only burst into speed for a reason (a treat, a fast
 // cursor, or now and then on their own) before they settle again.
 //
@@ -83,6 +84,16 @@ export const PARAMS = {
     spacing: [22, 4, 200, 1, 'gap between treats dropped along a drag, px'],
     startle: [800, 100, 4000, 50, 'cursor speed that startles, px/s'],
     scare: [110, 0, 400, 5, 'startle radius, px'],
+  },
+  pads: {
+    pads: [8, 0, 24, 1, 'lily pads on a fine pointer'],
+    padsTouch: [5, 0, 24, 1, 'lily pads on a coarse pointer'],
+    drift: [3, 0, 12, 0.5, 'mean drift of a pad, px/s'],
+    push: [10, 0, 40, 1, 'push a passing ripple gives a pad, px/s'],
+    shelter: [220, 0, 600, 10, 'how far a startled fish looks for a pad to hide under, px'],
+    shelterChance: [0.6, 0, 1, 0.05, 'chance a startled fish hides under a pad'],
+    rest: [0.01, 0, 0.2, 0.005, 'chance per s that a calm fish goes to rest under a pad'],
+    padAlpha: [0.35, 0, 1, 0.01, 'pad outline opacity'],
   },
 };
 export const defaults = () => Object.fromEntries(Object.values(PARAMS).flatMap((section) => Object.entries(section).map(([k, v]) => [k, v[0]])));
@@ -333,6 +344,7 @@ function spawnFish(w, f, x, y) {
   f.phase = r() * TAU; f.fin = r() * TAU; f.wa = 0; f.idle = 0; f.cs = -2;
   f.left = 0; f.top = 0; f.hz = 0; f.sweep = 0; f.amp = r() * 0.5; f.low = p.low * (0.85 + 0.3 * r());
   f.goal = null; f.keep = 0; f.will = 1; f.food = false;
+  f.pad = null; f.hide = 0; f.under = false; f.seek = 0; // the pad it is making for or hiding under
   f.rope = new Float32Array(SPINE * 2);
   const seg = (f.len * BODY) / (SPINE - 1), cx = Math.cos(f.h), cy = Math.sin(f.h);
   for (let i = 0; i < SPINE; i++) { f.rope[i * 2] = f.x - cx * seg * i; f.rope[i * 2 + 1] = f.y - cy * seg * i; }
@@ -347,8 +359,10 @@ export function createWorld(params, opts = {}) {
     fish: [], islands: [], outlines: [], treats: [], ripples: [], stroke: null, fed: [],
     ptr: { x: 0, y: 0, on: false, px: 0, py: 0, seen: false, speed: 0 },
     eaten: 0,
+    pads: [], padSeed: ((opts.seed == null ? 1 : opts.seed) ^ 0x9ad5eed) >>> 0, padIsl: 0, prand: null, flow: null,
   };
   populate(w);
+  spawnPads(w);
   return w;
 }
 const target = (w) => Math.max(0, Math.round(w.coarse ? w.params.countTouch : w.params.count));
@@ -371,6 +385,8 @@ export function setIslands(w, boxes) {
   const list = boxes || [];
   w.islands.length = Math.min(w.islands.length, list.length);
   list.forEach((b, i) => { if (w.islands[i]) placeBox(w.islands[i], b); else { const o = makeIsland(i, b); updateIsland(o, w.outlines[i], 0, w.params, w.reduced, w.t); w.islands.push(o); } });
+  // pads laid out before the page had any islands are laid out again round the first ones, while the pond is new
+  if (!w.padIsl && w.islands.length && w.t < 1) spawnPads(w);
 }
 export function setOutlines(w, fns) { w.outlines = fns || []; }
 export function setPointer(w, x, y, on) { w.ptr.x = x; w.ptr.y = y; w.ptr.on = !!on; }
@@ -413,6 +429,120 @@ export function strokeCancel(w) { w.stroke = null; }
 function ripple(w, x, y, size, life) {
   if (w.ripples.length >= 64) w.ripples.shift();
   w.ripples.push({ x, y, age: 0, size, life });
+}
+// A ripple's ring radius at a given age.
+const rippleR = (q, age) => 2 + q.size * Math.sqrt(Math.min(1, Math.max(0, age) / q.life));
+
+// ----- lily pads -----
+// A pad is a disc with a wedge cut toward its own heading, floating on open water. The pads start in two or three loose
+// clusters, drift on a slow flow that turns over the page and over time (nearby pads share it, so a cluster keeps
+// roughly together while it drifts and rearranges), turn a little as they go, nudge each other apart, keep off the
+// islands and the screen edges, and take a push outward from each ripple ring that passes under them. Everything here
+// runs on the pads' own seeded source (prand), apart from the fishes', so pads never change how the fish draw theirs.
+// pad: { x, y, r, a (heading of the notch), vx, vy (the push still carried from ripples), va, ph, since (s since a push) }
+const padTarget = (w) => Math.max(0, Math.round(w.coarse ? w.params.padsTouch : w.params.pads));
+const PAD_GAP = 4, PAD_COAST = 30, PAD_EDGE = 30, PAD_MAX = 5, PAD_DRAG = 0.6;
+// Whether a pad of radius r at (x,y) may be laid there: clear of the edges, the coasts and the other pads.
+function padFree(w, x, y, r, coastGap, edgeGap) {
+  if (x < edgeGap + r || x > w.w - edgeGap - r || y < edgeGap + r || y > w.h - edgeGap - r) return false;
+  for (const o of w.islands) if (shoreGap(o, x, y, coastGap + r) < 0) return false;
+  for (const q of w.pads) if (Math.hypot(q.x - x, q.y - y) < q.r + r + PAD_GAP) return false;
+  return true;
+}
+// Lays the pads out afresh from the pads' seed: two or three cluster centres on open water, then each pad by rejection
+// round its centre, on open water anywhere should the cluster be full.
+function spawnPads(w) {
+  w.prand = rng(w.padSeed); w.pads = []; w.padIsl = w.islands.length;
+  for (const f of w.fish) f.pad = null;
+  const r = w.prand;
+  w.flow = { a0: r() * TAU, p1: r() * TAU, p2: r() * TAU };
+  const k = 2 + Math.floor(r() * 2);
+  w.padCl = [];
+  for (let c = 0; c < k; c++) {
+    let best = null;
+    for (let t = 0; t < 40 && !best; t++) { const x = (0.1 + 0.8 * r()) * w.w, y = (0.1 + 0.8 * r()) * w.h; if (padFree(w, x, y, 50, 40, PAD_EDGE)) best = { x, y }; }
+    w.padCl.push(best || { x: (0.2 + 0.6 * r()) * w.w, y: (0.2 + 0.6 * r()) * w.h });
+  }
+  addPads(w, padTarget(w));
+}
+function addPads(w, n) {
+  const r = w.prand;
+  for (let i = 0; i < n; i++) {
+    const rad = 10 + 12 * r(), c = w.padCl[w.pads.length % w.padCl.length];
+    let x = c.x, y = c.y, ok = false;
+    for (let t = 0; t < 120 && !ok; t++) {
+      if (t < 60) { const d = Math.sqrt(r()) * 90, b = r() * TAU; x = c.x + Math.cos(b) * d; y = c.y + Math.sin(b) * d; }
+      else { x = (0.05 + 0.9 * r()) * w.w; y = (0.05 + 0.9 * r()) * w.h; }
+      ok = padFree(w, x, y, rad, 40, PAD_EDGE);
+    }
+    w.pads.push({ x, y, r: rad, a: r() * TAU, vx: 0, vy: 0, va: 0, ph: r() * TAU, since: Infinity });
+  }
+}
+// The drift of the water at (x,y): a heading that turns slowly over the page and over time.
+function flowAt(w, x, y) {
+  const f = w.flow, t = w.t;
+  return f.a0 + 0.03 * t + 1.1 * Math.sin(0.0035 * x + 0.05 * t + f.p1) + 1.1 * Math.sin(0.0041 * y - 0.04 * t + f.p2);
+}
+function stepPads(w, dt) {
+  const p = w.params, P = w.pads, r = w.prand;
+  const n = padTarget(w);
+  if (P.length < n) addPads(w, n - P.length);
+  else if (P.length > n) { P.length = n; for (const f of w.fish) f.pad = null; }
+  if (!w.reduced) {
+    const drag = Math.exp(-dt / PAD_DRAG);
+    for (const q of P) {
+      // a ripple ring that passed under the pad's centre this step pushes it outward and gives it a turn
+      for (const g of w.ripples) {
+        const dx = q.x - g.x, dy = q.y - g.y, d = Math.hypot(dx, dy);
+        if (d > 1e-6 && d <= rippleR(g, g.age) && (g.age - dt <= 0 || d > rippleR(g, g.age - dt))) {
+          q.vx += (dx / d) * p.push; q.vy += (dy / d) * p.push; q.va += (r() - 0.5) * 0.8; q.since = 0;
+        }
+      }
+      // rings that follow close on each other (a treat dropped, then eaten) do not stack past one push
+      const m = Math.hypot(q.vx, q.vy), cap = p.push; if (m > cap) { q.vx *= cap / m; q.vy *= cap / m; }
+      // the drift and the soft pushes, bounded together so a pad never hurries on its own account
+      const h = flowAt(w, q.x, q.y), s = p.drift * (1 + 0.33 * Math.sin(0.13 * w.t + q.ph));
+      let ux = Math.cos(h) * s, uy = Math.sin(h) * s;
+      for (const o of P) {
+        if (o === q) continue;
+        const dx = q.x - o.x, dy = q.y - o.y, d = Math.hypot(dx, dy) || 1e-6, room = d - q.r - o.r;
+        if (room < 12) { const k = Math.min(1.5, (12 - room) / 12) * 4; ux += (dx / d) * k; uy += (dy / d) * k; }
+      }
+      for (const o of w.islands) {
+        const gap = shoreGap(o, q.x, q.y, PAD_COAST);
+        if (gap < 30) { shoreNormal(o, q.x, q.y, NRM); const k = Math.min(1.5, 1 - gap / 30) * 6; ux += NRM.x * k; uy += NRM.y * k; }
+      }
+      const e = PAD_EDGE + q.r + 30;
+      if (q.x < e) ux += ((e - q.x) / 30) * 3; else if (q.x > w.w - e) ux -= ((q.x - (w.w - e)) / 30) * 3;
+      if (q.y < e) uy += ((e - q.y) / 30) * 3; else if (q.y > w.h - e) uy -= ((q.y - (w.h - e)) / 30) * 3;
+      const um = Math.hypot(ux, uy); if (um > PAD_MAX) { ux *= PAD_MAX / um; uy *= PAD_MAX / um; }
+      q.x += (ux + q.vx) * dt; q.y += (uy + q.vy) * dt;
+      q.a += (0.06 * Math.sin(0.07 * w.t + q.ph) + q.va) * dt;
+      q.vx *= drag; q.vy *= drag; q.va *= drag; q.since += dt;
+    }
+  }
+  // then hard limits, which the soft pushes above keep from ever acting in calm water: apart, off the land, on screen.
+  // They also carry the pads through a resize or an island that moves under them, reduced motion or not
+  for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
+    const a = P[i], b = P[j], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy), need = a.r + b.r;
+    if (d >= need) continue;
+    const ux = d > 1e-6 ? dx / d : 1, uy = d > 1e-6 ? dy / d : 0, k = (need - d) / 2;
+    a.x -= ux * k; a.y -= uy * k; b.x += ux * k; b.y += uy * k;
+  }
+  for (const q of P) {
+    for (const o of w.islands) if (shoreGap(o, q.x, q.y, q.r) < 0) { onShore(o, q.x, q.y, q.r, PT); q.x = PT.x; q.y = PT.y; }
+    q.x = Math.min(Math.max(q.x, Math.min(q.r, w.w / 2)), Math.max(w.w - q.r, w.w / 2));
+    q.y = Math.min(Math.max(q.y, Math.min(q.r, w.h / 2)), Math.max(w.h - q.r, w.h / 2));
+  }
+}
+// Sends f to hide under the nearest pad within shelter px, with the given chance; true if it went.
+function seekPad(w, f, chance) {
+  const p = w.params, r = w.prand;
+  let best = null, bd = p.shelter;
+  for (const q of w.pads) { const d = Math.hypot(q.x - f.x, q.y - f.y); if (d < bd) { bd = d; best = q; } }
+  if (!best || !(r() < chance)) return false;
+  f.pad = best; f.hide = 3 + 5 * r(); f.under = false; f.seek = 10; f.idle = 0;
+  return true;
 }
 
 // ----- beat and glide -----
@@ -467,6 +597,7 @@ export function step(w, dt) {
   // treats age and sink; ripples spread
   for (let i = w.treats.length - 1; i >= 0; i--) { const t = w.treats[i]; t.age += dt; if (t.age > p.sink) w.treats.splice(i, 1); }
   for (let i = w.ripples.length - 1; i >= 0; i--) { const q = w.ripples[i]; q.age += dt; if (q.age > q.life) w.ripples.splice(i, 1); }
+  stepPads(w, dt);
 
   const cosFov = Math.cos((p.fov * Math.PI) / 360);
   const zr2 = p.repel * p.repel, zo2 = p.orient * p.orient, far2 = p.far * p.far;
@@ -508,7 +639,7 @@ export function step(w, dt) {
       const dx = f.goal.x - f.x, dy = f.goal.y - f.y, d = Math.hypot(dx, dy);
       if (f.keep <= 0 || d < 40) f.goal = null;
       else { const kk = p.will * f.will * (f.food ? 2.5 : 1); sx += (dx / d) * kk; sy += (dy / d) * kk; }
-    } else if (!(f.idle > 0) && r() < curious * dt) inform(w, f);
+    } else if (!(f.idle > 0) && !f.pad && r() < curious * dt) inform(w, f);
     // its own meander: a slow random walk of a preferred bearing
     f.wa += (r() - 0.5) * 3 * Math.sqrt(dt); if (f.wa > 1.2) f.wa = 1.2; else if (f.wa < -1.2) f.wa = -1.2;
     sx += Math.cos(f.h + f.wa) * p.wander; sy += Math.sin(f.h + f.wa) * p.wander;
@@ -525,13 +656,15 @@ export function step(w, dt) {
       sx += ((t.x - f.x) / d) * 4; sy += ((t.y - f.y) / d) * 4;
       if (!w.reduced) f.en = Math.max(f.en, 1 - 0.5 * (d / Math.max(1, p.sense)));
       if (!f.goal) f.goal = { x: 0, y: 0 };
-      f.goal.x = t.x; f.goal.y = t.y; f.keep = 6; f.will = 1; f.food = true; f.idle = 0;
+      f.goal.x = t.x; f.goal.y = t.y; f.keep = 6; f.will = 1; f.food = true; f.idle = 0; f.pad = null;
     }
-    // a fast cursor through the pond scatters the fish near it
+    // a fast cursor through the pond scatters the fish near it, and some of them make for the nearest pad to hide
     if (startle) {
       const dx = f.x - ptr.x, dy = f.y - ptr.y, d = Math.hypot(dx, dy);
-      if (d < p.scare && d > 1e-6) { f.flee = 0.7; f.fx = dx / d; f.fy = dy / d; f.en = 1; }
+      if (d < p.scare && d > 1e-6) { f.flee = 0.7; f.fx = dx / d; f.fy = dy / d; f.en = 1; if (!f.pad) seekPad(w, f, p.shelterChance); }
     }
+    // and a calm fish now and then goes to rest under one on its own
+    else if (!f.pad && !(f.idle > 0) && f.en < 0.05 && !f.food && w.pads.length && w.prand() < p.rest * dt) seekPad(w, f, 1);
     if (f.flee > 0) { f.flee -= dt; sx += f.fx * 5 * Math.max(0, f.flee); sy += f.fy * 5 * Math.max(0, f.flee); }
     // islands: inside the look zone the part of the heading aimed at the shore is turned along it
     for (const o of w.islands) {
@@ -549,7 +682,17 @@ export function step(w, dt) {
     if (w.reduced) f.en = 0;
     // a calm fish now and then stops to hover a few seconds; anything urgent wakes it
     if (f.idle > 0) { f.idle -= dt; if (f.en > 0.2) f.idle = 0; }
-    else if (f.en < 0.05 && !f.goal && r() < p.idle * dt) f.idle = p.idleFor * (0.3 + 0.7 * r());
+    else if (f.en < 0.05 && !f.goal && !f.pad && r() < p.idle * dt) f.idle = p.idleFor * (0.3 + 0.7 * r());
+    // shelter: a fish making for a pad heads straight for it (giving up after `seek` s); once its head is under the pad
+    // it holds there for `hide` s, easing back toward the middle should the pad drift off it, then rejoins
+    let hold = -1;
+    if (f.pad) {
+      const q = f.pad, dx = q.x - f.x, dy = q.y - f.y, d = Math.hypot(dx, dy) || 1e-6;
+      if (!f.under) { f.seek -= dt; if (d < q.r) f.under = true; else if (f.seek <= 0) f.pad = null; }
+      else if ((f.hide -= dt) <= 0) f.pad = null;
+      if (f.pad && f.under) { sx = hx; sy = hy; if (d > q.r * 0.5) { sx += (dx / d) * 3; sy += (dy / d) * 3; hold = 10; } else hold = 0; }
+      else if (f.pad) { sx += (dx / d) * 4; sy += (dy / d) * 4; }
+    }
     const aim = wrapAngle(Math.atan2(sy, sx) - f.h);
     // a sharp turn from a glide or a hover is one strong stroke, a C-start: the head whips round and a single beat
     // drives it out of the turn. A slow turn is just a curve, taken whether the tail is beating or not
@@ -559,7 +702,7 @@ export function step(w, dt) {
     const dh = aim > turn ? turn : aim < -turn ? -turn : aim;
     f.h = wrapAngle(f.h + dh);
     // the speed it wants: its own pace, raised by urgency, nothing while it hovers
-    const want = f.idle > 0 ? 0 : w.reduced ? p.cruise * p.reduced : p.cruise * f.pace * (1 + f.en * (p.burst - 1));
+    const want = hold >= 0 ? Math.min(hold, p.cruise) : f.idle > 0 ? 0 : w.reduced ? p.cruise * p.reduced : p.cruise * f.pace * (1 + f.en * (p.burst - 1));
     swim(w, f, want, dt);
     f.en *= decay;
   }
@@ -710,7 +853,7 @@ const SHALLOWS = [[36, 0.16], [20, 0.2], [9, 0.28]];
 // Draws the world onto ctx (already scaled to CSS px). ink and paper are CSS colours (paper is the land); water is the
 // pond's colour and defaults to the land's; gold is the treats' and the koi's colour. The world is two layers, drawn in order: the
 // coasts (opaque: the water, the land, the shores and the waves lapping at them) and the live layer over them (the
-// fish, the ripples and the treats). The shell may draw the coasts at a lower resolution than the live layer.
+// fish, the pads, the ripples and the treats). The shell may draw the coasts at a lower resolution than the live layer.
 export function draw(ctx, w, ink, paper, gold, water = paper) {
   drawCoasts(ctx, w, ink, paper, water);
   drawLive(ctx, w, ink, paper, gold);
@@ -742,13 +885,20 @@ export function drawCoasts(ctx, w, ink, paper, water = paper) {
   }
   ctx.globalAlpha = 1;
 }
-// The live layer: the fish, the ripples and the treats, over the coasts.
+// The live layer: the fish, the pads over them, the ripples and the treats, over the coasts.
 export function drawLive(ctx, w, ink, paper, gold) {
   const p = w.params, still = w.reduced;
   // the school: a paper fill under each outline, so crossing fish read as one over the other
   ctx.strokeStyle = ink; ctx.lineWidth = p.width; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   ctx.fillStyle = paper;
   for (const f of w.fish) drawFish(ctx, f, p, still ? 0.4 : 1, gold);
+  // the pads float over the fish, so a fish that swims under one is hidden by it
+  const notch = (40 / 180) * Math.PI;
+  for (const q of w.pads) {
+    ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.arc(q.x, q.y, q.r, q.a + notch / 2, q.a + TAU - notch / 2); ctx.closePath();
+    ctx.globalAlpha = 1; ctx.fill();
+    ctx.globalAlpha = p.padAlpha; ctx.stroke();
+  }
   // ripples, then the treats on the surface above everything
   for (const q of w.ripples) {
     const k = q.age / q.life;
