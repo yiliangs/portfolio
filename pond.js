@@ -704,7 +704,79 @@ function makeBranch(r, k = 1) {
   }
   let R = 0;
   for (const g of lines) for (let k = 0; k < 6; k += 2) R = Math.max(R, Math.hypot(g[k], g[k + 1]));
-  return { kind: 'branch', lines, r: R };
+  return Object.assign({ kind: 'branch', lines, r: R }, branchWood(lines, R, L));
+}
+// The branch as wood: the spine and forks above are its skeleton. The limb is one closed tapered outline, 7 to 10 px
+// wide at the base down to 2 to 3 px at the tip with a little seeded unevenness, rounded at both ends; each fork is a
+// lobe 0.6 of the limb's width where it leaves, tapering to 1.5 to 2 px, walked out and back within the limb's own
+// outline, so the whole branch is one closed path and no line crosses the wood. Inside it run two or three grain
+// strokes at a third and two thirds of the width, and a small knot sits where a fork leaves. The widths draw from a
+// stream seeded by the branch's own length, so the floor's stream is unchanged. The whole is scaled about the centre
+// so every point stays inside r, the disc of the skeleton, and the floor's clearances hold for the drawn wood.
+function branchWood(lines, R, L) {
+  let st = (Math.floor(L * 1e6) ^ 0xb4a2c) >>> 0;
+  const r = () => { st = (st + 0x6d2b79f5) >>> 0; let t = st; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const q = (g, u, k) => (1 - u) * (1 - u) * g[k] + 2 * u * (1 - u) * g[k + 2] + u * u * g[k + 4];
+  const d = (g, u, k) => 2 * (1 - u) * (g[k + 2] - g[k]) + 2 * u * (g[k + 4] - g[k + 2]);
+  // a sampled spine: points, unit normals (left of the direction of travel) and widths
+  const spine = (g, u0, u1, n, wd) => {
+    const S = [];
+    for (let i = 0; i <= n; i++) {
+      const u = u0 + ((u1 - u0) * i) / n, tx = d(g, u, 0), ty = d(g, u, 1), m = Math.hypot(tx, ty) || 1;
+      S.push({ u, x: q(g, u, 0), y: q(g, u, 1), tx: tx / m, ty: ty / m, nx: -ty / m, ny: tx / m, w: wd(u) });
+    }
+    return S;
+  };
+  const side = (s, k) => [s.x + k * s.nx * s.w / 2, s.y + k * s.ny * s.w / 2];
+  // a rounded end round sample s, from its side k through the direction (fx, fy) to the side -k
+  const cap = (s, k, fx, fy, out) => {
+    for (let j = 1; j < 6; j++) { const a = (j / 6) * Math.PI, c = Math.cos(a), sn = Math.sin(a); out.push([s.x + (k * s.nx * c + fx * sn) * s.w / 2, s.y + (k * s.ny * c + fy * sn) * s.w / 2]); }
+  };
+  const main = lines[0], wb = 7 + 3 * r(), wt = 2 + r(), ph = r() * TAU, ph2 = r() * TAU;
+  const limbW = (u) => (wb + (wt - wb) * u) * (1 + 0.07 * Math.sin(ph + u * 9) + 0.05 * Math.sin(ph2 + u * 23));
+  const u0 = limbW(0) / 2 / L, u1 = 1 - limbW(1) / 2 / L, N = 48, S = spine(main, u0, u1, N, limbW);
+  // how far a point lies inside the limb: its distance to the nearest spine sample less that sample's half width
+  const inside = (x, y) => { let best = Infinity, j = 0; S.forEach((s, i) => { const e = Math.hypot(x - s.x, y - s.y); if (e < best) { best = e; j = i; } }); return { depth: S[j].w / 2 - best, j }; };
+  // the limb's two edges, left (+1) and right (-1), each walked from base to tip with its forks' lobes inserted
+  const edges = { 1: S.map((s) => ({ i: s, p: side(s, 1) })), '-1': S.map((s) => ({ i: s, p: side(s, -1) })) };
+  const knots = [];
+  for (const g of lines.slice(1)) {
+    const uf = S.reduce((b, s) => (Math.hypot(s.x - g[0], s.y - g[1]) < Math.hypot(b.x - g[0], b.y - g[1]) ? s : b), S[0]);
+    const fl = Math.hypot(g[4] - g[0], g[5] - g[1]) || 1, b0 = 0.6 * limbW(uf.u), bt = 1.5 + 0.5 * r();
+    const Lb = spine(g, 0, 1 - bt / 2 / fl, 24, (u) => b0 + (bt - b0) * u), tip = Lb[Lb.length - 1];
+    // the edge the fork leaves by
+    const kk = Math.sign((g[4] - g[0]) * uf.nx + (g[5] - g[1]) * uf.ny) || 1;
+    // each side of the lobe leaves the limb where it first stands outside the limb's outline
+    const out = (m) => { for (let i = 0; i < Lb.length; i++) { const p = side(Lb[i], m), h = inside(p[0], p[1]); if (h.depth < 0) return { i, j: h.j }; } return { i: Lb.length - 1, j: inside(...side(tip, m)).j }; };
+    const A = out(1), B = out(-1), first = A.j <= B.j ? [A, 1] : [B, -1], last = A.j <= B.j ? [B, -1] : [A, 1];
+    const loop = [];
+    for (let i = first[0].i; i < Lb.length; i++) loop.push(side(Lb[i], first[1]));
+    cap(tip, first[1], tip.tx, tip.ty, loop);
+    for (let i = Lb.length - 1; i >= last[0].i; i--) loop.push(side(Lb[i], last[1]));
+    const e = edges[kk], lo = Math.min(first[0].j, last[0].j), hi = Math.max(first[0].j, last[0].j);
+    edges[kk] = e.filter((v) => v.i.u < S[lo].u || v.i.u > S[hi].u || v.lobe);
+    const at = edges[kk].findIndex((v) => !v.lobe && v.i.u > S[hi].u);
+    edges[kk].splice(at < 0 ? edges[kk].length : at, 0, ...loop.map((p) => ({ i: uf, p, lobe: true })));
+    knots.push({ s: uf, k: kk });
+  }
+  const pts = edges[1].map((v) => v.p);
+  cap(S[N], 1, S[N].tx, S[N].ty, pts);
+  pts.push(...edges[-1].map((v) => v.p).reverse());
+  cap(S[0], -1, -S[0].tx, -S[0].ty, pts);
+  // grain: short runs along the spine at a third and two thirds of the width, kept off the forks' joins
+  const grain = [], runs = [[0.08, 0.4, -1], [0.45, 0.8, 1], [0.2, 0.55, 1]].slice(0, 2 + (r() < 0.5 ? 1 : 0));
+  for (const [a, b, k] of runs) {
+    const g = [];
+    for (const s of S) if (s.u >= a && s.u <= b) g.push([s.x + k * s.nx * s.w / 6, s.y + k * s.ny * s.w / 6]);
+    if (g.length > 1) grain.push(g);
+  }
+  // the knot: a small oval just inside the limb where the first fork leaves, along the spine
+  const kn = knots[0], knot = kn && { x: kn.s.x + kn.k * kn.s.nx * kn.s.w / 5, y: kn.s.y + kn.k * kn.s.ny * kn.s.w / 5, a: 1.5, b: 1, t: Math.atan2(kn.s.ty, kn.s.tx) };
+  let m = 0;
+  for (const p of pts) m = Math.max(m, Math.hypot(p[0], p[1]));
+  const f = m > R ? R / m : 1, sc = (p) => [p[0] * f, p[1] * f];
+  if (knot) { knot.x *= f; knot.y *= f; }
+  return { outline: pts.map(sc), grain: grain.map((g) => g.map(sc)), knot };
 }
 // Lays the floor, largest first: each thing where the best of its seeded tries keeps it furthest from the others and
 // from the land, so the floor spreads over the open water. A thing with no room is made again, a branch shorter each
@@ -736,7 +808,17 @@ function floorPath(ctx, q) {
     const c = Math.cos(q.t), s = Math.sin(q.t), h = q.L / 2, ax = x - c * h, ay = y - s * h, bx = x + c * h, by = y + s * h;
     ctx.moveTo(ax, ay); ctx.quadraticCurveTo(x - s * q.wd, y + c * q.wd, bx, by); ctx.quadraticCurveTo(x + s * q.wd, y - c * q.wd, ax, ay);
     ctx.moveTo(x + c * 0.65 * q.L, y + s * 0.65 * q.L); ctx.lineTo(ax, ay);
-  } else for (const g of q.lines) { ctx.moveTo(x + g[0], y + g[1]); ctx.quadraticCurveTo(x + g[2], y + g[3], x + g[4], y + g[5]); }
+  } else {
+    q.outline.forEach((p, i) => (i ? ctx.lineTo(x + p[0], y + p[1]) : ctx.moveTo(x + p[0], y + p[1])));
+    ctx.closePath();
+  }
+}
+// The branch's grain and knot, drawn after its outline: the grain at half the floor's opacity, the knot at full.
+function drawGrain(ctx, q, alpha) {
+  ctx.globalAlpha = alpha / 2;
+  for (const g of q.grain) { ctx.beginPath(); g.forEach((p, i) => (i ? ctx.lineTo(q.x + p[0], q.y + p[1]) : ctx.moveTo(q.x + p[0], q.y + p[1]))); ctx.stroke(); }
+  ctx.globalAlpha = alpha;
+  if (q.knot) { const k = q.knot; ctx.beginPath(); ctx.ellipse(q.x + k.x, q.y + k.y, k.a, k.b, k.t, 0, TAU); ctx.stroke(); }
 }
 // The outcrop: the island on the stones' side (the one furthest that way), and the first bearing from a seeded start
 // round which the whole outcrop fits; failing that, the bearing that fits the most.
@@ -1416,7 +1498,7 @@ export function drawGround(ctx, w, ink, paper, water = paper) {
   // its own path; drawn with the ground, so at its resolution
   if (w.floor.length) {
     ctx.globalAlpha = p.floorAlpha; ctx.strokeStyle = ink; ctx.lineWidth = 1; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-    for (const q of w.floor) { ctx.beginPath(); floorPath(ctx, q); ctx.stroke(); }
+    for (const q of w.floor) { ctx.beginPath(); floorPath(ctx, q); ctx.stroke(); if (q.kind === 'branch') drawGrain(ctx, q, p.floorAlpha); }
   }
   ctx.strokeStyle = ink; ctx.lineWidth = p.width; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   // the shores and the water lapping in toward them
