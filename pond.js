@@ -1,7 +1,8 @@
 // Home pond: the page seen from above as still water, with the two home objects standing in it as islands. A few
 // dozen line-drawn fish swim between them in groups that form, merge and part on their own, a few of them koi with gold
-// patches, water laps inward at each shore, pebbles, a branch and leaves lie on the bottom, stones stand in the water, water striders skate, lily pads drift, a lotus or two among them, now and then a flock of birds passes over, on the
-// open water and give a frightened fish somewhere to hide, and a click drops a treat the fish race for and eat. The layer sits behind reading text, so the resting
+// patches, water laps inward at each shore, a branch and leaves lie on the bottom, stones stand in the water, water
+// striders skate, lily pads drift, a lotus or two among them, on the open water and give a frightened fish somewhere
+// to hide, and a click drops a treat the fish race for and eat. The layer sits behind reading text, so the resting
 // picture is calm: the fish swim in easy beats and glides and only burst into speed for a reason (a treat, a fast
 // cursor, or now and then on their own) before they settle again.
 //
@@ -106,19 +107,10 @@ export const PARAMS = {
     dart: [80, 10, 300, 5, 'a water strider\'s dart speed, px/s'],
   },
   floor: {
-    pebbles: [3, 0, 8, 1, 'pebble beds on the pond floor on a fine pointer'],
-    pebblesTouch: [2, 0, 8, 1, 'pebble beds on a coarse pointer'],
     leaves: [3, 0, 8, 1, 'sunken leaves on a fine pointer'],
     leavesTouch: [2, 0, 8, 1, 'sunken leaves on a coarse pointer'],
     branch: [1, 0, 1, 1, 'a sunken branch'],
     floorAlpha: [0.22, 0, 1, 0.01, 'opacity of the things on the pond floor'],
-  },
-  air: {
-    birdGap: [70, 10, 600, 5, 'mean wait between flocks of birds passing over on a fine pointer, s'],
-    birdGapTouch: [110, 10, 600, 5, 'mean wait between flocks on a coarse pointer, s'],
-    flock: [5, 3, 7, 1, 'birds in a flock, on average'],
-    birdAlpha: [0.85, 0, 1, 0.01, 'opacity of a bird\'s pale silhouette'],
-    birdShadow: [0.1, 0, 0.4, 0.005, 'opacity of the shadow a bird casts on the water'],
   },
 };
 export const defaults = () => Object.fromEntries(Object.values(PARAMS).flatMap((section) => Object.entries(section).map(([k, v]) => [k, v[0]])));
@@ -396,12 +388,10 @@ export function createWorld(params, opts = {}) {
     ptr: { x: 0, y: 0, on: false, px: 0, py: 0, seen: false, speed: 0 },
     eaten: 0,
     seed: opts.seed == null ? 1 : opts.seed, rocks: [], floor: [], flowers: [], bloomRand: null, striders: [], srand: null,
-    flock: null, flockId: 0, flocksDone: 0, birdWait: 0, brand: rng(((opts.seed == null ? 1 : opts.seed) ^ 0xb12d5eed) >>> 0),
     pads: [], padSeed: ((opts.seed == null ? 1 : opts.seed) ^ 0x9ad5eed) >>> 0, prand: null, flow: null, laidIsl: 0, laidFor: '', relay: 0,
   };
   populate(w);
   layPond(w);
-  w.birdWait = birdGap(w) * (0.1 + 0.4 * w.brand());
   return w;
 }
 const target = (w) => Math.max(0, Math.round(w.coarse ? w.params.countTouch : w.params.count));
@@ -654,14 +644,14 @@ function layPond(w) {
 const planKey = (w) => [rockTarget(w), padTarget(w), ...floorTarget(w)].join(':');
 
 // ----- the pond floor -----
-// Things resting on the bottom: pebble beds, a sunken branch, sunken leaves. They are static, laid with the plan, and
+// Things resting on the bottom: a sunken branch and sunken leaves. They are static, laid with the plan, and
 // drawn with the ground as faint ink strokes. Each keeps its centre (x,y), its shape relative to that centre, and r, the
 // radius of a disc round the centre holding every point of the shape (control points included). Each stands
 // FLOOR_LAND px off every island's outermost drawn extent, FLOOR_NEAR px off every stone and every pad's home, and
 // FLOOR_EDGE px inside the screen, and clear of the header band (FLOOR_TOP) and the footer band (FLOOR_FOOT).
 const FLOOR_LAND = 12, FLOOR_NEAR = 30, FLOOR_EDGE = 30, FLOOR_TOP = 80, FLOOR_FOOT = 100;
-// [pebble beds, leaves, branches]
-const floorTarget = (w) => { const p = w.params; return [Math.max(0, Math.round(w.coarse ? p.pebblesTouch : p.pebbles)), Math.max(0, Math.round(w.coarse ? p.leavesTouch : p.leaves)), p.branch >= 0.5 ? 1 : 0]; };
+// [leaves, branches]
+const floorTarget = (w) => { const p = w.params; return [Math.max(0, Math.round(w.coarse ? p.leavesTouch : p.leaves)), p.branch >= 0.5 ? 1 : 0]; };
 function floorOk(w, x, y, r) {
   if (x - r < FLOOR_EDGE || w.w - x - r < FLOOR_EDGE || y - r < Math.max(FLOOR_EDGE, FLOOR_TOP) || w.h - y - r < Math.max(FLOOR_EDGE, FLOOR_FOOT)) return false;
   if (landClear(w, x, y) < r + FLOOR_LAND) return false;
@@ -669,122 +659,113 @@ function floorOk(w, x, y, r) {
   for (const q of w.pads) if (Math.hypot(q.hx - x, q.hy - y) - q.r - r < FLOOR_NEAR) return false;
   return true;
 }
-// A pebble bed: 5 to 9 ovals 3 to 7 px long, each laid against one already there, a few touching, the rest a little apart.
-function makePebbles(r) {
-  const n = 5 + Math.floor(r() * 5), S = [];
-  for (let i = 0; i < n; i++) {
-    const a = (3 + 4 * r()) / 2, b = a * (0.6 + 0.3 * r()), t = r() * TAU;
-    let dx = 0, dy = 0;
-    for (let k = 0; k < 30 && S.length; k++) {
-      const par = S[Math.floor(r() * S.length)], ang = r() * TAU, d = par.a + a + (r() < 0.35 ? 0 : 1 + 4 * r());
-      const x = par.dx + Math.cos(ang) * d, y = par.dy + Math.sin(ang) * d;
-      if (S.every((s) => Math.hypot(s.dx - x, s.dy - y) >= s.a + a - 0.01)) { dx = x; dy = y; break; }
-      if (k === 29) { dx = NaN; }
-    }
-    if (dx === dx) S.push({ dx, dy, a, b, t });
-  }
-  return { kind: 'pebbles', stones: S, r: Math.max(...S.map((s) => Math.hypot(s.dx, s.dy) + s.a)) };
-}
 // A sunken leaf: a pointed ellipse 10 to 16 px long with a midrib running on a little past one tip as its stalk.
 function makeLeaf(r) {
   const L = 10 + 6 * r();
   return { kind: 'leaf', L, wd: L * (0.32 + 0.1 * r()), t: r() * TAU, r: 0.65 * L };
 }
-// A sunken branch: a curved main line 60 to 120 px long (k scales the part over 60 px) with two or three short forks
-// off it, each a quadratic curve stored as [x0, y0, cx, cy, x1, y1] relative to the centre.
+// A sunken branch, a chunk of driftwood: a slightly bent limb 50 to 90 px long (k scales the part over 50 px), 14 to 22
+// px wide at its thick end tapering to 5 to 8 px at the other (never below 5), both sides weathered with seeded bumps and
+// hollows of 1 to 2 px every 8 to 12 px; one end broken off in a jagged cut, the other worn round; one or two stubby
+// forks, each 0.5 of the local width where it leaves and 4 to 8 px long past the limb's edge, worn round at a 2 to 3 px
+// tip. It keeps its skeleton, lines ([x0, y0, cx, cy, x1, y1] quadratics relative to the centre, the limb first, then
+// the forks), and what is drawn: outline, one closed polyline walked round the limb with each fork's lobe taken in
+// along the way, so no line crosses the wood; grain, three or four runs along the long axis; and a knot. r holds every
+// point of the outline.
 function makeBranch(r, k = 1) {
-  const L = 60 + 60 * k * r(), t = r() * TAU, c = Math.cos(t), s = Math.sin(t), bend = (r() < 0.5 ? -1 : 1) * (0.1 + 0.15 * r()) * L;
+  const L = 50 + 40 * k * r(), t = r() * TAU, c = Math.cos(t), s = Math.sin(t), bend = (r() < 0.5 ? -1 : 1) * (0.04 + 0.08 * r()) * L;
   const main = [-c * L / 2, -s * L / 2, -s * bend, c * bend, c * L / 2, s * L / 2], lines = [main];
   const at = (u, k) => (1 - u) * (1 - u) * main[k] + 2 * u * (1 - u) * main[k + 2] + u * u * main[k + 4];
-  for (let n = 2 + (r() < 0.5 ? 1 : 0), i = 0; i < n; i++) {
-    const u = 0.3 + 0.55 * ((i + r()) / n), x0 = at(u, 0), y0 = at(u, 1);
-    const tx = 2 * (1 - u) * (main[2] - main[0]) + 2 * u * (main[4] - main[2]), ty = 2 * (1 - u) * (main[3] - main[1]) + 2 * u * (main[5] - main[3]);
-    const a = Math.atan2(ty, tx) + (i % 2 ? 1 : -1) * (0.4 + 0.5 * r()), l = 10 + 15 * r(), k = (r() - 0.5) * 0.4;
-    lines.push([x0, y0, x0 + Math.cos(a + k) * l / 2, y0 + Math.sin(a + k) * l / 2, x0 + Math.cos(a) * l, y0 + Math.sin(a) * l]);
+  const dat = (u, k) => 2 * (1 - u) * (main[k + 2] - main[k]) + 2 * u * (main[k + 4] - main[k + 2]);
+  // the thick end at u = 0
+  const w0 = 14 + 8 * r(), w1 = 5 + 3 * r(), width = (u) => w0 + (w1 - w0) * u;
+  // weathering along one side: a seeded offset every 8 to 12 px, mostly alternating bump and hollow, eased between
+  const wear = () => {
+    const K = [];
+    for (let a = 0, v = r() < 0.5 ? -1 : 1; a < L + 12; a += 8 + 4 * r(), v = r() < 0.75 ? -v : v) K.push([a / L, Math.sign(v) * (1 + r())]);
+    return (u) => {
+      let i = 0;
+      while (i < K.length - 2 && K[i + 1][0] < u) i++;
+      const [ua, va] = K[i], [ub, vb] = K[i + 1], f = Math.min(1, Math.max(0, (u - ua) / (ub - ua)));
+      return va + ((vb - va) * (1 - Math.cos(f * Math.PI))) / 2;
+    };
+  };
+  const wl = wear(), wr = wear(), brokeThick = r() < 0.5;
+  // the worn end is trimmed by its half width so its round cap ends where the limb does
+  const u0 = brokeThick ? 0 : w0 / 2 / L, u1 = brokeThick ? 1 - w1 / 2 / L : 1, N = Math.ceil(L / 2);
+  const S = [];
+  for (let i = 0; i <= N; i++) {
+    const u = u0 + ((u1 - u0) * i) / N, tx = dat(u, 0), ty = dat(u, 1), m = Math.hypot(tx, ty) || 1;
+    // the two half widths, each at least 2.5 so the wood is never under 5 px
+    S.push({ u, x: at(u, 0), y: at(u, 1), tx: tx / m, ty: ty / m, nx: -ty / m, ny: tx / m, hl: Math.max(2.5, width(u) / 2 + wl(u)), hr: Math.max(2.5, width(u) / 2 + wr(u)) });
   }
-  let R = 0;
-  for (const g of lines) for (let k = 0; k < 6; k += 2) R = Math.max(R, Math.hypot(g[k], g[k + 1]));
-  return Object.assign({ kind: 'branch', lines, r: R }, branchWood(lines, R, L));
-}
-// The branch as wood: the spine and forks above are its skeleton. The limb is one closed tapered outline, 7 to 10 px
-// wide at the base down to 2 to 3 px at the tip with a little seeded unevenness, rounded at both ends; each fork is a
-// lobe 0.6 of the limb's width where it leaves, tapering to 1.5 to 2 px, walked out and back within the limb's own
-// outline, so the whole branch is one closed path and no line crosses the wood. Inside it run two or three grain
-// strokes at a third and two thirds of the width, and a small knot sits where a fork leaves. The widths draw from a
-// stream seeded by the branch's own length, so the floor's stream is unchanged. The whole is scaled about the centre
-// so every point stays inside r, the disc of the skeleton, and the floor's clearances hold for the drawn wood.
-function branchWood(lines, R, L) {
-  let st = (Math.floor(L * 1e6) ^ 0xb4a2c) >>> 0;
-  const r = () => { st = (st + 0x6d2b79f5) >>> 0; let t = st; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-  const q = (g, u, k) => (1 - u) * (1 - u) * g[k] + 2 * u * (1 - u) * g[k + 2] + u * u * g[k + 4];
-  const d = (g, u, k) => 2 * (1 - u) * (g[k + 2] - g[k]) + 2 * u * (g[k + 4] - g[k + 2]);
-  // a sampled spine: points, unit normals (left of the direction of travel) and widths
-  const spine = (g, u0, u1, n, wd) => {
-    const S = [];
-    for (let i = 0; i <= n; i++) {
-      const u = u0 + ((u1 - u0) * i) / n, tx = d(g, u, 0), ty = d(g, u, 1), m = Math.hypot(tx, ty) || 1;
-      S.push({ u, x: q(g, u, 0), y: q(g, u, 1), tx: tx / m, ty: ty / m, nx: -ty / m, ny: tx / m, w: wd(u) });
-    }
-    return S;
+  const side = (s, k) => (k > 0 ? [s.x + s.nx * s.hl, s.y + s.ny * s.hl] : [s.x - s.nx * s.hr, s.y - s.ny * s.hr]);
+  // how far a point lies inside the limb: that side's half width at the nearest sample less the distance to it
+  const inside = (x, y) => {
+    let best = Infinity, j = 0;
+    S.forEach((s, i) => { const e = Math.hypot(x - s.x, y - s.y); if (e < best) { best = e; j = i; } });
+    const s = S[j], h = (x - s.x) * s.nx + (y - s.y) * s.ny >= 0 ? s.hl : s.hr;
+    return { depth: h - best, j };
   };
-  const side = (s, k) => [s.x + k * s.nx * s.w / 2, s.y + k * s.ny * s.w / 2];
-  // a rounded end round sample s, from its side k through the direction (fx, fy) to the side -k
-  const cap = (s, k, fx, fy, out) => {
-    for (let j = 1; j < 6; j++) { const a = (j / 6) * Math.PI, c = Math.cos(a), sn = Math.sin(a); out.push([s.x + (k * s.nx * c + fx * sn) * s.w / 2, s.y + (k * s.ny * c + fy * sn) * s.w / 2]); }
+  // a worn end round centre (x, y), from the side point a (half width ha) through the direction (fx, fy) to the side
+  // point b (half width hb)
+  const round = (x, y, nx, ny, ha, hb, fx, fy, out) => {
+    for (let j = 1; j < 8; j++) { const a = (j / 8) * Math.PI, cs = Math.cos(a), sn = Math.sin(a), h = (ha * (1 + cs) + hb * (1 - cs)) / 2; out.push([x + (nx * cs + fx * sn) * h, y + (ny * cs + fy * sn) * h]); }
   };
-  const main = lines[0], wb = 7 + 3 * r(), wt = 2 + r(), ph = r() * TAU, ph2 = r() * TAU;
-  const limbW = (u) => (wb + (wt - wb) * u) * (1 + 0.07 * Math.sin(ph + u * 9) + 0.05 * Math.sin(ph2 + u * 23));
-  const u0 = limbW(0) / 2 / L, u1 = 1 - limbW(1) / 2 / L, N = 48, S = spine(main, u0, u1, N, limbW);
-  // how far a point lies inside the limb: its distance to the nearest spine sample less that sample's half width
-  const inside = (x, y) => { let best = Infinity, j = 0; S.forEach((s, i) => { const e = Math.hypot(x - s.x, y - s.y); if (e < best) { best = e; j = i; } }); return { depth: S[j].w / 2 - best, j }; };
-  // the limb's two edges, left (+1) and right (-1), each walked from base to tip with its forks' lobes inserted
-  const edges = { 1: S.map((s) => ({ i: s, p: side(s, 1) })), '-1': S.map((s) => ({ i: s, p: side(s, -1) })) };
-  const knots = [];
-  for (const g of lines.slice(1)) {
-    const uf = S.reduce((b, s) => (Math.hypot(s.x - g[0], s.y - g[1]) < Math.hypot(b.x - g[0], b.y - g[1]) ? s : b), S[0]);
-    const fl = Math.hypot(g[4] - g[0], g[5] - g[1]) || 1, b0 = 0.6 * limbW(uf.u), bt = 1.5 + 0.5 * r();
-    const Lb = spine(g, 0, 1 - bt / 2 / fl, 24, (u) => b0 + (bt - b0) * u), tip = Lb[Lb.length - 1];
-    // the edge the fork leaves by
-    const kk = Math.sign((g[4] - g[0]) * uf.nx + (g[5] - g[1]) * uf.ny) || 1;
+  // a broken end: from side point a to side point b in two or three short segments, the corners bitten in 1 to 4 px
+  const jag = (a, b, ix, iy, out) => {
+    const n = 2 + (r() < 0.5 ? 1 : 0);
+    for (let j = 1; j < n; j++) { const f = (j + (r() - 0.5) * 0.4) / n, dd = 1 + 3 * r(); out.push([a[0] + (b[0] - a[0]) * f + ix * dd, a[1] + (b[1] - a[1]) * f + iy * dd]); }
+  };
+  // the limb's two edges, left (+1) and right (-1), each walked from the thick end, with the forks' lobes taken in
+  const edges = { 1: S.map((s) => ({ u: s.u, p: side(s, 1) })), '-1': S.map((s) => ({ u: s.u, p: side(s, -1) })) };
+  const nf = 1 + (r() < 0.5 ? 1 : 0), k0 = r() < 0.5 ? 1 : -1;
+  for (let i = 0; i < nf; i++) {
+    const uf = 0.3 + 0.4 * ((i + r()) / nf), P = S.reduce((b, s) => (Math.abs(s.u - uf) < Math.abs(b.u - uf) ? s : b), S[0]);
+    const kk = i % 2 ? -k0 : k0, h = kk > 0 ? P.hl : P.hr, len = 4 + 4 * r(), bw = 0.5 * (P.hl + P.hr), bt = 2 + r();
+    // the stub leans 0.4 to 1 rad off square toward the thin end
+    const b = 0.4 + 0.6 * r(), dx = Math.cos(b) * kk * P.nx + Math.sin(b) * P.tx, dy = Math.cos(b) * kk * P.ny + Math.sin(b) * P.ty;
+    const reach = h / Math.cos(b) + len, end = reach - bt / 2;
+    lines.push([P.x, P.y, P.x + dx * reach / 2, P.y + dy * reach / 2, P.x + dx * reach, P.y + dy * reach]);
+    const wd = (e) => (e <= reach - len ? bw : bw + ((bt - bw) * (e - reach + len)) / len);
+    const B = [];
+    for (let j = 0; j <= 16; j++) { const e = (end * j) / 16; B.push({ x: P.x + dx * e, y: P.y + dy * e, nx: -dy, ny: dx, h: wd(e) / 2 }); }
+    const bside = (q, m) => [q.x + m * q.nx * q.h, q.y + m * q.ny * q.h];
     // each side of the lobe leaves the limb where it first stands outside the limb's outline
-    const out = (m) => { for (let i = 0; i < Lb.length; i++) { const p = side(Lb[i], m), h = inside(p[0], p[1]); if (h.depth < 0) return { i, j: h.j }; } return { i: Lb.length - 1, j: inside(...side(tip, m)).j }; };
-    const A = out(1), B = out(-1), first = A.j <= B.j ? [A, 1] : [B, -1], last = A.j <= B.j ? [B, -1] : [A, 1];
-    const loop = [];
-    for (let i = first[0].i; i < Lb.length; i++) loop.push(side(Lb[i], first[1]));
-    cap(tip, first[1], tip.tx, tip.ty, loop);
-    for (let i = Lb.length - 1; i >= last[0].i; i--) loop.push(side(Lb[i], last[1]));
-    const e = edges[kk], lo = Math.min(first[0].j, last[0].j), hi = Math.max(first[0].j, last[0].j);
-    edges[kk] = e.filter((v) => v.i.u < S[lo].u || v.i.u > S[hi].u || v.lobe);
-    const at = edges[kk].findIndex((v) => !v.lobe && v.i.u > S[hi].u);
-    edges[kk].splice(at < 0 ? edges[kk].length : at, 0, ...loop.map((p) => ({ i: uf, p, lobe: true })));
-    knots.push({ s: uf, k: kk });
+    const out = (m) => { for (let j = 0; j < B.length; j++) { const p = bside(B[j], m), o = inside(p[0], p[1]); if (o.depth < 0) return { j, at: o.j }; } return { j: B.length - 1, at: inside(...bside(B[B.length - 1], m)).j }; };
+    const A = out(1), C = out(-1), [first, fm] = A.at <= C.at ? [A, 1] : [C, -1], [last, lm] = A.at <= C.at ? [C, -1] : [A, 1];
+    const loop = [], tip = B[B.length - 1];
+    for (let j = first.j; j < B.length; j++) loop.push(bside(B[j], fm));
+    round(tip.x, tip.y, fm * tip.nx, fm * tip.ny, tip.h, tip.h, dx, dy, loop);
+    for (let j = B.length - 1; j >= last.j; j--) loop.push(bside(B[j], lm));
+    const lo = S[Math.min(first.at, last.at)].u, hi = S[Math.max(first.at, last.at)].u, e = edges[kk].filter((v) => v.lobe || v.u < lo || v.u > hi);
+    const ins = e.findIndex((v) => !v.lobe && v.u > hi);
+    e.splice(ins < 0 ? e.length : ins, 0, ...loop.map((p) => ({ u: P.u, p, lobe: true })));
+    edges[kk] = e;
   }
-  const pts = edges[1].map((v) => v.p);
-  cap(S[N], 1, S[N].tx, S[N].ty, pts);
+  const a = S[0], z = S[N], pts = edges[1].map((v) => v.p);
+  if (brokeThick) round(z.x, z.y, z.nx, z.ny, z.hl, z.hr, z.tx, z.ty, pts); else jag(side(z, 1), side(z, -1), -z.tx, -z.ty, pts);
   pts.push(...edges[-1].map((v) => v.p).reverse());
-  cap(S[0], -1, -S[0].tx, -S[0].ty, pts);
-  // grain: short runs along the spine at a third and two thirds of the width, kept off the forks' joins
-  const grain = [], runs = [[0.08, 0.4, -1], [0.45, 0.8, 1], [0.2, 0.55, 1]].slice(0, 2 + (r() < 0.5 ? 1 : 0));
-  for (const [a, b, k] of runs) {
-    const g = [];
-    for (const s of S) if (s.u >= a && s.u <= b) g.push([s.x + k * s.nx * s.w / 6, s.y + k * s.ny * s.w / 6]);
-    if (g.length > 1) grain.push(g);
+  if (brokeThick) jag(side(a, -1), side(a, 1), a.tx, a.ty, pts); else round(a.x, a.y, -a.nx, -a.ny, a.hr, a.hl, -a.tx, -a.ty, pts);
+  // grain: three or four runs along the long axis spread across the width, each over a seeded stretch of the limb
+  const grain = [], ng = 3 + (r() < 0.5 ? 1 : 0);
+  for (let g = 0; g < ng; g++) {
+    const f = -0.62 + (1.24 * (g + 0.5)) / ng + (r() - 0.5) * 0.12, ua = u0 + 0.04 + 0.4 * r() * (u1 - u0), ub = Math.min(u1 - 0.04, ua + (0.3 + 0.35 * r()) * (u1 - u0)), run = [];
+    for (const s of S) if (s.u >= ua && s.u <= ub) { const o = f * (f > 0 ? s.hl : s.hr); run.push([s.x + s.nx * o, s.y + s.ny * o]); }
+    if (run.length > 1) grain.push(run);
   }
-  // the knot: a small oval just inside the limb where the first fork leaves, along the spine
-  const kn = knots[0], knot = kn && { x: kn.s.x + kn.k * kn.s.nx * kn.s.w / 5, y: kn.s.y + kn.k * kn.s.ny * kn.s.w / 5, a: 1.5, b: 1, t: Math.atan2(kn.s.ty, kn.s.tx) };
-  let m = 0;
-  for (const p of pts) m = Math.max(m, Math.hypot(p[0], p[1]));
-  const f = m > R ? R / m : 1, sc = (p) => [p[0] * f, p[1] * f];
-  if (knot) { knot.x *= f; knot.y *= f; }
-  return { outline: pts.map(sc), grain: grain.map((g) => g.map(sc)), knot };
+  // the knot: a small oval along the grain at a seeded place inside the limb
+  const K = S[Math.round((0.2 + 0.6 * r()) * N)], ko = (r() - 0.5) * 0.5 * (K.hl + K.hr) / 2;
+  const knot = { x: K.x + K.nx * ko, y: K.y + K.ny * ko, a: 1.5, b: 1, t: Math.atan2(K.ty, K.tx) };
+  const R = Math.max(...pts.map((p) => Math.hypot(p[0], p[1])));
+  return { kind: 'branch', lines, outline: pts, grain, knot, r: R };
 }
 // Lays the floor, largest first: each thing where the best of its seeded tries keeps it furthest from the others and
 // from the land, so the floor spreads over the open water. A thing with no room is made again, a branch shorter each
 // time (three rounds); one with no room still is left out.
 function layFloor(w, r) {
-  const [nb, nl, nr] = floorTarget(w), makers = [];
+  const [nl, nr] = floorTarget(w), makers = [];
   for (let i = 0; i < nr; i++) makers.push((k) => makeBranch(r, k));
-  for (let i = 0; i < nb; i++) makers.push(() => makePebbles(r));
   for (let i = 0; i < nl; i++) makers.push(() => makeLeaf(r));
   const F = (w.floor = []);
   for (const make of makers) for (const k of [1, 0.5, 0]) {
@@ -803,8 +784,7 @@ function layFloor(w, r) {
 }
 function floorPath(ctx, q) {
   const { x, y } = q;
-  if (q.kind === 'pebbles') for (const s of q.stones) { ctx.moveTo(x + s.dx + Math.cos(s.t) * s.a, y + s.dy + Math.sin(s.t) * s.a); ctx.ellipse(x + s.dx, y + s.dy, s.a, s.b, s.t, 0, TAU); }
-  else if (q.kind === 'leaf') {
+  if (q.kind === 'leaf') {
     const c = Math.cos(q.t), s = Math.sin(q.t), h = q.L / 2, ax = x - c * h, ay = y - s * h, bx = x + c * h, by = y + s * h;
     ctx.moveTo(ax, ay); ctx.quadraticCurveTo(x - s * q.wd, y + c * q.wd, bx, by); ctx.quadraticCurveTo(x + s * q.wd, y - c * q.wd, ax, ay);
     ctx.moveTo(x + c * 0.65 * q.L, y + s * 0.65 * q.L); ctx.lineTo(ax, ay);
@@ -1101,61 +1081,9 @@ function stepStriders(w, dt) {
 // glide, so neighbours do not beat in step). The beat rate is fixed for the whole thrust from the speed it aims at,
 // through the stride; urgency raises the aim and so the rate, up to maxHz. With nothing wanted the fish hovers,
 // sculling with its pectoral fins and giving one slow beat now and then to hold its place.
-// Starts a thrust of n beats at hz aiming at speed top, with the tail sweeping `sweep` of its full amplitude.
 // A startled fish bursts away along (ux,uy), a unit vector, and may make for the nearest pad to hide under.
 function scare(w, f, ux, uy) { f.flee = 0.7; f.fx = ux; f.fy = uy; f.en = 1; if (!f.pad) seekPad(w, f, w.params.shelterChance); }
-
-// ----- birds passing over -----
-// A flock every birdGap s on average (birdGapTouch on a coarse pointer; the wait runs from one flock leaving to the next
-// arriving), one at a time. It enters from a seeded edge and crosses to the far side in a loose V: the lead in front,
-// the rest alternating down the two arms, each arm 30 to 50 degrees off the line of flight, 14 to 26 px between a bird
-// and the one ahead on its arm; the heading wanders a little and each bird drifts a px or so about its place. Each
-// bird flaps at 2 to 3 Hz from a phase of its own, with glides of 1 to 2 s on held wings. The birds are in the air: each
-// casts a shadow on the water SUN_X, SUN_Y px off (down and to the right), and a shadow passing within
-// BIRD_SCARE px of a fish startles it, once per flock. Reduced motion: no birds. The flock has its own seeded source.
-const SUN_X = 16, SUN_Y = 24, BIRD_SHADOW_K = 1.15, BIRD_SCARE = 50, BIRD_OFF = 50, BIRD_VIEW = 20;
-// how far a bird drifts about its place in the V, px on each axis; two neighbours 14 px apart stay 10 px apart or more
-const BIRD_DRIFT = 1.4;
-const birdGap = (w) => Math.max(1, w.coarse ? w.params.birdGapTouch : w.params.birdGap);
-function makeFlock(w) {
-  const r = w.brand, n = Math.max(3, Math.min(7, Math.round(w.params.flock + (2 * r() - 1) * 2)));
-  const e = Math.floor(r() * 4), h = [0, Math.PI, Math.PI / 2, -Math.PI / 2][e] + (2 * r() - 1) * 0.25, u = 0.15 + 0.7 * r();
-  // the lead starts BIRD_OFF px behind its edge, so the whole flock and its shadows start out of view
-  const x = (e === 0 ? 0 : e === 1 ? w.w : u * w.w) - Math.cos(h) * BIRD_OFF, y = (e < 2 ? u * w.h : e === 2 ? 0 : w.h) - Math.sin(h) * BIRD_OFF;
-  const gap = 14 + 12 * r(), arm = ((30 + 20 * r()) / 180) * Math.PI, birds = [];
-  for (let i = 0; i < n; i++) {
-    const k = Math.ceil(i / 2), side = i % 2 ? 1 : -1;
-    birds.push({ ox: -k * gap * Math.cos(arm), oy: side * k * gap * Math.sin(arm), jp: r() * TAU, span: 12 + 6 * r(), fl: r() * TAU, hz: 2 + r(), glide: 0, flap: 1 + 4 * r(), wing: 0, x, y });
-  }
-  return { id: ++w.flockId, birds, x, y, h, a: h, wp: r() * TAU, v: 70 + 40 * r(), t: 0, seen: false };
-}
-const inView = (w, x, y) => x > -BIRD_VIEW && x < w.w + BIRD_VIEW && y > -BIRD_VIEW && y < w.h + BIRD_VIEW;
-function stepBirds(w, dt) {
-  if (w.reduced) { w.flock = null; return; }
-  if (!w.flock) { if ((w.birdWait -= dt) > 0) return; w.flock = makeFlock(w); }
-  const F = w.flock, r = w.brand;
-  F.t += dt;
-  const a = (F.a = F.h + 0.08 * Math.sin(0.35 * F.t + F.wp)), c = Math.cos(a), s = Math.sin(a);
-  F.x += c * F.v * dt; F.y += s * F.v * dt;
-  let on = false;
-  for (const b of F.birds) {
-    const jx = BIRD_DRIFT * Math.sin(0.9 * F.t + b.jp), jy = BIRD_DRIFT * Math.cos(0.7 * F.t + 1.3 * b.jp);
-    b.x = F.x + c * b.ox - s * b.oy + jx; b.y = F.y + s * b.ox + c * b.oy + jy;
-    if (b.glide > 0) { b.glide -= dt; b.wing *= Math.exp(-6 * dt); if (b.glide <= 0) b.flap = 2 + 3 * r(); }
-    else { b.fl += TAU * b.hz * dt; b.wing = Math.sin(b.fl); if ((b.flap -= dt) <= 0) b.glide = 1 + r(); }
-    if (inView(w, b.x, b.y) || inView(w, b.x + SUN_X, b.y + SUN_Y)) on = true;
-  }
-  if (on) F.seen = true;
-  else if (F.seen || F.t > 300) { w.flock = null; if (F.seen) w.flocksDone++; w.birdWait = birdGap(w) * (0.5 + r()); return; }
-  // the shadows startle the fish they pass over
-  for (const f of w.fish) {
-    if (f.scaredBy === F.id) continue;
-    for (const b of F.birds) {
-      const dx = f.x - b.x - SUN_X, dy = f.y - b.y - SUN_Y, d = Math.hypot(dx, dy);
-      if (d < BIRD_SCARE && d > 1e-6) { f.scaredBy = F.id; scare(w, f, dx / d, dy / d); break; }
-    }
-  }
-}
+// Starts a thrust of n beats at hz aiming at speed top, with the tail sweeping `sweep` of its full amplitude.
 function kick(w, f, top, n, hz, sweep) { f.top = top; f.left = n; f.hz = hz; f.sweep = sweep; }
 function swim(w, f, want, dt) {
   const p = w.params, r = w.rand;
@@ -1360,8 +1288,6 @@ export function step(w, dt) {
   // the surface, after the fish
   stepFlowers(w, dt);
   stepStriders(w, dt);
-  // and the air over it
-  stepBirds(w, dt);
 }
 
 // ----- drawing -----
@@ -1494,8 +1420,8 @@ export function drawGround(ctx, w, ink, paper, water = paper) {
     for (const [g, a] of SHALLOWS) { ctx.globalAlpha = p.shallows * a; coastPath(ctx, o, g); ctx.fill(); }
     ctx.globalAlpha = 1; coastPath(ctx, o, 0); ctx.fill();
   }
-  // the pond floor: pebbles, a branch and leaves resting on the bottom, in ink stroke only, fainter than the fish, each
-  // its own path; drawn with the ground, so at its resolution
+  // the pond floor: a branch and leaves resting on the bottom, in ink stroke only, fainter than the fish, each its own
+  // path; drawn with the ground, so at its resolution
   if (w.floor.length) {
     ctx.globalAlpha = p.floorAlpha; ctx.strokeStyle = ink; ctx.lineWidth = 1; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
     for (const q of w.floor) { ctx.beginPath(); floorPath(ctx, q); ctx.stroke(); if (q.kind === 'branch') drawGrain(ctx, q, p.floorAlpha); }
@@ -1577,24 +1503,6 @@ function drawFlower(ctx, f, p, gold) {
   ctx.fillStyle = FLORA;
 }
 // The live layer, over the ground: the fish, the ripples and treats in the water, then the surface over them.
-// A gull seen from below, heading a, centred on (x,y), scaled by k: the leading edge a shallow M of three curves (each
-// outer wing out to its tip, and between the wrists a dip to the body), the trailing edge back round a short tail. The
-// flap (b.wing, -1 to 1) swings the tips forward and back and draws the span in a little.
-function birdPath(ctx, b, a, x, y, k) {
-  const h = (b.span / 2) * k, f = b.wing, c = Math.cos(a), s = Math.sin(a);
-  const X = (u, v) => x + (c * u - s * v) * h, Y = (u, v) => y + (s * u + c * v) * h;
-  const tu = -0.12 + 0.2 * f, tv = 1 - 0.18 * f * f, wu = 0.14 + 0.08 * f, wv = 0.45, cu = wu - 0.26;
-  const to = (u1, v1, u2, v2) => ctx.quadraticCurveTo(X(u1, v1), Y(u1, v1), X(u2, v2), Y(u2, v2));
-  ctx.moveTo(X(tu, -tv), Y(tu, -tv));
-  to((tu + wu) / 2 + 0.08, -(tv + wv) / 2, wu, -wv);
-  to(wu - 0.14, 0, wu, wv);
-  to((tu + wu) / 2 + 0.08, (tv + wv) / 2, tu, tv);
-  to((tu + cu) / 2 - 0.04, (tv + wv) / 2, cu, wv);
-  to(cu - 0.1, 0.2, -0.4, 0);
-  to(cu - 0.1, -0.2, cu, -wv);
-  to((tu + cu) / 2 - 0.04, -(tv + wv) / 2, tu, -tv);
-  ctx.closePath();
-}
 export function drawLive(ctx, w, ink, paper, gold) {
   const p = w.params, still = w.reduced;
   // the school: a paper fill under each outline, so crossing fish read as one over the other
@@ -1634,16 +1542,6 @@ export function drawLive(ctx, w, ink, paper, gold) {
     ctx.stroke();
     const c = Math.cos(s.a) * 1.5, d = Math.sin(s.a) * 1.5;
     ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(s.x - c, s.y - d); ctx.lineTo(s.x + c, s.y + d); ctx.stroke();
-  }
-  // the birds: in the air, over everything on the surface. Every shadow first, cast on the water and on whatever floats
-  // there, SUN_X, SUN_Y px off, a little larger than the bird; then each bird, a pale silhouette
-  // with no outline
-  if (w.flock) {
-    const F = w.flock;
-    ctx.fillStyle = ink; ctx.globalAlpha = p.birdShadow;
-    for (const b of F.birds) { ctx.beginPath(); birdPath(ctx, b, F.a, b.x + SUN_X, b.y + SUN_Y, BIRD_SHADOW_K); ctx.fill(); }
-    ctx.fillStyle = paper; ctx.globalAlpha = p.birdAlpha;
-    for (const b of F.birds) { ctx.beginPath(); birdPath(ctx, b, F.a, b.x, b.y, 1); ctx.fill(); }
   }
   ctx.globalAlpha = 1;
 }

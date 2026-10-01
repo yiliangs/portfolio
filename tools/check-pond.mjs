@@ -773,15 +773,13 @@ for (const [W, H] of [[1920, 1080], [1280, 720]]) for (const seed of [2, 19]) {
 }
 
 // (r) The pond floor, at seeds 2 and 19 on 1920x1080 and 1280x720 pages with the two islands placed in proportion, once
-// the plan is laid round them, and once on a coarse pointer: as many pebble beds, leaves and branches as the params
-// ask; each bed 5 to 9 pebbles 3 to 7 px long, each leaf 10 to 16 px, the branch 60 to 120 px with 2 or 3 forks; every
-// thing, measured from its own drawn shape, 12 px or more past the islands' outermost drawn extent, 30 px off every
-// stone and every pad's home, 30 px inside the screen, and clear of the top 80 px and the bottom 100 px; and two worlds
-// of one seed lay the same floor.
+// the plan is laid round them, and once on a coarse pointer: as many leaves and branches as the params ask; each leaf
+// 10 to 16 px, the branch 50 to 90 px with 1 or 2 forks; every thing, measured from its own drawn shape, 12 px or more
+// past the islands' outermost drawn extent, 30 px off every stone and every pad's home, 30 px inside the screen, and
+// clear of the top 80 px and the bottom 100 px; and two worlds of one seed lay the same floor.
 const floorReach = (q) => {
-  if (q.kind === 'pebbles') return Math.max(...q.stones.map((s) => Math.hypot(s.dx, s.dy) + s.a));
   if (q.kind === 'leaf') return 0.65 * q.L; // the stalk runs 0.15 L past the tip; the blade's control points lie inside
-  return Math.max(...q.lines.flatMap((g) => [0, 2, 4].map((k) => Math.hypot(g[k], g[k + 1]))));
+  return Math.max(...q.outline.map((p) => Math.hypot(p[0], p[1]))); // the branch: its drawn outline
 };
 for (const [W, H, coarse] of [[1920, 1080, false], [1280, 720, false], [1920, 1080, true]]) for (const seed of [2, 19]) {
   if (coarse && seed === 19) continue;
@@ -794,9 +792,9 @@ for (const [W, H, coarse] of [[1920, 1080, false], [1280, 720, false], [1920, 10
   const w = lay(), p = w.params, F = w.floor || [];
   const tag = `${W}x${H}${coarse ? ' coarse' : ''} seed ${seed}: (r)`;
   const count = (k) => F.filter((q) => q.kind === k).length;
-  const want = [coarse ? p.pebblesTouch : p.pebbles, coarse ? p.leavesTouch : p.leaves, p.branch];
-  const have = [count('pebbles'), count('leaf'), count('branch')];
-  if (have.join() !== want.join()) { fail(`${tag} the floor should hold ${want.join('/')} beds/leaves/branches, holds ${have.join('/')}`); continue; }
+  const want = [coarse ? p.leavesTouch : p.leaves, p.branch];
+  const have = [count('leaf'), count('branch')];
+  if (have.join() !== want.join()) { fail(`${tag} the floor should hold ${want.join('/')} leaves/branches, holds ${have.join('/')}`); continue; }
   let land = Infinity, near = Infinity, edge = Infinity, band = Infinity, shape = true;
   for (const q of F) {
     const R = floorReach(q), d = { x: q.x, y: q.y, r: R };
@@ -805,9 +803,8 @@ for (const [W, H, coarse] of [[1920, 1080, false], [1280, 720, false], [1920, 10
     for (const o of w.pads) near = Math.min(near, Math.hypot(o.hx - q.x, o.hy - q.y) - o.r - R);
     edge = Math.min(edge, q.x - R, W - q.x - R, q.y - R, H - q.y - R);
     band = Math.min(band, q.y - R - 80, H - 100 - q.y - R);
-    if (q.kind === 'pebbles') shape &&= q.stones.length >= 5 && q.stones.length <= 9 && q.stones.every((s) => s.a >= 1.5 - 1e-9 && s.a <= 3.5 + 1e-9);
     if (q.kind === 'leaf') shape &&= q.L >= 10 && q.L <= 16;
-    if (q.kind === 'branch') { const m = q.lines[0], L = Math.hypot(m[4] - m[0], m[5] - m[1]); shape &&= L >= 60 - 1e-9 && L <= 120 + 1e-9 && q.lines.length >= 3 && q.lines.length <= 4; }
+    if (q.kind === 'branch') { const m = q.lines[0], L = Math.hypot(m[4] - m[0], m[5] - m[1]); shape &&= L >= 50 - 1e-9 && L <= 90 + 1e-9 && q.lines.length >= 2 && q.lines.length <= 3; }
   }
   metric(`${tag} floor land ${land.toFixed(1)} near ${near.toFixed(1)} edge ${edge.toFixed(1)} band ${band.toFixed(1)}`);
   if (!(land >= 12 - 1e-6 && near >= 30 - 1e-6 && edge >= 30 - 1e-6 && band >= -1e-6)) fail(`${tag} every floor thing should stand 12 px past the islands' extent (${land.toFixed(1)}), 30 px off stones and pads (${near.toFixed(1)}), 30 px inside the screen (${edge.toFixed(1)}) and clear of the header and footer bands (${band.toFixed(1)})`);
@@ -815,50 +812,5 @@ for (const [W, H, coarse] of [[1920, 1080, false], [1280, 720, false], [1920, 10
   if (JSON.stringify(lay().floor) !== JSON.stringify(F)) fail(`${tag} two worlds of one seed should lay the same floor`);
 }
 
-// (s) Birds passing over, 10 simulated minutes at seeds 2 and 19 on a 1440x900 page with the two islands: at least 5
-// flocks cross completely (seen in view, then gone with every bird and its shadow, cast (16, 24) px off, out of view)
-// and never two at once (a new flock only a step after the last has gone); every bird's nearest flockmate stays 10 to
-// 34 px away throughout; at least one calm fish bursts within 2 s of a bird's shadow passing within 50 px of it; and
-// under reduced motion no flock ever appears.
-const SUN = [16, 24];
-for (const seed of [2, 19]) {
-  const w = createWorld(defaults(), { w: 1440, h: 900, seed });
-  setIslands(w, ISL2);
-  const out = (x, y) => x < 0 || x > 1440 || y < 0 || y > 900;
-  let last = null, seen = false, crossed = 0, swapped = 0, near = Infinity, far = -Infinity, bursts = 0;
-  const pend = new Map();
-  for (let s = 0; s < 600 * 60; s++) {
-    const calm = new Map(w.fish.map((f) => [f, f.en < 0.5])); // before the step, which may startle
-    step(w, DT);
-    const F = w.flock || null;
-    if (F !== last) {
-      if (last && seen && last.birds.every((b) => out(b.x, b.y) && out(b.x + SUN[0], b.y + SUN[1]))) crossed++;
-      if (last && F) swapped++;
-      last = F; seen = false;
-    }
-    if (!F) continue;
-    if (F.birds.some((b) => !out(b.x, b.y))) seen = true;
-    for (const b of F.birds) {
-      const d = Math.min(...F.birds.filter((o) => o !== b).map((o) => Math.hypot(o.x - b.x, o.y - b.y)));
-      near = Math.min(near, d); far = Math.max(far, d);
-    }
-    for (const f of w.fish) {
-      const d = Math.min(...F.birds.map((b) => Math.hypot(f.x - b.x - SUN[0], f.y - b.y - SUN[1])));
-      if (d < 50 && calm.get(f) && !pend.has(f)) pend.set(f, w.t);
-    }
-    for (const [f, t] of pend) { if (f.en > 0.9) { bursts++; pend.delete(f); } else if (w.t - t > 2) pend.delete(f); }
-  }
-  const show = `seed ${seed}: (s) flocks crossed ${crossed}, swapped ${swapped}, nearest flockmate ${near.toFixed(1)}..${far.toFixed(1)} px, bursts ${bursts}`;
-  metric(show);
-  if (!(crossed >= 5 && swapped === 0)) fail(`${show}: at least 5 flocks should cross completely in 10 minutes, one at a time`);
-  if (!(near >= 10 && far <= 34)) fail(`${show}: each bird's nearest flockmate should stay 10 to 34 px away`);
-  if (!(bursts >= 1)) fail(`${show}: a fish should burst when a bird's shadow passes over it`);
-  const q = createWorld(defaults(), { w: 1440, h: 900, seed, reduced: true });
-  setIslands(q, ISL2);
-  let any = false;
-  for (let s = 0; s < 600 * 60 && !any; s++) { step(q, DT); any = !!q.flock; }
-  if (any) fail(`seed ${seed}: (s) no flock should appear under reduced motion`);
-}
-
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }
-console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads, flowers, striders, stones and their layout, the pond floor, the birds hold');
+console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads, flowers, striders, stones and their layout, the pond floor hold');
