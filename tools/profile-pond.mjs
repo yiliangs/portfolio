@@ -17,6 +17,9 @@
 // - Each scenario gets a fresh tab: viewport and DPR by Emulation.setDeviceMetricsOverride, CPU throttle by
 //   Emulation.setCPUThrottlingRate, the tab brought to the front with focus emulated, and sampling starts only once
 //   rAF frames are seen to advance (a backgrounded tab reports stalled numbers without erroring).
+// - Every tab emulates prefers-reduced-motion: no-preference (Emulation.setEmulatedMedia), whatever the machine
+//   reports, so the pond always runs in full motion: under reduced motion the fish crawl and the striders hold still, and
+//   the profile would measure a different pond. The summary line says so.
 // - Per scenario it reports: step() and draw() JS time per frame, the rAF frame interval distribution from a probe
 //   loop that runs in both modes, main-thread busy share (Performance.getMetrics TaskDuration), and from a trace the
 //   busy time per frame of the renderer main thread, the GPU process main thread (where 2D canvas commands raster)
@@ -33,6 +36,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
+const REDUCED = 'no-preference'; // the prefers-reduced-motion every tab emulates
 
 // ---------- options ----------
 const args = Object.fromEntries(process.argv.slice(2).map((a) => { const m = a.match(/^--([^=]+)(?:=(.*))?$/); return m ? [m[1], m[2] ?? true] : [a, true]; }));
@@ -44,8 +48,8 @@ if (args.help) {
   --load=idle,busy        idle: fish only; busy: a scripted drag dropping treats across the water
   --mode=off,on           pond-off baseline and pond-on
   --coast-res=1,2         pond-on runs at each coastRes (coast layer resolution, CSS px scale); default: the page's own
-  --sections              time each section of drawCoasts() and drawLive(), and the coast copy (JS time only)
-  --ablate=a,b            extra pond-on runs, each with draw() sections skipped: water,land,shore,fish,treats,rings;
+  --sections              time each section of drawGround() and drawLive(), and the ground's copy (JS time only)
+  --ablate=a,b            extra pond-on runs, each with draw() sections skipped: water,land,floor,shore,fish,treats,surface (stones, pads, flowers),striders,rings;
                           join with + to skip several in one run (land+shore), or 'all' for an empty draw()
   --cpu-profile           V8 CPU profile during pond-on runs; prints top self-time functions
   --headless              headless Chrome (software raster: inflates fill cost)
@@ -62,7 +66,7 @@ const LOADS = list(args.load, 'idle,busy');
 const MODES = list(args.mode, 'off,on');
 const ABLATE = args.ablate ? list(args.ablate) : [];
 const COAST_RES = args['coast-res'] ? list(args['coast-res']).map(Number) : [null];
-const SECTIONS = ['water', 'land', 'shore', 'fish', 'treats'];
+const SECTIONS = ['water', 'land', 'floor', 'shore', 'fish', 'treats', 'surface', 'striders'];
 const ablation = (item) => (item === 'all' ? [...SECTIONS] : item.split('+'));
 for (const a of ABLATE) for (const p of ablation(a)) if (!SECTIONS.includes(p) && p !== 'rings') throw new Error('unknown --ablate ' + p);
 
@@ -84,21 +88,24 @@ function instrumentedPond() {
   src = once(src, '\n    paint();\n', '\n    const __t2 = performance.now(); paint(); if (globalThis.__prof) __prof.tick(__t1 - __t0, performance.now() - __t2);\n');
   src = once(src, '\n  return api;\n}', '\n  globalThis.__pondApi = api;\n  return api;\n}');
   if (args.sections || ABLATE.length) {
-    // the coast layer's sections; then 'copy' runs from the end of the coasts to the first live section (the scaled
+    // the ground's sections; then 'copy' runs from the end of the ground to the first live section (the scaled
     // copy onto the canvas when the coasts are drawn apart, nearly nothing when they are drawn straight on)
-    src = sectionFn(src, 'export function drawCoasts(ctx, w, ink, paper, water = paper) {', [
+    src = sectionFn(src, 'export function drawGround(ctx, w, ink, paper, water = paper) {', [
       ['water', (l) => l.startsWith('ctx.globalAlpha = 1; ctx.fillStyle = water;')],
       ['land', (l) => l === 'ctx.fillStyle = paper;'],
+      ['floor', (l) => l.startsWith('// the pond floor:')],
       ['shore', (l) => l.startsWith('ctx.strokeStyle = ink;')],
     ], 'copy');
     src = sectionFn(src, 'export function drawLive(ctx, w, ink, paper, gold) {', [
       ['fish', (l) => l.startsWith('// the school')],
       ['treats', (l) => l.startsWith('// ripples, then')],
+      ['surface', (l) => l.startsWith('// the surface: the stones, then the pads')],
+      ['striders', (l) => l.startsWith('// the striders:')],
     ], null);
   }
   return src;
 }
-// Cuts one of pond.js's draw functions (drawCoasts, drawLive) at the first line of each section. Each section is a run
+// Cuts one of pond.js's draw functions (drawGround, drawLive) at the first line of each section. Each section is a run
 // of whole statements, so wrapping it in an if-block to skip it keeps the braces balanced. The function's end opens
 // the section named by after; null closes the frame's timing. drawLive sets its own stroke style, so skipping a coast
 // section leaves the fish as they are.
@@ -206,12 +213,14 @@ async function runScenario(sc) {
     await s('Emulation.setFocusEmulationEnabled', { enabled: true });
     await s('Emulation.setDeviceMetricsOverride', { width: sc.view.width, height: sc.view.height, deviceScaleFactor: sc.view.dpr, mobile: false });
     await s('Emulation.setCPUThrottlingRate', { rate: sc.throttle });
+    await s('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: REDUCED }] });
     await s('Page.addScriptToEvaluateOnNewDocument', { source: initScript({ off: sc.mode === 'off', ablate: sc.ablate ? ablation(sc.ablate) : [] }) });
     await s('Page.navigate', { url: BASE + '/' });
     // wait for the pond (or its stub) to mount, then for frames to be seen advancing
     let ready = false;
     for (let i = 0; i < 300 && !ready; i++) { await sleep(100); ready = await ev('!!globalThis.__pondApi').catch(() => false); }
     if (!ready) throw new Error('the pond never mounted');
+    if (await ev('matchMedia("(prefers-reduced-motion: reduce)").matches')) throw new Error('the tab still reports reduced motion');
     const n0 = await ev('__prof.n'); await sleep(1000); const n1 = await ev('__prof.n');
     if (n1 - n0 < 10) throw new Error(`frames are not advancing (${n1 - n0} in 1 s); the tab is backgrounded or stalled`);
     if (sc.ablate && ablation(sc.ablate).includes('rings')) await ev('__pondApi.params.rings = 0');
@@ -308,7 +317,7 @@ for (const throttle of THROTTLES) for (const view of VIEW_KEYS) for (const load 
   for (const mode of MODES) for (const cr of mode === 'on' ? COAST_RES : [null]) scenarios.push({ throttle, viewKey: view, view: VIEWS[view], load, mode, cr });
   for (const cr of COAST_RES) for (const ablate of ABLATE) scenarios.push({ throttle, viewKey: view, view: VIEWS[view], load, mode: 'on', ablate, cr });
 }
-console.log(`pond profile: ${scenarios.length} scenarios x ${SECONDS} s; Chrome ${gpu.headless ? 'headless' : 'headed'}; GPU ${gpu.vendor} / ${gpu.device}; 2d_canvas=${gpu.canvas2d} gpu_compositing=${gpu.compositing} rasterization=${gpu.rasterization}`);
+console.log(`pond profile: ${scenarios.length} scenarios x ${SECONDS} s; Chrome ${gpu.headless ? 'headless' : 'headed'}; GPU ${gpu.vendor} / ${gpu.device}; 2d_canvas=${gpu.canvas2d} gpu_compositing=${gpu.compositing} rasterization=${gpu.rasterization}; prefers-reduced-motion emulated as ${REDUCED}`);
 
 const results = [];
 for (const sc of scenarios) {
@@ -360,7 +369,7 @@ if (ABLATE.length) {
 }
 if (args.sections) {
   console.log('\ndraw() sections, JS ms per frame (mean)');
-  for (const x of rows) if (x.r.mode === 'on' && !x.r.ablate && x.r.dump.secN) console.log(`  ${pad(key(x.r), 20)} ` + [...SECTIONS.slice(0, 3), 'copy', ...SECTIONS.slice(3)].map((k) => `${k} ${f((x.r.dump.secAcc[k] || 0) / x.r.dump.secN, 3)}`).join('  '));
+  for (const x of rows) if (x.r.mode === 'on' && !x.r.ablate && x.r.dump.secN) console.log(`  ${pad(key(x.r), 20)} ` + [...SECTIONS.slice(0, 4), 'copy', ...SECTIONS.slice(4)].map((k) => `${k} ${f((x.r.dump.secAcc[k] || 0) / x.r.dump.secN, 3)}`).join('  '));
 }
 if (args['cpu-profile']) {
   console.log('\nCPU profile, top self time (ms per frame)');
