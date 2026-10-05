@@ -90,8 +90,8 @@ function instrumentedPond() {
   if (args.sections || ABLATE.length) {
     // the ground's sections; then 'copy' runs from the end of the ground to the first live section (the scaled
     // copy onto the canvas when the coasts are drawn apart, nearly nothing when they are drawn straight on)
-    src = sectionFn(src, 'export function drawGround(ctx, w, ink, paper, water = paper) {', [
-      ['water', (l) => l.startsWith('ctx.globalAlpha = 1; ctx.fillStyle = water;')],
+    src = sectionFn(src, 'export function drawGround(ctx, w, ink, paper, water = { img: null, w: 0, h: 0, flat: paper }) {', [
+      ['water', (l) => l.startsWith('ctx.globalAlpha = 1; if (!water.img')],
       ['land', (l) => l === 'ctx.fillStyle = paper;'],
       ['floor', (l) => l.startsWith('// the pond floor:')],
       ['shore', (l) => l.startsWith('ctx.strokeStyle = ink;')],
