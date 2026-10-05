@@ -75,6 +75,9 @@ export const PARAMS = {
     ringAlpha: [0.13, 0, 1, 0.01, 'wave opacity'],
     shoreAlpha: [0.16, 0, 1, 0.01, 'shoreline opacity'],
     water: [0.08, 0, 0.4, 0.005, 'how much darker the water is than the land'],
+    markDensity: [1, 0, 3, 0.05, 'how close the hatch on the water is laid, dashes per area x this'],
+    markAlpha: [0.05, 0, 1, 0.01, 'opacity of the hatch on the water'],
+    markJitter: [0.35, 0, 1, 0.05, 'how loosely the hatch\'s dashes are laid, 0 a strict lattice, 1 hand-laid'],
     shallows: [0.6, 0, 1, 0.05, 'how far the shallows lighten back toward the land'],
     coastRes: [1.5, 1, 2, 0.25, 'resolution of the ground (water, land, floor, shores) on a dense screen: 1 CSS px, 2 the full backing store'],
   },
@@ -1490,22 +1493,68 @@ export function waterOf(paper, depth) {
   const k = light ? depth : Math.min(1, depth * 3), mix = c.map((v, i) => Math.round(v + (deep[i] - v) * k));
   return `rgb(${mix[0]}, ${mix[1]}, ${mix[2]})`;
 }
+// Marks on the water: a hatch, the draughtsman's water, in thin ink strokes over the flat water, the same single-weight
+// line as the fish, the floor and the shores, so the pond reads as one drawing. Level dashes lie on rows HATCH_PITCH
+// apart at HATCH_PERIOD along each row (both at density 1), each row shifted half a period from the last, evenly over the
+// whole page. Density shrinks pitch and period together by its square root, so dashes
+// per area follow it, while a dash keeps HATCH_DASH px (never more than 0.7 of the period). A mark is { x, y, pts }: its
+// anchor, the dash's lattice point, and its polyline [x0, y0, x1, y1], world CSS px. The lattice is anchored at the
+// world's corner with a phase from the seed, and each dash is drawn from its own point's hash, so which dashes exist and
+// where depends on the seed and the position alone (never a running stream, never the page size): two loads differ even
+// when the hatch is strict, a larger page holds a smaller page's marks, and a resize reveals more of the same picture.
+// The seed is the world's on its own derivation, so the simulation draws exactly what it drew without them.
+// The jitter j loosens the hatch from a printed one toward a hand-laid one: from its hash each dash takes a length up to
+// j x 50 percent off HATCH_DASH either way, a shift along its row up to j x a quarter period, a shift off its row up to
+// j x 2 px (to whole pixels, so every dash stays crisp) and a j x 15 percent chance of being left out; at 0 it is a
+// strict lattice of equal dashes. Every dash draws all four numbers whatever j is, so moving the slider loosens one field
+// rather than dealing a new one.
+const HATCH_PITCH = 14, HATCH_PERIOD = 44, HATCH_DASH = 22;
+// No point of a dash lies farther than this from its anchor (half of 1.5 dashes plus a quarter period is 27.5 px), so
+// a page draws every dash anchored within this of it.
+export const HATCH_REACH = 30;
+const hashPoint = (x, y, s) => { let h = Math.imul(x, 0x27d4eb2d) ^ Math.imul(y, 0x165667b1) ^ s; h = Math.imul(h ^ (h >>> 15), 0x85ebca6b); h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35); return (h ^ (h >>> 16)) >>> 0; };
+// a stream of numbers in [0, 1) from a hash (mulberry32)
+const pointRand = (h) => () => { h = (h + 0x6d2b79f5) | 0; let t = Math.imul(h ^ (h >>> 15), 1 | h); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+// The marks of a W x H page: every dash anchored within HATCH_REACH of it, x in [-reach, W + reach) and y likewise.
+export function waterMarks(seed, W, H, density = 1, jitter = 0.35) {
+  const out = []; if (!(density > 0)) return out;
+  const s = (seed ^ 0x6d61726b ^ 0x68617463) >>> 0, j = jitter, R = HATCH_REACH, f = 1 / Math.sqrt(density);
+  const P = HATCH_PITCH * f, T = HATCH_PERIOD * f, ph = pointRand(s), oy = ph() * P, ox = ph() * T;
+  const L0 = Math.min(HATCH_DASH, 0.7 * T), along = 0.25 * Math.min(T, HATCH_PERIOD), off = 2 * Math.min(1, P / HATCH_PITCH);
+  for (let iy = Math.ceil((-R - oy) / P); oy + iy * P < H + R; iy++) {
+    const ay = oy + iy * P, x0 = ox + ((iy & 1) * T) / 2;
+    for (let ix = Math.ceil((-R - x0) / T); x0 + ix * T < W + R; ix++) {
+      const ax = x0 + ix * T, d = pointRand(hashPoint(ix, iy, s)), gone = d() < 0.15 * j, L = L0 * (1 + j * (d() - 0.5)), cx = ax + j * (d() - 0.5) * 2 * along, yy = Math.round(ay + j * (d() - 0.5) * 2 * off) + 0.5;
+      if (!gone) out.push({ x: ax, y: ay, pts: [cx - L / 2, yy, cx + L / 2, yy] });
+    }
+  }
+  return out;
+}
+// Strokes marks onto ctx (already scaled to CSS px) in the ink: one weight, round ends, one alpha, nothing filled.
+export function drawMarks(ctx, marks, ink, alpha) {
+  ctx.globalAlpha = alpha; ctx.strokeStyle = ink; ctx.lineWidth = 1; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath();
+  for (const { pts } of marks) { ctx.moveTo(pts[0], pts[1]); for (let i = 2; i < pts.length; i += 2) ctx.lineTo(pts[i], pts[i + 1]); }
+  ctx.stroke(); ctx.globalAlpha = 1;
+}
 // bands of shallows round each island, far to near: grown by px, strength of the land colour laid over the water
 const SHALLOWS = [[36, 0.16], [20, 0.2], [9, 0.28]];
 
 // Draws the world onto ctx (already scaled to CSS px). ink and paper are CSS colours (paper is the land); water is the
-// pond's colour and defaults to the land's; gold is the treats' and the koi's colour. The world is two layers, drawn in order: the
+// pond's layer, { img, w, h, flat }: the flat water and its marks pre-rendered into an image drawn at w x h CSS px from
+// the corner, and the flat water colour under whatever it does not cover (all of the pond when img is null); it
+// defaults to bare land.
+// gold is the treats' and the koi's colour. The world is two layers, drawn in order: the
 // ground (opaque: the water, the land, the things on the pond floor, the shores and the waves lapping at them) and the live layer over them (the
 // fish, the ripples and the treats, then the things on the surface). The shell may draw the ground at a lower resolution than the live layer.
-export function draw(ctx, w, ink, paper, gold, water = paper) {
+export function draw(ctx, w, ink, paper, gold, water) {
   drawGround(ctx, w, ink, paper, water);
   drawLive(ctx, w, ink, paper, gold);
 }
 // The ground: covers the whole canvas, so it needs nothing under it.
-export function drawGround(ctx, w, ink, paper, water = paper) {
+export function drawGround(ctx, w, ink, paper, water = { img: null, w: 0, h: 0, flat: paper }) {
   const p = w.params, still = w.reduced;
-  // the water, then each island as land with shallows lightening toward its coast
-  ctx.globalAlpha = 1; ctx.fillStyle = water; ctx.fillRect(0, 0, w.w, w.h);
+  // the water (the flat colour only where the layer falls short, as for a moment after a resize), then each island as land with shallows lightening toward its coast
+  ctx.globalAlpha = 1; if (!water.img || water.w < w.w || water.h < w.h) { ctx.fillStyle = water.flat; ctx.fillRect(0, 0, w.w, w.h); } if (water.img) { ctx.imageSmoothingEnabled = true; ctx.drawImage(water.img, 0, 0, water.w, water.h); }
   ctx.fillStyle = paper;
   for (const o of w.islands) {
     for (const [g, a] of SHALLOWS) { ctx.globalAlpha = p.shallows * a; coastPath(ctx, o, g); ctx.fill(); }
@@ -1659,10 +1708,32 @@ export function mount(container) {
   reducedQ?.addEventListener?.('change', onReduced);
   // the tokens live on the root div, not on <html>, so read them off the layer itself; and read them again every
   // second, so a change of theme reaches the ink without any hook into how the theme is switched
-  let ink = '#201f1d', paper = '#f3f2f2', inkAge = Infinity, water = paper, waterFor = null, waterDepth = NaN;
+  let ink = '#201f1d', paper = '#f3f2f2', inkAge = Infinity;
   const readInk = () => { const css = getComputedStyle(container); ink = css.getPropertyValue('--color-text').trim() || ink; paper = css.getPropertyValue('--color-bg').trim() || paper; inkAge = 0; };
+  // backing pixels per CSS px of the ground (see paint)
+  const groundRes = () => Math.min(dpr, Math.max(1, params.coastRes || 1));
+  // The water: the hatch is generated once and drawn once, over the flat water colour, into its own canvas at the
+  // ground's resolution, so it is as crisp as the floor's branch; the ground blits it each frame. The marks are kept
+  // apart from their colour, so a theme, depth or alpha change only redraws them, and only a change of size, density or
+  // jitter makes new ones. A resize regenerates 200 ms after the last one; until then the old layer is drawn at its
+  // own size, never stretched, with the flat water under what it misses.
+  let water = { img: null, w: 0, h: 0, flat: paper }, marks = null, marksKey = '', layerKey = '', waterCanvas = null, resizedAt = -Infinity;
+  const relayWater = (now) => {
+    const mk = `${world.seed} ${vw} ${vh} ${params.markDensity} ${params.markJitter}`;
+    if (mk !== marksKey && (!marks || now - resizedAt > 200)) { marks = { w: vw, h: vh, list: waterMarks(world.seed, vw, vh, params.markDensity, params.markJitter) }; marksKey = mk; }
+    const res = groundRes(), lk = `${marksKey} ${res} ${paper} ${ink} ${params.water} ${params.markAlpha}`;
+    if (lk === layerKey) return;
+    layerKey = lk;
+    const flat = waterOf(paper, params.water);
+    if (!waterCanvas) waterCanvas = document.createElement('canvas');
+    waterCanvas.width = Math.max(1, Math.round(marks.w * res)); waterCanvas.height = Math.max(1, Math.round(marks.h * res));
+    const c = waterCanvas.getContext('2d', { alpha: false }); c.setTransform(res, 0, 0, res, 0, 0);
+    c.fillStyle = flat; c.fillRect(0, 0, marks.w, marks.h); drawMarks(c, marks.list, ink, params.markAlpha);
+    water = { img: waterCanvas, w: marks.w, h: marks.h, flat };
+  };
   let vw = 1, vh = 1;
   const resize = () => {
+    resizedAt = performance.now();
     vw = container.clientWidth || 1; vh = container.clientHeight || 1;
     canvas.width = Math.round(vw * dpr); canvas.height = Math.round(vh * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     resizeWorld(world, vw, vh);
@@ -1673,7 +1744,7 @@ export function mount(container) {
   // soften, so the default keeps some of the resolution back. The live layer is drawn over them at full resolution. At coastRes >= dpr they go straight on.
   let coastCanvas = null, coastCtx = null;
   const paint = () => {
-    const res = Math.min(dpr, Math.max(1, params.coastRes || 1));
+    const res = groundRes();
     if (res >= dpr) drawGround(ctx, world, ink, paper, water);
     else {
       if (!coastCtx) { coastCanvas = document.createElement('canvas'); coastCtx = coastCanvas.getContext('2d', { alpha: false }); }
@@ -1693,7 +1764,7 @@ export function mount(container) {
     const dt = Math.min(0.05, Math.max(0, (now - last) / 1000)); last = now;
     inkAge += dt; if (inkAge > 1) readInk();
     step(world, dt);
-    if (paper !== waterFor || params.water !== waterDepth) { waterFor = paper; waterDepth = params.water; water = waterOf(paper, waterDepth); }
+    relayWater(now);
     paint();
   };
   // a hidden tab runs nothing; on return the clock restarts rather than jumping by the time away
@@ -1719,7 +1790,7 @@ export function mount(container) {
       alive = false; if (raf) cancelAnimationFrame(raf); ro.disconnect();
       document.removeEventListener('visibilitychange', onVisible); reducedQ?.removeEventListener?.('change', onReduced);
       if (dev) dev.destroy();
-      canvas.width = canvas.height = 0; if (coastCanvas) coastCanvas.width = coastCanvas.height = 0; if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+      canvas.width = canvas.height = 0; if (coastCanvas) coastCanvas.width = coastCanvas.height = 0; if (waterCanvas) waterCanvas.width = waterCanvas.height = 0; if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
     },
   };
   if (new URLSearchParams(location.search).has('dev')) import('./pond-dev.js').then((m) => { if (alive) dev = m.mount(api); }).catch((e) => console.error('pond-dev', e));

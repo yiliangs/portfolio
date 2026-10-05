@@ -706,7 +706,7 @@ const ladderCheck = (w, tag, again) => {
   if (i > 0) { const u = again(L[i - 1].away); if (same(L[i - 1], u.plan)) fail(`${show}: (t) the rung before (${L[i - 1].away.toFixed(1)} px) lays every stone wanted, so the stones should stand there`); }
 };
 
-// (u) The header band, on every page (p), (q) and (s) lay: the canvas runs under the site's opaque header, 56 px tall,
+// (u) The header band, on every page (p), (q) and (w) lay: the canvas runs under the site's opaque header, 56 px tall,
 // so every stone's edge stands 80 px or more below the top of the page (the header plus an islet's outermost wave), and
 // every islet's outermost drawn extent (its coast plus ISLET_OUTER, at 360 bearings) stays below the header. A stone
 // the header hides is a stone the page does not have. The stones keep no foot band: the footer only overlaps.
@@ -812,7 +812,7 @@ for (const [W, H] of [[1920, 1080], [1280, 720]]) for (const seed of [2, 19]) {
   if (!gave && !(pm * rm < 0)) fail(`${show}: (q) the pads and the stones should sit on opposite sides of the middle`);
 }
 
-// The islets, at seeds 2 and 19 on 1920x1080 and 1280x720 pages laid as in (q). (s) each group of stones is one islet
+// The islets, at seeds 2 and 19 on 1920x1080 and 1280x720 pages laid as in (q). (w) each group of stones is one islet
 // (w.islets: its stones and a coast in the islands' representation, a radius per bearing round a centre, read by
 // coast()); every stone belongs to the islet of its group; the coast holds every vertex of its stones (the vertex no
 // farther from the centre than the coast at its bearing, to 1e-3 px; the drawn stone lies inside its vertices); the
@@ -826,7 +826,7 @@ for (const [W, H] of [[1920, 1080], [1280, 720]]) for (const seed of [2, 19]) {
 const isletLay = (W, H, seed) => { const w = createWorld(defaults(), { w: W, h: H, seed }); setIslands(w, ISL2.map((b) => ({ x: (b.x * W) / 1440, y: (b.y * H) / 900, w: (b.w * W) / 1440, h: (b.h * H) / 900 }))); step(w, DT); return w; };
 for (const [W, H] of [[1920, 1080], [1280, 720]]) for (const seed of [2, 19]) {
   const w = isletLay(W, H, seed), tag = `${W}x${H} seed ${seed}:`, S = w.islets;
-  if (!Array.isArray(S) || !S.length || typeof M.ISLET_OUTER !== 'number') { fail(`${tag} (s) the world should carry its islets (w.islets) and the pond their outermost reach (ISLET_OUTER)`); continue; }
+  if (!Array.isArray(S) || !S.length || typeof M.ISLET_OUTER !== 'number') { fail(`${tag} (w) the world should carry its islets (w.islets) and the pond their outermost reach (ISLET_OUTER)`); continue; }
   let member = true, holds = true, bend = 0, open = Infinity;
   for (const q of w.rocks) member &&= S.filter((s) => s.rocks.includes(q) && s.grp === q.grp).length === 1;
   for (const s of S) {
@@ -845,12 +845,12 @@ for (const [W, H] of [[1920, 1080], [1280, 720]]) for (const seed of [2, 19]) {
   const relaid = !!w.plan && L.some((k) => k.away === w.plan.away && k.span === w.plan.span && k.clear === w.plan.clear) && moved >= w.plan.clear - 1e-6;
   const show = `${tag} ${S.length} islets of ${S.map((s) => s.rocks.length).join('+')} stones, coast bend ${bend.toFixed(4)} of the mean radius, outermost wave ${open.toFixed(1)} px short of the islands' outermost drawn extent; rockAway raised to ${w.params.rockAway}, stones laid at ${w.plan && w.plan.away != null ? w.plan.away.toFixed(1) : '?'}, ${moved.toFixed(1)} px past it`;
   metric(show);
-  if (!member) fail(`${show}: (s) every stone should belong to exactly the islet of its group`);
-  if (!holds) fail(`${show}: (s) each islet's coast should hold every vertex of its stones`);
-  if (!(bend < 0.03)) fail(`${show}: (s) each islet's coast should be smooth, its largest second difference under 0.03 of its mean radius`);
-  if (!(open > 0)) fail(`${show}: (s) an islet's outermost wave should stand short of every island's outermost drawn extent`);
-  if (!twin) fail(`${show}: (s) two worlds of one seed should lay the same stones and islets`);
-  if (!relaid) fail(`${show}: (s) moving rockAway should lay the stones again on its ladder, at the distance in use`);
+  if (!member) fail(`${show}: (w) every stone should belong to exactly the islet of its group`);
+  if (!holds) fail(`${show}: (w) each islet's coast should hold every vertex of its stones`);
+  if (!(bend < 0.03)) fail(`${show}: (w) each islet's coast should be smooth, its largest second difference under 0.03 of its mean radius`);
+  if (!(open > 0)) fail(`${show}: (w) an islet's outermost wave should stand short of every island's outermost drawn extent`);
+  if (!twin) fail(`${show}: (w) two worlds of one seed should lay the same stones and islets`);
+  if (!relaid) fail(`${show}: (w) moving rockAway should lay the stones again on its ladder, at the distance in use`);
 }
 
 // (r) The pond floor, at seeds 2 and 19 on 1920x1080 and 1280x720 pages with the two islands placed in proportion, once
@@ -893,5 +893,54 @@ for (const [W, H, coarse] of [[1920, 1080, false], [1280, 720, false], [1920, 10
   if (JSON.stringify(lay().floor) !== JSON.stringify(F)) fail(`${tag} two worlds of one seed should lay the same floor`);
 }
 
+// (s) The hatch on the water. One seed gives the same marks twice and three seeds give three sets, so each load differs.
+// The marks are anchored in the world: a page holds every dash anchored within HATCH_REACH of it (x in [-reach,
+// W + reach), y likewise), so an 800x600 page's marks are exactly those of the same seed's 1440x900 page so anchored,
+// and a resize shows more of the same picture. Every point of a dash lies within the reach of its anchor and its length
+// within 10 to 34 px; over five seeds a 1440x900 page holds 2000 to 2600 dashes at the default jitter. The marks draw
+// on no stream of the world's: a world stepped after marks were made from its seed is the world stepped without them.
+// The hatch is an even field over the whole page, so cut a 1440x900 page into a 6 x 4 grid of tiles and every tile
+// holds within 15 percent of the mean count of strokes (by each stroke's midpoint), for five seeds, strict and at the
+// default jitter. At jitter 0 it is a strict lattice: every dash one length and level, and the rows on one pitch (each
+// gap between neighbouring rows the same). The defaults are 0.05 alpha and a jitter in [0, 1].
+{
+  const { waterMarks, drawMarks, HATCH_REACH: R } = M;
+  if (typeof waterMarks !== 'function' || typeof drawMarks !== 'function' || !(R > 0)) fail('(s) pond.js should export waterMarks, drawMarks and HATCH_REACH, the hatch on the water');
+  else {
+    const p = defaults(), key = (ms) => ms.map((m) => JSON.stringify(m)).sort().join('\n'), marks = (seed, W, H) => waterMarks(seed, W, H, 1);
+    if (p.markAlpha !== 0.05 || !(p.markJitter >= 0 && p.markJitter <= 1)) fail(`(s) the defaults should be the hatch at alpha 0.05 with a markJitter in [0, 1]; got alpha ${p.markAlpha}, jitter ${p.markJitter}`);
+    if (key(marks(5, 800, 600)) !== key(marks(5, 800, 600))) fail('(s) one seed should give the same marks twice');
+    const three = [3, 4, 1234567].map((s) => key(marks(s, 800, 600)));
+    if (three[0] === three[1] || three[0] === three[2] || three[1] === three[2]) fail('(s) three seeds should give three different sets of marks');
+    const small = marks(9, 800, 600), inner = marks(9, 1440, 900).filter((m) => m.x >= -R && m.x < 800 + R && m.y >= -R && m.y < 600 + R);
+    if (!small.length || key(small) !== key(inner)) fail(`(s) an 800x600 page's marks should be exactly the 1440x900 page's marks anchored within ${R} px of it; ${small.length} vs ${inner.length}`);
+    for (const seed of [1, 2, 19, 77, 4242]) {
+      const ms = marks(seed, 1440, 900); let far = 0, lo = Infinity, hi = 0;
+      for (const m of ms) {
+        let L = 0; for (let i = 0; i < m.pts.length; i += 2) { far = Math.max(far, Math.hypot(m.pts[i] - m.x, m.pts[i + 1] - m.y)); if (i) L += Math.hypot(m.pts[i] - m.pts[i - 2], m.pts[i + 1] - m.pts[i - 1]); }
+        lo = Math.min(lo, L); hi = Math.max(hi, L);
+      }
+      metric(`seed ${seed} (s) hatch: ${ms.length} strokes, length ${lo.toFixed(1)}..${hi.toFixed(1)}, farthest point ${far.toFixed(1)} px`);
+      if (far > R + 1e-9) fail(`seed ${seed}: (s) every point should lie within ${R} px of its mark's anchor, one lies ${far.toFixed(2)} px off`);
+      if (ms.length && !(lo >= 10 - 1e-9 && hi <= 34 + 1e-9)) fail(`seed ${seed}: (s) strokes should be 10 to 34 px long, got ${lo.toFixed(2)}..${hi.toFixed(2)}`);
+      if (!(ms.length >= 2000 && ms.length <= 2600)) fail(`seed ${seed}: (s) a 1440x900 page should hold 2000 to 2600 strokes, got ${ms.length}`);
+    }
+    const run = (first) => { const w = createWorld(defaults(), { w: 1440, h: 900, seed: 31 }); setIslands(w, ISL2); if (first) marks(w.seed, 1440, 900); for (let s = 0; s < 240; s++) step(w, DT); return JSON.stringify([w.fish, w.pads, w.floor]); };
+    if (run(false) !== run(true)) fail('(s) making marks from a world\'s seed should leave the world\'s steps unchanged');
+    for (const j of [0, p.markJitter ?? 0.35]) for (const seed of [1, 2, 19, 77, 4242]) {
+      const ms = waterMarks(seed, 1440, 900, 1, j), tiles = new Array(24).fill(0);
+      for (const { pts } of ms) { const mx = (pts[0] + pts[2]) / 2, my = pts[1]; if (mx >= 0 && mx < 1440 && my >= 0 && my < 900) tiles[Math.floor(my / 225) * 6 + Math.floor(mx / 240)]++; }
+      const mean = tiles.reduce((a, b) => a + b, 0) / 24, worst = Math.max(...tiles.map((t) => Math.abs(t - mean) / mean));
+      metric(`seed ${seed} (s) hatch at jitter ${j}: ${ms.length} strokes, tiles ${Math.min(...tiles)}..${Math.max(...tiles)} about a mean of ${mean.toFixed(1)}, worst ${(worst * 100).toFixed(1)} percent off`);
+      if (!(mean > 0 && worst <= 0.15)) fail(`seed ${seed}: (s) at jitter ${j} every tile of the hatch should hold within 15 percent of the mean ${mean.toFixed(1)} strokes, one is ${(worst * 100).toFixed(1)} percent off`);
+      if (j === 0) {
+        const lens = new Set(ms.map(({ pts }) => (pts[2] - pts[0]).toFixed(6))), level = ms.every(({ pts }) => pts.length === 4 && pts[1] === pts[3]);
+        const rows = [...new Set(ms.map(({ pts }) => pts[1]))].sort((a, b) => a - b), gaps = new Set(rows.slice(1).map((y, i) => (y - rows[i]).toFixed(6)));
+        if (lens.size !== 1 || !level || gaps.size !== 1) fail(`seed ${seed}: (s) at jitter 0 the hatch should be a strict lattice, one length and one row pitch; got ${lens.size} lengths, ${gaps.size} row gaps, level ${level}`);
+      }
+    }
+  }
+}
+
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }
-console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads, flowers, striders, stones and their layout, the islets, the pond floor hold');
+console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads, flowers, striders, stones and their layout, the islets, the pond floor, the marks on the water hold');
