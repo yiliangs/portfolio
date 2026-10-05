@@ -53,7 +53,7 @@
         "\n\n\n  ",
         "\n  ",
         "\n  ",
-        h("div", { key: "3", ref: V.pondLayerRef, "data-print": "hide", "aria-hidden": "true", style: {"position":"fixed","inset":"0","pointerEvents":"none","zIndex":"0","opacity":"0","transition":"opacity 900ms cubic-bezier(.65,0,.15,1)"} }),
+        h("div", { key: "3", ref: V.sceneLayerRef, "data-print": "hide", "aria-hidden": "true", style: {"position":"fixed","inset":"0","pointerEvents":"none","zIndex":"0","opacity":"0","transition":"opacity 900ms cubic-bezier(.65,0,.15,1)"} }),
         "\n  ",
         h("div", { key: "5", ref: V.parchLayerRef, "data-print": "hide", "aria-hidden": "true", style: {"position":"fixed","inset":"0","pointerEvents":"none","zIndex":"1","opacity":"0.8"} }),
         "\n  ",
@@ -2109,27 +2109,62 @@
   
   class Component extends DCLogic {
     contentsRef = React.createRef(); platesRef = React.createRef(); notesRef = React.createRef(); landingStatementRef = React.createRef();
-    homeLayerRef = React.createRef(); homeRollRef = React.createRef(); homeCubeRef = React.createRef(); pondLayerRef = React.createRef(); 
-    // the home pond lives only on the home view; it fades out (and stops) elsewhere. syncHome runs this on resize and
-    // scroll too, so the islands follow the objects wherever the page puts them; each frame the pond also reads the
+    homeLayerRef = React.createRef(); homeRollRef = React.createRef(); homeCubeRef = React.createRef(); sceneLayerRef = React.createRef();
+    // The home scenes, by name: each a lazy import of a module under scenes/ that exports `scene`, the descriptor whose
+    // contract heads scenes/kit.js. A new scene is one module and one line here.
+    scenes = {
+      pond: () => import('./scenes/pond.js'),
+    };
+    // the scene this page load shows, picked once and kept when the visitor leaves home and comes back
+    sceneName = this.pickScene(location.search);
+    // ?scene=<name> when that name is registered; otherwise a registered scene at random
+    pickScene(search, random = Math.random) {
+      const names = Object.keys(this.scenes), asked = new URLSearchParams(search).get('scene');
+      return names.includes(asked) ? asked : names[Math.floor(random() * names.length)];
+    }
+    // the kit and the named scene's module, loaded together
+    loadScene(name) {
+      return Promise.all([import('./scenes/kit.js'), this.scenes[name]()]);
+    }
+    // Shows the named scene in place of the one up now: the mounted scene is destroyed first, then the named one mounts
+    // as any first scene does and is sent the outlines and sources. The dev panel's scene switcher calls this.
+    switchScene(name) {
+      if (!this.scenes[name]) return;
+      this.sceneName = name; clearTimeout(this.sceneKillTimer);
+      if (this.scene) { this.scene.destroy(); this.scene = null; }
+      this.sceneLoading = false;
+      this.syncScene();
+    }
+    // the home scene lives only on the home view; it fades out (and stops) elsewhere. syncHome runs this on resize and
+    // scroll too, so the footprints follow the objects wherever the page puts them; each frame the scene also reads the
     // objects' own outlines on screen, and falls back to these boxes while an object shows nothing
-    syncPond() {
-      const layer = this.pondLayerRef.current; if (!layer) return;
+    syncScene() {
+      const layer = this.sceneLayerRef.current; if (!layer) return;
       const home = this.state.view === 'home', roll = this.homeRollRef.current, cube = this.homeCubeRef.current;
       if (home && roll && cube) {
-        if (!this.pond) { if (this.pondLoading) return; this.pondLoading = true; import('./pond.js').then((m) => { this.pondLoading = false; if (!this.pondLayerRef.current || this.pond) return; this.pond = m.mount(this.pondLayerRef.current); this.pond.setOutlines([(o) => (this.parch ? this.parch.outline(o) : 0), (o) => (this.home ? this.home.outline(o) : 0)]); this.syncPond(); }).catch(() => { this.pondLoading = false; }); return; }
-        // the islands take the pointer from here on (componentDidMount routes it); until the pond is up, or if it never
-        // loads, the buttons keep their boxes so the objects still open by pointer
+        if (!this.scene) {
+          if (this.sceneLoading) return;
+          this.sceneLoading = true; const name = this.sceneName;
+          this.loadScene(name).then(([kit, m]) => {
+            if (name !== this.sceneName) return; // switched away while it loaded
+            this.sceneLoading = false; if (!this.sceneLayerRef.current || this.scene) return;
+            this.scene = kit.mountScene(this.sceneLayerRef.current, m.scene, { name, scenes: Object.keys(this.scenes), pick: (n) => this.switchScene(n) });
+            this.scene.setOutlines([(o) => (this.parch ? this.parch.outline(o) : 0), (o) => (this.home ? this.home.outline(o) : 0)]); this.syncScene();
+          }).catch(() => { if (name === this.sceneName) this.sceneLoading = false; });
+          return;
+        }
+        // the footprints take the pointer from here on (componentDidMount routes it); until the scene is up, or if it
+        // never loads, the buttons keep their boxes so the objects still open by pointer
         roll.style.pointerEvents = cube.style.pointerEvents = 'none';
         const box = (el) => { const r = el.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; };
         // the visible objects, not their layout cells: the roll stands about as wide as its word, the cube is a square
         const rb = box(roll), rs = roll.firstElementChild ? box(roll.firstElementChild) : rb, rw = Math.max(rs.w, rb.h * 0.5), cb = box(cube), cs = Math.min(cb.w, cb.h);
-        this.pond.setSources([{ x: rb.x + rb.w / 2 - rw / 2, y: rb.y, w: rw, h: rb.h }, { x: cb.x + cb.w / 2 - cs / 2, y: cb.y + cb.h / 2 - cs / 2, w: cs, h: cs }]);
+        this.scene.setSources([{ x: rb.x + rb.w / 2 - rw / 2, y: rb.y, w: rw, h: rb.h }, { x: cb.x + cb.w / 2 - cs / 2, y: cb.y + cb.h / 2 - cs / 2, w: cs, h: cs }]);
         layer.style.opacity = '1';
       } else {
         layer.style.opacity = '0';
         this.homeHoverAt(-1);
-        if (this.pond) { clearTimeout(this.pondKillTimer); this.pondKillTimer = setTimeout(() => { if (this.pond && this.state.view !== 'home') { this.pond.destroy(); this.pond = null; } }, 1000); }
+        if (this.scene) { clearTimeout(this.sceneKillTimer); this.sceneKillTimer = setTimeout(() => { if (this.scene && this.state.view !== 'home') { this.scene.destroy(); this.scene = null; } }, 1000); }
       }
     }
     headRef = React.createRef(); rootRef = React.createRef(); heroRef = React.createRef(); scriptRef = React.createRef(); parchLayerRef = React.createRef(); platformRef = React.createRef(); heroTextRef = React.createRef(); tabToolingRef = React.createRef(); tabWritingRef = React.createRef();
@@ -3252,7 +3287,7 @@
       if (from) { this.plateLead = true; this.plateFrom = from; }
     }
     syncHome() {
-      this.syncPond();
+      this.syncScene();
       const layer = this.homeLayerRef.current; if (!layer) return;
       const box = (el) => { const r = el.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; };
       const cell = this.state.view === 'home' ? this.homeCubeRef.current : null;
@@ -3327,7 +3362,7 @@
     goPage(page) { this.transition({ view: 'page', page, idx: this.featuredFor[page][0], hovered: this.featuredFor[page][0] }); }
     // the cube's own way into Development: its layer leads the handoff to the page's hero
     goCube() { this.goPage('tooling'); this.cubeLead = true; }
-    // which home island the pointer is over (-1 for water or none): a hand over either, and the cube lit over its own
+    // which home footprint the pointer is over (-1 for open ground or none): a hand over either, and the cube lit over its own
     homeHoverAt(i) {
       if (i === (this.homeHover ?? -1)) return;
       this.homeHover = i;
@@ -3429,7 +3464,7 @@
   
         if (this.parch) { this.parch.setTilt(kx, ky, inside); this.parch.setCursor(e.clientX, e.clientY); }
         const rootEl = this.rootRef.current; if (rootEl) { rootEl.style.setProperty('--mx', String(kx)); rootEl.style.setProperty('--my', String(ky)); }
-        if (this.pond) this.pond.setPointer(e.clientX, e.clientY, true);
+        if (this.scene) this.scene.setPointer(e.clientX, e.clientY, true);
         if (this.dragLast && this.parch) { this.parch.drag(e.clientX - this.dragLast[0], e.clientY - this.dragLast[1]); this.dragLast = [e.clientX, e.clientY]; }
       };
       window.addEventListener('pointermove', this.onTilt, { passive: true });
@@ -3437,39 +3472,39 @@
       this.onDown = (e) => { const pf = this.platformRef.current; if (!pf || !this.parch || !this.parch.isPlatform() || e.button !== 0) return; const r = pf.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return; this.dragLast = [e.clientX, e.clientY]; this.parch.dragStart(); pf.style.cursor = 'grabbing'; };
       this.onUp = () => { if (!this.dragLast) return; this.dragLast = null; if (this.parch) this.parch.dragEnd(); const pf = this.platformRef.current; if (pf) pf.style.cursor = 'grab'; };
       window.addEventListener('pointerdown', this.onDown); window.addEventListener('pointerup', this.onUp); window.addEventListener('pointercancel', this.onUp);
-      // the home view's pointer, routed by the islands: once the pond is up, the land an island draws is where its
-      // object is, so the two home buttons stop taking pointer hits (syncPond) and stay only for keyboard and screen
-      // readers. Over an island the cursor is a hand and the cube lights; a click on the scroll's island opens
-      // Research, on the cube's opens Development. A mouse or pen press on open water starts a feed stroke and dragging
-      // drops a line of treats (none on the land it crosses); a press that never moves drops one. A press that starts
-      // on an island feeds nothing, and navigates only if it ends as a click on the same island. A press on a real
-      // control feeds nothing. A touch tap on water drops one treat, on an island navigates; a touch drag stays a
-      // scroll (the browser cancels the pointer) and does neither.
-      const homePond = () => !!this.pond && this.state.view === 'home';
+      // the home view's pointer, routed by the scene's footprints: once the scene is up, the ground a footprint draws is
+      // where its object is, so the two home buttons stop taking pointer hits (syncScene) and stay only for keyboard and
+      // screen readers. Over a footprint the cursor is a hand and the cube lights; a click on the scroll's footprint opens
+      // Research, on the cube's opens Development. A mouse or pen press on open ground starts a stroke and dragging
+      // hands the scene a line of drops (none on the footprints it crosses); a press that never moves drops one. A press
+      // that starts on a footprint strokes nothing, and navigates only if it ends as a click on the same footprint. A
+      // press on a real control strokes nothing. A touch tap on open ground drops one, on a footprint navigates; a touch
+      // drag stays a scroll (the browser cancels the pointer) and does neither.
+      const homeScene = () => !!this.scene && this.state.view === 'home';
       const control = (e) => !!(e.target && e.target.closest && e.target.closest('a, button, input, textarea, select, label, [role=button]'));
       const far = (p, e) => Math.hypot(e.clientX - p[0], e.clientY - p[1]) > 10;
-      this.onFeedDown = (e) => {
-        this.feedTap = null; this.feeding = false; this.homePress = null;
-        if (!homePond() || e.button !== 0 || control(e)) return;
-        const i = this.pond.hit(e.clientX, e.clientY);
+      this.onScenePress = (e) => {
+        this.sceneTap = null; this.stroking = false; this.homePress = null;
+        if (!homeScene() || e.button !== 0 || control(e)) return;
+        const i = this.scene.hit(e.clientX, e.clientY);
         if (i >= 0) { this.homePress = { i, at: [e.clientX, e.clientY] }; return; }
-        if (e.pointerType === 'touch') { this.feedTap = [e.clientX, e.clientY]; return; }
-        this.feeding = true; this.pond.strokeStart(e.clientX, e.clientY);
+        if (e.pointerType === 'touch') { this.sceneTap = [e.clientX, e.clientY]; return; }
+        this.stroking = true; this.scene.strokeStart(e.clientX, e.clientY);
       };
-      this.onFeedMove = (e) => {
-        if (this.feedTap && far(this.feedTap, e)) this.feedTap = null;
+      this.onSceneMove = (e) => {
+        if (this.sceneTap && far(this.sceneTap, e)) this.sceneTap = null;
         if (this.homePress && far(this.homePress.at, e)) this.homePress = null;
-        if (e.pointerType !== 'touch') this.homeHoverAt(homePond() && !control(e) ? this.pond.hit(e.clientX, e.clientY) : -1);
-        if (this.feeding && this.pond) this.pond.strokeTo(e.clientX, e.clientY);
+        if (e.pointerType !== 'touch') this.homeHoverAt(homeScene() && !control(e) ? this.scene.hit(e.clientX, e.clientY) : -1);
+        if (this.stroking && this.scene) this.scene.strokeTo(e.clientX, e.clientY);
       };
-      this.onFeedUp = (e) => { const up = e.type === 'pointerup' && this.pond; if (this.feeding && this.pond) { if (up) this.pond.strokeEnd(); else this.pond.strokeCancel(); } if (this.feedTap && up) this.pond.drop(this.feedTap[0], this.feedTap[1]); this.feeding = false; this.feedTap = null; if (!up) this.homePress = null; };
+      this.onSceneRelease = (e) => { const up = e.type === 'pointerup' && this.scene; if (this.stroking && this.scene) { if (up) this.scene.strokeEnd(); else this.scene.strokeCancel(); } if (this.sceneTap && up) this.scene.drop(this.sceneTap[0], this.sceneTap[1]); this.stroking = false; this.sceneTap = null; if (!up) this.homePress = null; };
       this.onHomeClick = (e) => {
         const p = this.homePress; this.homePress = null;
-        if (!p || !homePond() || e.button !== 0 || this.pond.hit(e.clientX, e.clientY) !== p.i) return;
+        if (!p || !homeScene() || e.button !== 0 || this.scene.hit(e.clientX, e.clientY) !== p.i) return;
         this.homeHoverAt(-1);
         if (p.i === 0) this.goPage('writing'); else this.goCube();
       };
-      window.addEventListener('pointerdown', this.onFeedDown); window.addEventListener('pointermove', this.onFeedMove, { passive: true }); window.addEventListener('pointerup', this.onFeedUp); window.addEventListener('pointercancel', this.onFeedUp); window.addEventListener('click', this.onHomeClick);
+      window.addEventListener('pointerdown', this.onScenePress); window.addEventListener('pointermove', this.onSceneMove, { passive: true }); window.addEventListener('pointerup', this.onSceneRelease); window.addEventListener('pointercancel', this.onSceneRelease); window.addEventListener('click', this.onHomeClick);
       this.onScroll = () => { this.syncParchment(); this.syncHome(); this.setState({ scrollY: window.scrollY }); clearTimeout(this.remeasureTimer); this.remeasureTimer = setTimeout(() => this.remeasureText(), 120); };
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => setTimeout(() => { this.remeasureText(); this.fitLandingStatement(); this.syncParchment(); }, 50));
       this.onResize = () => { this.setState({ narrow: this.isStacked(), landingRows: this.visibleRows(), phone: this.isPhone(), portrait: this.isPortrait(), scale: this.landingScale() }); this.measureTabs(); this.syncParchment(); this.syncHome(); };
@@ -3517,7 +3552,7 @@
       // re-render through forceUpdate, both park on their own side of the window, and each hides itself
       // on a view it has nothing to tune, so only one ever stands on the page. The flag is the only
       // thing that fetches them, so the page ships nothing for them otherwise, the same arrangement
-      // pond.js has for the home pond.
+      // scenes/kit.js has for the home scene.
       if (this.dev) {
         import('./leaves-dev.js')
           .then((m) => { if (!this.dead) this.leafTuner = m.mount({ spreads: this.LEAF_SPREADS, pairs: this.LEAF_PAIRS, rerender: () => this.forceUpdate() }); })
@@ -4003,7 +4038,7 @@
       });
     }
   
-    componentWillUnmount() { this.dead = true; if (this.leafTuner) { this.leafTuner.destroy(); this.leafTuner = null; } if (this.gridTuner) { this.gridTuner.destroy(); this.gridTuner = null; } if (this.pond) { this.pond.destroy(); this.pond = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); clearTimeout(this.pondKillTimer); window.removeEventListener('pointerdown', this.onFeedDown); window.removeEventListener('pointermove', this.onFeedMove); window.removeEventListener('pointerup', this.onFeedUp); window.removeEventListener('pointercancel', this.onFeedUp); window.removeEventListener('click', this.onHomeClick); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); window.removeEventListener('popstate', this.onPop); this.observer?.disconnect(); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
+    componentWillUnmount() { this.dead = true; if (this.leafTuner) { this.leafTuner.destroy(); this.leafTuner = null; } if (this.gridTuner) { this.gridTuner.destroy(); this.gridTuner = null; } if (this.scene) { this.scene.destroy(); this.scene = null; } if (this.home) { this.home.destroy(); this.home = null; } clearInterval(this.glitchTimer); clearInterval(this.typeTimer); clearTimeout(this.sceneKillTimer); window.removeEventListener('pointerdown', this.onScenePress); window.removeEventListener('pointermove', this.onSceneMove); window.removeEventListener('pointerup', this.onSceneRelease); window.removeEventListener('pointercancel', this.onSceneRelease); window.removeEventListener('click', this.onHomeClick); window.removeEventListener('pointerdown', this.onDown); window.removeEventListener('pointerup', this.onUp); window.removeEventListener('pointercancel', this.onUp); (this.trInstances || []).forEach((t) => t.destroy()); window.removeEventListener('scroll', this.onScroll); window.removeEventListener('pointermove', this.onTilt); window.removeEventListener('resize', this.onResize); window.removeEventListener('keydown', this.onKey); window.removeEventListener('popstate', this.onPop); this.observer?.disconnect(); clearTimeout(this.hintTimer); clearTimeout(this.wipeTimer); cancelAnimationFrame(this.brandRaf); cancelAnimationFrame(this.breathRaf); this.finishMorph(); if (this.parch) { this.parch.destroy(); this.parch = null; } }
     observeReveals() { document.querySelectorAll('[data-enter=""]').forEach((el) => this.observer.observe(el)); }
     // The serif register never scrambles: this picker hands back the glyph it was given, so the
     // wavefront carries brightness and nothing on the line moves. resolve() in the library takes a
@@ -4581,7 +4616,7 @@
         delay: ((detailRow - 1) * this.PLOT_STEP) + 'ms' };
       return {
         isHome: view === 'home', showTabs: view !== 'home', goHome: () => this.goHome(),
-        homeLayerRef: this.homeLayerRef, homeRollRef: this.homeRollRef, homeCubeRef: this.homeCubeRef, pondLayerRef: this.pondLayerRef,
+        homeLayerRef: this.homeLayerRef, homeRollRef: this.homeRollRef, homeCubeRef: this.homeCubeRef, sceneLayerRef: this.sceneLayerRef,
         goToolingFromCube: () => this.goCube(),
         // The home in portrait. Two objects laid across a page need width, not a large width, so a phone
         // and an upright tablet both read them down the page instead. The main takes the screen exactly:

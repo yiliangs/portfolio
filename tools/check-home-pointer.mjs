@@ -22,10 +22,10 @@ const fail = (msg) => failures.push(msg);
 
 // the routing block: from its first const to the line that adds the window listeners
 function routing() {
-  const starts = ['const homePond', 'const feedable'].map((k) => src.indexOf(k)).filter((i) => i >= 0);
+  const starts = ['const homeScene'].map((k) => src.indexOf(k)).filter((i) => i >= 0);
   if (!starts.length) return null;
   const at = Math.min(...starts), line = src.lastIndexOf('\n', at) + 1;
-  const add = src.indexOf("window.addEventListener('pointerdown', this.onFeedDown)", at);
+  const add = src.indexOf("window.addEventListener('pointerdown', this.onScenePress)", at);
   if (add < 0) return null;
   return src.slice(line, src.indexOf('\n', add));
 }
@@ -38,9 +38,9 @@ function readMethod(name) {
 
 const code = routing();
 if (!code) { console.error('check-home-pointer: could not find the home pointer routing in ' + SRC); process.exit(1); }
-const sync = readMethod('syncPond') || '';
-// the buttons give up the pointer only after the pond exists: the line sits past the `if (!this.pond)` early return
-const mountAt = sync.indexOf('if (!this.pond)'), noneAt = sync.search(/roll\.style\.pointerEvents\s*=\s*cube\.style\.pointerEvents\s*=\s*'none'/);
+const sync = readMethod('syncScene') || '';
+// the buttons give up the pointer only after the scene exists: the line sits past the `if (!this.scene)` early return
+const mountAt = sync.indexOf('if (!this.scene)'), noneAt = sync.search(/roll\.style\.pointerEvents\s*=\s*cube\.style\.pointerEvents\s*=\s*'none'/);
 const buttonsYield = mountAt >= 0 && noneAt > mountAt;
 
 const { window: win } = new JSDOM('<!doctype html><body><a id="link" href="#">x</a><main id="main"><button id="roll"></button><button id="cube"></button></main></body>');
@@ -60,7 +60,7 @@ function world({ pond = true } = {}) {
   } : null;
   for (const b of [roll, cube]) b.style.pointerEvents = pond && buttonsYield ? 'none' : '';
   const self = {
-    state: { view: 'home' }, pond: P, rootRef: { current: main },
+    state: { view: 'home' }, scene: P, rootRef: { current: main },
     goPage: (p) => log.nav.push(p), goCube: () => log.nav.push('tooling'), homeHoverAt: (i) => log.hover.push(i),
   };
   const on = {};
@@ -138,7 +138,7 @@ const said = (log) => `nav ${JSON.stringify(log.nav)}, feed ${JSON.stringify(log
 // 10. the listeners come off on unmount
 {
   const un = readMethod('componentWillUnmount') || '';
-  for (const t of ["'pointerdown', this.onFeedDown", "'pointermove', this.onFeedMove", "'pointerup', this.onFeedUp", "'pointercancel', this.onFeedUp", "'click', this.onHomeClick"]) {
+  for (const t of ["'pointerdown', this.onScenePress", "'pointermove', this.onSceneMove", "'pointerup', this.onSceneRelease", "'pointercancel', this.onSceneRelease", "'click', this.onHomeClick"]) {
     if (/onHomeClick/.test(code) || !/onHomeClick/.test(t)) if (!un.includes('removeEventListener(' + t)) fail(`componentWillUnmount should remove ${t}`);
   }
 }

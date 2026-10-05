@@ -1,4 +1,4 @@
-// Checks pond.js's simulation headless: the swimming stroke, the islands, the treats, and reduced motion.
+// Checks scenes/pond.js's simulation headless: the swimming stroke, the islands, the treats, and reduced motion.
 //
 // The pond's step() is a function of the world, dt and the world's own seeded random source, so every run below is
 // the same run every time. None of these properties shows in a still frame: a fish that clips an island for one frame,
@@ -10,12 +10,15 @@
 //
 // Run with `npm run check`. Exits non-zero and prints every failure it found.
 
-// POND_MODULE=<path> runs these checks against another copy of pond.js, e.g. an older commit's, to show a check failing
+// POND_MODULE=<path> runs these checks against another copy of scenes/pond.js (with its kit.js beside it), e.g. an older commit's, to show a check failing
 // on the code it was written to replace.
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
-const M = await import(process.env.POND_MODULE ? pathToFileURL(resolve(process.env.POND_MODULE)).href : '../pond.js');
-const { defaults, createWorld, step, setIslands, setPointer, dropTreat, strokeStart, strokeTo, strokeEnd, strokeCancel, envelope, thrustHz, lateral, shoreR, coast, waterOf } = M;
+const M = await import(process.env.POND_MODULE ? pathToFileURL(resolve(process.env.POND_MODULE)).href : '../scenes/pond.js');
+// the islands are the kit's footprints, and the pond's colour and defaults are the kit's functions of the pond's tables
+const K = await import(process.env.POND_MODULE ? new URL('./kit.js', pathToFileURL(resolve(process.env.POND_MODULE))).href : '../scenes/kit.js');
+const { createWorld, step, setIslands, setPointer, dropTreat, strokeStart, strokeTo, strokeEnd, strokeCancel, envelope, thrustHz, lateral } = M;
+const { edgeR: shoreR, edge: coast } = K, defaults = () => K.paramDefaults(M.PARAMS), waterOf = (paper, depth) => K.tint(paper, depth, M.PALETTE.light, M.PALETTE.dark);
 
 const failures = [];
 const fail = (msg) => failures.push(msg);
@@ -187,12 +190,12 @@ for (const seed of [1, 7, 42]) {
       for (let s = 0; s < 60 * 3; s++) step(w, DT);
       a = Math.PI / 4;
       for (let s = 0; s < Math.ceil((3 * P.follow) / DT); s++) step(w, DT);
-      const o = w.islands[0], fresh = M.makeIsland(0, SQ_BOX); M.updateIsland(fresh, square(() => a), 0, P, false, w.t);
-      let off = 0; for (let j = 0; j < M.BEARINGS; j++) off = Math.max(off, Math.abs(o.S[j] - fresh.S[j]));
+      const o = w.islands[0], fresh = K.makeFootprint(0, SQ_BOX); K.updateFootprint(fresh, square(() => a), 0, P, false, w.t);
+      let off = 0; for (let j = 0; j < K.BEARINGS; j++) off = Math.max(off, Math.abs(o.S[j] - fresh.S[j]));
       if (!(off <= 2)) fail(`(ii) after ${(3 * P.follow).toFixed(2)} s the coast should be within 2 px of the turned square's, is ${off.toFixed(2)} px off`);
       // and it did move: the target for the turned square differs from the upright one
-      const up = M.makeIsland(0, SQ_BOX); M.updateIsland(up, square(() => 0), 0, P, false, w.t);
-      let moved = 0; for (let j = 0; j < M.BEARINGS; j++) moved = Math.max(moved, Math.abs(up.S[j] - fresh.S[j]));
+      const up = K.makeFootprint(0, SQ_BOX); K.updateFootprint(up, square(() => 0), 0, P, false, w.t);
+      let moved = 0; for (let j = 0; j < K.BEARINGS; j++) moved = Math.max(moved, Math.abs(up.S[j] - fresh.S[j]));
       metric(`islands: follow residue ${off.toFixed(2)} px of a ${moved.toFixed(2)} px change`);
     }
     // (iii) smooth: under a square turning at the tesseract's rate the coast changes at most 12 px/s at any bearing
@@ -210,7 +213,7 @@ for (const seed of [1, 7, 42]) {
       M.setOutlines(w, [square(() => 0)]); setIslands(w, [SQ_BOX]);
       for (let s = 0; s < 60 * 10; s++) step(w, DT);
       const o = w.islands[0];
-      dist = distortion(o, (k) => { const u = (k / 360) * M.BEARINGS, i = Math.floor(u), f = u - i; return o.S[i % M.BEARINGS] * (1 - f) + o.S[(i + 1) % M.BEARINGS] * f; });
+      dist = distortion(o, (k) => { const u = (k / 360) * K.BEARINGS, i = Math.floor(u), f = u - i; return o.S[i % K.BEARINGS] * (1 - f) + o.S[(i + 1) % K.BEARINGS] * f; });
     }
     // (v) fallback: an object that shows nothing still has its box on land
     {
@@ -232,8 +235,8 @@ for (const seed of [1, 7, 42]) {
       if (!(drift <= 1e-3)) fail(`(vi) reduced motion: a still object's coast should hold, moved ${drift.toFixed(3)} px in 5 s`);
       a = Math.PI / 4;
       for (let s = 0; s < 60 * 8; s++) step(w, DT);
-      const o = w.islands[0], fresh = M.makeIsland(0, SQ_BOX); M.updateIsland(fresh, square(() => a), 0, w.params, true, w.t);
-      let off = 0; for (let j = 0; j < M.BEARINGS; j++) off = Math.max(off, Math.abs(o.S[j] - fresh.S[j]));
+      const o = w.islands[0], fresh = K.makeFootprint(0, SQ_BOX); K.updateFootprint(fresh, square(() => a), 0, w.params, true, w.t);
+      let off = 0; for (let j = 0; j < K.BEARINGS; j++) off = Math.max(off, Math.abs(o.S[j] - fresh.S[j]));
       if (!(off <= 2)) fail(`(vi) reduced motion: the coast should still follow a turned object, ${off.toFixed(2)} px off after 8 s`);
     }
   }
@@ -537,7 +540,7 @@ for (const seed of [2, 19]) {
   let spawnBad = 0;
   P.forEach((q, i) => {
     if (q.x < 30 + q.r || q.x > w.w - 30 - q.r || q.y < 30 + q.r || q.y > w.h - 30 - q.r) spawnBad++;
-    else if (w.islands.some((o) => M.shoreGap(o, q.x, q.y, 40 + q.r) < 0)) spawnBad++;
+    else if (w.islands.some((o) => K.edgeGap(o, q.x, q.y, 40 + q.r) < 0)) spawnBad++;
     else if (P.some((o, j) => j !== i && Math.hypot(o.x - q.x, o.y - q.y) < o.r + q.r)) spawnBad++;
     if (!(q.r >= 10 && q.r <= 22)) spawnBad++;
   });
@@ -553,7 +556,7 @@ for (const seed of [2, 19]) {
     P.forEach((q, i) => {
       const v = Math.hypot(q.x - prev[i][0], q.y - prev[i][1]) / DT; prev[i][0] = q.x; prev[i][1] = q.y;
       if (q.since < 2) pushed = Math.max(pushed, v); else calm = Math.max(calm, v);
-      for (const o of w.islands) { land = Math.min(land, M.shoreGap(o, q.x, q.y, q.r)); clear = Math.min(clear, M.shoreGap(o, q.x, q.y, 0)); }
+      for (const o of w.islands) { land = Math.min(land, K.edgeGap(o, q.x, q.y, q.r)); clear = Math.min(clear, K.edgeGap(o, q.x, q.y, 0)); }
       edge = Math.min(edge, q.x - q.r, w.w - q.r - q.x, q.y - q.r, w.h - q.r - q.y);
       for (let j = i + 1; j < P.length; j++) apart = Math.min(apart, Math.hypot(P[j].x - q.x, P[j].y - q.y) - P[j].r - q.r);
     });
@@ -646,7 +649,7 @@ for (const seed of [2, 19]) {
         else if (!t.dart) paused[i] += DT;
         was[i] = t.dart;
         for (const q of w.pads) pad = Math.min(pad, Math.hypot(q.x - t.x, q.y - t.y) - q.r);
-        for (const o of w.islands) land = Math.min(land, M.shoreGap(o, t.x, t.y, 20));
+        for (const o of w.islands) land = Math.min(land, K.edgeGap(o, t.x, t.y, 20));
         edge = Math.min(edge, t.x - 20, w.w - 20 - t.x, t.y - 20, w.h - 20 - t.y);
       });
     }
@@ -662,7 +665,7 @@ for (const seed of [2, 19]) {
   const p = defaults(); p.count = 0;
   const w = createWorld(p, { w: 1440, h: 900, seed: 2 }); setIslands(w, ISL2); step(w, DT);
   // the strider with the most open water round it, so a dart away from the cursor has somewhere to go
-  const room = (t) => Math.min(t.x, w.w - t.x, t.y, w.h - t.y, ...w.islands.map((o) => M.shoreGap(o, t.x, t.y, 0)), ...w.pads.map((q) => Math.hypot(q.x - t.x, q.y - t.y) - q.r));
+  const room = (t) => Math.min(t.x, w.w - t.x, t.y, w.h - t.y, ...w.islands.map((o) => K.edgeGap(o, t.x, t.y, 0)), ...w.pads.map((q) => Math.hypot(q.x - t.x, q.y - t.y) - q.r));
   const s = w.striders && w.striders.slice().sort((a, b) => room(b) - room(a))[0];
   if (s) {
     s.dart = false; s.left = 10;
@@ -713,7 +716,7 @@ const ladderCheck = (w, tag, again) => {
 const bandCheck = (w, tag) => {
   const R = w.rocks || [], top = Math.min(...R.map((q) => q.y - q.r));
   let wave = Infinity;
-  for (const s of w.islets || []) for (let i = 0; i < 360; i++) { const t = (i / 360) * TAU; wave = Math.min(wave, s.y + Math.sin(t) * (M.coast(s, t) + (M.ISLET_OUTER || 0))); }
+  for (const s of w.islets || []) for (let i = 0; i < 360; i++) { const t = (i / 360) * TAU; wave = Math.min(wave, s.y + Math.sin(t) * (K.edge(s, t) + (M.ISLET_OUTER || 0))); }
   const show = `${tag} ${R.length} stones, the highest edge ${top.toFixed(1)} px from the top of the page, the highest islet wave ${wave.toFixed(1)} px`;
   metric(show);
   if (!(top >= 80 - 1e-6 && wave >= 56)) fail(`${show}: (u) every stone's edge should stand 80 px or more below the top of the page and every islet's outermost wave below the 56 px header`);
@@ -788,7 +791,7 @@ for (const [W, H] of [[1920, 1080], [1280, 720]]) for (const seed of [2, 19]) {
   const R = w.rocks || [], P = w.pads || [];
   if (!R.length || !P.length || R.some((q) => q.grp == null) || P.some((q) => q.cl == null)) { fail(`${W}x${H} seed ${seed}: (q) the stones and the pads should carry their groups (grp, cl)`); continue; }
   const gap = (a, b) => Math.hypot(a.x - b.x, a.y - b.y) - a.r - b.r;
-  const land = (x, y, g) => Math.min(...w.islands.map((o) => M.shoreGap(o, x, y, g)));
+  const land = (x, y, g) => Math.min(...w.islands.map((o) => K.edgeGap(o, x, y, g)));
   const mean = (L) => ({ x: L.reduce((a, q) => a + q.x, 0) / L.length, y: L.reduce((a, q) => a + q.y, 0) / L.length });
   let padRock = Infinity;
   for (const q of P) for (const o of R) padRock = Math.min(padRock, gap(q, o));
@@ -797,7 +800,7 @@ for (const [W, H] of [[1920, 1080], [1280, 720]]) for (const seed of [2, 19]) {
   if (group.length) centres.push(mean(group));
   const centreCoast = Math.min(...centres.map((c) => land(c.x, c.y, 0)));
   let edge = Infinity, onLand = Infinity;
-  const calm = (q) => Math.min(...w.islands.map((o) => M.calmGap(o, q.x, q.y, q.r)));
+  const calm = (q) => Math.min(...w.islands.map((o) => K.calmGap(o, q.x, q.y, q.r)));
   for (const q of [...P, ...R]) edge = Math.min(edge, q.x - q.r, W - q.r - q.x, q.y - q.r, H - q.r - q.y);
   for (const q of P) onLand = Math.min(onLand, land(q.x, q.y, q.r));
   const rockClear = Math.min(...R.map((q) => beyond(w, q))), cropNear = Math.min(...crop.map((q) => beyond(w, q)));
@@ -830,11 +833,11 @@ for (const [W, H] of [[1920, 1080], [1280, 720]]) for (const seed of [2, 19]) {
   let member = true, holds = true, bend = 0, open = Infinity;
   for (const q of w.rocks) member &&= S.filter((s) => s.rocks.includes(q) && s.grp === q.grp).length === 1;
   for (const s of S) {
-    for (const q of s.rocks) q.t.forEach((t, k) => { const vx = q.x + Math.cos(t) * q.r * q.k[k] - s.x, vy = q.y + Math.sin(t) * q.r * q.k[k] - s.y; if (Math.hypot(vx, vy) > M.coast(s, Math.atan2(vy, vx)) + 1e-3) holds = false; });
+    for (const q of s.rocks) q.t.forEach((t, k) => { const vx = q.x + Math.cos(t) * q.r * q.k[k] - s.x, vy = q.y + Math.sin(t) * q.r * q.k[k] - s.y; if (Math.hypot(vx, vy) > K.edge(s, Math.atan2(vy, vx)) + 1e-3) holds = false; });
     const n = s.C.length;
     for (let i = 0; i < n; i++) bend = Math.max(bend, Math.abs(s.C[i] - 2 * s.C[(i + 1) % n] + s.C[(i + 2) % n]) / s.mean);
     for (let i = 0; i < 360; i++) {
-      const t = (i / 360) * TAU, R = M.coast(s, t) + M.ISLET_OUTER, x = s.x + Math.cos(t) * R, y = s.y + Math.sin(t) * R;
+      const t = (i / 360) * TAU, R = K.edge(s, t) + M.ISLET_OUTER, x = s.x + Math.cos(t) * R, y = s.y + Math.sin(t) * R;
       for (const o of w.islands) open = Math.min(open, Math.hypot(x - o.x, y - o.y) - extent(w, o, Math.atan2(y - o.y, x - o.x)));
     }
   }
@@ -904,7 +907,7 @@ for (const [W, H, coarse] of [[1920, 1080, false], [1280, 720, false], [1920, 10
 // default jitter. At jitter 0 it is a strict lattice: every dash one length and level, and the rows on one pitch (each
 // gap between neighbouring rows the same). The defaults are 0.05 alpha and a jitter in [0, 1].
 {
-  const { waterMarks, drawMarks, HATCH_REACH: R } = M;
+  const { waterMarks } = M, { drawMarks } = K, R = M.HATCH.reach;
   if (typeof waterMarks !== 'function' || typeof drawMarks !== 'function' || !(R > 0)) fail('(s) pond.js should export waterMarks, drawMarks and HATCH_REACH, the hatch on the water');
   else {
     const p = defaults(), key = (ms) => ms.map((m) => JSON.stringify(m)).sort().join('\n'), marks = (seed, W, H) => waterMarks(seed, W, H, 1);
