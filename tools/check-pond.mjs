@@ -812,54 +812,42 @@ for (const [W, H, coarse] of [[1920, 1080, false], [1280, 720, false], [1920, 10
   if (JSON.stringify(lay().floor) !== JSON.stringify(F)) fail(`${tag} two worlds of one seed should lay the same floor`);
 }
 
-// (s) The light net on the water. One seed gives one net and three seeds give three, so each load differs. The net is
-// anchored in the world: an 800x600 page's net is the top-left corner of a 1440x900 page's at the same seed, so a
-// resize shows more of the same net. Every value lies in [0, 1], and over five seeds the share of filament samples
-// (above 0.5) stays between 3% and 25%: neither a flat sheet nor a solid web. Coloured over a light and a dark paper:
-// at depth 0 every pixel is the paper, at strength 0 every pixel is waterOf(paper, depth), and at the defaults a
-// filament is lighter than the flat water while no pixel is lighter than the paper. And the net draws on no stream of
-// the world's: a world stepped after a net was made from its seed is the world stepped without one.
+// (s) The marks on the water, for every style in MARK_STYLES. One seed gives the same marks twice and three seeds give
+// three sets, so each load differs. The marks are anchored in the world: a page holds every mark anchored within the
+// style's reach of it (x in [-reach, W + reach), y likewise), so an 800x600 page's marks are exactly those of the same
+// seed's 1440x900 page so anchored, and a resize shows more of the same picture. Every point of a stroke lies within
+// the style's reach of its anchor and its length within the style's band; over five seeds the strokes on a 1440x900
+// page stay within the style's count band, sparse but present. And the marks draw on no stream of the world's: a world
+// stepped after marks were made from its seed is the world stepped without them.
 {
-  const { waterField, waterLayer, WATER_STEP } = M;
-  if (typeof waterField !== 'function' || typeof waterLayer !== 'function' || !(WATER_STEP > 0)) fail('(s) pond.js should export waterField, waterLayer and WATER_STEP, the light net on the water');
+  const { waterMarks, drawMarks, MARK_STYLES } = M;
+  if (typeof waterMarks !== 'function' || typeof drawMarks !== 'function' || !MARK_STYLES) fail('(s) pond.js should export waterMarks, drawMarks and MARK_STYLES, the marks on the water');
   else {
-    const p = defaults(), opts = { step: WATER_STEP, cell: p.causticCell, sharp: p.causticSharp }, n = (px) => Math.ceil(px / WATER_STEP);
-    const net = (seed, W, H) => waterField(seed, n(W), n(H), opts);
-    const same = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
-    if (!same(net(5, 800, 600), net(5, 800, 600))) fail('(s) one seed should give the same net twice');
-    const three = [3, 4, 1234567].map((s) => net(s, 800, 600));
-    if (same(three[0], three[1]) || same(three[0], three[2]) || same(three[1], three[2])) fail('(s) three seeds should give three different nets');
-    const small = net(9, 800, 600), big = net(9, 1440, 900), sc = n(800), bc = n(1440);
-    let off = 0; for (let j = 0; j < n(600); j++) for (let i = 0; i < sc; i++) if (small[j * sc + i] !== big[j * bc + i]) off++;
-    if (off) fail(`(s) an 800x600 net should be the top-left corner of the 1440x900 net of its seed; ${off} samples differ`);
-    for (const seed of [1, 2, 19, 77, 4242]) {
-      const f = net(seed, 1440, 900); let lo = Infinity, hi = -Infinity, fil = 0;
-      for (const v of f) { if (v < lo) lo = v; if (v > hi) hi = v; if (v > 0.5) fil++; }
-      const share = fil / f.length;
-      metric(`seed ${seed} (s) net range ${lo.toFixed(3)}..${hi.toFixed(3)} filament share ${share.toFixed(3)}`);
-      if (!(lo >= 0 && hi <= 1)) fail(`seed ${seed}: (s) net values should lie in [0, 1], got ${lo}..${hi}`);
-      if (!(share >= 0.03 && share <= 0.25)) fail(`seed ${seed}: (s) the share of filament samples should be 3% to 25%, got ${(share * 100).toFixed(1)}%`);
-    }
-    const rgb = (css) => css.match(/\d+/g).map(Number), lum = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2], f = net(19, 1440, 900);
-    for (const paper of ['#f3f2f2', '#1b1a19']) {
-      const P = rgb(waterOf(paper, 0)), flat = rgb(waterOf(paper, p.water)), at = (px, o) => [px[o], px[o + 1], px[o + 2]], eq = (a, b) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
-      const zero = waterLayer(f, paper, 0, p.caustic), bare = waterLayer(f, paper, p.water, 0), lit = waterLayer(f, paper, p.water, p.caustic);
-      let notPaper = 0, notFlat = 0, dim = 0, bright = 0, fil = 0;
-      for (let o = 0, i = 0; i < f.length; i++, o += 4) {
-        if (!eq(at(zero, o), P)) notPaper++;
-        if (!eq(at(bare, o), flat)) notFlat++;
-        const c = at(lit, o); if (lum(c) > lum(P)) bright++;
-        if (f[i] > 0.8) { fil++; if (!(lum(c) > lum(flat))) dim++; }
+    const p = defaults(), key = (ms) => ms.map((m) => JSON.stringify(m)).sort().join('\n');
+    if (!MARK_STYLES[p.marks]) fail(`(s) the default style ${p.marks} should be one of MARK_STYLES`);
+    for (const [style, st] of Object.entries(MARK_STYLES)) {
+      const tag = `style ${style} (${st.name}):`, marks = (seed, W, H) => waterMarks(seed, W, H, +style, 1);
+      if (key(marks(5, 800, 600)) !== key(marks(5, 800, 600))) fail(`${tag} (s) one seed should give the same marks twice`);
+      const three = [3, 4, 1234567].map((s) => key(marks(s, 800, 600)));
+      if (three[0] === three[1] || three[0] === three[2] || three[1] === three[2]) fail(`${tag} (s) three seeds should give three different sets of marks`);
+      const R = st.reach, small = marks(9, 800, 600), inner = marks(9, 1440, 900).filter((m) => m.x >= -R && m.x < 800 + R && m.y >= -R && m.y < 600 + R);
+      if (!small.length || key(small) !== key(inner)) fail(`${tag} (s) an 800x600 page's marks should be exactly the 1440x900 page's marks anchored within ${R} px of it; ${small.length} vs ${inner.length}`);
+      for (const seed of [1, 2, 19, 77, 4242]) {
+        const ms = marks(seed, 1440, 900); let far = 0, lo = Infinity, hi = 0;
+        for (const m of ms) {
+          let L = 0; for (let i = 0; i < m.pts.length; i += 2) { far = Math.max(far, Math.hypot(m.pts[i] - m.x, m.pts[i + 1] - m.y)); if (i) L += Math.hypot(m.pts[i] - m.pts[i - 2], m.pts[i + 1] - m.pts[i - 1]); }
+          lo = Math.min(lo, L); hi = Math.max(hi, L);
+        }
+        metric(`seed ${seed} (s) ${st.name}: ${ms.length} strokes, length ${lo.toFixed(1)}..${hi.toFixed(1)}, farthest point ${far.toFixed(1)} px`);
+        if (far > R + 1e-9) fail(`seed ${seed}: ${tag} (s) every point should lie within ${R} px of its mark's anchor, one lies ${far.toFixed(2)} px off`);
+        if (ms.length && !(lo >= st.len[0] - 1e-9 && hi <= st.len[1] + 1e-9)) fail(`seed ${seed}: ${tag} (s) strokes should be ${st.len[0]} to ${st.len[1]} px long, got ${lo.toFixed(2)}..${hi.toFixed(2)}`);
+        if (!(ms.length >= st.count[0] && ms.length <= st.count[1])) fail(`seed ${seed}: ${tag} (s) a 1440x900 page should hold ${st.count[0]} to ${st.count[1]} strokes, got ${ms.length}`);
       }
-      if (notPaper) fail(`${paper}: (s) at depth 0 every pixel of the water should be the paper; ${notPaper} are not`);
-      if (notFlat) fail(`${paper}: (s) at strength 0 every pixel should be waterOf(paper, depth); ${notFlat} are not`);
-      if (!fil || dim) fail(`${paper}: (s) every filament pixel should be lighter than the flat water; ${dim} of ${fil} are not`);
-      if (bright) fail(`${paper}: (s) no pixel should be lighter than the paper; ${bright} are`);
+      const run = (first) => { const w = createWorld(defaults(), { w: 1440, h: 900, seed: 31 }); setIslands(w, ISL2); if (first) marks(w.seed, 1440, 900); for (let s = 0; s < 240; s++) step(w, DT); return JSON.stringify([w.fish, w.pads, w.floor]); };
+      if (run(false) !== run(true)) fail(`${tag} (s) making marks from a world's seed should leave the world's steps unchanged`);
     }
-    const run = (first) => { const w = createWorld(defaults(), { w: 1440, h: 900, seed: 31 }); setIslands(w, ISL2); if (first) net(w.seed, 1440, 900); for (let s = 0; s < 240; s++) step(w, DT); return JSON.stringify([w.fish, w.pads, w.floor]); };
-    if (run(false) !== run(true)) fail('(s) making the net from a world\'s seed should leave the world\'s steps unchanged');
   }
 }
 
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }
-console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads, flowers, striders, stones and their layout, the pond floor, the light net on the water hold');
+console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads, flowers, striders, stones and their layout, the pond floor, the marks on the water hold');
