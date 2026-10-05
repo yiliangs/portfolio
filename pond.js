@@ -75,10 +75,9 @@ export const PARAMS = {
     ringAlpha: [0.13, 0, 1, 0.01, 'wave opacity'],
     shoreAlpha: [0.16, 0, 1, 0.01, 'shoreline opacity'],
     water: [0.08, 0, 0.4, 0.005, 'how much darker the water is than the land'],
-    marks: [5, 1, 5, 1, 'style of the marks on the water: 1 dashes, 2 wavelets, 3 current, 4 rings, 5 hatch (candidates)'],
-    markDensity: [1, 0, 3, 0.05, 'how many marks the water holds, x the style\'s own'],
-    markAlpha: [0.05, 0, 1, 0.01, 'opacity of the marks on the water'],
-    markJitter: [0.35, 0, 1, 0.05, 'hatch (style 5) only: how loosely its dashes are laid, 0 a strict lattice, 1 hand-laid'],
+    markDensity: [1, 0, 3, 0.05, 'how close the hatch on the water is laid, dashes per area x this'],
+    markAlpha: [0.05, 0, 1, 0.01, 'opacity of the hatch on the water'],
+    markJitter: [0.35, 0, 1, 0.05, 'how loosely the hatch\'s dashes are laid, 0 a strict lattice, 1 hand-laid'],
     shallows: [0.6, 0, 1, 0.05, 'how far the shallows lighten back toward the land'],
     coastRes: [1.5, 1, 2, 0.25, 'resolution of the ground (water, land, floor, shores) on a dense screen: 1 CSS px, 2 the full backing store'],
   },
@@ -1403,106 +1402,41 @@ export function waterOf(paper, depth) {
   const k = light ? depth : Math.min(1, depth * 3), mix = c.map((v, i) => Math.round(v + (deep[i] - v) * k));
   return `rgb(${mix[0]}, ${mix[1]}, ${mix[2]})`;
 }
-// Marks on the water: a few thin ink strokes over the flat water, the same single-weight line as the fish, the floor and
-// the shores, so the pond reads as one drawing. A mark is { x, y, pts }: its anchor and its polyline [x0, y0, x1, y1,
-// ...], world CSS px. Each style makes the marks of one lattice cell from that cell's own hash, cells anchored at the
-// world's corner, so which marks exist and where depends on the seed and the position alone (never a running stream,
-// never the page size): a larger page holds a smaller page's marks and a resize reveals more of the same picture. The
-// seed is the world's on its own derivation, so the simulation draws exactly what it drew without them.
-const hashCell = (x, y, s) => { let h = Math.imul(x, 0x27d4eb2d) ^ Math.imul(y, 0x165667b1) ^ s; h = Math.imul(h ^ (h >>> 15), 0x85ebca6b); h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35); return (h ^ (h >>> 16)) >>> 0; };
-// smooth value noise in [0, 1): the drifts the marks gather in, and the current's flow
-function smoothNoise(x, y, s) {
-  const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy, u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy);
-  const a = hashCell(ix, iy, s), b = hashCell(ix + 1, iy, s), c = hashCell(ix, iy + 1, s), d = hashCell(ix + 1, iy + 1, s);
-  return ((a + (b - a) * u) * (1 - v) + (c + (d - c) * u) * v) / 4294967296;
-}
-// a cell's own stream of numbers in [0, 1), from its hash (mulberry32)
-const cellRand = (h) => () => { h = (h + 0x6d2b79f5) | 0; let t = Math.imul(h ^ (h >>> 15), 1 | h); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-// The drifts: a slow noise squeezed to [0, 1], 0 over the calm stretches between drifts, so the marks gather in loose
-// patches with open water round them rather than tiling the page. sx, sy are its scale across and down, px.
-const drift = (x, y, s, sx, sy, lo) => Math.min(1, Math.max(0, (smoothNoise(x / sx, y / sy, s) - lo) / 0.25));
-// The candidate styles, by the number the `marks` parameter picks (a prototype: the owner keeps one). Each gives its
-// lattice cell, px; its reach (no point of a mark lies farther than this from its anchor, so a page draws the marks
-// anchored within reach of it); the band a stroke's length keeps to, and the band of strokes on a 1440x900 page at
-// density 1, both for the checks; and make(r, x, y, C, k, s, out), which pushes the marks of the cell with corner x, y
-// and size C, drawing on the cell's stream r; k is the density there, s the marks' seed and j the jitter (the hatch's).
-export const MARK_STYLES = {
-  1: { name: 'dashes', cell: 64, reach: 30, len: [6, 28], count: [250, 800], make: dashes },
-  2: { name: 'wavelets', cell: 48, reach: 12, len: [10, 28], count: [80, 450], make: wavelets },
-  3: { name: 'current', cell: 44, reach: 21, len: [14, 40], count: [50, 400], make: current },
-  4: { name: 'rings', cell: 150, reach: 26, len: [14, 123], count: [25, 160], make: rings },
-  5: { name: 'hatch', cell: 96, reach: 30, len: [10, 34], count: [2000, 2600], make: hatch },
-};
-// 1. Dashes, the engraver's calm water: a stack of 3 to 7 short level strokes 4 to 6 px apart, each 6 to 28 px long
-// and centred up to 8 px either side of the stack's anchor, so the ends stagger; fuller stacks where the drift is thick.
-function dashes(r, x, y, C, k, s, out) {
-  const d = drift(x + C / 2, y + C / 2, s, 340, 190, 0.45) * k;
-  if (r() >= d * 0.75) return;
-  const ax = x + r() * C, ay = y + r() * C, n = 3 + Math.floor(r() * (2 + 3 * d)), gap = 4 + r() * 2, top = ay - ((n - 1) * gap) / 2;
-  for (let i = 0; i < n; i++) { const L = 6 + 22 * r() * (1 - 0.4 * Math.abs(i / (n - 1) - 0.5)), cx = ax + (r() - 0.5) * 16, yy = Math.round(top + i * gap) + 0.5; out.push({ x: ax, y: ay, pts: [cx - L / 2, yy, cx + L / 2, yy] }); }
-}
-// 2. Wavelets: shallow wave marks, 10 to 22 px wide, each a single low arch or a two-hump tilde 1.5 to 3 px high,
-// tilted a little off level; none where the drift is calm and up to two to a cell where it is thick, so they gather.
-function wavelets(r, x, y, C, k, s, out) {
-  const n = Math.min(2, Math.floor(drift(x + C / 2, y + C / 2, s, 320, 200, 0.52) * k * 1.5 + r() * 0.85));
-  for (let j = 0; j < n; j++) {
-    const ax = x + r() * C, ay = y + r() * C, wd = 10 + 12 * r(), amp = 1.5 + 1.5 * r(), tilt = (r() - 0.5) * 0.3, humps = r() < 0.5 ? 1 : 2, ca = Math.cos(tilt), sa = Math.sin(tilt), pts = [];
-    for (let i = 0, m = 6 * humps + 2; i <= m; i++) { const t = i / m, u = (t - 0.5) * wd, v = -amp * Math.sin(Math.PI * humps * t); pts.push(ax + u * ca - v * sa, ay + u * sa + v * ca); }
-    out.push({ x: ax, y: ay, pts });
-  }
-}
-// 3. Current: strokes 14 to 40 px long that follow a slow flow field for their length, half each way from the anchor,
-// so neighbours agree in direction; the drift is stretched across the flow's mean heading into long streams with still
-// water between them. The flow keeps within about 45 degrees of level, mostly far less: a
-// steep stroke reads as a scratch, not water.
-const flowAngle = (x, y, s) => ((s & 0xff) / 255 - 0.5) * 0.4 + 0.7 * (smoothNoise(x / 260, y / 260, s ^ 0x51) - 0.5) + 0.9 * (smoothNoise(x / 80, y / 80, s ^ 0x52) - 0.5);
-function current(r, x, y, C, k, s, out) {
-  if (r() >= drift(x + C / 2, y + C / 2, s, 520, 110, 0.52) * k * 0.75) return;
-  const ax = x + r() * C, ay = y + r() * C, half = Math.round((14 + 26 * r()) / 4), a = [], b = [];
-  let px = ax, py = ay; for (let i = 0; i < half; i++) { const t = flowAngle(px, py, s); px += 2 * Math.cos(t); py += 2 * Math.sin(t); a.push(px, py); }
-  px = ax; py = ay; for (let i = 0; i < half; i++) { const t = flowAngle(px, py, s); px -= 2 * Math.cos(t); py -= 2 * Math.sin(t); b.push(py, px); }
-  out.push({ x: ax, y: ay, pts: [...b.reverse(), ax, ay, ...a] });
-}
-// 4. Rings: a still ripple group, 2 or 3 concentric arcs 6 to 26 px across in radius, each broken, 40 to 75 percent of
-// its circle from its own start, as a pen lifts off a ring drawn fast.
-function rings(r, x, y, C, k, s, out) {
-  if (r() >= drift(x + C / 2, y + C / 2, s, 380, 300, 0.38) * k * 0.85) return;
-  const ax = x + r() * C, ay = y + r() * C, m = 2 + (r() < 0.5 ? 1 : 0), r0 = 6 + 5 * r(), dr = Math.min(5 + 4 * r(), (26 - r0) / (m - 1));
-  for (let j = 0; j < m; j++) {
-    const R = r0 + j * dr, span = (0.4 + 0.35 * r()) * 2 * Math.PI, a0 = r() * 2 * Math.PI, n = Math.ceil((span * R) / 3), pts = [];
-    for (let i = 0; i <= n; i++) { const t = a0 + (span * i) / n; pts.push(ax + R * Math.cos(t), ay + R * Math.sin(t)); }
-    out.push({ x: ax, y: ay, pts });
-  }
-}
-// 5. Hatch, the draughtsman's water: level dashes on rows a constant pitch apart (14 px at density 1) at a constant
-// period along each row (44 px), each row shifted half a period from the last, over the whole page with no drifts and
-// no calm gaps. Density shrinks pitch and period together by its square root, so dashes per area follow it, while a dash
-// keeps 22 px (never more than 0.7 of the period). The seed sets the lattice's phase, so two loads differ even when
-// the hatch is strict. The jitter j loosens it from a printed hatch toward a hand-laid one: from its own hash each dash
-// takes a length up to j x 50 percent off 22 px either way, a shift along its row up to j x a quarter period, a shift off
-// its row up to j x 2 px (to whole pixels, so every dash stays crisp) and a j x 15 percent chance of being left out; at
-// 0 it is a strict lattice of equal dashes. A dash is anchored at its lattice point and drawn from that point's own
-// hash, and each walked cell makes the dashes whose points lie in it, so the field never depends on the walk. Every dash
-// draws all four numbers whatever j is, so moving the slider loosens one field rather than dealing a new one.
-const HATCH = 0x68617463;
-function hatch(r, x, y, C, k, s, out, j = 0) {
-  if (!(k > 0)) return;
-  const f = 1 / Math.sqrt(k), P = 14 * f, T = 44 * f, ph = cellRand(s ^ HATCH), oy = ph() * P, ox = ph() * T, L0 = Math.min(22, 0.7 * T), along = 0.25 * Math.min(T, 44), off = 2 * Math.min(1, P / 14);
-  for (let iy = Math.ceil((y - oy) / P), ey = Math.ceil((y + C - oy) / P); iy < ey; iy++) {
+// Marks on the water: a hatch, the draughtsman's water, in thin ink strokes over the flat water, the same single-weight
+// line as the fish, the floor and the shores, so the pond reads as one drawing. Level dashes lie on rows HATCH_PITCH
+// apart at HATCH_PERIOD along each row (both at density 1), each row shifted half a period from the last, evenly over the
+// whole page. Density shrinks pitch and period together by its square root, so dashes
+// per area follow it, while a dash keeps HATCH_DASH px (never more than 0.7 of the period). A mark is { x, y, pts }: its
+// anchor, the dash's lattice point, and its polyline [x0, y0, x1, y1], world CSS px. The lattice is anchored at the
+// world's corner with a phase from the seed, and each dash is drawn from its own point's hash, so which dashes exist and
+// where depends on the seed and the position alone (never a running stream, never the page size): two loads differ even
+// when the hatch is strict, a larger page holds a smaller page's marks, and a resize reveals more of the same picture.
+// The seed is the world's on its own derivation, so the simulation draws exactly what it drew without them.
+// The jitter j loosens the hatch from a printed one toward a hand-laid one: from its hash each dash takes a length up to
+// j x 50 percent off HATCH_DASH either way, a shift along its row up to j x a quarter period, a shift off its row up to
+// j x 2 px (to whole pixels, so every dash stays crisp) and a j x 15 percent chance of being left out; at 0 it is a
+// strict lattice of equal dashes. Every dash draws all four numbers whatever j is, so moving the slider loosens one field
+// rather than dealing a new one.
+const HATCH_PITCH = 14, HATCH_PERIOD = 44, HATCH_DASH = 22;
+// No point of a dash lies farther than this from its anchor (half of 1.5 dashes plus a quarter period is 27.5 px), so
+// a page draws every dash anchored within this of it.
+export const HATCH_REACH = 30;
+const hashPoint = (x, y, s) => { let h = Math.imul(x, 0x27d4eb2d) ^ Math.imul(y, 0x165667b1) ^ s; h = Math.imul(h ^ (h >>> 15), 0x85ebca6b); h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35); return (h ^ (h >>> 16)) >>> 0; };
+// a stream of numbers in [0, 1) from a hash (mulberry32)
+const pointRand = (h) => () => { h = (h + 0x6d2b79f5) | 0; let t = Math.imul(h ^ (h >>> 15), 1 | h); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+// The marks of a W x H page: every dash anchored within HATCH_REACH of it, x in [-reach, W + reach) and y likewise.
+export function waterMarks(seed, W, H, density = 1, jitter = 0.35) {
+  const out = []; if (!(density > 0)) return out;
+  const s = (seed ^ 0x6d61726b ^ 0x68617463) >>> 0, j = jitter, R = HATCH_REACH, f = 1 / Math.sqrt(density);
+  const P = HATCH_PITCH * f, T = HATCH_PERIOD * f, ph = pointRand(s), oy = ph() * P, ox = ph() * T;
+  const L0 = Math.min(HATCH_DASH, 0.7 * T), along = 0.25 * Math.min(T, HATCH_PERIOD), off = 2 * Math.min(1, P / HATCH_PITCH);
+  for (let iy = Math.ceil((-R - oy) / P); oy + iy * P < H + R; iy++) {
     const ay = oy + iy * P, x0 = ox + ((iy & 1) * T) / 2;
-    for (let ix = Math.ceil((x - x0) / T), ex = Math.ceil((x + C - x0) / T); ix < ex; ix++) {
-      const ax = x0 + ix * T, d = cellRand(hashCell(ix, iy, s ^ HATCH)), gone = d() < 0.15 * j, L = L0 * (1 + j * (d() - 0.5)), cx = ax + j * (d() - 0.5) * 2 * along, yy = Math.round(ay + j * (d() - 0.5) * 2 * off) + 0.5;
+    for (let ix = Math.ceil((-R - x0) / T); x0 + ix * T < W + R; ix++) {
+      const ax = x0 + ix * T, d = pointRand(hashPoint(ix, iy, s)), gone = d() < 0.15 * j, L = L0 * (1 + j * (d() - 0.5)), cx = ax + j * (d() - 0.5) * 2 * along, yy = Math.round(ay + j * (d() - 0.5) * 2 * off) + 0.5;
       if (!gone) out.push({ x: ax, y: ay, pts: [cx - L / 2, yy, cx + L / 2, yy] });
     }
   }
-}
-// The marks of a W x H page in a style: those of every cell anchored within the style's reach of the page. jitter
-// loosens the styles that take it (the hatch); the others ignore it.
-export function waterMarks(seed, W, H, style, density = 1, jitter = 0.35) {
-  const st = MARK_STYLES[style], out = []; if (!st) return out;
-  const s = (seed ^ 0x6d61726b) >>> 0, C = st.cell, R = st.reach, all = [];
-  for (let iy = Math.floor(-R / C); iy * C < H + R; iy++) for (let ix = Math.floor(-R / C); ix * C < W + R; ix++) st.make(cellRand(hashCell(ix, iy, s)), ix * C, iy * C, C, density, s, all, jitter);
-  for (const m of all) if (m.x >= -R && m.x < W + R && m.y >= -R && m.y < H + R) out.push(m);
   return out;
 }
 // Strokes marks onto ctx (already scaled to CSS px) in the ink: one weight, round ends, one alpha, nothing filled.
@@ -1682,15 +1616,15 @@ export function mount(container) {
   const readInk = () => { const css = getComputedStyle(container); ink = css.getPropertyValue('--color-text').trim() || ink; paper = css.getPropertyValue('--color-bg').trim() || paper; inkAge = 0; };
   // backing pixels per CSS px of the ground (see paint)
   const groundRes = () => Math.min(dpr, Math.max(1, params.coastRes || 1));
-  // The water: the marks are generated once and drawn once, over the flat water colour, into their own canvas at the
-  // ground's resolution, so they are as crisp as the floor's branch; the ground blits it each frame. The marks are kept
-  // apart from their colour, so a theme, depth or alpha change only redraws them, and only a change of size, style or
-  // density makes new ones. A resize regenerates 200 ms after the last one; until then the old layer is drawn at its
+  // The water: the hatch is generated once and drawn once, over the flat water colour, into its own canvas at the
+  // ground's resolution, so it is as crisp as the floor's branch; the ground blits it each frame. The marks are kept
+  // apart from their colour, so a theme, depth or alpha change only redraws them, and only a change of size, density or
+  // jitter makes new ones. A resize regenerates 200 ms after the last one; until then the old layer is drawn at its
   // own size, never stretched, with the flat water under what it misses.
   let water = { img: null, w: 0, h: 0, flat: paper }, marks = null, marksKey = '', layerKey = '', waterCanvas = null, resizedAt = -Infinity;
   const relayWater = (now) => {
-    const mk = `${world.seed} ${vw} ${vh} ${params.marks} ${params.markDensity} ${params.markJitter}`;
-    if (mk !== marksKey && (!marks || now - resizedAt > 200)) { marks = { w: vw, h: vh, list: waterMarks(world.seed, vw, vh, params.marks, params.markDensity, params.markJitter) }; marksKey = mk; }
+    const mk = `${world.seed} ${vw} ${vh} ${params.markDensity} ${params.markJitter}`;
+    if (mk !== marksKey && (!marks || now - resizedAt > 200)) { marks = { w: vw, h: vh, list: waterMarks(world.seed, vw, vh, params.markDensity, params.markJitter) }; marksKey = mk; }
     const res = groundRes(), lk = `${marksKey} ${res} ${paper} ${ink} ${params.water} ${params.markAlpha}`;
     if (lk === layerKey) return;
     layerKey = lk;
