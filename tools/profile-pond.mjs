@@ -49,7 +49,7 @@ if (args.help) {
   --mode=off,on           pond-off baseline and pond-on
   --coast-res=1,2         pond-on runs at each coastRes (coast layer resolution, CSS px scale); default: the page's own
   --sections              time each section of drawGround() and drawLive(), and the ground's copy (JS time only)
-  --ablate=a,b            extra pond-on runs, each with draw() sections skipped: water,land,floor,shore,fish,treats,surface (stones, pads, flowers),striders,rings;
+  --ablate=a,b            extra pond-on runs, each with draw() sections skipped: water,land,islets (the stones),floor,shore,fish,treats,surface (pads, flowers),striders,rings;
                           join with + to skip several in one run (land+shore), or 'all' for an empty draw()
   --cpu-profile           V8 CPU profile during pond-on runs; prints top self-time functions
   --headless              headless Chrome (software raster: inflates fill cost)
@@ -66,7 +66,7 @@ const LOADS = list(args.load, 'idle,busy');
 const MODES = list(args.mode, 'off,on');
 const ABLATE = args.ablate ? list(args.ablate) : [];
 const COAST_RES = args['coast-res'] ? list(args['coast-res']).map(Number) : [null];
-const SECTIONS = ['water', 'land', 'floor', 'shore', 'fish', 'treats', 'surface', 'striders'];
+const SECTIONS = ['water', 'land', 'islets', 'floor', 'shore', 'fish', 'treats', 'surface', 'striders'];
 const ablation = (item) => (item === 'all' ? [...SECTIONS] : item.split('+'));
 for (const a of ABLATE) for (const p of ablation(a)) if (!SECTIONS.includes(p) && p !== 'rings') throw new Error('unknown --ablate ' + p);
 
@@ -93,13 +93,14 @@ function instrumentedPond() {
     src = sectionFn(src, 'export function drawGround(ctx, w, ink, paper, water = { img: null, w: 0, h: 0, flat: paper }) {', [
       ['water', (l) => l.startsWith('ctx.globalAlpha = 1; if (!water.img')],
       ['land', (l) => l === 'ctx.fillStyle = paper;'],
+      ['islets', (l) => l.startsWith('// the islets:')],
       ['floor', (l) => l.startsWith('// the pond floor:')],
       ['shore', (l) => l.startsWith('ctx.strokeStyle = ink;')],
     ], 'copy');
     src = sectionFn(src, 'export function drawLive(ctx, w, ink, paper, gold) {', [
       ['fish', (l) => l.startsWith('// the school')],
       ['treats', (l) => l.startsWith('// ripples, then')],
-      ['surface', (l) => l.startsWith('// the surface: the stones, then the pads')],
+      ['surface', (l) => l.startsWith('// the surface: the pads')],
       ['striders', (l) => l.startsWith('// the striders:')],
     ], null);
   }

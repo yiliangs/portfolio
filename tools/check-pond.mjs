@@ -524,7 +524,8 @@ for (const m of fission.filter((f) => f.seed === 2 || f.seed === 19)) {
 // ripples from treats dropped among them, cursor passes and a resize (given a second to settle), every pad stays on the
 // water, on screen and clear of the others. (i) a pad drifts under 6 px/s except within 2 s of a ripple's push, and a
 // ripple does push it, or (i) proves nothing. (h) a fast cursor pass through fish near the pads sends at least 2 of
-// them to hide under a pad (head under it for a full second) within 6 s.
+// them to hide under a pad (head under it for a full second) within 6 s, once 4 fish have gathered within 180 px of
+// a pad (the pass waits for them up to a minute; a school that never gathers there fails).
 const padsOf = (w) => (Array.isArray(w.pads) ? w.pads : null);
 for (const seed of [2, 19]) {
   const w = createWorld(defaults(), { w: 1440, h: 900, seed });
@@ -568,9 +569,11 @@ for (const seed of [2, 19]) {
   setIslands(w, ISL2);
   const P = padsOf(w);
   if (!P) { fail(`seed ${seed}: (h) the world should carry lily pads (w.pads)`); continue; }
-  // the pads keep to their clusters, so the school may be elsewhere at 5 s: wait up to a minute for fish near one
-  const nearPad = () => w.fish.some((f) => P.some((q) => Math.hypot(q.x - f.x, q.y - f.y) < 180));
-  for (let s = 0; s < 60 * 5 || (s < 60 * 60 && !nearPad()); s++) step(w, DT);
+  // the pads keep to their clusters, so the school may be elsewhere at 5 s: wait up to a minute for GATHER fish to be
+  // near one, the precondition of the pass; a school that never gathers by the pads in a minute fails on its own
+  const GATHER = 4, nearPad = () => w.fish.filter((f) => P.some((q) => Math.hypot(q.x - f.x, q.y - f.y) < 180)).length;
+  for (let s = 0; s < 60 * 5 || (s < 60 * 60 && nearPad() < GATHER); s++) step(w, DT);
+  if (nearPad() < GATHER) { fail(`seed ${seed}: (h) the school never gathered by the pads: ${nearPad()} fish within 180 px of a pad after a minute, want ${GATHER}`); continue; }
   const under = (f) => P.some((q) => Math.hypot(q.x - f.x, q.y - f.y) < q.r);
   // the pass goes through the fish near a pad with the most company within 100 px
   let at = null, most = -1;
@@ -688,18 +691,49 @@ const beyond = (w, q) => Math.min(...w.islands.map((o) => Math.hypot(q.x - o.x, 
 // How far the live coast has risen past the top of the swell the bound assumes, at the tables' own bearings (0 or less).
 const swellOver = (w) => Math.max(...w.islands.flatMap((o) => [...o.C].map((c, j) => c - o.S[j] - w.params.rough * o.mean)));
 
+// The distance in use (w.plan.away, span, clear: the rung of awayLadder the stones were laid at). (t) it is a rung of
+// awayLadder(rockAway), never below the old rule's floor of 60 px, the whole of rockAway on a 1920x1080 page, and the
+// nearest it had to be: the rung before it does not lay every stone wanted (a world asked for that rung's distance as
+// its rockAway tries that rung first, with the same draws, and must step down past it).
+const ladderCheck = (w, tag, again) => {
+  if (typeof M.awayLadder !== 'function' || !w.plan || typeof w.plan.away !== 'number') { fail(`${tag} (t) the pond should export awayLadder and the plan carry the distance in use (plan.away, span, clear)`); return; }
+  const L = M.awayLadder(w.params.rockAway), same = (k, p) => k.away === p.away && k.span === p.span && k.clear === p.clear;
+  const i = L.findIndex((k) => same(k, w.plan)), show = `${tag} stones laid at ${w.plan.away.toFixed(1)} px (rung ${i} of ${L.map((k) => k.away.toFixed(1)).join(', ')})`;
+  metric(show);
+  if (i < 0) fail(`${show}: (t) the distance in use should be a rung of awayLadder(rockAway)`);
+  if (!(w.plan.away >= 60 - 1e-9)) fail(`${show}: (t) the distance in use should never fall below 60 px`);
+  if (w.w === 1920 && w.h === 1080 && w.plan.away !== w.params.rockAway) fail(`${show}: (t) a 1920x1080 page should lay the stones at the whole of rockAway (${w.params.rockAway})`);
+  if (i > 0) { const u = again(L[i - 1].away); if (same(L[i - 1], u.plan)) fail(`${show}: (t) the rung before (${L[i - 1].away.toFixed(1)} px) lays every stone wanted, so the stones should stand there`); }
+};
+
+// (u) The header band, on every page (p), (q) and (w) lay: the canvas runs under the site's opaque header, 56 px tall,
+// so every stone's edge stands 80 px or more below the top of the page (the header plus an islet's outermost wave), and
+// every islet's outermost drawn extent (its coast plus ISLET_OUTER, at 360 bearings) stays below the header. A stone
+// the header hides is a stone the page does not have. The stones keep no foot band: the footer only overlaps.
+const bandCheck = (w, tag) => {
+  const R = w.rocks || [], top = Math.min(...R.map((q) => q.y - q.r));
+  let wave = Infinity;
+  for (const s of w.islets || []) for (let i = 0; i < 360; i++) { const t = (i / 360) * TAU; wave = Math.min(wave, s.y + Math.sin(t) * (M.coast(s, t) + (M.ISLET_OUTER || 0))); }
+  const show = `${tag} ${R.length} stones, the highest edge ${top.toFixed(1)} px from the top of the page, the highest islet wave ${wave.toFixed(1)} px`;
+  metric(show);
+  if (!(top >= 80 - 1e-6 && wave >= 56)) fail(`${show}: (u) every stone's edge should stand 80 px or more below the top of the page and every islet's outermost wave below the 56 px header`);
+};
+
 // Stones, on a 1440x900 page with two islands at seeds 2 and 19. (p) `rocks` stones (rocksTouch on a coarse pointer),
-// each 4 to 44 px with 5 to 7 vertices, stand as laid 20 px inside the screen edge; every stone's edge stands 24 px or
-// more past its island's outermost drawn extent at high swell (the coast at the top of the swell, the shallows and the
-// lapping rings); two may overlap as circles (the stones draw inside their circles,
+// each 4 to 44 px with 5 to 7 vertices, stand as laid 20 px inside the screen edge; every stone's edge stands the
+// distance in use (plan.clear: the rung's distance, 24 px at the floor) or more past its island's outermost drawn
+// extent at high swell (the coast at the top of the swell, the shallows and the lapping rings); two may overlap as circles (the stones draw inside their circles,
 // so two that touch do) but never by more than 35 percent of the smaller one's radius. Through 70 simulated
 // seconds of cursor passes and treats dropped beside the stones, after the first 10 s no fish's head or body comes
 // within a stone's radius, and no pad or strider ever stands on one.
 for (const seed of [2, 19]) {
-  const w = createWorld(defaults(), { w: 1440, h: 900, seed }); setIslands(w, ISL2); step(w, DT);
+  const lay = (away) => { const p = defaults(); if (away != null) p.rockAway = away; const u = createWorld(p, { w: 1440, h: 900, seed }); setIslands(u, ISL2); step(u, DT); return u; };
+  const w = lay();
   const R = Array.isArray(w.rocks) ? w.rocks : null;
   if (!R) { fail(`seed ${seed}: (p) the world should carry stones (w.rocks)`); continue; }
+  ladderCheck(w, `1440x900 seed ${seed}:`, lay);
   const coarse = createWorld(defaults(), { w: 1440, h: 900, seed, coarse: true }); setIslands(coarse, ISL2); step(coarse, DT);
+  bandCheck(w, `1440x900 seed ${seed}:`); bandCheck(coarse, `1440x900 coarse seed ${seed}:`);
   if (R.length !== w.params.rocks || coarse.rocks.length !== w.params.rocksTouch) fail(`seed ${seed}: (p) want ${w.params.rocks} stones on a fine pointer and ${w.params.rocksTouch} on a coarse one, got ${R.length} and ${coarse.rocks.length}`);
   let bad = 0, land = Infinity, edge = Infinity, over = -Infinity;
   R.forEach((q, i) => {
@@ -724,23 +758,28 @@ for (const seed of [2, 19]) {
   const show = `seed ${seed}: ${R.length} stones, edges at least ${land.toFixed(1)} px past the islands' outermost drawn extent at high swell (${landRun.toFixed(1)} px through the run), ${edge.toFixed(1)} px inside the edge, overlapping at most ${(Math.max(0, over) * 100).toFixed(0)}% of the smaller; after 10 s the fish came within ${near.toFixed(1)} px of a stone's edge, pads ${padOn.toFixed(1)} px, striders ${strOn.toFixed(1)} px`;
   metric(show);
   if (bad) fail(`${show}: (p) ${bad} stones outside 4 to 44 px or 5 to 7 vertices`);
-  if (!(land >= 24 - 1e-6 && landRun >= 24 - 1e-6 && edge >= 20 && over <= 0.35 + 1e-9)) fail(`${show}: (p) every stone's edge should stand 24 px past the islands' outermost drawn extent at high swell, all 20 px inside the edge, overlapping by at most 35 percent`);
+  const away = w.plan && w.plan.clear;
+  if (!(land >= away - 1e-6 && landRun >= away - 1e-6 && edge >= 20 && over <= 0.35 + 1e-9)) fail(`${show}: (p) every stone's edge should stand the distance in use (${away}) px past the islands' outermost drawn extent at high swell, all 20 px inside the edge, overlapping by at most 35 percent`);
   if (!(near >= 0 && padOn >= -0.5 && strOn >= 0)) fail(`${show}: (p) no fish, pad or strider should stand on a stone`);
 }
 
 // The layout, at seeds 2 and 19 on 1920x1080 and 1280x720 pages with the two islands placed in proportion. (q) after
-// 60 simulated seconds of drift: the outcrop holds 3 to 5 stones; every stone's and every pad's edge stands 24 px or
-// more past the islands' outermost drawn extent at high swell (the pads sampled every half second through the drift,
-// and the live coast never rising past the top of the swell the bound assumes), and the outcrop's nearest edge
-// 60 to 100 px past it, so it belongs to that shore with a channel the school can pass; no pad
+// 60 simulated seconds of drift: the outcrop holds 3 to 5 stones; every pad's edge stands 24 px or more and every
+// stone's the distance in use (plan.clear) or more past the islands' outermost drawn extent at high swell (the pads
+// sampled every half second through the drift, and the live coast never rising past the top of the swell the bound
+// assumes), and the outcrop's nearest edge plan.away to plan.away + plan.span px past it (140 to 220 at rockAway's
+// default, 60 to 100 at the floor), so it belongs to that shore with open water between its waves and the island's; (t)
+// holds for the distance in use; no pad
 // comes within 90 px of a stone (edge to edge); no cluster's centre (a pad cluster's, or the stone group's in open
 // water) lies within 60 px of a coast, and no pad cluster's centre within 90 px of the screen's edge; no pad or
 // stone lies within 30 px of the screen's edge, and no pad on the land. Unless the plan reports that it gave way
 // (plan.gaveWay: no room for the whole composition), the stones stand in two groups and the pads' centroid and the
 // stones' lie on opposite sides of the screen's middle.
 for (const [W, H] of [[1920, 1080], [1280, 720]]) for (const seed of [2, 19]) {
-  const w = createWorld(defaults(), { w: W, h: H, seed });
-  setIslands(w, ISL2.map((b) => ({ x: (b.x * W) / 1440, y: (b.y * H) / 900, w: (b.w * W) / 1440, h: (b.h * H) / 900 })));
+  const lay = (away) => { const p = defaults(); if (away != null) p.rockAway = away; const u = createWorld(p, { w: W, h: H, seed }); setIslands(u, ISL2.map((b) => ({ x: (b.x * W) / 1440, y: (b.y * H) / 900, w: (b.w * W) / 1440, h: (b.h * H) / 900 }))); return u; };
+  const w = lay();
+  step(w, DT); ladderCheck(w, `${W}x${H} seed ${seed}:`, (a) => { const u = lay(a); step(u, DT); return u; });
+  bandCheck(w, `${W}x${H} seed ${seed}:`);
   let padClear = Infinity, swellUp = -Infinity;
   for (let s = 0; s < 60 * 60; s++) {
     step(w, DT);
@@ -765,11 +804,53 @@ for (const [W, H] of [[1920, 1080], [1280, 720]]) for (const seed of [2, 19]) {
   const mid = (c) => (W >= H ? c.x - W / 2 : c.y - H / 2), pm = mid(mean(P)), rm = mid(mean(R));
   const show = `${W}x${H} seed ${seed}: ${w.plan && w.plan.gaveWay ? 'gave way; ' : ''}${crop.length} stones in the outcrop (nearest edge ${cropNear.toFixed(1)} px past the outermost drawn extent at high swell; every stone ${rockClear.toFixed(1)}, every pad ${padClear.toFixed(1)} through the drift; live coast ${swellUp.toFixed(2)} px over the swell's top) and ${group.length} in open water, ${P.length} pads in ${centres.length - (group.length ? 1 : 0)} clusters; pad to stone ${padRock.toFixed(1)} px, cluster centre to coast ${centreCoast.toFixed(1)} px, pad cluster centre to edge ${padEdge.toFixed(1)} px, edge ${edge.toFixed(1)} px, pads to land ${onLand.toFixed(1)} px; centroids ${pm.toFixed(0)} px (pads) and ${rm.toFixed(0)} px (stones) off the middle`;
   metric(show);
-  if (!(crop.length >= 3 && crop.length <= 5 && rockClear >= 24 - 1e-6 && padClear >= 24 - 1e-6 && cropNear >= 60 - 1e-6 && cropNear <= 100 && swellUp <= 0.01)) fail(`${show}: (q) the outcrop should hold 3 to 5 stones, every stone's and pad's edge 24 px past the islands' outermost drawn extent at high swell, the outcrop's nearest 60 to 100 px past it`);
+  const { away, span, clear } = w.plan || {};
+  if (!(crop.length >= 3 && crop.length <= 5 && rockClear >= clear - 1e-6 && padClear >= 24 - 1e-6 && cropNear >= away - 1e-6 && cropNear <= away + span && swellUp <= 0.01)) fail(`${show}: (q) the outcrop should hold 3 to 5 stones, every pad's edge 24 px and every stone's the distance in use (${clear}) px past the islands' outermost drawn extent at high swell, the outcrop's nearest ${away} to ${away + span} px past it`);
   if (!(padRock >= 90 && centreCoast >= 60 && padEdge >= 90 && edge >= 30 && onLand >= 0)) fail(`${show}: (q) pads 90 px off the stones, cluster centres 60 px off the coasts and pad cluster centres 90 px off the edge, nothing within 30 px of the edge, no pad on the land`);
   const gave = !!(w.plan && w.plan.gaveWay);
   if (!gave && !group.length) fail(`${show}: (q) with room for the whole composition the stones should stand in two groups`);
   if (!gave && !(pm * rm < 0)) fail(`${show}: (q) the pads and the stones should sit on opposite sides of the middle`);
+}
+
+// The islets, at seeds 2 and 19 on 1920x1080 and 1280x720 pages laid as in (q). (w) each group of stones is one islet
+// (w.islets: its stones and a coast in the islands' representation, a radius per bearing round a centre, read by
+// coast()); every stone belongs to the islet of its group; the coast holds every vertex of its stones (the vertex no
+// farther from the centre than the coast at its bearing, to 1e-3 px; the drawn stone lies inside its vertices); the
+// coast is smooth: the largest second difference of the radius over three neighbouring bearings is under 0.03 of the
+// islet's mean radius. A corner is a jump in the radius's slope, not a large step, so the second difference is what
+// tells it: the old convex-hull profile of the same stones measured 0.066 to 0.21 on seeds 2,19,3,7,11 at three page
+// sizes, the blurred coast at most 0.011. The islet's outermost drawn extent (ISLET_OUTER px past the coast) stands
+// short of every island's outermost drawn extent at high swell, so open water lies between the islet's waves and the
+// island's; two worlds of one seed lay the same stones and coasts; and moving rockAway lays the stones again on its
+// new ladder, every stone the distance in use past the islands.
+const isletLay = (W, H, seed) => { const w = createWorld(defaults(), { w: W, h: H, seed }); setIslands(w, ISL2.map((b) => ({ x: (b.x * W) / 1440, y: (b.y * H) / 900, w: (b.w * W) / 1440, h: (b.h * H) / 900 }))); step(w, DT); return w; };
+for (const [W, H] of [[1920, 1080], [1280, 720]]) for (const seed of [2, 19]) {
+  const w = isletLay(W, H, seed), tag = `${W}x${H} seed ${seed}:`, S = w.islets;
+  if (!Array.isArray(S) || !S.length || typeof M.ISLET_OUTER !== 'number') { fail(`${tag} (w) the world should carry its islets (w.islets) and the pond their outermost reach (ISLET_OUTER)`); continue; }
+  let member = true, holds = true, bend = 0, open = Infinity;
+  for (const q of w.rocks) member &&= S.filter((s) => s.rocks.includes(q) && s.grp === q.grp).length === 1;
+  for (const s of S) {
+    for (const q of s.rocks) q.t.forEach((t, k) => { const vx = q.x + Math.cos(t) * q.r * q.k[k] - s.x, vy = q.y + Math.sin(t) * q.r * q.k[k] - s.y; if (Math.hypot(vx, vy) > M.coast(s, Math.atan2(vy, vx)) + 1e-3) holds = false; });
+    const n = s.C.length;
+    for (let i = 0; i < n; i++) bend = Math.max(bend, Math.abs(s.C[i] - 2 * s.C[(i + 1) % n] + s.C[(i + 2) % n]) / s.mean);
+    for (let i = 0; i < 360; i++) {
+      const t = (i / 360) * TAU, R = M.coast(s, t) + M.ISLET_OUTER, x = s.x + Math.cos(t) * R, y = s.y + Math.sin(t) * R;
+      for (const o of w.islands) open = Math.min(open, Math.hypot(x - o.x, y - o.y) - extent(w, o, Math.atan2(y - o.y, x - o.x)));
+    }
+  }
+  const same = (u) => JSON.stringify({ r: u.rocks, h: u.islets.map((s) => [s.grp, s.x, s.y, [...s.C], s.ph]) });
+  const twin = same(isletLay(W, H, seed)) === same(w);
+  w.params.rockAway += 40; for (let s = 0; s < 60; s++) step(w, DT);
+  const moved = Math.min(...w.rocks.map((q) => beyond(w, q))), L = typeof M.awayLadder === 'function' ? M.awayLadder(w.params.rockAway) : [];
+  const relaid = !!w.plan && L.some((k) => k.away === w.plan.away && k.span === w.plan.span && k.clear === w.plan.clear) && moved >= w.plan.clear - 1e-6;
+  const show = `${tag} ${S.length} islets of ${S.map((s) => s.rocks.length).join('+')} stones, coast bend ${bend.toFixed(4)} of the mean radius, outermost wave ${open.toFixed(1)} px short of the islands' outermost drawn extent; rockAway raised to ${w.params.rockAway}, stones laid at ${w.plan && w.plan.away != null ? w.plan.away.toFixed(1) : '?'}, ${moved.toFixed(1)} px past it`;
+  metric(show);
+  if (!member) fail(`${show}: (w) every stone should belong to exactly the islet of its group`);
+  if (!holds) fail(`${show}: (w) each islet's coast should hold every vertex of its stones`);
+  if (!(bend < 0.03)) fail(`${show}: (w) each islet's coast should be smooth, its largest second difference under 0.03 of its mean radius`);
+  if (!(open > 0)) fail(`${show}: (w) an islet's outermost wave should stand short of every island's outermost drawn extent`);
+  if (!twin) fail(`${show}: (w) two worlds of one seed should lay the same stones and islets`);
+  if (!relaid) fail(`${show}: (w) moving rockAway should lay the stones again on its ladder, at the distance in use`);
 }
 
 // (r) The pond floor, at seeds 2 and 19 on 1920x1080 and 1280x720 pages with the two islands placed in proportion, once
@@ -862,4 +943,4 @@ for (const [W, H, coarse] of [[1920, 1080, false], [1280, 720, false], [1920, 10
 }
 
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }
-console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads, flowers, striders, stones and their layout, the pond floor, the marks on the water hold');
+console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads, flowers, striders, stones and their layout, the islets, the pond floor, the marks on the water hold');
