@@ -75,6 +75,9 @@ export const PARAMS = {
     ringAlpha: [0.13, 0, 1, 0.01, 'wave opacity'],
     shoreAlpha: [0.16, 0, 1, 0.01, 'shoreline opacity'],
     water: [0.08, 0, 0.4, 0.005, 'how much darker the water is than the land'],
+    caustic: [0.45, 0, 1, 0.01, 'strength of the light net on the pond floor: share of the depth a filament lifts'],
+    causticCell: [90, 20, 300, 1, 'size of a cell of the light net, px'],
+    causticSharp: [10, 2, 30, 0.5, 'how fine the light net\'s filaments are'],
     shallows: [0.6, 0, 1, 0.05, 'how far the shallows lighten back toward the land'],
     coastRes: [1.5, 1, 2, 0.25, 'resolution of the ground (water, land, floor, shores) on a dense screen: 1 CSS px, 2 the full backing store'],
   },
@@ -1392,29 +1395,108 @@ function rgbOf(css) {
   else { const m = s.match(/rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/i); if (m) c = [+m[1], +m[2], +m[3]]; }
   return c;
 }
+// The water's tone over a paper, parsed once: the paper's [r, g, b], the slate it deepens toward, and how far a step of
+// depth pulls (a dark page has little room below it, so the same depth pulls three times as far to read as the same
+// step). null when the paper cannot be parsed.
+function waterTone(paper) {
+  const c = rgbOf(paper); if (!c) return null;
+  const light = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 > 0.5;
+  return { c, deep: light ? [44, 74, 85] : [4, 10, 13], pull: light ? 1 : 3 };
+}
+// The [r, g, b] of the water at a depth over a parsed tone; depth 0 is the paper itself.
+const waterMix = (t, depth) => { const k = Math.min(1, Math.max(0, depth * t.pull)); return t.c.map((v, i) => Math.round(v + (t.deep[i] - v) * k)); };
 export function waterOf(paper, depth) {
-  const c = rgbOf(paper); if (!c) return String(paper).trim();
-  const light = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 > 0.5, deep = light ? [44, 74, 85] : [4, 10, 13];
-  // a dark page has little room below it, so the same depth pulls three times as far to read as the same step
-  const k = light ? depth : Math.min(1, depth * 3), mix = c.map((v, i) => Math.round(v + (deep[i] - v) * k));
+  const t = waterTone(paper); if (!t) return String(paper).trim();
+  const mix = waterMix(t, depth);
   return `rgb(${mix[0]}, ${mix[1]}, ${mix[2]})`;
+}
+// The light net on the pond floor: the web of caustics a rippled surface throws on the bottom, seen from straight above
+// and frozen. It is not a second colour: it varies the water's depth pixel by pixel, shallower on a filament and a
+// little deeper inside a cell, so a page with no depth shows no net and nothing is ever lighter than the land.
+// waterField is the shape, intensities in [0, 1] with 1 on a filament, one sample every `step` CSS px from the
+// top-left corner. Each value is a function of the seed and its world position alone (hashes keyed on integer lattice
+// cells, never a running stream), so a larger field holds a smaller one as its corner and a resize shows more of the
+// same net; and it is the world's seed on its own derivation, so the simulation draws exactly what it drew without it.
+const hashCell = (x, y, s) => { let h = Math.imul(x, 0x27d4eb2d) ^ Math.imul(y, 0x165667b1) ^ s; h = Math.imul(h ^ (h >>> 15), 0x85ebca6b); h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35); return (h ^ (h >>> 16)) >>> 0; };
+// smooth value noise in [0, 1): the warp that bends every edge, and the slow drift of brightness and width
+function smoothNoise(x, y, s) {
+  const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy, u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy);
+  const a = hashCell(ix, iy, s), b = hashCell(ix + 1, iy, s), c = hashCell(ix, iy + 1, s), d = hashCell(ix + 1, iy + 1, s);
+  return ((a + (b - a) * u) * (1 - v) + (c + (d - c) * u) * v) / 4294967296;
+}
+// A cellular net: the second-nearest feature point's distance less the nearest's, 0 on the border between two cells.
+// Neighbouring samples nearly always fall in the same lattice cell, so each net keeps the 3x3 feature points of the
+// last cell it was asked about and hashes again only on entering a new one.
+function cellNet(s) {
+  const P = new Float64Array(18); let cx = NaN, cy = NaN;
+  return (x, y) => {
+    const ix = Math.floor(x), iy = Math.floor(y);
+    if (ix !== cx || iy !== cy) { cx = ix; cy = iy; for (let j = -1, n = 0; j <= 1; j++) for (let i = -1; i <= 1; i++, n += 2) { const h = hashCell(ix + i, iy + j, s); P[n] = ix + i + (h & 0xffff) / 65536; P[n + 1] = iy + j + (h >>> 16) / 65536; } }
+    let f1 = 9, f2 = 9;
+    for (let n = 0; n < 18; n += 2) { const dx = P[n] - x, dy = P[n + 1] - y, d = dx * dx + dy * dy; if (d < f1) { f2 = f1; f1 = d; } else if (d < f2) f2 = d; }
+    return Math.sqrt(f2) - Math.sqrt(f1);
+  };
+}
+// The net is two cell scales, the finer one fainter, each domain-warped so no edge runs straight (straight edges read
+// as cracked mud); a slow noise thins and thickens the filaments and another dims whole stretches, so the net is open
+// in places and its brightness wanders over the page rather than repeating. The slow noises (the warp, the width, the
+// dimming) are taken at nodes every G samples, anchored at the corner like the samples, and interpolated between:
+// they change little over a node's span, and computing them per sample was half the cost.
+export function waterField(seed, cols, rows, { step = 1, cell = 90, sharp = 10 } = {}) {
+  const s = (seed ^ 0xca057c5) >>> 0, sw = (s ^ 0x3c6ef372) >>> 0, sf = (s ^ 0x5bd1e995) >>> 0, sm = (s ^ 0x7f4a7c15) >>> 0, k = step / cell, out = new Float32Array(cols * rows);
+  const G = Math.max(1, Math.floor(cell / (8 * step))), nc = Math.floor((cols - 1) / G) + 2, nr = Math.floor((rows - 1) / G) + 2, WX = new Float32Array(nc * nr), WY = new Float32Array(nc * nr), TH = new Float32Array(nc * nr), LIT = new Float32Array(nc * nr);
+  for (let b = 0; b < nr; b++) for (let a = 0; a < nc; a++) {
+    const x = (a * G + 0.5) * k, y = (b * G + 0.5) * k, n = b * nc + a;
+    WX[n] = 0.9 * (smoothNoise(x * 0.7, y * 0.7, sw) + 0.5 * smoothNoise(x * 1.7, y * 1.7, sw ^ 1) - 0.75); WY[n] = 0.9 * (smoothNoise(x * 0.7 + 31.7, y * 0.7 + 11.3, sw) + 0.5 * smoothNoise(x * 1.7 + 5.1, y * 1.7 + 19.9, sw ^ 1) - 0.75);
+    TH[n] = sharp / (0.6 + 0.8 * smoothNoise(x * 0.45 + 3.3, y * 0.45 + 9.1, sm ^ 1));
+    LIT[n] = 0.25 + 0.75 * Math.min(1, Math.max(0, (smoothNoise(x * 0.2, y * 0.2, sm) - 0.2) / 0.45));
+  }
+  // a filament's profile across its width: (1 - d/4)^4 for d = e^2, which is exp(-d) near the line and 0 from e = 2 on
+  const near = cellNet(s), fine = cellNet(sf), line = (e) => { const t = 1 - e * e * 0.25; return t > 0 ? t * t * t * t : 0; };
+  for (let j = 0; j < rows; j++) {
+    const y = (j + 0.5) * k, b = Math.floor(j / G), v = (j - b * G) / G;
+    for (let i = 0; i < cols; i++) {
+      const x = (i + 0.5) * k, a = Math.floor(i / G), u = (i - a * G) / G, n = b * nc + a, m = n + nc;
+      const w00 = (1 - u) * (1 - v), w10 = u * (1 - v), w01 = (1 - u) * v, w11 = u * v;
+      const X = x + w00 * WX[n] + w10 * WX[n + 1] + w01 * WX[m] + w11 * WX[m + 1], Y = y + w00 * WY[n] + w10 * WY[n + 1] + w01 * WY[m] + w11 * WY[m + 1];
+      const th = w00 * TH[n] + w10 * TH[n + 1] + w01 * TH[m] + w11 * TH[m + 1], lit = w00 * LIT[n] + w10 * LIT[n + 1] + w01 * LIT[m] + w11 * LIT[m + 1];
+      out[j * cols + i] = Math.min(1, lit * (line(near(X, Y) * th) + 0.35 * line(fine(X * 1.9 + 7.3, Y * 1.9 + 3.1) * th * 0.8)));
+    }
+  }
+  return out;
+}
+// how much deeper a cell's inside reads than the flat water, against how much shallower a full filament reads
+const CELL_DEEP = 0.3;
+// The net coloured over a paper: RGBA bytes, one pixel per field sample, at depth * g, where g = 1 - strength on a full
+// filament and 1 + strength * CELL_DEEP where the field is 0. At strength 0 every pixel is waterOf(paper, depth).
+// null when the paper cannot be parsed.
+export function waterLayer(field, paper, depth, strength) {
+  const t = waterTone(paper); if (!t) return null;
+  const N = 256, lut = new Uint8Array(N * 3), out = new Uint8ClampedArray(field.length * 4);
+  for (let q = 0; q < N; q++) { const v = q / (N - 1); lut.set(waterMix(t, depth * Math.max(0, 1 + strength * (CELL_DEEP * (1 - v) - v))), q * 3); }
+  for (let n = 0, o = 0; n < field.length; n++, o += 4) { const q = Math.round(field[n] * (N - 1)) * 3; out[o] = lut[q]; out[o + 1] = lut[q + 1]; out[o + 2] = lut[q + 2]; out[o + 3] = 255; }
+  return out;
 }
 // bands of shallows round each island, far to near: grown by px, strength of the land colour laid over the water
 const SHALLOWS = [[36, 0.16], [20, 0.2], [9, 0.28]];
+// CSS px between samples of the light net; the shell scales its layer up with smoothing (see waterField)
+export const WATER_STEP = 2;
 
 // Draws the world onto ctx (already scaled to CSS px). ink and paper are CSS colours (paper is the land); water is the
-// pond's colour and defaults to the land's; gold is the treats' and the koi's colour. The world is two layers, drawn in order: the
+// pond's layer, { img, w, h, flat }: the net pre-rendered into an image drawn at w x h CSS px from the corner, and the
+// flat water colour under whatever it does not cover (all of the pond when img is null); it defaults to bare land.
+// gold is the treats' and the koi's colour. The world is two layers, drawn in order: the
 // ground (opaque: the water, the land, the things on the pond floor, the shores and the waves lapping at them) and the live layer over them (the
 // fish, the ripples and the treats, then the things on the surface). The shell may draw the ground at a lower resolution than the live layer.
-export function draw(ctx, w, ink, paper, gold, water = paper) {
+export function draw(ctx, w, ink, paper, gold, water) {
   drawGround(ctx, w, ink, paper, water);
   drawLive(ctx, w, ink, paper, gold);
 }
 // The ground: covers the whole canvas, so it needs nothing under it.
-export function drawGround(ctx, w, ink, paper, water = paper) {
+export function drawGround(ctx, w, ink, paper, water = { img: null, w: 0, h: 0, flat: paper }) {
   const p = w.params, still = w.reduced;
-  // the water, then each island as land with shallows lightening toward its coast
-  ctx.globalAlpha = 1; ctx.fillStyle = water; ctx.fillRect(0, 0, w.w, w.h);
+  // the water (the flat colour only where the net falls short, as for a moment after a resize), then each island as land with shallows lightening toward its coast
+  ctx.globalAlpha = 1; if (!water.img || water.w < w.w || water.h < w.h) { ctx.fillStyle = water.flat; ctx.fillRect(0, 0, w.w, w.h); } if (water.img) { ctx.imageSmoothingEnabled = true; ctx.drawImage(water.img, 0, 0, water.w, water.h); }
   ctx.fillStyle = paper;
   for (const o of w.islands) {
     for (const [g, a] of SHALLOWS) { ctx.globalAlpha = p.shallows * a; coastPath(ctx, o, g); ctx.fill(); }
@@ -1563,10 +1645,29 @@ export function mount(container) {
   reducedQ?.addEventListener?.('change', onReduced);
   // the tokens live on the root div, not on <html>, so read them off the layer itself; and read them again every
   // second, so a change of theme reaches the ink without any hook into how the theme is switched
-  let ink = '#201f1d', paper = '#f3f2f2', inkAge = Infinity, water = paper, waterFor = null, waterDepth = NaN;
+  let ink = '#201f1d', paper = '#f3f2f2', inkAge = Infinity;
   const readInk = () => { const css = getComputedStyle(container); ink = css.getPropertyValue('--color-text').trim() || ink; paper = css.getPropertyValue('--color-bg').trim() || paper; inkAge = 0; };
+  // The water: the light net is generated once into a field and coloured once into its own canvas, which the ground
+  // draws each frame. The field is kept apart from its colour, so a theme, depth or strength change only recolours,
+  // and only a change of size, cell or sharpness makes a new field. A resize regenerates 200 ms after the last one;
+  // until then the old layer is drawn at its own size, never stretched, with the flat water under what it misses.
+  let water = { img: null, w: 0, h: 0, flat: paper }, field = null, fieldKey = '', layerKey = '', waterCanvas = null, resizedAt = -Infinity;
+  const relayWater = (now) => {
+    const cols = Math.ceil(vw / WATER_STEP), rows = Math.ceil(vh / WATER_STEP), fk = `${world.seed} ${cols} ${rows} ${params.causticCell} ${params.causticSharp}`;
+    if (fk !== fieldKey && (!field || now - resizedAt > 200)) { field = { cols, rows, v: waterField(world.seed, cols, rows, { step: WATER_STEP, cell: params.causticCell, sharp: params.causticSharp }) }; fieldKey = fk; }
+    const lk = `${fieldKey} ${paper} ${params.water} ${params.caustic}`;
+    if (lk === layerKey) return;
+    layerKey = lk;
+    const px = waterLayer(field.v, paper, params.water, params.caustic), flat = waterOf(paper, params.water);
+    if (!px) { water = { img: null, w: 0, h: 0, flat }; return; }
+    if (!waterCanvas) waterCanvas = document.createElement('canvas');
+    waterCanvas.width = field.cols; waterCanvas.height = field.rows;
+    waterCanvas.getContext('2d').putImageData(new ImageData(px, field.cols, field.rows), 0, 0);
+    water = { img: waterCanvas, w: field.cols * WATER_STEP, h: field.rows * WATER_STEP, flat };
+  };
   let vw = 1, vh = 1;
   const resize = () => {
+    resizedAt = performance.now();
     vw = container.clientWidth || 1; vh = container.clientHeight || 1;
     canvas.width = Math.round(vw * dpr); canvas.height = Math.round(vh * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     resizeWorld(world, vw, vh);
@@ -1597,7 +1698,7 @@ export function mount(container) {
     const dt = Math.min(0.05, Math.max(0, (now - last) / 1000)); last = now;
     inkAge += dt; if (inkAge > 1) readInk();
     step(world, dt);
-    if (paper !== waterFor || params.water !== waterDepth) { waterFor = paper; waterDepth = params.water; water = waterOf(paper, waterDepth); }
+    relayWater(now);
     paint();
   };
   // a hidden tab runs nothing; on return the clock restarts rather than jumping by the time away
@@ -1623,7 +1724,7 @@ export function mount(container) {
       alive = false; if (raf) cancelAnimationFrame(raf); ro.disconnect();
       document.removeEventListener('visibilitychange', onVisible); reducedQ?.removeEventListener?.('change', onReduced);
       if (dev) dev.destroy();
-      canvas.width = canvas.height = 0; if (coastCanvas) coastCanvas.width = coastCanvas.height = 0; if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+      canvas.width = canvas.height = 0; if (coastCanvas) coastCanvas.width = coastCanvas.height = 0; if (waterCanvas) waterCanvas.width = waterCanvas.height = 0; if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
     },
   };
   if (new URLSearchParams(location.search).has('dev')) import('./pond-dev.js').then((m) => { if (alive) dev = m.mount(api); }).catch((e) => console.error('pond-dev', e));
