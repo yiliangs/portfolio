@@ -563,36 +563,55 @@ function rockPath(ctx, q) {
 }
 // The islets. Each group of stones (the outcrop, the open-water group; a lone stone is a group of one) is drawn as one
 // small island: its water, the shallows and the waves, follows one smooth closed curve round the whole group. That
-// curve is the convex hull of the group's stone vertices, kept as its support point at HULL_N bearings (the vertex
-// furthest along each), so the curve g px out is each point pushed g px along its bearing. It is built with the plan,
-// never per frame. islet: { grp, rocks (its stones), hx, hy (the support point at each bearing), ph (its waves' phase,
-// so the islets do not lap in step with the islands or each other) }
+// curve is a coast in the islands' own representation, a radius per bearing round a centre, read by coast() and drawn
+// by coastPath(), so an islet's coast is soft and organic for the same reason an island's is, and any change to how a
+// coast is drawn reaches both. It is built with the plan, never per frame: stones do not swell or move. islet: { grp,
+// rocks (its stones), x, y (the centroid of its stones' vertices), S, C (its profile, one array), calm 0, mean (the
+// profile's mean radius), ph (its waves' phase, so the islets do not lap in step with the islands or each other) }.
+// The islands' swell, follow and calm have no meaning here: S and C are the same static profile and calm is 0, the
+// values coast() and calmCoast() read as a still coast.
 // Scaled to stones of 8 to 40 px against the islands' hundreds, by eye: ISLET_RINGS waves (the islands lap with
 // `rings`) starting ISLET_REACH px out (theirs, `reach`), on the islands' clock and strength; and two slim bands of
 // shallows, far to near, at the islands' two nearer strengths. An islet's outermost drawn extent is ISLET_OUTER px past
-// its hull.
-const HULL_N = 48, ISLET_RINGS = 2, ISLET_REACH = 18, ISLET_SHALLOWS = [[12, 0.2], [5, 0.28]];
+// its coast. ISLET_BLUR is the profile's blur round the circle, deg, as the islands' `blur`.
+const ISLET_RINGS = 2, ISLET_REACH = 18, ISLET_SHALLOWS = [[12, 0.2], [5, 0.28]], ISLET_BLUR = 40, ISLET_SPLIT = 12;
 export const ISLET_OUTER = Math.max(ISLET_SHALLOWS[0][0], 3 + ISLET_REACH);
-const HC = Float64Array.from({ length: HULL_N }, (_, i) => Math.cos((i / HULL_N) * TAU)), HS = Float64Array.from({ length: HULL_N }, (_, i) => Math.sin((i / HULL_N) * TAU));
 function layIslets(w) {
   w.islets = [];
   for (const grp of [0, 1]) {
     const L = w.rocks.filter((q) => q.grp === grp);
     if (!L.length) continue;
-    const V = [];
-    for (const q of L) q.t.forEach((t, i) => V.push(q.x + Math.cos(t) * q.r * q.k[i], q.y + Math.sin(t) * q.r * q.k[i]));
-    const hx = new Float64Array(HULL_N), hy = new Float64Array(HULL_N);
-    for (let i = 0; i < HULL_N; i++) { let b = -Infinity; for (let j = 0; j < V.length; j += 2) { const d = V[j] * HC[i] + V[j + 1] * HS[i]; if (d > b) { b = d; hx[i] = V[j]; hy[i] = V[j + 1]; } } }
-    w.islets.push({ grp, rocks: L, hx, hy, ph: rng((w.seed ^ 0x15e7) + 7919 * (grp + 1))() });
+    // the stones' vertex polygons, which hold their drawn outlines (curved through the edges' midpoints, inside them)
+    const P = L.map((q) => q.t.map((t, i) => [q.x + Math.cos(t) * q.r * q.k[i], q.y + Math.sin(t) * q.r * q.k[i]]));
+    let x = 0, y = 0, n = 0; for (const V of P) for (const [vx, vy] of V) { x += vx; y += vy; n++; }
+    x /= n; y /= n;
+    // the reach: along each bearing, the farthest point of any polygon's edges (sampled ISLET_SPLIT to an edge), kept
+    // at both bearings either side of it, so the profile read between them by coast() never falls inside the point
+    const N = new Float32Array(BEARINGS);
+    for (const V of P) for (let i = 0; i < V.length; i++) {
+      const [ax, ay] = V[i], [bx, by] = V[(i + 1) % V.length];
+      for (let s = 0; s < ISLET_SPLIT; s++) {
+        const f = s / ISLET_SPLIT, px = ax + (bx - ax) * f - x, py = ay + (by - ay) * f - y, d = Math.hypot(px, py);
+        let u = (Math.atan2(py, px) / TAU) * BEARINGS; u -= Math.floor(u / BEARINGS) * BEARINGS;
+        const j = Math.floor(u) % BEARINGS, k = (j + 1) % BEARINGS;
+        if (d > N[j]) N[j] = d; if (d > N[k]) N[k] = d;
+      }
+    }
+    // blurred round the circle as an island's silhouette is, wide enough that no corner of a stone and no straight
+    // run from one stone to the next survives; then wherever the blur pulled the coast inside a stone, the shortfall is
+    // blurred too and raised to its own peak (the island's cape), a few times over, and last the coast never under
+    // the reach at all
+    const K = kernel(ISLET_BLUR), h = K.length >> 1, blur = (A) => Float32Array.from(A, (_, j) => { let v = 0; for (let d = -h; d <= h; d++) v += K[d + h] * A[(j + d + 2 * BEARINGS) % BEARINGS]; return v; });
+    const R = blur(N);
+    for (let it = 0; it < 4; it++) {
+      const D = Float32Array.from(R, (r, j) => Math.max(0, N[j] - r)), dmax = Math.max(...D);
+      if (dmax < 1e-3) break;
+      const E = blur(D), emax = Math.max(...E);
+      for (let j = 0; j < BEARINGS; j++) R[j] += (E[j] * dmax) / emax;
+    }
+    let mean = 0; for (let j = 0; j < BEARINGS; j++) mean += R[j] = Math.max(R[j], N[j]);
+    w.islets.push({ grp, rocks: L, x, y, S: R, C: R, calm: 0, mean: mean / BEARINGS, ph: rng((w.seed ^ 0x15e7) + 7919 * (grp + 1))() });
   }
-}
-const IX = new Float64Array(HULL_N), IY = new Float64Array(HULL_N);
-// An islet's curve grown by g px, as a fresh closed path curved through the midpoints of its samples.
-function isletPath(ctx, s, g) {
-  for (let i = 0; i < HULL_N; i++) { IX[i] = s.hx[i] + HC[i] * g; IY[i] = s.hy[i] + HS[i] * g; }
-  ctx.beginPath(); ctx.moveTo((IX[HULL_N - 1] + IX[0]) / 2, (IY[HULL_N - 1] + IY[0]) / 2);
-  for (let i = 0; i < HULL_N; i++) { const j = (i + 1) % HULL_N; ctx.quadraticCurveTo(IX[i], IY[i], (IX[i] + IX[j]) / 2, (IY[i] + IY[j]) / 2); }
-  ctx.closePath();
 }
 
 // ----- lily pads -----
@@ -1485,18 +1504,18 @@ export function drawGround(ctx, w, ink, paper, water = paper) {
     ctx.globalAlpha = 1; coastPath(ctx, o, 0); ctx.fill();
   }
   // the islets: each group of stones is land like the islands, at its own small scale. Its shallows and its waves follow
-  // one curve round the whole group (isletPath), so the rings of neighbouring stones never tangle; its shoreline is the
+  // one coast round the whole group (coastPath), so the rings of neighbouring stones never tangle; its shoreline is the
   // outline of the stones' union: the group's stones stroked at twice the line width as one path, then filled over in
   // the land's colour, so only the outer half of the line survives where the stones lean on each other. Each group is
   // its own small path, for the reason the surface in drawLive gives.
-  for (const s of w.islets) for (const [g, a] of ISLET_SHALLOWS) { ctx.globalAlpha = p.shallows * a; isletPath(ctx, s, g); ctx.fill(); }
+  for (const s of w.islets) for (const [g, a] of ISLET_SHALLOWS) { ctx.globalAlpha = p.shallows * a; coastPath(ctx, s, g); ctx.fill(); }
   ctx.lineWidth = p.width; ctx.lineJoin = 'round'; ctx.strokeStyle = ink;
   for (const s of w.islets) {
     for (let i = 0; i < ISLET_RINGS; i++) {
       const u = still ? (i + 0.5) / ISLET_RINGS : ((w.t * p.lap + s.ph + i / ISLET_RINGS) % 1); // 0 far out, 1 at the shore
       const a = still ? 0.6 : Math.min(1, u * 4) * (1 - u);
       if (a <= 0.001) continue;
-      ctx.globalAlpha = p.ringAlpha * a; ctx.lineWidth = p.width; isletPath(ctx, s, 3 + ISLET_REACH * (1 - u)); ctx.stroke();
+      ctx.globalAlpha = p.ringAlpha * a; ctx.lineWidth = p.width; coastPath(ctx, s, 3 + ISLET_REACH * (1 - u)); ctx.stroke();
     }
     ctx.beginPath(); for (const q of s.rocks) rockPath(ctx, q);
     ctx.globalAlpha = p.shoreAlpha; ctx.lineWidth = 2 * p.width; ctx.stroke();

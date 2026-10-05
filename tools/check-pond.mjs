@@ -798,36 +798,41 @@ for (const [W, H] of [[1920, 1080], [1280, 720]]) for (const seed of [2, 19]) {
 }
 
 // The islets, at seeds 2 and 19 on 1920x1080 and 1280x720 pages laid as in (q). (s) each group of stones is one islet
-// (w.islets: its stones and the support points of their vertices' convex hull at evenly spaced bearings); every stone
-// belongs to the islet of its group; the hull is convex and encloses every vertex of its stones; the islet's outermost
-// drawn extent (ISLET_OUTER px past the hull) stands short of every island's outermost drawn extent at high swell, so
-// open water lies between the islet's waves and the island's; two worlds of one seed lay the same stones and hulls;
-// and moving rockAway lays the stones again on its new ladder, every stone the distance in use past the islands.
+// (w.islets: its stones and a coast in the islands' representation, a radius per bearing round a centre, read by
+// coast()); every stone belongs to the islet of its group; the coast holds every vertex of its stones (the vertex no
+// farther from the centre than the coast at its bearing, to 1e-3 px; the drawn stone lies inside its vertices); the
+// coast is smooth: the largest second difference of the radius over three neighbouring bearings is under 0.03 of the
+// islet's mean radius. A corner is a jump in the radius's slope, not a large step, so the second difference is what
+// tells it: the old convex-hull profile of the same stones measured 0.066 to 0.21 on seeds 2,19,3,7,11 at three page
+// sizes, the blurred coast at most 0.011. The islet's outermost drawn extent (ISLET_OUTER px past the coast) stands
+// short of every island's outermost drawn extent at high swell, so open water lies between the islet's waves and the
+// island's; two worlds of one seed lay the same stones and coasts; and moving rockAway lays the stones again on its
+// new ladder, every stone the distance in use past the islands.
 const isletLay = (W, H, seed) => { const w = createWorld(defaults(), { w: W, h: H, seed }); setIslands(w, ISL2.map((b) => ({ x: (b.x * W) / 1440, y: (b.y * H) / 900, w: (b.w * W) / 1440, h: (b.h * H) / 900 }))); step(w, DT); return w; };
 for (const [W, H] of [[1920, 1080], [1280, 720]]) for (const seed of [2, 19]) {
   const w = isletLay(W, H, seed), tag = `${W}x${H} seed ${seed}:`, S = w.islets;
   if (!Array.isArray(S) || !S.length || typeof M.ISLET_OUTER !== 'number') { fail(`${tag} (s) the world should carry its islets (w.islets) and the pond their outermost reach (ISLET_OUTER)`); continue; }
-  let member = true, convex = true, encloses = true, open = Infinity;
+  let member = true, holds = true, bend = 0, open = Infinity;
   for (const q of w.rocks) member &&= S.filter((s) => s.rocks.includes(q) && s.grp === q.grp).length === 1;
   for (const s of S) {
-    const n = s.hx.length, P = [...s.hx].map((x, i) => { const t = (i / n) * TAU; return { x: x + Math.cos(t) * 0.5, y: s.hy[i] + Math.sin(t) * 0.5, t }; });
-    for (let i = 0; i < n; i++) {
-      const a = P[i], b = P[(i + 1) % n], c = P[(i + 2) % n];
-      if ((b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x) < -1e-6) convex = false;
-      for (const q of s.rocks) q.t.forEach((t, k) => { const vx = q.x + Math.cos(t) * q.r * q.k[k] - a.x, vy = q.y + Math.sin(t) * q.r * q.k[k] - a.y; if ((b.x - a.x) * vy - (b.y - a.y) * vx < -1e-6) encloses = false; });
-      const x = s.hx[i] + Math.cos(a.t) * M.ISLET_OUTER, y = s.hy[i] + Math.sin(a.t) * M.ISLET_OUTER;
+    for (const q of s.rocks) q.t.forEach((t, k) => { const vx = q.x + Math.cos(t) * q.r * q.k[k] - s.x, vy = q.y + Math.sin(t) * q.r * q.k[k] - s.y; if (Math.hypot(vx, vy) > M.coast(s, Math.atan2(vy, vx)) + 1e-3) holds = false; });
+    const n = s.C.length;
+    for (let i = 0; i < n; i++) bend = Math.max(bend, Math.abs(s.C[i] - 2 * s.C[(i + 1) % n] + s.C[(i + 2) % n]) / s.mean);
+    for (let i = 0; i < 360; i++) {
+      const t = (i / 360) * TAU, R = M.coast(s, t) + M.ISLET_OUTER, x = s.x + Math.cos(t) * R, y = s.y + Math.sin(t) * R;
       for (const o of w.islands) open = Math.min(open, Math.hypot(x - o.x, y - o.y) - extent(w, o, Math.atan2(y - o.y, x - o.x)));
     }
   }
-  const same = (u) => JSON.stringify({ r: u.rocks, h: u.islets.map((s) => [s.grp, [...s.hx], [...s.hy], s.ph]) });
+  const same = (u) => JSON.stringify({ r: u.rocks, h: u.islets.map((s) => [s.grp, s.x, s.y, [...s.C], s.ph]) });
   const twin = same(isletLay(W, H, seed)) === same(w);
   w.params.rockAway += 40; for (let s = 0; s < 60; s++) step(w, DT);
   const moved = Math.min(...w.rocks.map((q) => beyond(w, q))), L = typeof M.awayLadder === 'function' ? M.awayLadder(w.params.rockAway) : [];
   const relaid = !!w.plan && L.some((k) => k.away === w.plan.away && k.span === w.plan.span && k.clear === w.plan.clear) && moved >= w.plan.clear - 1e-6;
-  const show = `${tag} ${S.length} islets of ${S.map((s) => s.rocks.length).join('+')} stones, outermost wave ${open.toFixed(1)} px short of the islands' outermost drawn extent; rockAway raised to ${w.params.rockAway}, stones laid at ${w.plan && w.plan.away != null ? w.plan.away.toFixed(1) : '?'}, ${moved.toFixed(1)} px past it`;
+  const show = `${tag} ${S.length} islets of ${S.map((s) => s.rocks.length).join('+')} stones, coast bend ${bend.toFixed(4)} of the mean radius, outermost wave ${open.toFixed(1)} px short of the islands' outermost drawn extent; rockAway raised to ${w.params.rockAway}, stones laid at ${w.plan && w.plan.away != null ? w.plan.away.toFixed(1) : '?'}, ${moved.toFixed(1)} px past it`;
   metric(show);
   if (!member) fail(`${show}: (s) every stone should belong to exactly the islet of its group`);
-  if (!convex || !encloses) fail(`${show}: (s) each islet's hull should be convex (${convex}) and enclose every vertex of its stones (${encloses})`);
+  if (!holds) fail(`${show}: (s) each islet's coast should hold every vertex of its stones`);
+  if (!(bend < 0.03)) fail(`${show}: (s) each islet's coast should be smooth, its largest second difference under 0.03 of its mean radius`);
   if (!(open > 0)) fail(`${show}: (s) an islet's outermost wave should stand short of every island's outermost drawn extent`);
   if (!twin) fail(`${show}: (s) two worlds of one seed should lay the same stones and islets`);
   if (!relaid) fail(`${show}: (s) moving rockAway should lay the stones again on its ladder, at the distance in use`);
