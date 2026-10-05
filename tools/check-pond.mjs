@@ -706,6 +706,19 @@ const ladderCheck = (w, tag, again) => {
   if (i > 0) { const u = again(L[i - 1].away); if (same(L[i - 1], u.plan)) fail(`${show}: (t) the rung before (${L[i - 1].away.toFixed(1)} px) lays every stone wanted, so the stones should stand there`); }
 };
 
+// (u) The header band, on every page (p), (q) and (s) lay: the canvas runs under the site's opaque header, 56 px tall,
+// so every stone's edge stands 80 px or more below the top of the page (the header plus an islet's outermost wave), and
+// every islet's outermost drawn extent (its coast plus ISLET_OUTER, at 360 bearings) stays below the header. A stone
+// the header hides is a stone the page does not have. The stones keep no foot band: the footer only overlaps.
+const bandCheck = (w, tag) => {
+  const R = w.rocks || [], top = Math.min(...R.map((q) => q.y - q.r));
+  let wave = Infinity;
+  for (const s of w.islets || []) for (let i = 0; i < 360; i++) { const t = (i / 360) * TAU; wave = Math.min(wave, s.y + Math.sin(t) * (M.coast(s, t) + (M.ISLET_OUTER || 0))); }
+  const show = `${tag} ${R.length} stones, the highest edge ${top.toFixed(1)} px from the top of the page, the highest islet wave ${wave.toFixed(1)} px`;
+  metric(show);
+  if (!(top >= 80 - 1e-6 && wave >= 56)) fail(`${show}: (u) every stone's edge should stand 80 px or more below the top of the page and every islet's outermost wave below the 56 px header`);
+};
+
 // Stones, on a 1440x900 page with two islands at seeds 2 and 19. (p) `rocks` stones (rocksTouch on a coarse pointer),
 // each 4 to 44 px with 5 to 7 vertices, stand as laid 20 px inside the screen edge; every stone's edge stands the
 // distance in use (plan.clear: the rung's distance, 24 px at the floor) or more past its island's outermost drawn
@@ -720,6 +733,7 @@ for (const seed of [2, 19]) {
   if (!R) { fail(`seed ${seed}: (p) the world should carry stones (w.rocks)`); continue; }
   ladderCheck(w, `1440x900 seed ${seed}:`, lay);
   const coarse = createWorld(defaults(), { w: 1440, h: 900, seed, coarse: true }); setIslands(coarse, ISL2); step(coarse, DT);
+  bandCheck(w, `1440x900 seed ${seed}:`); bandCheck(coarse, `1440x900 coarse seed ${seed}:`);
   if (R.length !== w.params.rocks || coarse.rocks.length !== w.params.rocksTouch) fail(`seed ${seed}: (p) want ${w.params.rocks} stones on a fine pointer and ${w.params.rocksTouch} on a coarse one, got ${R.length} and ${coarse.rocks.length}`);
   let bad = 0, land = Infinity, edge = Infinity, over = -Infinity;
   R.forEach((q, i) => {
@@ -765,6 +779,7 @@ for (const [W, H] of [[1920, 1080], [1280, 720]]) for (const seed of [2, 19]) {
   const lay = (away) => { const p = defaults(); if (away != null) p.rockAway = away; const u = createWorld(p, { w: W, h: H, seed }); setIslands(u, ISL2.map((b) => ({ x: (b.x * W) / 1440, y: (b.y * H) / 900, w: (b.w * W) / 1440, h: (b.h * H) / 900 }))); return u; };
   const w = lay();
   step(w, DT); ladderCheck(w, `${W}x${H} seed ${seed}:`, (a) => { const u = lay(a); step(u, DT); return u; });
+  bandCheck(w, `${W}x${H} seed ${seed}:`);
   let padClear = Infinity, swellUp = -Infinity;
   for (let s = 0; s < 60 * 60; s++) {
     step(w, DT);

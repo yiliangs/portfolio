@@ -485,6 +485,13 @@ const rockTarget = (w) => Math.max(0, Math.round(w.coarse ? w.params.rocksTouch 
 // A fish keeps ROCK_SHORE px off a stone, less than the `shore` it keeps off an island: a stone is small enough to slip
 // round, and the full shore margin round the larger stones made the fish bunch.
 const ROCK_EDGE = 30, ROCK_OVER = 0.35, ROCK_FULL = 0.95, ROCK_SHORE = 6;
+// The page's reserved bands, which the static things laid with the plan keep out of. The canvas runs under the site's
+// opaque header, 56 px tall, so anything laid in the top BAND_TOP px is hidden or cut: the band is the header plus room
+// for an islet's outermost wave (ISLET_OUTER). The footer's links sit in the bottom BAND_FOOT px; nothing hides there,
+// it only overlaps. The pond floor keeps out of both. The stones keep out of the top band only: they want the open
+// water far from the islands, which is at the page's margins, and with the foot band too a 1280x720 page has no room
+// left for the outcrop (seed 2 lays 0+3).
+const BAND_TOP = 80, BAND_FOOT = 100;
 // No pad comes within CLEAR px of an island's outermost drawn extent: the coast at the top of the swell (the low-swell
 // coast S plus the swell's full span), then the widest band of shallows, then the reach of the lapping rings. The pads
 // stand away from the island at every point of the swell. The stones are islets with shallows and waves of their own,
@@ -544,10 +551,11 @@ function bulge(q, b) {
   q.k[j] = Math.max(q.k[j], ROCK_FULL);
 }
 // Whether a stone of size r may stand at (x,y): open water, its edge `clear` px off every island's outermost drawn
-// extent, ROCK_EDGE inside the screen, and overlapping no stone by more than ROCK_OVER of the smaller: the lumps draw
-// inside their circles, so two that touch must overlap as circles.
+// extent, ROCK_EDGE inside the screen, out of the page's top band (BAND_TOP), and overlapping no stone by more than
+// ROCK_OVER of the smaller: the lumps draw inside their circles, so two that touch must overlap as circles. Every rung
+// of the layout's ladder lays through here, so the band holds at every rung.
 function rockFree(w, x, y, r, list, clear) {
-  if (x < ROCK_EDGE + r || x > w.w - ROCK_EDGE - r || y < ROCK_EDGE + r || y > w.h - ROCK_EDGE - r) return false;
+  if (x < ROCK_EDGE + r || x > w.w - ROCK_EDGE - r || y < Math.max(ROCK_EDGE, BAND_TOP) + r || y > w.h - ROCK_EDGE - r) return false;
   for (const o of w.islands) if (outerGap(o, x, y, r + clear, w.params) < 0) return false;
   for (const q of list) if (Math.hypot(q.x - x, q.y - y) < q.r + r - ROCK_OVER * Math.min(q.r, r)) return false;
   return true;
@@ -730,12 +738,12 @@ const planKey = (w) => [rockTarget(w), padTarget(w), ...floorTarget(w), w.params
 // drawn with the ground as faint ink strokes. Each keeps its centre (x,y), its shape relative to that centre, and r, the
 // radius of a disc round the centre holding every point of the shape (control points included). Each stands
 // FLOOR_LAND px off every island's outermost drawn extent, FLOOR_NEAR px off every stone and every pad's home, and
-// FLOOR_EDGE px inside the screen, and clear of the header band (FLOOR_TOP) and the footer band (FLOOR_FOOT).
-const FLOOR_LAND = 12, FLOOR_NEAR = 30, FLOOR_EDGE = 30, FLOOR_TOP = 80, FLOOR_FOOT = 100;
+// FLOOR_EDGE px inside the screen's sides, and out of the page's reserved bands at the top and the foot (BAND_TOP, BAND_FOOT).
+const FLOOR_LAND = 12, FLOOR_NEAR = 30, FLOOR_EDGE = 30;
 // [leaves, branches]
 const floorTarget = (w) => { const p = w.params; return [Math.max(0, Math.round(w.coarse ? p.leavesTouch : p.leaves)), p.branch >= 0.5 ? 1 : 0]; };
 function floorOk(w, x, y, r) {
-  if (x - r < FLOOR_EDGE || w.w - x - r < FLOOR_EDGE || y - r < Math.max(FLOOR_EDGE, FLOOR_TOP) || w.h - y - r < Math.max(FLOOR_EDGE, FLOOR_FOOT)) return false;
+  if (x - r < FLOOR_EDGE || w.w - x - r < FLOOR_EDGE || y - r < Math.max(FLOOR_EDGE, BAND_TOP) || w.h - y - r < Math.max(FLOOR_EDGE, BAND_FOOT)) return false;
   if (landClear(w, x, y) < r + FLOOR_LAND) return false;
   for (const q of w.rocks) if (Math.hypot(q.x - x, q.y - y) - q.r - r < FLOOR_NEAR) return false;
   for (const q of w.pads) if (Math.hypot(q.hx - x, q.hy - y) - q.r - r < FLOOR_NEAR) return false;
