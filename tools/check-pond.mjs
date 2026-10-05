@@ -853,7 +853,7 @@ for (const [W, H, coarse] of [[1920, 1080, false], [1280, 720, false], [1920, 10
     const H5 = MARK_STYLES[5];
     if (!H5 || H5.name !== 'hatch') fail('(s) MARK_STYLES[5] should be the hatch, an even field of level dashes');
     else {
-      if (p.marks !== 5 || p.markAlpha !== 0.1 || !(p.markJitter >= 0 && p.markJitter <= 1)) fail(`(s) the defaults should be the hatch (marks 5) at alpha 0.1 with a markJitter in [0, 1]; got marks ${p.marks}, alpha ${p.markAlpha}, jitter ${p.markJitter}`);
+      if (p.marks !== 5 || p.markAlpha !== 0.05 || !(p.markJitter >= 0 && p.markJitter <= 1)) fail(`(s) the defaults should be the hatch (marks 5) at alpha 0.05 with a markJitter in [0, 1]; got marks ${p.marks}, alpha ${p.markAlpha}, jitter ${p.markJitter}`);
       for (const j of [0, p.markJitter ?? 0.35]) for (const seed of [1, 2, 19, 77, 4242]) {
         const ms = waterMarks(seed, 1440, 900, 5, 1, j), tiles = new Array(24).fill(0);
         for (const { pts } of ms) { const mx = (pts[0] + pts[2]) / 2, my = pts[1]; if (mx >= 0 && mx < 1440 && my >= 0 && my < 900) tiles[Math.floor(my / 225) * 6 + Math.floor(mx / 240)]++; }

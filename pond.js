@@ -77,7 +77,7 @@ export const PARAMS = {
     water: [0.08, 0, 0.4, 0.005, 'how much darker the water is than the land'],
     marks: [5, 1, 5, 1, 'style of the marks on the water: 1 dashes, 2 wavelets, 3 current, 4 rings, 5 hatch (candidates)'],
     markDensity: [1, 0, 3, 0.05, 'how many marks the water holds, x the style\'s own'],
-    markAlpha: [0.1, 0, 1, 0.01, 'opacity of the marks on the water'],
+    markAlpha: [0.05, 0, 1, 0.01, 'opacity of the marks on the water'],
     markJitter: [0.35, 0, 1, 0.05, 'hatch (style 5) only: how loosely its dashes are laid, 0 a strict lattice, 1 hand-laid'],
     shallows: [0.6, 0, 1, 0.05, 'how far the shallows lighten back toward the land'],
     coastRes: [1.5, 1, 2, 0.25, 'resolution of the ground (water, land, floor, shores) on a dense screen: 1 CSS px, 2 the full backing store'],
