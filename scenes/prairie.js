@@ -47,6 +47,9 @@ export const PARAMS = {
     trot: [2.2, 0.5, 6, 0.05, 'trotting speed, body lengths per s'],
     run: [5.5, 1, 12, 0.1, 'running speed, body lengths per s'],
     turn: [2.2, 0.2, 8, 0.1, 'turn rate at a walk, rad/s'],
+    swish: [3, 1, 8, 0.1, 'mean period of a standing cow\'s tail swish, s; each cow 0.67..1.33 of it'],
+    flick: [10, 2, 60, 0.5, 'mean time between a cow\'s flicks of the tail at flies, s'],
+    lag: [0.5, 0, 2, 0.05, 'time the tail takes to catch up with a turn, s'],
     horns: [0, 'toggle', 'horns: the longhorn\'s short pair beside the ears; off, polled'],
     alpha: [0.55, 0.05, 1, 0.01, 'ink opacity'],
     width: [1, 0.3, 3, 0.05, 'line width, px'],
@@ -56,7 +59,7 @@ export const PARAMS = {
     sheet: [0, 'toggle', 'study sheet: every gait at eight phases instead of one cow'],
     studyGait: [1, 0, 3, 0.05, 'gait: 0 graze, 1 walk, 2 trot, 3 run'],
     studyPhase: [0, 0, 1, 0.01, 'stride phase'],
-    studyRun: [1, 'toggle', 'run the stride at the gait\'s own pace'],
+    studyRun: [1, 'toggle', 'run the stride and the tail at the gait\'s own pace; off, both held'],
     studyTurn: [0, -1.5, 1.5, 0.05, 'turn, rad per body length'],
     studyScale: [8, 2, 12, 0.5, 'scale of the study over the herd\'s'],
     studyPied: [0, 'toggle', 'study a pied cow'],
@@ -153,19 +156,19 @@ const pickPalette = (p) => { PALETTE.pick = Math.max(0, Math.min(CANDIDATES.leng
 // neck and a hind hoof trailing past the rump, each in its turn. GAITS lists, for graze, walk, trot and run: the
 // phase offset of each leg (left hind, left fore, right hind, right fore), the share of the cycle a hoof stands, the
 // reach, the body lengths covered per stride, how far the neck carries the head, how long the head reads from above,
-// the spine's flex, the head's nod, the tail's length and its swing. A gait between two of them is the blend of both.
+// the spine's flex, the head's nod, and the tail's length. A gait between two of them is the blend of both.
 export const GAITS = [
   // graze: a slow step now and then; the head dropped to the grass and stretched forward past a long neck, its face
   // foreshortened as it points down; the tail swishing at flies
-  { name: 'graze', off: [0, 0.25, 0.5, 0.75], duty: 0.75, reach: 0.14, stride: 0.45, neck: 0.18, head: 0.22, flex: 0, nod: 0, tail: 0.3, swing: 0 },
+  { name: 'graze', off: [0, 0.25, 0.5, 0.75], duty: 0.75, reach: 0.14, stride: 0.45, neck: 0.18, head: 0.22, flex: 0, nod: 0, tail: 0.3 },
   // walk: four beats, lateral sequence; the head tucked back against the shoulders, nodding with each fore step
-  { name: 'walk', off: [0, 0.25, 0.5, 0.75], duty: 0.62, reach: 0.25, stride: 0.7, neck: 0.04, head: 0.27, flex: 0, nod: 0.02, tail: 0.3, swing: 0.1 },
+  { name: 'walk', off: [0, 0.25, 0.5, 0.75], duty: 0.62, reach: 0.25, stride: 0.7, neck: 0.04, head: 0.27, flex: 0, nod: 0.02, tail: 0.3 },
   // trot: two beats, diagonal pairs, the head steady
-  { name: 'trot', off: [0, 0.5, 0.5, 1], duty: 0.45, reach: 0.3, stride: 0.95, neck: 0.06, head: 0.27, flex: 0.01, nod: 0.01, tail: 0.34, swing: 0.45 },
+  { name: 'trot', off: [0, 0.5, 0.5, 1], duty: 0.45, reach: 0.3, stride: 0.95, neck: 0.06, head: 0.27, flex: 0.01, nod: 0.01, tail: 0.34 },
   // run: heavy and transverse, the hinds then the fores; the head thrust out, the spine flexing, the tail up
-  { name: 'run', off: [0, 0.62, 0.12, 0.5], duty: 0.32, reach: 0.37, stride: 1.4, neck: 0.1, head: 0.28, flex: 0.04, nod: 0.04, tail: 0.42, swing: 1 },
+  { name: 'run', off: [0, 0.62, 0.12, 0.5], duty: 0.32, reach: 0.37, stride: 1.4, neck: 0.1, head: 0.28, flex: 0.04, nod: 0.04, tail: 0.42 },
 ];
-const GAIT_KEYS = ['duty', 'reach', 'stride', 'neck', 'head', 'flex', 'nod', 'tail', 'swing'];
+const GAIT_KEYS = ['duty', 'reach', 'stride', 'neck', 'head', 'flex', 'nod', 'tail'];
 // the neck leaves the shoulders at NB along the spine; past it the spine bends half again as hard
 const NB = 0.5;
 // [along the spine, side] of each leg's root: left hind, left fore, right hind, right fore, under the shoulder and the
@@ -210,7 +213,8 @@ function at(u, v) {
   PT.x = P.hx + P.ca * lx - P.sa * ly; PT.y = P.hy + P.sa * lx + P.ca * ly; return PT;
 }
 // A cow's draw state: { x, y, a (heading), bend (rad per unit), g (gait 0..3), ph (stride phase 0..1), t (its own
-// clock, s), side (+-1, the side its calf keeps to), seed, patches (null or its coat's patches), size (px per unit) }.
+// clock, s), side (+-1, the side its calf keeps to), seed, patches (null or its coat's patches), size (px per unit) },
+// and for the tail, read when present: om (turn rate, rad/s), tl (om eased over the tail's lag), alarm, drink.
 export function poseCow(h) {
   const G = gaitAt(h.g, P.G);
   P.hx = h.x; P.hy = h.y; P.ca = Math.cos(h.a); P.sa = Math.sin(h.a); P.s = h.size; P.bend = h.bend;
@@ -297,22 +301,57 @@ function horns(ctx) {
   const u = NB * P.flex + P.neck + 0.3 * P.head;
   for (const sg of [-1, 1]) { at(u, sg * 0.098); ctx.moveTo(PT.x, PT.y); at(u + 0.005, sg * 0.19); const cx = PT.x, cy = PT.y; at(u + 0.09, sg * 0.23); ctx.quadraticCurveTo(cx, cy, PT.x, PT.y); }
 }
-// The tail: a line off the rump ending in a tuft. It hangs at a walk and swishes at flies grazing; at a run it lifts
-// and streams. The tuft is a small closed drop round the line's end, never under 1.8 px across.
+// The tail: a chain of three segments hanging off the rump, drawn as one curve through its joints, with a tuft at the
+// end. Each segment's angle off the one before is a sum of cheap functions of the cow's clock and state, no physics:
+// - standing or grazing, a slow swish side to side, on the cow's own period (TAIL.swish, 0.67..1.33 of it by seed),
+//   the far segments a little behind the root so the swing travels down the tail;
+// - now and then a flick at flies: a fast swing to one side and back over 0.4 s, at a time hashed from the cow's seed
+//   and a slot of TAIL.flick seconds, so the gaps run 0.5..1.5 of it; a drinking cow holds still but for these;
+// - walking, a gentle sway with the stride, one beat per stride as the hips roll;
+// - trotting and running, carried out behind and straighter, with a small flutter at the tip; an alarmed cow carries
+//   it longer behind the rump, as raised;
+// - turning, the tail trails to the outside of the turn and catches up: the cow's turn rate less its turn rate eased
+//   over TAIL.lag (h.tl, kept by the step), which is large only while the turn is new.
+// The joints' summed angle is held under 1.35 rad either way, so the chain never doubles back past its root and stays
+// behind the rump: the root itself sits inside the outline, which the body's fill covers.
+const TAIL = { swish: 3, flick: 10 };
+const TSEG = [0.36, 0.34, 0.3];
+const TJ = new Float32Array(8);
+const hash = (n, s) => { const x = Math.sin(n * 127.1 + s * 311.7) * 43758.5453; return x - Math.floor(x); };
 function tail(ctx, h) {
-  const G = P.G, L = G.tail, u0 = -0.55 * P.flex;
-  const sw = (1 - Math.min(1, h.g)) * 0.55 * Math.sin(h.t * 1.9 + h.seed) + 0.2 * Math.sin(h.t * 0.7 + h.seed * 2) - 0.5 * h.bend * L;
-  const wave = Math.sin(h.t * (4 + 7 * G.swing)) * 0.05 * (0.3 + G.swing);
-  // a quadratic from the root through a waving middle to the end, in the frame
-  const mu = u0 - L * 0.5, mv = sw * L * 0.4 + wave, eu = u0 - L, ev = sw * L - wave;
-  at(u0, 0); ctx.moveTo(PT.x, PT.y);
-  for (let i = 1; i <= 4; i++) { const t = i / 4, b = 2 * t * (1 - t), c = t * t; at((1 - t) * (1 - t) * u0 + b * mu + c * eu, b * mv + c * ev); ctx.lineTo(PT.x, PT.y); }
-  const du = eu - mu, dv = ev - mv, n = Math.hypot(du, dv) || 1, tu = du / n, tv = dv / n;
-  const len = Math.max(0.1, 2.6 / P.s), wd = Math.max(0.028, 0.9 / P.s);
-  at(eu + tu * len * 0.35, ev + tv * len * 0.35); SX[0] = PT.x; SY[0] = PT.y;
-  at(eu - tu * len * 0.25 - tv * wd, ev - tv * len * 0.25 + tu * wd); SX[1] = PT.x; SY[1] = PT.y;
-  at(eu - tu * len * 0.65, ev - tv * len * 0.65); SX[2] = PT.x; SY[2] = PT.y;
-  at(eu - tu * len * 0.25 + tv * wd, ev - tv * len * 0.25 - tu * wd); SX[3] = PT.x; SY[3] = PT.y;
+  const G = P.G, t = h.t, g = h.g, alarm = clamp(h.alarm || 0, 0, 1), drinking = !!(h.drink && h.drink.at);
+  const still = 1 - clamp(g, 0, 1), stream = clamp((g - 1.2) / 1.2, 0, 1), sway = clamp(g, 0, 1) * (1 - stream);
+  const L = G.tail * (1 + 0.35 * alarm) * P.s;
+  // the flick: its slot, its start in the slot, its side
+  const F = TAIL.flick, n = Math.floor(t / F), fq = t - (n + 0.25 + 0.5 * hash(n, h.seed)) * F, fs = hash(n + 0.5, h.seed) < 0.5 ? -1 : 1;
+  const w0 = 2 * Math.PI / (TAIL.swish * (0.67 + 0.66 * hash(7, h.seed))), sA = still * (drinking ? 0 : 1) * (1 - 0.6 * alarm);
+  const turn = -clamp(((h.om || 0) - (h.tl || 0)) * 0.6, -1, 1);
+  // the root and the spine's heading there, then the chain back from it (the backward heading less a turn toward +v)
+  const u0 = -0.55 * P.flex; at(u0, 0);
+  let x = PT.x, y = PT.y, a = 0;
+  const back = h.a + P.bend * u0 + Math.PI;
+  TJ[0] = x; TJ[1] = y;
+  for (let i = 0; i < 3; i++) {
+    const e = (fq - i * 0.05) / 0.4, flick = e > 0 && e < 1 ? fs * Math.sin(Math.PI * e) * (i ? 0.33 : 0.55) * still : 0;
+    a += sA * (0.22 - 0.03 * i) * Math.sin(w0 * t + h.seed - 0.7 * i)
+      + sway * (0.08 - 0.01 * i) * Math.sin(TAU * h.ph - 0.9 * i)
+      + stream * (0.03 * i) * Math.sin(t * 17 + h.seed - 1.4 * i)
+      + flick + turn * (0.5 - 0.15 * i);
+    a = clamp(a, -1.35, 1.35);
+    const d = back - a; x += Math.cos(d) * L * TSEG[i]; y += Math.sin(d) * L * TSEG[i];
+    TJ[2 * i + 2] = x; TJ[2 * i + 3] = y;
+  }
+  // one curve: from the root, through the first joint's midpoint to the next, to the end
+  ctx.moveTo(TJ[0], TJ[1]);
+  ctx.quadraticCurveTo(TJ[2], TJ[3], (TJ[2] + TJ[4]) / 2, (TJ[3] + TJ[5]) / 2);
+  ctx.quadraticCurveTo(TJ[4], TJ[5], TJ[6], TJ[7]);
+  // the tuft: a small closed drop round the end along the last segment, never under 2.6 by 1.8 px
+  const du = TJ[6] - TJ[4], dv = TJ[7] - TJ[5], m = Math.hypot(du, dv) || 1, tu = du / m, tv = dv / m;
+  const len = Math.max(0.1 * P.s, 2.6), wd = Math.max(0.028 * P.s, 0.9), ex = TJ[6], ey = TJ[7];
+  SX[0] = ex + tu * len * 0.35; SY[0] = ey + tv * len * 0.35;
+  SX[1] = ex - tu * len * 0.25 - tv * wd; SY[1] = ey - tv * len * 0.25 + tu * wd;
+  SX[2] = ex - tu * len * 0.65; SY[2] = ey - tv * len * 0.65;
+  SX[3] = ex - tu * len * 0.25 + tv * wd; SY[3] = ey - tv * len * 0.25 - tu * wd;
   closedCurve(ctx, SX, SY, 4);
 }
 // The coat's patches: two or three large flat shapes over the hindquarters, the shoulders and the middle, from the
@@ -582,7 +621,7 @@ function populate(w) {
       if (freeFor(w, x, y, S * 0.6) && H.every((o) => Math.hypot(o.x - x, o.y - y) > S * (calf ? 0.7 : 1.1))) break;
     }
     const size = S * (calf ? 0.62 : 0.92 + 0.16 * r());
-    H.push({ i, x, y, a: r() * TAU, v: 0, g: 0, want: 0, ph: r(), t: r() * 100, bend: 0, om: 0, seed: r() * TAU, side: r() < 0.5 ? -1 : 1, size, calf, dam, band: 0, alarm: 0, shelter: null, food: null, stepT: 1 + r() * 8, stepping: 0, stepA: 0, dustT: 0, chaffT: 0, pied: 0, patches: null, drink: null, drinkT: p.drink * (0.1 + r()), crowd: Infinity, cx: 0, cy: 0, moved: false });
+    H.push({ i, x, y, a: r() * TAU, v: 0, g: 0, want: 0, ph: r(), t: r() * 100, bend: 0, om: 0, tl: 0, seed: r() * TAU, side: r() < 0.5 ? -1 : 1, size, calf, dam, band: 0, alarm: 0, shelter: null, food: null, stepT: 1 + r() * 8, stepping: 0, stepA: 0, dustT: 0, chaffT: 0, pied: 0, patches: null, drink: null, drinkT: p.drink * (0.1 + r()), crowd: Infinity, cx: 0, cy: 0, moved: false });
   }
   w.cows = H; w.calfN = nf;
   markPied(w);
@@ -855,6 +894,7 @@ function stepHerd(w, dt, startle) {
       h.a = wrapAngle(h.a + clamp(aim, -rate, rate));
     }
     h.om += (wrapAngle(h.a - a0) / dt - h.om) * Math.min(1, dt * 8);
+    h.tl += (h.om - h.tl) * (p.lag > 0 ? Math.min(1, dt / p.lag) : 1);
     const curv = clamp(h.om / Math.max(h.v / S, 0.9), -0.7, 0.7) + 0.12 * Math.sin(h.t * 0.45 + h.seed) * (1 - Math.min(1, h.g));
     h.bend += (curv - h.bend) * Math.min(1, dt * 6);
     h.ph = (h.ph + (h.v / (S * gaitAt(h.g, GA).stride)) * dt) % 1;
@@ -1097,8 +1137,7 @@ export function step(w, dt) {
   stepFeed(w, dt);
   stepHares(w, dt);
   stepWeeds(w, dt);
-  if (p.study && p.studyRun) { const G = gaitAt(p.studyGait, GA), v = p.studyGait < 1 ? lerp(STEP_SPEED, p.walk, p.studyGait) : speedAt(p, p.studyGait); w.study.ph = (w.study.ph + (v / G.stride) * dt) % 1; }
-  w.study.t += dt;
+  if (p.study && p.studyRun) { const G = gaitAt(p.studyGait, GA), v = p.studyGait < 1 ? lerp(STEP_SPEED, p.walk, p.studyGait) : speedAt(p, p.studyGait); w.study.ph = (w.study.ph + (v / G.stride) * dt) % 1; w.study.t += dt; }
 }
 // what the herd is doing, for the checks and the profiler: the share of cows at each gait, rounded
 export function gaitShare(w) { const s = [0, 0, 0, 0]; for (const h of w.cows) s[clamp(Math.round(h.g), 0, 3)]++; return s.map((v) => v / Math.max(1, w.cows.length)); }
@@ -1372,6 +1411,7 @@ export function drawLive(ctx, w, colours) {
   ctx.fillStyle = paper; ctx.strokeStyle = ink;
   for (const q of w.hares) if (q.state !== 'down') drawHare(ctx, q);
   // the herd: calves and all, a paper fill under each so crossing cows read one over the other
+  TAIL.swish = p.swish; TAIL.flick = p.flick;
   for (const h of w.cows) drawCow(ctx, h, horned, ink, paper, chestnut, p.alpha);
   // dust behind a running cow, chaff where an apple is eaten
   if (w.puffs.length) {
@@ -1419,6 +1459,7 @@ export function drawLive(ctx, w, colours) {
 function drawStudy(ctx, w, colours) {
   const p = w.params, { ink, paper, chestnut } = colours, horned = !!p.horns;
   const patches = p.studyPied ? coatPatches(0x5eed1) : null, mk = (x, y, size, g, ph) => ({ x, y, a: 0, bend: p.studyTurn, g, ph, t: w.study.t, side: 1, seed: 1, size, patches });
+  TAIL.swish = p.swish; TAIL.flick = p.flick;
   ctx.globalAlpha = 0.95; ctx.fillStyle = paper; ctx.fillRect(0, 0, w.w, w.h);
   ctx.fillStyle = ink; ctx.font = '11px ui-monospace, Menlo, monospace'; ctx.textBaseline = 'top';
   ctx.globalAlpha = 0.7; ctx.fillText(`pose study: ${horned ? 'longhorn' : 'polled'}; a still shows the pose, not the motion`, 24, 92);
