@@ -174,7 +174,7 @@ export function gaitAt(g, out = {}) {
   return out;
 }
 // The frame of one draw, filled by poseHorse and read by the figures.
-const P = { G: {}, hx: 0, hy: 0, ca: 1, sa: 0, s: 1, bend: 0, neck: 0, head: 0, flex: 1, hoof: new Float32Array(8), lift: new Float32Array(4) };
+const P = { G: {}, hx: 0, hy: 0, ca: 1, sa: 0, s: 1, bend: 0, neck: 0, head: 0, flex: 1, rx: 0, ry: 0, rt: 0, rc: 1, rs: 0, hoof: new Float32Array(8), lift: new Float32Array(4) };
 const PT = { x: 0, y: 0 };
 // a circular arc of curvature k, d along: [x, y, heading] from its start
 const ARC = [0, 0, 0];
@@ -192,8 +192,9 @@ function at(u, v) {
   let px, py, th;
   if (u <= w) { arc(k, u); px = ARC[0]; py = ARC[1]; th = ARC[2]; }
   else {
-    arc(k, w); const x0 = ARC[0], y0 = ARC[1], t0 = ARC[2]; arc(1.5 * k, u - w);
-    const c = Math.cos(t0), s = Math.sin(t0); px = x0 + c * ARC[0] - s * ARC[1]; py = y0 + s * ARC[0] + c * ARC[1]; th = t0 + ARC[2];
+    // the neck's root (the barrel's end) is the same for every point of one pose: poseHorse sets it
+    arc(1.5 * k, u - w);
+    const c = P.rc, s = P.rs; px = P.rx + c * ARC[0] - s * ARC[1]; py = P.ry + s * ARC[0] + c * ARC[1]; th = P.rt + ARC[2];
   }
   let sn, cs; if (Math.abs(th) < 0.6) { const t2 = th * th; sn = th * (1 - t2 / 6); cs = 1 - t2 / 2 + (t2 * t2) / 24; } else { sn = Math.sin(th); cs = Math.cos(th); }
   const lx = (px - sn * v) * P.s, ly = (py + cs * v) * P.s;
@@ -204,6 +205,7 @@ function at(u, v) {
 export function poseHorse(h) {
   const G = gaitAt(h.g, P.G);
   P.hx = h.x; P.hy = h.y; P.ca = Math.cos(h.a); P.sa = Math.sin(h.a); P.s = h.size; P.bend = h.bend;
+  arc(h.bend, NB); P.rx = ARC[0]; P.ry = ARC[1]; P.rt = ARC[2]; P.rc = Math.cos(P.rt); P.rs = Math.sin(P.rt);
   P.flex = 1 + G.flex * Math.sin(h.ph * TAU);
   P.neck = G.neck + G.nod * Math.sin(h.ph * TAU * 2 + 0.6);
   P.head = G.head;
@@ -1071,7 +1073,11 @@ function paintLand(ctx, d, p, colours, lean) {
 
 // ----- drawing: the ground -----
 // A gust: the layer painted again at a stronger lean, in a copy kept beside the static layer (painted anew when the
-// layer is), laid over the bands where the passing gusts lean the grass past GUST_AT, clipped to them.
+// layer is), laid over the bands where the passing gusts lean the grass past GUST_AT, each band clipped on its own.
+// One band is a convex clip, which the GPU applies as it draws; two bands in one clip made it a mask of the whole page
+// every frame. Under its clip a band's copy is laid strip by strip down the page, each strip only as wide as the band
+// crossing it (the wind runs within 0.45 rad of east, so a band crosses every strip), so a gust costs about its own
+// area, not the page's. A strip starts and ends on whole pixels of the copy and lands where the whole copy would.
 function gustCopy(d, k, layer, p) {
   if (!d.copies) d.copies = [];
   let c = d.copies[k];
@@ -1084,20 +1090,29 @@ function gustCopy(d, k, layer, p) {
   paintLand(g, d, p, d.colours, LEANS[k] * p.lean);
   c.version = d.version; return c.canvas;
 }
+const GUST_STRIP = 64;
 function drawGusts(ctx, w, layer) {
   const p = w.params, d = w.layerData, c = Math.cos(w.wind.a), s = Math.sin(w.wind.a), cx = w.w / 2, cy = w.h / 2, T = w.w + w.h;
   for (let k = 1; k < LEANS.length; k++) {
-    let any = false;
     for (const g of w.wind.gusts) {
       if (g.amp <= GUST_AT[k]) continue;
+      const img = gustCopy(d, k, layer, p);
+      if (!img) return;
       const half = p.gustWidth * (2 / Math.PI) * Math.acos(Math.sqrt(GUST_AT[k] / g.amp)), a = g.s - half, b = g.s + half;
-      if (!any) { ctx.save(); ctx.beginPath(); any = true; }
+      ctx.save(); ctx.beginPath();
       ctx.moveTo(cx + c * a + s * T, cy + s * a - c * T); ctx.lineTo(cx + c * b + s * T, cy + s * b - c * T); ctx.lineTo(cx + c * b - s * T, cy + s * b + c * T); ctx.lineTo(cx + c * a - s * T, cy + s * a + c * T); ctx.closePath();
+      ctx.clip();
+      const sx = layer.w / img.width, sy = layer.h / img.height;
+      if (Math.abs(c) < 0.3) ctx.drawImage(img, 0, 0, layer.w, layer.h);
+      else for (let y0 = 0, S = Math.max(1, Math.round(GUST_STRIP / sy)); y0 < img.height; y0 += S) {
+        // the band's span across this strip, in CSS px, a px wider each side than its clip
+        const y1 = Math.min(img.height, y0 + S), ya = y0 * sy - cy, yb = y1 * sy - cy;
+        const xa = (a - ya * s) / c, xb = (a - yb * s) / c, xc = (b - ya * s) / c, xd = (b - yb * s) / c;
+        const x0 = Math.max(0, Math.floor((cx + Math.min(xa, xb, xc, xd) - 2) / sx)), x1 = Math.min(img.width, Math.ceil((cx + Math.max(xa, xb, xc, xd) + 2) / sx));
+        if (x1 > x0) ctx.drawImage(img, x0, y0, x1 - x0, y1 - y0, x0 * sx, y0 * sy, (x1 - x0) * sx, (y1 - y0) * sy);
+      }
+      ctx.restore();
     }
-    if (!any) continue;
-    const img = gustCopy(d, k, layer, p);
-    if (img) { ctx.clip(); ctx.drawImage(img, 0, 0, layer.w, layer.h); }
-    ctx.restore();
   }
 }
 // The trampled ring: short ticks along the knoll's edge grown by off, one every gap px, each len px along the edge.
