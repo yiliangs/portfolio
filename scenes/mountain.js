@@ -58,7 +58,7 @@ export const PARAMS = {
   eagles: {
     count: [36, 1, 120, 1, 'eagles on a fine pointer'],
     countTouch: [16, 1, 120, 1, 'eagles on a coarse pointer'],
-    length: [13, 6, 50, 1, 'eagle length at mid height, px; the span is 2.35 of it, beak to tail 0.8'],
+    length: [13, 6, 50, 1, 'eagle length at mid height, px; the span is 2.45 of it, beak to tail 0.85'],
     glide: [70, 10, 200, 1, 'gliding speed, px/s'],
     circle: [40, 10, 200, 1, 'circling speed in lift, px/s'],
     orbit: [78, 20, 200, 1, 'mean radius an eagle circles in lift at, px'],
@@ -151,10 +151,12 @@ export const PALETTE = {
 // The leading edge, shoulder out to the hand, then the hand's front corner where the first finger springs.
 const LEAD = [0.13, 0.07, 0.17, 0.3, 0.2, 0.6, 0.205, 0.8];
 const HAND_FRONT = [0.18, 0.9], HAND_BACK = [-0.17, 0.84];
-// The fingers fan from a centre in the hand: tips from FAN[0] (forward) to FAN[1] (back) radians off the span, each
-// FINGER_R long from the centre (the middle ones longest by FINGER_BULGE), slotted down to SLOT_R between them; one
-// every FINGER_PITCH px of the drawn arc of tips, 4 to 7 a wing.
-const FAN_C = [0, 0.8], FAN = [0.66, -0.84], FINGER_R = 0.34, FINGER_BULGE = 0.05, SLOT_R = 0.2, FINGER_PITCH = 2;
+// The fingers fan from a centre in the hand, each FINGER_R long from it (the middle ones longest by FINGER_BULGE),
+// slotted down to SLOT_R between them, so each reaches about a third of the chord past the hand. Their tips stand
+// FINGER_PITCH px apart on the drawn arc, 4 to 7 a wing: the fan opens from FAN_SPREAD[0] radians up to
+// FAN_SPREAD[1] round FAN_MID (off the span, forward positive) to keep a small eagle's four fingers parted by paper.
+const FAN_C = [0, 0.8], FAN_MID = -0.09, FAN_SPREAD = [1.5, 2.1], FINGER_R = 0.38, FINGER_BULGE = 0.05, SLOT_R = 0.18;
+const FINGER_PITCH = 3.5;
 // The trailing edge, the hand's back corner to the wing's root; laid out by EDGE below.
 const TRAIL = [-0.17, 0.84, -0.27, 0.68, -0.32, 0.45, -0.31, 0.22, -0.26, 0.08];
 // The dark body between the wings as x, y, sharp from the neck back to the tail's root; the wings' roots join it.
@@ -244,16 +246,17 @@ let EDGE_LEN = 0;
   }
 }
 // The fringe along the trailing edge, secondary to the fingers: a shallow feather end every FEATHER px of the drawn
-// edge, 2 to 9 of them a wing (at 30 px across that is two or three), each one curve between two notches cut in by
-// CUT of a feather's width and never less than LEAST_CUT px.
-const FEATHER = 4.5, CUT = 0.3, LEAST_CUT = 0.8;
+// edge, 2 to 9 of them a wing, each one curve between two notches cut in by CUT of a feather's width and never less
+// than LEAST_CUT px. Below FRINGE_SPAN px across it is only fuzz, and the edge is drawn plain.
+const FEATHER = 4.5, CUT = 0.3, LEAST_CUT = 0.8, FRINGE_SPAN = 36, SPAN = 2.45;
 // the curve's control that carries it from (ax, ay) to (bx, by) through (tx, ty), put as a control point
 function through(side, ax, ay, tx, ty, bx, by) { wingPt(side, 2 * tx - (ax + bx) / 2, 2 * ty - (ay + by) / 2, 2); }
 // One wing round from the shoulder: the leading edge out to the hand, the fingers fanned round its tip, the fringe of
 // the trailing edge back to the root. Each finger is one curve from the slot before it to the slot after it.
 function wingRun(side) {
-  const L = P.L, arc = FINGER_R * (FAN[0] - FAN[1]);
-  const nf = clamp(Math.round((arc * L) / FINGER_PITCH), 4, 7), slot = Math.min(SLOT_R, FINGER_R - 1.6 / L);
+  const L = P.L, nf = clamp(Math.round((FINGER_R * FAN_SPREAD[0] * L) / FINGER_PITCH) + 1, 4, 7);
+  const spread = clamp((FINGER_PITCH * (nf - 1)) / (FINGER_R * L), FAN_SPREAD[0], FAN_SPREAD[1]);
+  const FAN = [FAN_MID + spread / 2, FAN_MID - spread / 2], slot = Math.min(SLOT_R, FINGER_R - 2 / L);
   wingPt(side, LEAD[0], LEAD[1], 1);
   for (let i = 2; i < LEAD.length; i += 2) wingPt(side, LEAD[i], LEAD[i + 1], false);
   let px = HAND_FRONT[0], py = HAND_FRONT[1];
@@ -265,6 +268,7 @@ function wingRun(side) {
     if (i < nf - 1) { const b = a + (FAN[1] - FAN[0]) / (nf - 1) / 2; nx = FAN_C[0] + slot * Math.sin(b); ny = FAN_C[1] + slot * Math.cos(b); }
     through(side, px, py, tx, ty, nx, ny); wingPt(side, nx, ny, 1); px = nx; py = ny;
   }
+  if (SPAN * L < FRINGE_SPAN) { const m = 4 * (EM >> 1); wingPt(side, EDGE[m], EDGE[m + 1], false); wingPt(side, EDGE[4 * EM], EDGE[4 * EM + 1], 1); return; }
   const n = clamp(Math.round((EDGE_LEN * L) / FEATHER), 2, 9), d = Math.max((CUT * EDGE_LEN) / n, LEAST_CUT / L);
   for (let k = 0; k < n; k++) {
     const e = 4 * Math.round(((k + 1) / n) * EM), cut = k < n - 1 ? d : 0;
@@ -324,11 +328,19 @@ export function eagleTones(ink, paper) {
   return (tones = light ? { dark: mix(TONE_DARK), white: paper } : { dark: mix(TONE_DARK_NIGHT), white: mix(TONE_WHITE_NIGHT) });
 }
 function fillStroke(ctx, fill, alpha) { ctx.fillStyle = fill; ctx.globalAlpha = 1; ctx.fill(); ctx.globalAlpha = alpha; ctx.stroke(); }
+// The white marks never shrink below what reads as paper on the dark at flight size: the head is held at least
+// HEAD_PX across and the tail at least TAIL_PX long, each grown about where it joins the body.
+const HEAD_PX = 3.5, TAIL_PX = 3, HEAD_BACK = 0.1, HEAD_W = 0.184, TAIL_ROOT = -0.24, TAIL_LEN = 0.26;
+let kh = 1, kt = 1;
+const headPt = (x, y, s) => bodyPt(HEAD_BACK + (x - HEAD_BACK) * kh, y * kh, s);
+const tailGrown = (x, y, s) => tailPt(TAIL_ROOT + (x - TAIL_ROOT) * kt, y * kt, s);
+function whiteScale() { kh = Math.max(1, HEAD_PX / (HEAD_W * P.L)); kt = Math.max(1, TAIL_PX / (TAIL_LEN * P.L)); }
 // the white head (with the beak's tick) and tail fan as one path
 function whitePath(ctx) {
-  qn = 0; run(HEAD, bodyPt, 1, false); run(HEAD, bodyPt, -1, true, 1); thin(0); ctx.beginPath(); trace(ctx, 0, qn, true);
-  qn = 0; run(BEAK, bodyPt, 1, false); trace(ctx, 0, qn, false);
-  qn = 0; run(TAIL, tailPt, 1, false); tailPt(TAIL_END, 0, false); run(TAIL, tailPt, -1, true); trace(ctx, 0, qn, true);
+  whiteScale();
+  qn = 0; run(HEAD, headPt, 1, false); run(HEAD, headPt, -1, true, 1); thin(0); ctx.beginPath(); trace(ctx, 0, qn, true);
+  qn = 0; run(BEAK, headPt, 1, false); trace(ctx, 0, qn, false);
+  qn = 0; run(TAIL, tailGrown, 1, false); tailGrown(TAIL_END, 0, false); run(TAIL, tailGrown, -1, true); trace(ctx, 0, qn, true);
 }
 
 // One eagle in flight at (x, y), heading in radians, L px long, in pose, its line at alpha; tone from eagleTones();
@@ -348,7 +360,7 @@ export function drawEagle(ctx, x, y, heading, L, pose, alpha, tone, persp = PERS
 const FLAT = { bank: 0, flap: 0, beat: 0, fan: 0 };
 export function drawPerched(ctx, x, y, heading, L, alpha, tone) {
   poseEagle(x, y, heading, L, FLAT);
-  qn = 0; run(HEAD, bodyPt, 1, false); run(HEAD, bodyPt, -1, true, 1); ctx.beginPath(); trace(ctx, 0, qn, true);
+  whiteScale(); qn = 0; run(HEAD, headPt, 1, false); run(HEAD, headPt, -1, true, 1); ctx.beginPath(); trace(ctx, 0, qn, true);
   qn = 0; run(PERCHED_TAIL, bodyPt, 1, false); bodyPt(PERCHED_TAIL_END, 0, false); run(PERCHED_TAIL, bodyPt, -1, true); trace(ctx, 0, qn, true);
   fillStroke(ctx, tone.white, alpha);
   qn = 0; run(PERCHED, bodyPt, 1, false); bodyPt(PERCHED_TIP, 0, false); run(PERCHED, bodyPt, -1, true); ctx.beginPath(); trace(ctx, 0, qn, true);
