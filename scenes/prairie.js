@@ -4,7 +4,7 @@
 // worn trails, trot to catch up, and gallop for the trees when a fast cursor spooks them, then settle under the
 // canopies and drift back out to graze. Wind runs over the grass in gusts that lay the blades over as they pass,
 // tumbleweeds roll before it, wildflowers open through the visit, hares sit by their burrows and bolt from the cursor,
-// and a press or a drag scatters apples the horses come to eat. The layer sits behind reading text, so the resting
+// and a press or a drag scatters apples the horses near it turn and trot to eat. The layer sits behind reading text, so the resting
 // picture is calm: most of the herd has its head down most of the time.
 //
 // The simulation is kept apart from the drawing. createWorld() builds a state and step() advances it by dt with the
@@ -92,6 +92,7 @@ export const PARAMS = {
     scare: [150, 0, 500, 5, 'spook radius, px'],
     alarm: [90, 0, 300, 5, 'how far a spooked horse spooks the next, px'],
     calm: [7, 1, 30, 0.5, 'time a spooked horse takes to settle, s'],
+    lure: [0.5, 0, 1, 0.01, 'alarm under which a horse still goes for an apple; a press calms the horses near it to under this'],
   },
   land: {
     groves: [3, 0, 6, 1, 'stands of trees on a fine pointer'],
@@ -422,7 +423,10 @@ export function knollAt(w, x, y) { return footprintAt(w.knolls, x, y); }
 export function dropFeed(w, x, y) {
   if (footprintAt(w.knolls, x, y) >= 0) return;
   for (const b of blocksOf(w)) { const d = Math.hypot(x - b.x, y - b.y); if (d < b.r + 4) { const k = (b.r + 4) / Math.max(1e-6, d); x = b.x + (x - b.x) * k; y = b.y + (y - b.y) * k; } }
-  w.feed.push({ x, y, left: 1, age: 0 }); w.drops++;
+  w.feed.push({ x, y, left: 1, age: 0, eater: null }); w.drops++;
+  // the rattle of an apple: a horse that hears it is calmed enough to come for it
+  const p = w.params;
+  for (const h of w.horses) if (h.alarm > p.lure * 0.8 && Math.hypot(h.x - x, h.y - y) < p.sense) h.alarm = p.lure * 0.8;
   while (w.feed.length > Math.max(1, w.params.max)) w.feed.shift();
 }
 const landAt = (w) => (x, y) => footprintAt(w.knolls, x, y), feedOn = (w) => (x, y) => dropFeed(w, x, y);
@@ -752,21 +756,23 @@ function trailPull(w, h, tx, ty, out) {
 const TP = { x: 0, y: 0 };
 function stepHerd(w, dt, startle) {
   const p = w.params, r = w.rand, H = w.horses, n = H.length, ptr = w.ptr, rm = w.reduced;
-  // a fast cursor spooks the horses near it into a run for cover, and a spooked horse spooks those near it
-  if (startle) for (const h of H) { const dx = h.x - ptr.x, dy = h.y - ptr.y, d = Math.hypot(dx, dy); if (d < p.scare && d > 1e-6) spook(w, h, 1, dx / d, dy / d, null); }
+  // a fast cursor spooks the horses near it into a run for cover, and a spooked horse spooks those near it. A press
+  // held down to lay apples is no threat, and a horse at an apple spooks only at half the range.
+  if (startle && !w.stroke) for (const h of H) { const dx = h.x - ptr.x, dy = h.y - ptr.y, d = Math.hypot(dx, dy); if (d < p.scare * (h.food ? 0.5 : 1) && d > 1e-6) spook(w, h, 1, dx / d, dy / d, null); }
   if (!rm) for (const h of H) {
     if (h.alarm < 0.4) continue;
-    for (const o of H) { if (o === h || o.alarm >= h.alarm * 0.88) continue; const d = Math.hypot(o.x - h.x, o.y - h.y); if (d < p.alarm) { const s = h.shelter; spook(w, o, h.alarm * 0.88, Math.cos(h.a), Math.sin(h.a), s ? s.grove : null); } }
+    for (const o of H) { if (o === h || o.food || o.alarm >= h.alarm * 0.88) continue; const d = Math.hypot(o.x - h.x, o.y - h.y); if (d < p.alarm) { const s = h.shelter; spook(w, o, h.alarm * 0.88, Math.cos(h.a), Math.sin(h.a), s ? s.grove : null); } }
   }
-  // the apples: a calm horse makes for the nearest it notices, three to an apple at most
+  // the apples: every horse that notices one and is not in a panic makes for the nearest, one nobody is eating before
+  // one somebody is; an apple calms the horse that takes it. The first to reach an apple eats it; the rest wait round.
   if (w.feed.length) {
-    for (const f of w.feed) f.claims = 0;
-    for (const h of H) if (h.food) { if (w.feed.includes(h.food)) h.food.claims++; else h.food = null; }
+    for (const f of w.feed) { const e = f.eater; if (e && (e.food !== f || Math.hypot(f.x - e.x, f.y - e.y) > e.size * 1.8)) f.eater = null; }
     for (const h of H) {
-      if (h.food || h.alarm > 0.05) continue;
+      if (h.food && !w.feed.includes(h.food)) h.food = null;
+      if (h.alarm > p.lure) { h.food = null; continue; }
       let bf = null, bd = p.sense;
-      for (const f of w.feed) { const d = Math.hypot(f.x - h.x, f.y - h.y); if (d < bd && f.claims < 3) { bd = d; bf = f; } }
-      if (bf) { h.food = bf; bf.claims++; }
+      for (const f of w.feed) { const d = Math.hypot(f.x - h.x, f.y - h.y) + (f.eater && f.eater !== h ? 2.5 * h.size : 0); if (d < bd) { bd = d; bf = f; } }
+      if (bf) { h.food = bf; h.alarm = 0; h.shelter = null; }
     }
   } else for (const h of H) h.food = null;
   for (const h of H) {
@@ -776,16 +782,18 @@ function stepHerd(w, dt, startle) {
     if (rm) h.alarm = 0;
     if (h.alarm <= 0) h.shelter = null;
     let tx = h.x, ty = h.y, want = 0, eating = false, stand = false, fx = 0, fy = 0;
-    if (h.alarm > 0.02 && h.shelter) {
+    if (h.food) {
+      const f = h.food; tx = f.x; ty = f.y;
+      const d = Math.hypot(tx - h.x, ty - h.y);
+      if (d < S * 1.3 && (!f.eater || f.eater === h)) { f.eater = h; eating = true; f.left -= dt / p.eat; h.chaffT -= dt; if (h.chaffT <= 0) { h.chaffT = 0.6; puff(w, f.x, f.y, 3, 0.8, 1); } }
+      // another got there first: wait a little way off, facing it
+      else if (f.eater && f.eater !== h && d < S * 3) { stand = true; fx = tx - h.x; fy = ty - h.y; }
+      else want = d > 3 * S ? 2 : 1;
+    } else if (h.alarm > 0.02 && h.shelter) {
       const s = h.shelter; tx = s.x; ty = s.y;
       const d = Math.hypot(tx - h.x, ty - h.y);
       if (d < 10) { stand = true; if (s.ring) { const g = w.land.groves[s.grove]; fx = g.x - h.x; fy = g.y - h.y; } }
       else want = h.alarm > 0.5 ? 3 : h.alarm > 0.22 ? 2 : 1;
-    } else if (h.food) {
-      tx = h.food.x; ty = h.food.y;
-      const d = Math.hypot(tx - h.x, ty - h.y);
-      if (d < S * 1.3) { eating = true; h.food.left -= dt / p.eat; h.chaffT -= dt; if (h.chaffT <= 0) { h.chaffT = 0.7; puff(w, h.food.x, h.food.y, 3, 0.8, 1); } }
-      else want = d > 200 ? 2 : 1;
     } else if (h.foal) {
       const m = H[h.mare], ox = Math.cos(m.a), oy = Math.sin(m.a);
       tx = m.x - ox * S * 0.3 - oy * S * 0.9 * m.side; ty = m.y - oy * S * 0.3 + ox * S * 0.9 * m.side;
@@ -841,7 +849,7 @@ function stepHerd(w, dt, startle) {
     let vt = h.g < 1 ? lerp(h.stepping > 0 ? STEP_SPEED : 0, p.walk, h.g) : speedAt(p, h.g);
     if (h.foal) vt *= 1.15;
     if (eating || stand) vt = 0;
-    else if (want > 0) { const d = Math.hypot(tx - h.x, ty - h.y); vt *= clamp(d / (2 * S), h.food ? 0.15 : 0.3, 1); }
+    else if (want > 0) { const d = Math.hypot(tx - h.x, ty - h.y); vt *= clamp(d / (2 * S), h.food ? 0.45 : 0.3, 1); }
     h.v += (vt * S - h.v) * Math.min(1, dt * (h.g > 2 ? 2.5 : 3));
     // the turn: a heading eased toward the wanted direction at the gait's turn rate; the spine bends with it
     const a0 = h.a;
@@ -897,7 +905,7 @@ function segSeg(ax, ay, bx, by, cx, cy, dx, dy) {
 // How many horses one canopy shelters: its area over the room each takes.
 export const canopyCap = (w, g) => Math.max(1, Math.floor((g.r * g.r) / (w.params.size * w.params.size * w.params.crowd)));
 // No two bodies overlap, ever: each pair that does is pushed apart along the line between their nearest points, half
-// each, with its motion into the other damped away rather than bounced,
+// each (a horse eating gives way less), with its motion into the other damped away rather than bounced,
 // and a few rounds of that, so a crowd settles in place. A canopy holding its cap lets no more in. Each horse also
 // learns its tightest neighbour (crowd, and the way away from it, cx, cy), which a grazing horse steps away from.
 function separate(w, dt) {
@@ -920,7 +928,7 @@ function separate(w, dt) {
           if (gap < B.crowd) { B.crowd = gap; B.cx = -nx; B.cy = -ny; }
         }
         if (gap >= SLOP) continue;
-        const give = (h) => (h.pinned ? 0.15 : 1), wa = give(A), wb = give(B), pen = SLOP - gap, s = pen / (wa + wb);
+        const give = (h) => (h.pinned ? 0.15 : h.food && h.food.eater === h ? 0.3 : 1), wa = give(A), wb = give(B), pen = SLOP - gap, s = pen / (wa + wb);
         A.x += nx * s * wa; A.y += ny * s * wa; shift(CA, nx * s * wa, ny * s * wa); A.moved = true;
         B.x -= nx * s * wb; B.y -= ny * s * wb; shift(CB, -nx * s * wb, -ny * s * wb); B.moved = true;
         // the push is damped: whatever of its speed carried a horse into the other is let go over a few frames

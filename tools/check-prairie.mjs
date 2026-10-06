@@ -1,6 +1,6 @@
 // Checks scenes/prairie.js's simulation headless: the herd and its bands, the land a horse walks round, the apples,
-// the startle, reduced motion, the hares, the grass, the trails, the scene's place in the home registry, and the horses'
-// bodies kept apart and the canopies' caps.
+// the startle, reduced motion, the hares, the grass, the trails, the scene's place in the home registry, the horses'
+// bodies kept apart and the canopies' caps, and the apples drawing the herd.
 //
 // The prairie's step() is a function of the world, dt and the world's own seeded random sources, so every run below is
 // the same run every time. None of these properties shows in a still frame: a horse whose nose dips into a boulder for
@@ -356,6 +356,73 @@ const J_SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], J_SECONDS = 120, J_STAR
   metric(`(j) separation ran ${((performance.now() - t0) / 1000).toFixed(1)} s, measuring every step`);
 }
 
+lap('k');
+// (k) the apples draw the herd: within K_WATCH s of an apple going down at least K_HORSES horses at one step make for it
+// (their food is that apple and they head within K_AIM of it, or they stand at it), and it is eaten within K_EAT s. It
+// holds at rest, after a press whose cursor came in fast across the herd (the hand moving in to press must not startle
+// the herd off the apple), and after a fast drag.
+const K_WATCH = 4, K_EAT = 12, K_HORSES = 3, K_AIM = (30 * Math.PI) / 180, K_RUSH = 25, K_FROM = 300, K_DRAG = 200;
+{
+  const angErr = (a, b) => Math.abs(Math.atan2(Math.sin(b - a), Math.cos(b - a)));
+  const makingFor = (h, f) => !!f && (Math.hypot(f.x - h.x, f.y - h.y) < 1.3 * h.size || angErr(h.a, Math.atan2(f.y - h.y, f.x - h.x)) < K_AIM);
+  // steps the world for up to K_EAT s after the apple went down: the most horses at one step in the first K_WATCH s for
+  // which aims(h) holds, and when the first apple was eaten. hold(w) runs before each of the first K_WATCH s of steps,
+  // then the cursor lifts.
+  const watch = (w, aims, hold) => {
+    const e0 = w.eaten; let t = 0, most = 0, mostAt = 0, eatenAt = -1, lifted = !hold;
+    while (t < K_EAT && (eatenAt < 0 || t < K_WATCH)) {
+      if (t < K_WATCH && hold) hold(w); else if (!lifted) { setPointer(w, 0, 0, false); lifted = true; }
+      step(w, DT); t += DT;
+      if (t <= K_WATCH) { let n = 0; for (const h of w.horses) if (aims(h)) n++; if (n > most) { most = n; mostAt = t; } }
+      if (eatenAt < 0 && w.eaten > e0) eatenAt = t;
+    }
+    if (!lifted) setPointer(w, 0, 0, false);
+    return { most, mostAt, eatenAt };
+  };
+  const judge = (seed, how, r) => {
+    metric(`seed ${seed} (k) ${how}: most horses making for the apple at once ${r.most} (at ${r.mostAt.toFixed(2)} s), eaten ${r.eatenAt < 0 ? 'never' : `after ${r.eatenAt.toFixed(2)} s`}`);
+    if (r.most < K_HORSES) fail(`seed ${seed}: (k) ${how}: at least ${K_HORSES} horses should make for the apple within ${K_WATCH} s, most at once ${r.most}`);
+    if (r.eatenAt < 0) fail(`seed ${seed}: (k) ${how}: the apple should be eaten within ${K_EAT} s, it never was`);
+  };
+  // the herd 10 s in, its centroid, open ground 150 px off, and the unit vector from that ground to the centroid
+  const setup = (seed) => {
+    const w = world(seed); run(w, 10);
+    const c = centroid(w), at = openNear(w, c.x, c.y, 150);
+    if (!at) return null;
+    const d = Math.hypot(c.x - at.x, c.y - at.y) || 1;
+    return { w, c, at, ux: (c.x - at.x) / d, uy: (c.y - at.y) / d };
+  };
+  // the cursor comes in from K_FROM px out on the herd's side of `at`, crossing near the herd, at K_RUSH px a step
+  const rushIn = (s) => {
+    const { w, at, ux, uy } = s;
+    for (let d = K_FROM; d > 0; d -= K_RUSH) { setPointer(w, at.x + ux * d, at.y + uy * d, true); step(w, DT); }
+    setPointer(w, at.x, at.y, true);
+  };
+  for (const seed of [1, 7, 42]) {
+    let s = setup(seed);
+    if (!s) { fail(`seed ${seed}: (k) found no open ground 150 px from the herd to drop an apple on`); continue; }
+    const n0 = s.w.feed.length; dropFeed(s.w, s.at.x, s.at.y);
+    let apple = s.w.feed.length > n0 ? s.w.feed[s.w.feed.length - 1] : null;
+    if (!apple) fail(`seed ${seed}: (k) at rest: dropFeed on open ground laid no apple`);
+    else judge(seed, 'at rest', watch(s.w, (h) => h.food === apple && makingFor(h, apple)));
+
+    s = setup(seed); rushIn(s);
+    const m0 = s.w.feed.length; strokeStart(s.w, s.at.x, s.at.y); strokeEnd(s.w);
+    apple = s.w.feed.length > m0 ? s.w.feed[s.w.feed.length - 1] : null;
+    if (!apple) fail(`seed ${seed}: (k) press: a press after a fast approach laid no apple`);
+    else { const { w, at } = s; judge(seed, 'press after a fast approach', watch(w, (h) => h.food === apple && makingFor(h, apple), (w) => setPointer(w, at.x, at.y, true))); }
+
+    s = setup(seed); rushIn(s);
+    { const { w, at, ux, uy } = s, e0 = w.eaten; let x = at.x, y = at.y;
+      strokeStart(w, x, y);
+      for (let d = K_RUSH; d <= K_DRAG; d += K_RUSH) { x = at.x - ux * d; y = at.y - uy * d; setPointer(w, x, y, true); strokeTo(w, x, y); step(w, DT); }
+      strokeEnd(w);
+      if (!w.feed.length && w.eaten === e0) fail(`seed ${seed}: (k) drag: a fast drag laid no apple`);
+      else judge(seed, 'fast drag', watch(w, (h) => !!h.food && w.feed.includes(h.food) && makingFor(h, h.food), (w) => setPointer(w, x, y, true)));
+    }
+  }
+}
+
 lap(null);
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }
-console.log('check-prairie: the herd holds and rejoins, no horse enters a knoll or a block, apples are eaten, a startle passes, reduced motion stills, hares bolt and settle, the grass, the trails and the registry hold, and bodies stay apart under capped canopies');
+console.log('check-prairie: the herd holds and rejoins, no horse enters a knoll or a block, apples are eaten, a startle passes, reduced motion stills, hares bolt and settle, the grass, the trails and the registry hold, bodies stay apart under capped canopies, and apples draw the herd');
