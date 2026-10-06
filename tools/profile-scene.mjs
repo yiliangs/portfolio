@@ -80,6 +80,31 @@ const SECTION_TABLES = {
     // the lapping rings round the islands and islets: a param, not a section
     params: { rings: 'rings' },
   },
+  prairie: {
+    ground: {
+      head: 'export function drawGround(ctx, w, colours, layer = { img: null, w: 0, h: 0, flat: colours.paper }) {',
+      anchors: [
+        ['grass', (l) => l.startsWith('if (!layer.img || layer.w < w.w')],
+        ['gusts', (l) => l.startsWith('if (!w.reduced && w.wind.gusts.length')],
+        ['knolls', (l) => l === 'ctx.fillStyle = paper;'],
+        ['worn', (l) => l.startsWith("ctx.strokeStyle = ink; ctx.lineWidth = 1;")],
+        ['flowers', (l) => l.startsWith('// the wildflowers')],
+      ],
+      after: 'copy',
+    },
+    live: {
+      head: 'export function drawLive(ctx, w, colours) {',
+      anchors: [
+        ['apples', (l) => l.startsWith('// the apples')],
+        ['hares', (l) => l.startsWith('// the hares')],
+        ['herd', (l) => l.startsWith('// the herd')],
+        ['puffs', (l) => l.startsWith('// dust behind')],
+        ['canopies', (l) => l.startsWith('// the canopies')],
+        ['weeds', (l) => l.startsWith('// the tumbleweeds')],
+      ],
+    },
+    params: {},
+  },
 };
 
 // ---------- options ----------
@@ -89,7 +114,7 @@ if (args.help) {
   --scene=pond            the scene to profile (scenes/<name>.js, picked through ?scene=<name>)
   --seconds=10            sampling window per scenario
   --throttle=1,4,6        CPU throttle rates
-  --view=1080p1,1440p2    viewports: 1080p1 = 1920x1080 at DPR 1, 1440p2 = 2560x1440 at DPR 2
+  --view=1080p1,1440p2    viewports: 1080p1 = 1920x1080 at DPR 1, 1440p2 = 2560x1440 at DPR 2, 900p2 = 1440x900 at DPR 2
   --load=idle,busy        idle: the scene alone; busy: a scripted drag across the open ground (in the pond, dropping treats)
   --mode=off,on           scene-off baseline and scene-on
   --ground-res=1,2        scene-on runs at each groundRes (ground layer resolution, CSS px scale); default: the page's own
@@ -113,7 +138,7 @@ if (!/^[a-z0-9_-]+$/i.test(SCENE)) throw new Error('bad --scene ' + SCENE);
 if (!existsSync(join(ROOT, 'scenes', SCENE + '.js'))) { console.error(`profile-scene: no scenes/${SCENE}.js`); process.exit(2); }
 const SECONDS = Number(args.seconds ?? 10);
 const THROTTLES = list(args.throttle, '1,4,6').map(Number);
-const VIEWS = { '1080p1': { width: 1920, height: 1080, dpr: 1 }, '1440p2': { width: 2560, height: 1440, dpr: 2 } };
+const VIEWS = { '1080p1': { width: 1920, height: 1080, dpr: 1 }, '1440p2': { width: 2560, height: 1440, dpr: 2 }, '900p2': { width: 1440, height: 900, dpr: 2 } };
 const VIEW_KEYS = list(args.view, '1080p1,1440p2');
 for (const v of VIEW_KEYS) if (!VIEWS[v]) throw new Error('unknown --view ' + v);
 const LOADS = list(args.load, 'idle,busy');
