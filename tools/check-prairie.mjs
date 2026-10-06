@@ -1,9 +1,9 @@
-// Checks scenes/prairie.js's simulation headless: the herd and its bands, the land a horse walks round, the apples,
-// the startle, reduced motion, the hares, the grass, the trails, the scene's place in the home registry, the horses'
+// Checks scenes/prairie.js's simulation headless: the herd and its bands, the land a cow walks round, the apples,
+// the startle, reduced motion, the hares, the grass, the trails, the scene's place in the home registry, the cows'
 // bodies kept apart and the canopies' caps, the apples drawing the herd, and the ponds and drinking at them.
 //
 // The prairie's step() is a function of the world, dt and the world's own seeded random sources, so every run below is
-// the same run every time. None of these properties shows in a still frame: a horse whose nose dips into a boulder for
+// the same run every time. None of these properties shows in a still frame: a cow whose nose dips into a boulder for
 // one frame, a band that wanders off and never comes back, or a reduced-motion herd that still bolts all look fine in a
 // screenshot and wrong in motion.
 //
@@ -18,7 +18,7 @@ import { resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
 const M = await import(process.env.PRAIRIE_MODULE ? pathToFileURL(resolve(process.env.PRAIRIE_MODULE)).href : '../scenes/prairie.js');
 const K = await import(process.env.PRAIRIE_MODULE ? new URL('./kit.js', pathToFileURL(resolve(process.env.PRAIRIE_MODULE))).href : '../scenes/kit.js');
-const { createWorld, step, setSources, setPointer, dropFeed, strokeStart, strokeTo, strokeEnd, strokeCancel, knollAt, grassMarks, gaitShare, blocksOf, noseReach } = M;
+const { createWorld, step, setSources, setPointer, dropFeed, strokeStart, strokeTo, strokeEnd, strokeCancel, pondAt, grassMarks, gaitShare, blocksOf, noseReach } = M;
 const { edgeR, edgeGap } = K, defaults = () => K.paramDefaults(M.PARAMS);
 
 const failures = [];
@@ -29,7 +29,7 @@ const metric = (line) => { if (process.env.PRAIRIE_METRICS) console.log(line); }
 let lapAt = performance.now(), lapName = null;
 const lap = (name) => { const t = performance.now(); if (lapName) metric(`(${lapName}) took ${((t - lapAt) / 1000).toFixed(1)} s`); lapAt = t; lapName = name; };
 
-// two knolls on a 1440x900 page, as the home page lays its two objects
+// two ponds on a 1440x900 page, as the home page lays its two objects
 const BOXES = [{ x: 300, y: 260, w: 170, h: 340 }, { x: 900, y: 330, w: 240, h: 240 }];
 const W = 1440, H = 900;
 function world(seed, opts = {}) {
@@ -39,7 +39,7 @@ function world(seed, opts = {}) {
   return w;
 }
 const run = (w, seconds, dt = DT, each) => { const n = Math.round(seconds / dt); for (let s = 0; s < n; s++) { step(w, dt); if (each) each(w, s); } };
-function centroid(w) { let x = 0, y = 0; for (const h of w.horses) { x += h.x; y += h.y; } return { x: x / w.horses.length, y: y / w.horses.length }; }
+function centroid(w) { let x = 0, y = 0; for (const h of w.cows) { x += h.x; y += h.y; } return { x: x / w.cows.length, y: y / w.cows.length }; }
 // A startle: the cursor crosses the herd's middle at 20 px a step (1200 px/s at DT), then lifts. each(w) runs after
 // every step of the sweep.
 function sweep(w, each, angle = 0.3, steps = 50) {
@@ -47,12 +47,12 @@ function sweep(w, each, angle = 0.3, steps = 50) {
   for (let k = 0; k <= steps; k++) { const s = (k - steps / 2) * 20; setPointer(w, c.x + ux * s, c.y + uy * s, true); step(w, DT); if (each) each(w); }
   setPointer(w, 0, 0, false);
 }
-// open ground about `dist` px from (x, y): off every knoll, well clear of every block, inside the page
+// open ground about `dist` px from (x, y): off every pond, well clear of every block, inside the page
 function openNear(w, x, y, dist) {
   for (let i = 0; i < 64; i++) {
     const a = i * 0.7, px = x + Math.cos(a) * dist, py = y + Math.sin(a) * dist;
-    if (px < 60 || px > W - 60 || py < 120 || py > H - 60 || knollAt(w, px, py) >= 0) continue;
-    if (w.knolls.some((o) => edgeR(o, px, py, 30) < 1)) continue;
+    if (px < 60 || px > W - 60 || py < 120 || py > H - 60 || pondAt(w, px, py) >= 0) continue;
+    if (w.ponds.some((o) => edgeR(o, px, py, 30) < 1)) continue;
     if (blocksOf(w).some((b) => Math.hypot(px - b.x, py - b.y) < b.r + 30)) continue;
     return { x: px, y: py };
   }
@@ -60,7 +60,7 @@ function openNear(w, x, y, dist) {
 }
 
 lap('a');
-// (a) the herd: over 12 seeds the horses keep near their band's mare, every parting ends with the bands rejoining, and
+// (a) the herd: over 12 seeds the cows keep near their band's lead cow, every parting ends with the bands rejoining, and
 // partings happen at all. The first parting comes 27.5 s or more into a run, so a band that never comes back can stay
 // under A_APART in a short run; the share of comebacks that end (A_REJOIN) catches it. A comeback is a parted band whose
 // time apart has run out, so it is making for the main band; only those begun A_BACK s or more before a run's end are
@@ -80,17 +80,17 @@ const A_NEAR = 300, A_SHARE = 0.6, A_SAMPLES = 0.98, A_APART = 100, A_REJOIN = 0
       for (const id of seen) if (!w.bands.some((b) => b.id === id)) { const c = back.get(id); if (c) c.ended = true; else back.set(id, { t, ended: true }); seen.delete(id); }
       if (w.bands.length > 1) { if (apartAt == null) apartAt = t; apartMax = Math.max(apartMax, t - apartAt); } else if (apartAt != null) { apartAt = null; rejoins++; }
       if ((s + 1) % 30) return;
-      const lead = new Map(w.bands.map((b) => [b.id, w.horses[b.leader]]));
+      const lead = new Map(w.bands.map((b) => [b.id, w.cows[b.leader]]));
       let near = 0;
-      for (const h of w.horses) { const L = lead.get(h.band); if (L && Math.hypot(h.x - L.x, h.y - L.y) <= A_NEAR) near++; }
-      const share = near / w.horses.length;
+      for (const h of w.cows) { const L = lead.get(h.band); if (L && Math.hypot(h.x - L.x, h.y - L.y) <= A_NEAR) near++; }
+      const share = near / w.cows.length;
       samples++; if (share >= A_SHARE) good++; minShare = Math.min(minShare, share);
     });
     const frac = good / samples;
     for (const c of back.values()) if (c.t <= A_SECONDS - A_BACK) { comebacks++; if (c.ended) cameBack++; }
     splits += w.splits - s0; worstSamples = Math.min(worstSamples, frac); worstShare = Math.min(worstShare, minShare); longest = Math.max(longest, apartMax);
-    metric(`seed ${seed} (a) herd: ${w.horses.length} horses, ${(frac * 100).toFixed(1)} percent of samples with ${A_SHARE * 100} percent within ${A_NEAR} px of their mare, lowest share ${minShare.toFixed(2)}, ${w.splits - s0} splits, ${w.merges} merges, longest apart ${apartMax.toFixed(1)} s`);
-    if (frac < A_SAMPLES) fail(`seed ${seed}: (a) the herd should hold together: ${A_SHARE * 100} percent of horses within ${A_NEAR} px of their band's mare in ${A_SAMPLES * 100} percent of samples, got ${(frac * 100).toFixed(1)} percent`);
+    metric(`seed ${seed} (a) herd: ${w.cows.length} cows, ${(frac * 100).toFixed(1)} percent of samples with ${A_SHARE * 100} percent within ${A_NEAR} px of their lead cow, lowest share ${minShare.toFixed(2)}, ${w.splits - s0} splits, ${w.merges} merges, longest apart ${apartMax.toFixed(1)} s`);
+    if (frac < A_SAMPLES) fail(`seed ${seed}: (a) the herd should hold together: ${A_SHARE * 100} percent of cows within ${A_NEAR} px of their band's lead cow in ${A_SAMPLES * 100} percent of samples, got ${(frac * 100).toFixed(1)} percent`);
     if (apartMax > A_APART) fail(`seed ${seed}: (a) parted bands should rejoin within ${A_APART} s, one parting lasted ${apartMax.toFixed(1)} s`);
   }
   metric(`(a) herd overall: worst sample share ${(worstSamples * 100).toFixed(1)} percent, lowest share ${worstShare.toFixed(2)}, longest apart ${longest.toFixed(1)} s, ${splits} splits, ${rejoins} rejoined (${(rejoins / Math.max(1, splits)).toFixed(2)}), ${cameBack} of ${comebacks} comebacks begun ${A_BACK} s before the end ended`);
@@ -100,34 +100,34 @@ const A_NEAR = 300, A_SHARE = 0.6, A_SAMPLES = 0.98, A_APART = 100, A_REJOIN = 0
 }
 
 lap('b');
-// (b) no horse enters a knoll, a boulder, a shrub or the waterhole: its middle, its nose and its rump, every step, with
+// (b) no cow enters a pond, a boulder, a shrub or the waterhole: its middle, its nose and its rump, every step, with
 // a startle partway through
 {
-  let worstKnoll = Infinity, worstBlock = Infinity;
+  let worstPond = Infinity, worstBlock = Infinity;
   for (const seed of [1, 7, 42]) {
     const w = world(seed);
     let kMin = Infinity, bMin = Infinity, hits = 0, first = '';
     const look = (w) => {
-      for (const h of w.horses) {
+      for (const h of w.cows) {
         const ca = Math.cos(h.a), sa = Math.sin(h.a);
         for (const [part, off] of [['middle', 0], ['nose', noseReach(h.g) * h.size], ['rump', -w.params.rump * h.size]]) {
           const x = h.x + ca * off, y = h.y + sa * off;
-          for (const o of w.knolls) { const r = edgeR(o, x, y, 0); kMin = Math.min(kMin, r); if (r < 1) { hits++; if (!first) first = `${part} in a knoll at t ${w.t.toFixed(2)} s`; } }
+          for (const o of w.ponds) { const r = edgeR(o, x, y, 0); kMin = Math.min(kMin, r); if (r < 1) { hits++; if (!first) first = `${part} in a pond at t ${w.t.toFixed(2)} s`; } }
           for (const b of blocksOf(w)) { const d = Math.hypot(x - b.x, y - b.y) - b.r; bMin = Math.min(bMin, d); if (d < 0) { hits++; if (!first) first = `${part} in a ${b.kind} at t ${w.t.toFixed(2)} s`; } }
         }
       }
     };
     run(w, 40, DT, look); sweep(w, look); run(w, 40, DT, look); sweep(w, look, 2.1); run(w, 38, DT, look);
-    worstKnoll = Math.min(worstKnoll, kMin); worstBlock = Math.min(worstBlock, bMin);
-    metric(`seed ${seed} (b) keep-out: least knoll edgeR ${kMin.toFixed(3)}, least block clearance ${bMin.toFixed(2)} px, ${hits} intrusions`);
-    if (hits) fail(`seed ${seed}: (b) no horse should enter a knoll or a block; ${hits} intrusions, the first ${first}`);
+    worstPond = Math.min(worstPond, kMin); worstBlock = Math.min(worstBlock, bMin);
+    metric(`seed ${seed} (b) keep-out: least pond edgeR ${kMin.toFixed(3)}, least block clearance ${bMin.toFixed(2)} px, ${hits} intrusions`);
+    if (hits) fail(`seed ${seed}: (b) no cow should enter a pond or a block; ${hits} intrusions, the first ${first}`);
   }
-  metric(`(b) keep-out overall: least knoll edgeR ${worstKnoll.toFixed(3)}, least block clearance ${worstBlock.toFixed(2)} px`);
+  metric(`(b) keep-out overall: least pond edgeR ${worstPond.toFixed(3)}, least block clearance ${worstBlock.toFixed(2)} px`);
 }
 
 lap('c');
 // (c) the apples: one dropped on open ground near the herd is eaten; a press with no drag drops one; a cancelled stroke
-// drops none; one dropped on a knoll is refused
+// drops none; one dropped on a pond is refused
 const C_EAT = 20;
 {
   let slowest = 0;
@@ -151,12 +151,12 @@ const C_EAT = 20;
   strokeStart(w, at.x, at.y); strokeTo(w, at.x + 8, at.y); strokeCancel(w);
   if (w.drops !== d0 || w.feed.length !== f0) fail(`(c) a cancelled stroke should drop no apple, dropped ${w.drops - d0}`);
   d0 = w.drops; f0 = w.feed.length;
-  const o = w.knolls[0]; dropFeed(w, o.x, o.y);
-  if (w.drops !== d0 || w.feed.length !== f0) fail(`(c) an apple dropped on a knoll should be refused, ${w.drops - d0} counted`);
+  const o = w.ponds[0]; dropFeed(w, o.x, o.y);
+  if (w.drops !== d0 || w.feed.length !== f0) fail(`(c) an apple dropped on a pond should be refused, ${w.drops - d0} counted`);
 }
 
 lap('d');
-// (d) the startle: a fast cursor across the herd sets horses galloping, and the herd settles back to grazing
+// (d) the startle: a fast cursor across the herd sets cows running, and the herd settles back to grazing
 const D_PEAK = 0.5, D_CALM = 45, D_GRAZE = 0.7;
 {
   let lowPeak = 1, slowest = 0;
@@ -167,24 +167,24 @@ const D_PEAK = 0.5, D_CALM = 45, D_GRAZE = 0.7;
     let t = 5, calm = false;
     while (t < D_CALM * 3) { const g = gaitShare(w); if (g[0] >= D_GRAZE && g[3] === 0) { calm = true; break; } step(w, DT); t += DT; }
     lowPeak = Math.min(lowPeak, peak); slowest = Math.max(slowest, t);
-    metric(`seed ${seed} (d) startle: peak gallop share ${peak.toFixed(2)}, back to grazing (graze ${D_GRAZE}+, gallop 0) after ${calm ? t.toFixed(2) + ' s' : 'never'}`);
-    if (!(peak >= D_PEAK)) fail(`seed ${seed}: (d) a fast cursor across the herd should set at least ${D_PEAK * 100} percent galloping, peak ${(peak * 100).toFixed(1)} percent`);
+    metric(`seed ${seed} (d) startle: peak running share ${peak.toFixed(2)}, back to grazing (graze ${D_GRAZE}+, running 0) after ${calm ? t.toFixed(2) + ' s' : 'never'}`);
+    if (!(peak >= D_PEAK)) fail(`seed ${seed}: (d) a fast cursor across the herd should set at least ${D_PEAK * 100} percent running, peak ${(peak * 100).toFixed(1)} percent`);
     if (!calm || t > D_CALM) fail(`seed ${seed}: (d) the herd should be back to grazing within ${D_CALM} s of a startle, ${calm ? `took ${t.toFixed(2)} s` : 'it never was'}`);
   }
-  metric(`(d) startle overall: lowest peak gallop ${lowPeak.toFixed(2)}, slowest calm ${slowest.toFixed(2)} s`);
+  metric(`(d) startle overall: lowest peak running ${lowPeak.toFixed(2)}, slowest calm ${slowest.toFixed(2)} s`);
 }
 
 lap('e');
-// (e) reduced motion: the same sweep sets nothing galloping, the wind's phase holds and no gust blows; in full motion the
+// (e) reduced motion: the same sweep sets nothing running, the wind's phase holds and no gust blows; in full motion the
 // phase runs
 {
   for (const seed of [1, 7]) {
     const w = world(seed, { reduced: true }); run(w, 10);
-    const ph = w.wind.phase; let gallop = 0, gusts = 0;
-    const watch = (w) => { gallop = Math.max(gallop, gaitShare(w)[3]); gusts = Math.max(gusts, w.wind.gusts.length); };
+    const ph = w.wind.phase; let running = 0, gusts = 0;
+    const watch = (w) => { running = Math.max(running, gaitShare(w)[3]); gusts = Math.max(gusts, w.wind.gusts.length); };
     run(w, 1, DT, watch); sweep(w, watch); run(w, 10, DT, watch);
-    metric(`seed ${seed} (e) reduced: peak gallop share ${gallop.toFixed(2)}, wind phase moved ${(w.wind.phase - ph).toFixed(4)}, most gusts ${gusts}`);
-    if (gallop > 0) fail(`seed ${seed}: (e) under reduced motion no horse should gallop, peak gallop share ${(gallop * 100).toFixed(1)} percent`);
+    metric(`seed ${seed} (e) reduced: peak running share ${running.toFixed(2)}, wind phase moved ${(w.wind.phase - ph).toFixed(4)}, most gusts ${gusts}`);
+    if (running > 0) fail(`seed ${seed}: (e) under reduced motion no cow should run, peak running share ${(running * 100).toFixed(1)} percent`);
     if (w.wind.phase !== ph) fail(`seed ${seed}: (e) under reduced motion the wind's phase should hold, it moved ${(w.wind.phase - ph).toFixed(4)}`);
     if (gusts) fail(`seed ${seed}: (e) under reduced motion no gust should blow, ${gusts} at once`);
     const f = world(seed), fph = f.wind.phase; run(f, 2);
@@ -249,7 +249,7 @@ const H_STEP = 20, H_END = 30, H_POND = 30;
     const near = (name, x, y) => {
       if (name === 'water') return L.water ? Math.abs(Math.hypot(x - L.water.x, y - L.water.y) - L.water.r) : Infinity;
       if (name.startsWith('grove')) { const g = L.groves[+name.slice(5)]; return g ? Math.max(0, Math.hypot(x - g.x, y - g.y) - g.r) : Infinity; }
-      if (name.startsWith('knoll')) { const o = w.knolls[+name.slice(5)]; return o ? Math.abs(edgeGap(o, x, y, 0)) : Infinity; }
+      if (name.startsWith('pond')) { const o = w.ponds[+name.slice(4)]; return o ? Math.abs(edgeGap(o, x, y, 0)) : Infinity; }
       return Infinity;
     };
     for (const t of L.trails) {
@@ -260,7 +260,7 @@ const H_STEP = 20, H_END = 30, H_POND = 30;
       if (gap > H_STEP) fail(`seed ${seed}: (h) trail ${t.from}-${t.to} should step at most ${H_STEP} px, widest ${gap.toFixed(1)} px`);
       if (e0 > H_END || e1 > H_END) fail(`seed ${seed}: (h) trail ${t.from}-${t.to} should end on its features, ends ${e0.toFixed(1)} and ${e1.toFixed(1)} px off`);
     }
-    w.knolls.forEach((o, i) => {
+    w.ponds.forEach((o, i) => {
       let best = Infinity;
       for (const t of L.trails) { const P = t.pts, n = P.length / 2; best = Math.min(best, Math.abs(edgeGap(o, P[0], P[1], 0)), Math.abs(edgeGap(o, P[2 * n - 2], P[2 * n - 1], 0))); }
       metric(`seed ${seed} (h) pond ${i}: nearest trail end ${best.toFixed(1)} px off its edge`);
@@ -285,7 +285,7 @@ lap('i');
   }
 }
 
-// A horse's body as a capsule: a segment along its heading from the rump to the nose, each end pulled in by the radius,
+// A cow's body as a capsule: a segment along its heading from the rump to the nose, each end pulled in by the radius,
 // with half the body's width as the radius. cx, cy and R bound it in a circle, so most pairs are rejected cheaply.
 function capsule(h, p) {
   const S = h.size, r = (p.girth ?? 0.21) * S, ux = Math.cos(h.a), uy = Math.sin(h.a);
@@ -312,10 +312,10 @@ function segDist(px, py, qx, qy, rx, ry, sx, sy) {
   }
   return Math.hypot(px + d1x * s - (rx + d2x * t), py + d1y * s - (ry + d2y * t));
 }
-// the least capsule gap over every pair of horses, and the pair; pairs whose bounding circles are apart are skipped, so
+// the least capsule gap over every pair of cows, and the pair; pairs whose bounding circles are apart are skipped, so
 // a herd with no pair close reports Infinity
 function leastGap(w) {
-  const p = w.params, C = w.horses.map((h) => capsule(h, p));
+  const p = w.params, C = w.cows.map((h) => capsule(h, p));
   let least = Infinity;
   for (let i = 0; i < C.length; i++) {
     const A = C[i];
@@ -327,15 +327,15 @@ function leastGap(w) {
   }
   return least;
 }
-// how many horses a grove's canopy may hold
+// how many cows a grove's canopy may hold
 const canopyCap = (w, g) => {
   const p = w.params;
   return M.canopyCap ? M.canopyCap(w, g) : Math.max(1, Math.floor((g.r * g.r) / (p.size * p.size * (p.crowd ?? 1.6))));
 };
 
 lap('j');
-// (j) hard separation and the canopy queue: over 12 seeds of 120 s with a startle toward cover at 30 s, no two horses'
-// bodies overlap by more than J_OVERLAP px at any step after the first 2 s, and no grove's canopy ever holds more horses
+// (j) hard separation and the canopy queue: over 12 seeds of 120 s with a startle toward cover at 30 s, no two cows'
+// bodies overlap by more than J_OVERLAP px at any step after the first 2 s, and no grove's canopy ever holds more cows
 // than its cap. Every step is measured.
 const J_SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], J_SECONDS = 120, J_STARTLE = 30, J_SETTLE = 2, J_OVERLAP = 0.5;
 {
@@ -349,7 +349,7 @@ const J_SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], J_SECONDS = 120, J_STAR
       const g = leastGap(w);
       if (g < worst) { worst = g; worstAt = t; }
       for (const G of (w.land ? w.land.groves : [])) {
-        let n = 0; for (const h of w.horses) if (Math.hypot(h.x - G.x, h.y - G.y) < G.r) n++;
+        let n = 0; for (const h of w.cows) if (Math.hypot(h.x - G.x, h.y - G.y) < G.r) n++;
         const cap = canopyCap(w, G);
         if (n / cap > ratio) { ratio = n / cap; canopy = n; canopyCapAt = cap; }
         if (n > cap && !overAt) overAt = { t, n, cap };
@@ -357,22 +357,22 @@ const J_SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], J_SECONDS = 120, J_STAR
     };
     run(w, J_STARTLE, DT, look); sweep(w, look); run(w, J_SECONDS - J_STARTLE - 51 * DT, DT, look);
     metric(`seed ${seed} (j) separation: worst capsule gap ${worst.toFixed(2)} px at t ${worstAt.toFixed(2)} s, fullest canopy ${canopy}/${canopyCapAt}`);
-    if (worst < -J_OVERLAP) fail(`seed ${seed}: (j) no two horses should overlap by more than ${J_OVERLAP} px, worst gap ${worst.toFixed(2)} px at t ${worstAt.toFixed(2)} s`);
-    if (overAt) fail(`seed ${seed}: (j) no canopy should hold more horses than its cap, ${overAt.n} under a canopy of cap ${overAt.cap} at t ${overAt.t.toFixed(2)} s`);
+    if (worst < -J_OVERLAP) fail(`seed ${seed}: (j) no two cows should overlap by more than ${J_OVERLAP} px, worst gap ${worst.toFixed(2)} px at t ${worstAt.toFixed(2)} s`);
+    if (overAt) fail(`seed ${seed}: (j) no canopy should hold more cows than its cap, ${overAt.n} under a canopy of cap ${overAt.cap} at t ${overAt.t.toFixed(2)} s`);
   }
   metric(`(j) separation ran ${((performance.now() - t0) / 1000).toFixed(1)} s, measuring every step`);
 }
 
 lap('k');
-// (k) the apples draw the herd: within K_WATCH s of an apple going down at least K_HORSES horses at one step make for it
+// (k) the apples draw the herd: within K_WATCH s of an apple going down at least K_COWS cows at one step make for it
 // (their food is that apple and they head within K_AIM of it, or they stand at it), and it is eaten within K_EAT s. It
 // holds at rest, after a press whose cursor came in fast across the herd (the hand moving in to press must not startle
 // the herd off the apple), and after a fast drag.
-const K_WATCH = 4, K_EAT = 12, K_HORSES = 3, K_AIM = (30 * Math.PI) / 180, K_RUSH = 25, K_FROM = 300, K_DRAG = 200;
+const K_WATCH = 4, K_EAT = 12, K_COWS = 3, K_AIM = (30 * Math.PI) / 180, K_RUSH = 25, K_FROM = 300, K_DRAG = 200;
 {
   const angErr = (a, b) => Math.abs(Math.atan2(Math.sin(b - a), Math.cos(b - a)));
   const makingFor = (h, f) => !!f && (Math.hypot(f.x - h.x, f.y - h.y) < 1.3 * h.size || angErr(h.a, Math.atan2(f.y - h.y, f.x - h.x)) < K_AIM);
-  // steps the world for up to K_EAT s after the apple went down: the most horses at one step in the first K_WATCH s for
+  // steps the world for up to K_EAT s after the apple went down: the most cows at one step in the first K_WATCH s for
   // which aims(h) holds, and when the first apple was eaten. hold(w) runs before each of the first K_WATCH s of steps,
   // then the cursor lifts.
   const watch = (w, aims, hold) => {
@@ -380,15 +380,15 @@ const K_WATCH = 4, K_EAT = 12, K_HORSES = 3, K_AIM = (30 * Math.PI) / 180, K_RUS
     while (t < K_EAT && (eatenAt < 0 || t < K_WATCH)) {
       if (t < K_WATCH && hold) hold(w); else if (!lifted) { setPointer(w, 0, 0, false); lifted = true; }
       step(w, DT); t += DT;
-      if (t <= K_WATCH) { let n = 0; for (const h of w.horses) if (aims(h)) n++; if (n > most) { most = n; mostAt = t; } }
+      if (t <= K_WATCH) { let n = 0; for (const h of w.cows) if (aims(h)) n++; if (n > most) { most = n; mostAt = t; } }
       if (eatenAt < 0 && w.eaten > e0) eatenAt = t;
     }
     if (!lifted) setPointer(w, 0, 0, false);
     return { most, mostAt, eatenAt };
   };
   const judge = (seed, how, r) => {
-    metric(`seed ${seed} (k) ${how}: most horses making for the apple at once ${r.most} (at ${r.mostAt.toFixed(2)} s), eaten ${r.eatenAt < 0 ? 'never' : `after ${r.eatenAt.toFixed(2)} s`}`);
-    if (r.most < K_HORSES) fail(`seed ${seed}: (k) ${how}: at least ${K_HORSES} horses should make for the apple within ${K_WATCH} s, most at once ${r.most}`);
+    metric(`seed ${seed} (k) ${how}: most cows making for the apple at once ${r.most} (at ${r.mostAt.toFixed(2)} s), eaten ${r.eatenAt < 0 ? 'never' : `after ${r.eatenAt.toFixed(2)} s`}`);
+    if (r.most < K_COWS) fail(`seed ${seed}: (k) ${how}: at least ${K_COWS} cows should make for the apple within ${K_WATCH} s, most at once ${r.most}`);
     if (r.eatenAt < 0) fail(`seed ${seed}: (k) ${how}: the apple should be eaten within ${K_EAT} s, it never was`);
   };
   // the herd 10 s in, its centroid, open ground 150 px off, and the unit vector from that ground to the centroid
@@ -432,8 +432,8 @@ const K_WATCH = 4, K_EAT = 12, K_HORSES = 3, K_AIM = (30 * Math.PI) / 180, K_RUS
 
 lap('l');
 // (l) the ponds: the water is drawn on the two footprints, each pond's marks inside its own footprint and clear of the
-// other; there is no separate waterhole. Over 12 seeds of 120 s with a startle at 40 s no horse's middle, nose or rump
-// enters a pond, horses come to the shore to drink and leave, and no more than the drinkers allowed drink at once.
+// other; there is no separate waterhole. Over 12 seeds of 120 s with a startle at 40 s no cow's middle, nose or rump
+// enters a pond, cows come to the shore to drink and leave, and no more than the drinkers allowed drink at once.
 const L_SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], L_SECONDS = 120, L_STARTLE = 40;
 {
   if (typeof M.pondMarks !== 'function') fail('(l) the scene should export pondMarks(w, i), the water marks drawn on footprint i');
@@ -442,7 +442,7 @@ const L_SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], L_SECONDS = 120, L_STAR
     if (w.land && w.land.water != null) fail(`seed ${seed}: (l) the land should hold no separate waterhole, land.water is set`);
     if (blocksOf(w).some((b) => b.kind === 'water')) fail(`seed ${seed}: (l) no block should be of kind 'water'`);
     if (typeof M.pondMarks !== 'function') continue;
-    w.knolls.forEach((o, i) => {
+    w.ponds.forEach((o, i) => {
       let marks = null; try { marks = M.pondMarks(w, i); } catch (e) { fail(`seed ${seed}: (l) pondMarks(w, ${i}) threw: ${e.message}`); return; }
       if (!marks || !marks.length) { fail(`seed ${seed}: (l) pond ${i} should draw water marks, got none`); return; }
       let out = 0, cross = 0, pts = 0, worst = 0;
@@ -451,7 +451,7 @@ const L_SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], L_SECONDS = 120, L_STAR
         for (let j = 0; j + 1 < P.length; j += 2) {
           pts++; const r = edgeR(o, P[j], P[j + 1], 0.5); worst = Math.max(worst, r);
           if (r >= 1) out++;
-          if (w.knolls.some((q, k) => k !== i && edgeR(q, P[j], P[j + 1], 0) < 1)) cross++;
+          if (w.ponds.some((q, k) => k !== i && edgeR(q, P[j], P[j + 1], 0) < 1)) cross++;
         }
       }
       metric(`seed ${seed} (l) pond ${i}: ${marks.length} marks, ${pts} points, greatest edgeR ${worst.toFixed(3)}`);
@@ -468,11 +468,11 @@ const L_SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], L_SECONDS = 120, L_STAR
     const look = (w) => {
       t += DT;
       let n = 0;
-      for (const h of w.horses) {
+      for (const h of w.cows) {
         const ca = Math.cos(h.a), sa = Math.sin(h.a);
         for (const [part, off] of [['middle', 0], ['nose', noseReach(h.g) * h.size], ['rump', -w.params.rump * h.size]]) {
           const x = h.x + ca * off, y = h.y + sa * off;
-          for (const o of w.knolls) { const r = edgeR(o, x, y, 0); kMin = Math.min(kMin, r); if (r < 1) { hits++; if (!first) first = `${part} of horse ${h.i} in a pond at t ${t.toFixed(2)} s`; } }
+          for (const o of w.ponds) { const r = edgeR(o, x, y, 0); kMin = Math.min(kMin, r); if (r < 1) { hits++; if (!first) first = `${part} of cow ${h.i} in a pond at t ${t.toFixed(2)} s`; } }
         }
         if (h.drink) { n++; if (h.drink.at) shore.add(h); }
         else if (shore.has(h)) { shore.delete(h); if (firstDrink < 0) firstDrink = t; }
@@ -482,13 +482,13 @@ const L_SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], L_SECONDS = 120, L_STAR
     run(w, L_STARTLE, DT, look); sweep(w, look); run(w, L_SECONDS - L_STARTLE - 51 * DT, DT, look);
     const drinks = w.drinks ?? 0;
     metric(`seed ${seed} (l) ponds: least edgeR ${kMin.toFixed(3)}, ${hits} intrusions, first drink finished ${firstDrink < 0 ? 'never' : `at ${firstDrink.toFixed(2)} s`}, ${drinks} drinks, most drinking at once ${crowd}`);
-    if (hits) fail(`seed ${seed}: (l) no horse should enter a pond; ${hits} intrusions, the first ${first}`);
-    if (firstDrink < 0 || !(drinks > 0)) fail(`seed ${seed}: (l) a horse should reach a shore, drink and leave within ${L_SECONDS} s; ${firstDrink < 0 ? 'none did' : 'one did'}, w.drinks ${w.drinks}`);
-    if (crowd > most) fail(`seed ${seed}: (l) at most ${most} horses should drink at once, ${crowd} at t ${crowdAt.toFixed(2)} s`);
+    if (hits) fail(`seed ${seed}: (l) no cow should enter a pond; ${hits} intrusions, the first ${first}`);
+    if (firstDrink < 0 || !(drinks > 0)) fail(`seed ${seed}: (l) a cow should reach a shore, drink and leave within ${L_SECONDS} s; ${firstDrink < 0 ? 'none did' : 'one did'}, w.drinks ${w.drinks}`);
+    if (crowd > most) fail(`seed ${seed}: (l) at most ${most} cows should drink at once, ${crowd} at t ${crowdAt.toFixed(2)} s`);
   }
   metric(`(l) ponds ran ${((performance.now() - t0) / 1000).toFixed(1)} s`);
 }
 
 lap(null);
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }
-console.log('check-prairie: the herd holds and rejoins, no horse enters a knoll or a block, apples are eaten, a startle passes, reduced motion stills, hares bolt and settle, the grass, the trails and the registry hold, bodies stay apart under capped canopies, apples draw the herd, and the ponds hold water and drinkers');
+console.log('check-prairie: the herd holds and rejoins, no cow enters a pond or a block, apples are eaten, a startle passes, reduced motion stills, hares bolt and settle, the grass, the trails and the registry hold, bodies stay apart under capped canopies, apples draw the herd, and the ponds hold water and drinkers');

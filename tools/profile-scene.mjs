@@ -86,7 +86,7 @@ const SECTION_TABLES = {
       anchors: [
         ['grass', (l) => l.startsWith('if (!layer.img || layer.w < w.w')],
         ['gusts', (l) => l.startsWith('if (!w.reduced && w.wind.gusts.length')],
-        ['knolls', (l) => l === 'ctx.fillStyle = paper;'],
+        ['ponds', (l) => l === 'ctx.fillStyle = paper;'],
         ['worn', (l) => l.startsWith("ctx.strokeStyle = ink; ctx.lineWidth = 1;")],
         ['flowers', (l) => l.startsWith('// the wildflowers')],
       ],
