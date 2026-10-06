@@ -80,6 +80,31 @@ const SECTION_TABLES = {
     // the lapping rings round the islands and islets: a param, not a section
     params: { rings: 'rings' },
   },
+  mountain: {
+    ground: {
+      head: 'export function drawGround(ctx, w, colours, layer = { img: null, w: 0, h: 0, flat: colours.paper }) {',
+      anchors: [
+        ['layer', (l) => l.startsWith('if (!layer.img')],
+        ['summits', (l) => l === 'ctx.fillStyle = paper;'],
+        ['rings', (l) => l.startsWith('// (the rings: traced')],
+        ['ridge', (l) => l.startsWith('// the ridgeline from top to top')],
+        ['stream', (l) => l.startsWith('// the stream\'s marks shimmer')],
+        ['flowers', (l) => l === '// edelweiss'],
+        ['streaks', (l) => l.startsWith('// wind streaks over the high ground')],
+        ['lift', (l) => l.startsWith('// raised lift:')],
+      ],
+      after: 'copy',
+    },
+    live: {
+      head: 'export function drawLive(ctx, w, colours) {',
+      anchors: [
+        ['goats', (l) => l.startsWith('// goats on their ledges')],
+        ['eagles', (l) => l.startsWith('// perched eagles, then')],
+        ['clouds', (l) => l.startsWith('// the clouds, over everything')],
+      ],
+    },
+    params: {},
+  },
 };
 
 // ---------- options ----------
@@ -89,7 +114,7 @@ if (args.help) {
   --scene=pond            the scene to profile (scenes/<name>.js, picked through ?scene=<name>)
   --seconds=10            sampling window per scenario
   --throttle=1,4,6        CPU throttle rates
-  --view=1080p1,1440p2    viewports: 1080p1 = 1920x1080 at DPR 1, 1440p2 = 2560x1440 at DPR 2
+  --view=1080p1,1440p2    viewports: 1080p1 = 1920x1080 at DPR 1, 1440p2 = 2560x1440 at DPR 2, or any WxHpD
   --load=idle,busy        idle: the scene alone; busy: a scripted drag across the open ground (in the pond, dropping treats)
   --mode=off,on           scene-off baseline and scene-on
   --ground-res=1,2        scene-on runs at each groundRes (ground layer resolution, CSS px scale); default: the page's own
@@ -115,6 +140,8 @@ const SECONDS = Number(args.seconds ?? 10);
 const THROTTLES = list(args.throttle, '1,4,6').map(Number);
 const VIEWS = { '1080p1': { width: 1920, height: 1080, dpr: 1 }, '1440p2': { width: 2560, height: 1440, dpr: 2 } };
 const VIEW_KEYS = list(args.view, '1080p1,1440p2');
+// any other view as <width>x<height>p<dpr>, e.g. 1440x900p2
+for (const v of VIEW_KEYS) { const m = /^(\d+)x(\d+)p(\d+(?:\.\d+)?)$/.exec(v); if (m && !VIEWS[v]) VIEWS[v] = { width: +m[1], height: +m[2], dpr: +m[3] }; }
 for (const v of VIEW_KEYS) if (!VIEWS[v]) throw new Error('unknown --view ' + v);
 const LOADS = list(args.load, 'idle,busy');
 const MODES = list(args.mode, 'off,on');
