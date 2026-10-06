@@ -236,6 +236,24 @@ function trace(ctx, a, b, closed) {
   }
   if (closed) ctx.closePath(); else ctx.lineTo(X(n - 1), Y(n - 1));
 }
+// The run of Q from a to qn thinned: a smooth point that lies within THIN px of the line from the last point kept to
+// the next is dropped, and qn moves back by the points dropped. The curve through such a point moves by less than that
+// distance, well inside the one-px line, so a small eagle is drawn through fewer points than a large one and looks the
+// same. The sharp points, the fingers' tips and slots, are always kept, and so are the run's ends. A path's points are
+// what its stroke costs the GPU process, and the eagles' strokes are most of the scene's.
+const THIN = 0.2;
+function thin(a) {
+  if (qn - a < 3) return;
+  let k = a + 1;
+  for (let i = a + 1; i < qn - 1; i++) {
+    if (!SH[i]) {
+      const lx = Q[2 * k - 2], ly = Q[2 * k - 1], dx = Q[2 * i + 2] - lx, dy = Q[2 * i + 3] - ly, ex = Q[2 * i] - lx, ey = Q[2 * i + 1] - ly;
+      if (Math.abs(dx * ey - dy * ex) < THIN * Math.hypot(dx, dy)) continue;
+    }
+    Q[2 * k] = Q[2 * i]; Q[2 * k + 1] = Q[2 * i + 1]; SH[k] = SH[i]; k++;
+  }
+  Q[2 * k] = Q[2 * qn - 2]; Q[2 * k + 1] = Q[2 * qn - 1]; SH[k] = SH[qn - 1]; qn = k + 1;
+}
 const pairs = (A, f, rev, side) => { const n = A.length / 2; for (let j = 0; j < n; j++) { const i = rev ? n - 1 - j : j; f(A[2 * i], side * A[2 * i + 1], false); } };
 
 // One eagle in flight at (x, y), heading in radians, L px long, in pose, in figure variant 0, 1 or 2; nape is a colour
@@ -263,11 +281,11 @@ export function drawEagle(ctx, x, y, heading, L, pose, variant, alpha, nape, per
     // parted: the tail, each wing and the body as outlines of their own, each over a paper fill, so the body's line
     // crosses the wing roots and the parts read like an engraving's
     // both wings in one path: they never overlap, and one fill and one stroke cost half of two
-    qn = 0; wingRun(1, false); const half = qn; wingRun(-1, false);
+    qn = 0; wingRun(1, false); thin(0); const half = qn; wingRun(-1, false); thin(half);
     ctx.beginPath(); trace(ctx, 0, half, true); trace(ctx, half, qn, true); ctx.globalAlpha = 0.92; ctx.fill(); ctx.globalAlpha = alpha; ctx.stroke();
     // the body and the tail in one path over the wings, the tail's root showing as a short line across the body
-    qn = 0; pairs(BODY, bodyPt, false, 1); pairs(BODY.slice(2), bodyPt, true, -1); const body = qn;
-    tailPt(TAIL[0], TAIL[1], false); pairs(TAIL.slice(2), tailPt, false, 1); tailPt(TAIL_TIP, 0, false); pairs(TAIL.slice(2), tailPt, true, -1); tailPt(TAIL[0], -TAIL[1], false);
+    qn = 0; pairs(BODY, bodyPt, false, 1); pairs(BODY.slice(2), bodyPt, true, -1); thin(0); const body = qn;
+    tailPt(TAIL[0], TAIL[1], false); pairs(TAIL.slice(2), tailPt, false, 1); tailPt(TAIL_TIP, 0, false); pairs(TAIL.slice(2), tailPt, true, -1); tailPt(TAIL[0], -TAIL[1], false); thin(body);
     ctx.beginPath(); trace(ctx, 0, body, true); trace(ctx, body, qn, true); ctx.globalAlpha = 0.92; ctx.fill(); ctx.globalAlpha = alpha; ctx.stroke();
   } else {
     // one silhouette: beak, the right side round wing and tail, the left side back
@@ -996,15 +1014,23 @@ function stepClouds(w, dt) {
     if (c.y < -m) c.y += w.h + 2 * m; else if (c.y > w.h + m) c.y -= w.h + 2 * m;
   }
 }
-// a cumulus from above: puffs round the edge, the rim between two puffs pinched in; the puffs breathe slowly
+// a cumulus from above: puffs round the edge, the rim between two puffs pinched in; the puffs breathe slowly. The rim
+// is sampled at 96 bearings and drawn straight from sample to sample, less every sample within THIN px of the line
+// from the last one kept to the next (most of a puff's broad arc; never the pinches between puffs)
+const CLOUD_N = 96, CX = new Float32Array(CLOUD_N), CY = new Float32Array(CLOUD_N);
 function cloudPath(ctx, c, T) {
-  const n = 96;
-  ctx.beginPath();
-  for (let i = 0; i <= n; i++) {
+  const n = CLOUD_N;
+  for (let i = 0; i < n; i++) {
     const a = (i / n) * TAU, puff = Math.abs(Math.sin((c.lobes * a) / 2 + c.ph[0] + 0.25 * Math.sin(T * 0.07 + c.ph[1])));
     const k = c.r * (0.8 + 0.22 * Math.sqrt(puff) + 0.07 * Math.sin(2 * a + c.ph[2] + T * 0.04));
-    const x = c.x + Math.cos(a) * k, y = c.y + Math.sin(a) * k;
-    if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+    CX[i] = c.x + Math.cos(a) * k; CY[i] = c.y + Math.sin(a) * k;
+  }
+  ctx.beginPath(); ctx.moveTo(CX[0], CY[0]);
+  let lx = CX[0], ly = CY[0];
+  for (let i = 1; i < n; i++) {
+    const j = (i + 1) % n, dx = CX[j] - lx, dy = CY[j] - ly, ex = CX[i] - lx, ey = CY[i] - ly;
+    if (Math.abs(dx * ey - dy * ex) < THIN * Math.hypot(dx, dy)) continue;
+    ctx.lineTo(CX[i], CY[i]); lx = CX[i]; ly = CY[i];
   }
   ctx.closePath();
 }
