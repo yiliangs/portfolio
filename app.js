@@ -2114,6 +2114,7 @@
     // contract heads scenes/kit.js. A new scene is one module and one line here.
     scenes = {
       pond: () => import('./scenes/pond.js'),
+      prairie: () => import('./scenes/prairie.js'),
     };
     // the scene this page load shows, picked once and kept when the visitor leaves home and comes back
     sceneName = this.pickScene(location.search);
