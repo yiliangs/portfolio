@@ -110,7 +110,7 @@ lap('b');
     const look = (w) => {
       for (const h of w.horses) {
         const ca = Math.cos(h.a), sa = Math.sin(h.a);
-        for (const [part, off] of [['middle', 0], ['nose', noseReach(h.g) * h.size], ['rump', -0.6 * h.size]]) {
+        for (const [part, off] of [['middle', 0], ['nose', noseReach(h.g) * h.size], ['rump', -w.params.rump * h.size]]) {
           const x = h.x + ca * off, y = h.y + sa * off;
           for (const o of w.knolls) { const r = edgeR(o, x, y, 0); kMin = Math.min(kMin, r); if (r < 1) { hits++; if (!first) first = `${part} in a knoll at t ${w.t.toFixed(2)} s`; } }
           for (const b of blocksOf(w)) { const d = Math.hypot(x - b.x, y - b.y) - b.r; bMin = Math.min(bMin, d); if (d < 0) { hits++; if (!first) first = `${part} in a ${b.kind} at t ${w.t.toFixed(2)} s`; } }
@@ -470,7 +470,7 @@ const L_SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], L_SECONDS = 120, L_STAR
       let n = 0;
       for (const h of w.horses) {
         const ca = Math.cos(h.a), sa = Math.sin(h.a);
-        for (const [part, off] of [['middle', 0], ['nose', noseReach(h.g) * h.size], ['rump', -0.6 * h.size]]) {
+        for (const [part, off] of [['middle', 0], ['nose', noseReach(h.g) * h.size], ['rump', -w.params.rump * h.size]]) {
           const x = h.x + ca * off, y = h.y + sa * off;
           for (const o of w.knolls) { const r = edgeR(o, x, y, 0); kMin = Math.min(kMin, r); if (r < 1) { hits++; if (!first) first = `${part} of horse ${h.i} in a pond at t ${t.toFixed(2)} s`; } }
         }

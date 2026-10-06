@@ -25,16 +25,16 @@ export const PARAMS = {
     countTouch: [16, 1, 90, 1, 'horses on a coarse pointer'],
     foals: [4, 0, 12, 1, 'foals among them on a fine pointer'],
     foalsTouch: [2, 0, 12, 1, 'foals on a coarse pointer'],
-    pintos: [6, 0, 24, 1, 'pintos, the horses with chestnut patches, on a fine pointer'],
-    pintosTouch: [3, 0, 24, 1, 'pintos on a coarse pointer'],
-    spacing: [2, 0.8, 4, 0.05, 'room a grazing horse keeps from the next, body lengths'],
+    pintos: [11, 0, 24, 1, 'pintos, the horses with chestnut patches, on a fine pointer'],
+    pintosTouch: [5, 0, 24, 1, 'pintos on a coarse pointer'],
+    spacing: [1.7, 0.8, 4, 0.05, 'room a grazing horse keeps from the next, body lengths'],
     keep: [24, 4, 120, 1, 'mean time a band grazes one spot before the mare moves on, s'],
     roam: [240, 60, 600, 10, 'how far the mare leads to the next spot, px'],
     split: [55, 10, 300, 5, 'mean time between one band parting in two, s'],
     rejoin: [28, 5, 120, 1, 'mean time a band that parted stays apart, s'],
     trail: [0.8, 0, 3, 0.05, 'pull of a worn trail on a walking horse'],
-    girth: [0.21, 0.05, 0.6, 0.01, 'half the body\'s width, body lengths: the capsule no other horse may enter'],
-    rump: [0.5, 0.1, 1, 0.01, 'the rump\'s distance behind the body\'s middle, body lengths'],
+    girth: [0.25, 0.05, 0.6, 0.01, 'half the body\'s width, body lengths: the capsule no other horse may enter'],
+    rump: [0.56, 0.1, 1, 0.01, 'the rump\'s distance behind the body\'s middle, body lengths'],
     room: [0.5, 0, 2, 0.05, 'least room a grazing horse leaves to its neighbours, body lengths'],
     crowd: [1.6, 0.5, 6, 0.1, 'room under a canopy per sheltering horse, square body lengths'],
     drink: [300, 10, 900, 5, 'mean time between one horse\'s walks to the water, s'],
@@ -42,7 +42,7 @@ export const PARAMS = {
     sip: [4, 1, 20, 0.5, 'time a horse stands drinking, s'],
   },
   gait: {
-    size: [20, 8, 40, 1, 'body length, rump to chest, px'],
+    size: [26, 8, 40, 1, 'body length, rump to shoulder, px'],
     walk: [0.9, 0.2, 3, 0.05, 'walking speed, body lengths per s'],
     trot: [2.2, 0.5, 6, 0.05, 'trotting speed, body lengths per s'],
     gallop: [5.5, 1, 12, 0.1, 'galloping speed, body lengths per s'],
@@ -960,7 +960,7 @@ const GA = {};
 // Pushes a horse clear: its middle, its nose and its rump each kept off every knoll (by shore), every block and the
 // page's edge; motion aimed inward is shed so it slides along.
 function keepOut(w, h) {
-  const p = w.params, S = h.size, ca = Math.cos(h.a), sa = Math.sin(h.a), nose = noseReach(h.g) * S, rump = 0.6 * S;
+  const p = w.params, S = h.size, ca = Math.cos(h.a), sa = Math.sin(h.a), nose = noseReach(h.g) * S, rump = p.rump * S;
   for (let pass = 0; pass < 3; pass++) {
     for (const [off, g] of [[0, p.shore], [nose, 2], [-rump, 2]]) {
       const x = h.x + ca * off, y = h.y + sa * off;
