@@ -140,9 +140,11 @@ const RIDGE_S = 20;
 // (f) a fast sweep through a kettle is a gust: it sends eagles to cover, and they all soar again within a bound
 const TOSSED = 0.15, CALM_S = 20;
 {
-  const w = mountain(8); run(w, 8);
+  // settle, then wait (at most 20 s more) for a kettle with an eagle circling in it: the sweep needs a target
+  const w = mountain(8), circling = () => w.eagles.some((e) => e.lift && e.mode === 'circle'); run(w, 8);
   const p = w.params, n = w.eagles.length, frac = () => w.eagles.filter(inCover).length / n;
   let base = 0; run(w, 2, () => { base = Math.max(base, frac()); });
+  for (let s = 0; s < 20 / DT && !circling(); s++) step(w, DT);
   // the busiest kettle
   const held = new Map(); for (const e of w.eagles) if (e.lift && e.mode === 'circle') held.set(e.lift, (held.get(e.lift) || 0) + 1);
   const k = [...held.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
@@ -212,24 +214,26 @@ const SETTLE_S = 5, SIT_S = 1.5;
   }
 }
 
-// (i) the hachures: a measured number on the default page; every one runs downslope; none on a summit
-const HACH = [1500, 2200];
-for (let seed = 1; seed <= 4; seed++) {
-  const w = mountain(seed), p = w.params, R = w.relief, marks = M.hachures(w, 1440, 900, p), sl = { x: 0, y: 0 };
+// (i) the hachures, under each of the three reliefs: a measured number on the default page; every one runs downslope;
+// none on a summit's plateau
+const HACH = [[2200, 3600], [600, 1000], [700, 1150]];
+for (const relief of [0, 1, 2]) for (let seed = 1; seed <= 4; seed++) {
+  const w = mountain(seed), p = { ...w.params, relief }, R = w.relief, marks = M.hachures(w, 1440, 900, p), sl = { x: 0, y: 0 };
+  const HR = HACH[relief];
   let up = 0, inside = 0, worst = 1;
   for (const { pts } of marks) {
     const mx = (pts[0] + pts[2]) / 2, my = (pts[1] + pts[3]) / 2, dx = pts[2] - pts[0], dy = pts[3] - pts[1];
-    if (M.inZone(R, mx, my)) inside++;
+    if (M.inCore(R, mx, my)) inside++;
     M.slope(R, mx, my, sl);
     const g = Math.hypot(sl.x, sl.y), L = Math.hypot(dx, dy);
     if (g < 1e-3 * R.gref || L < 1e-9) continue;
     const c = (dx * -sl.x + dy * -sl.y) / (L * g); worst = Math.min(worst, c);
     if (!(c > 0.95)) up++;
   }
-  metric(`seed ${seed} (i) ${marks.length} hachures, worst downslope cosine ${worst.toFixed(4)}, ${inside} in a summit zone`);
-  if (!(marks.length >= HACH[0] && marks.length <= HACH[1])) fail(`seed ${seed}: (i) ${marks.length} hachures on the default page, want ${HACH[0]}..${HACH[1]}`);
-  if (up) fail(`seed ${seed}: (i) ${up} hachures do not run downslope (worst cosine ${worst.toFixed(3)})`);
-  if (inside) fail(`seed ${seed}: (i) ${inside} hachures lie in a summit's zone`);
+  metric(`relief ${relief} seed ${seed} (i) ${marks.length} hachures, worst downslope cosine ${worst.toFixed(4)}, ${inside} on a plateau`);
+  if (!(marks.length >= HR[0] && marks.length <= HR[1])) fail(`relief ${relief} seed ${seed}: (i) ${marks.length} hachures on the default page, want ${HR[0]}..${HR[1]}`);
+  if (up) fail(`relief ${relief} seed ${seed}: (i) ${up} hachures do not run downslope (worst cosine ${worst.toFixed(3)})`);
+  if (inside) fail(`relief ${relief} seed ${seed}: (i) ${inside} hachures lie on a summit's plateau`);
 }
 
 // (j) the stream runs at least 20 points down to its tarn and ends on the shore

@@ -373,7 +373,9 @@ export function mountScene(container, scene, host = {}) {
   const params = paramDefaults(scene.PARAMS), pal = scene.palette;
   const mq = (q) => (window.matchMedia ? window.matchMedia(q) : null);
   const coarseQ = mq('(pointer: coarse)'), reducedQ = mq('(prefers-reduced-motion: reduce)');
-  const world = scene.createWorld(params, { w: container.clientWidth || 1, h: container.clientHeight || 1, seed: (Math.random() * 2 ** 32) >>> 0, coarse: !!coarseQ?.matches, reduced: !!reducedQ?.matches });
+  // a `?seed=` in the page's address fixes the world's seed, so a look can be compared at the same draw
+  const seedQ = new URLSearchParams(location.search).get('seed'), seed = seedQ != null && seedQ !== '' && Number.isFinite(+seedQ) ? +seedQ >>> 0 : (Math.random() * 2 ** 32) >>> 0;
+  const world = scene.createWorld(params, { w: container.clientWidth || 1, h: container.clientHeight || 1, seed, coarse: !!coarseQ?.matches, reduced: !!reducedQ?.matches });
   const onReduced = () => { world.reduced = !!reducedQ.matches; };
   reducedQ?.addEventListener?.('change', onReduced);
   // the tokens live on the root div, not on <html>, so read them off the layer itself; and read them again every

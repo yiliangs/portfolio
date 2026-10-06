@@ -1,8 +1,9 @@
-// The mountain: a home scene seen straight down, drawn as a cartographer draws high ground. The two objects stand on
-// summits whose contour rings follow their live outlines and merge across the saddle between them, a ridgeline running
-// from one top to the other; hachures fall downslope from a height field of the summits, satellite crags and a broad
-// ridge; tarns lie in the hollows, a stream runs down a valley to one, and scree, rock strata and a treeline of conifers
-// are drawn fainter. Bald eagles soar in loose kettles: they glide between thermals, bank into their turns (the wings
+// The mountain: a home scene seen straight down, drawn as a mapmaker draws high ground. The two objects stand on the
+// plateaus of two summits whose top contours follow their live outlines; a height field of the summits, the ridge
+// between them, the spurs running out from them, satellite crags and dips under the tarns is drawn one of three ways
+// (hachures lit from the upper left, old-map hill signs in profile, or a two-tone woodcut; see the static layer), with
+// snow above a snowline; tarns lie in the hollows, a stream runs down a valley to one, and scree, rock strata and a
+// treeline of conifers are drawn fainter. Bald eagles soar in loose kettles: they glide between thermals, bank into their turns (the wings
 // foreshorten and the body rolls), circle and climb in lift, peel off from the top of a thermal and sink on the glide to
 // the next; the height they fly at is read from their drawn size. A press raises a thermal, a drag lays a line of ridge
 // lift; eagles glide to either, climb in it, and leave as it is spent. A fast cursor is a gust: the eagles are tossed
@@ -24,21 +25,20 @@ export const PARAMS = {
   ground: {
     slate: [0.07, 0, 0.4, 0.005, 'how far the page is taken toward the candidate\'s ground tone'],
     palette: [0, 0, 2, 1, 'tint candidate: 0 slate, 1 glacier, 2 dusk'],
-    bands: [0.5, 0, 1, 0.05, 'how far the summits lighten back toward the paper, band by band'],
+    relief: [1, 0, 2, 1, 'how the mountain is drawn: 0 hachures, 1 hill signs, 2 woodcut'],
     ...GROUND,
   },
   summits: {
     ...FOOTPRINT,
-    rings: [5, 0, 12, 1,'contour rings below each summit\'s top contour; the fifth is an index contour'],
-    interval: [15, 6, 40, 1, 'gap between contour rings, px'],
-    saddle: [1, 0, 3, 0.05, 'how softly two summits\' rings merge across the saddle, in rings'],
-    cell: [12, 3, 24, 1, 'grid the rings are traced on, px'],
+    apron: [90, 0, 300, 5, 'open ground round each summit kept clear of crags, tarns and trees, px'],
     topAlpha: [0.3, 0, 1, 0.01, 'opacity of the top contour'],
-    ringAlpha: [0.15, 0, 1, 0.01, 'opacity of the contour rings'],
-    ridgeAlpha: [0.2, 0, 1, 0.01, 'opacity of the ridgeline between the summits'],
+    ridgeAlpha: [0.2, 0, 1, 0.01, 'opacity of the hachured saddle between the summits (hachure relief)'],
     clear: [14, 0, 80, 1, 'gap an eagle keeps from a summit\'s top contour, px'],
   },
   relief: {
+    snow: [0.86, 0.5, 1, 0.01, 'snowline: the share of the ground off the plateaus that lies below it'],
+    shade: [0.13, 0, 0.5, 0.01, 'woodcut: the flat tint of ink on the slopes facing away from the light'],
+    lineAlpha: [0.42, 0, 1, 0.01, 'opacity of ridgelines, valley lines and the hill signs\' outlines'],
     density: [1, 0, 3, 0.05, 'how close the hachures are laid, strokes per area x this'],
     jitter: [0.35, 0, 1, 0.05, 'how loosely the hachures are laid, 0 a strict lattice, 1 hand-laid'],
     hachureAlpha: [0.22, 0, 1, 0.01, 'opacity of the hachures'],
@@ -381,6 +381,10 @@ export function height(R, x, y) {
     const ex = g.bx - g.ax, ey = g.by - g.ay, u = clamp(((x - g.ax) * ex + (y - g.ay) * ey) / (ex * ex + ey * ey || 1), 0, 1);
     const dx = x - g.ax - ex * u, dy = y - g.ay - ey * u; z += g.h * Math.exp(-(dx * dx + dy * dy) / (g.r * g.r));
   }
+  for (const s of R.spurs) {
+    const ex = s.bx - s.ax, ey = s.by - s.ay, u = clamp(((x - s.ax) * ex + (y - s.ay) * ey) / s.l2, 0, 1);
+    const dx = x - s.ax - ex * u, dy = y - s.ay - ey * u; z += (s.h0 + (s.h1 - s.h0) * u) * Math.exp(-(dx * dx + dy * dy) / (s.r * s.r));
+  }
   for (const k of R.dips) { const dx = x - k.x, dy = y - k.y; z -= k.h * Math.exp(-(dx * dx + dy * dy) / (k.r * k.r)); }
   for (const v of R.waves) z += v[3] * Math.sin(v[0] * x + v[1] * y + v[2]);
   return z;
@@ -393,20 +397,25 @@ export function slope(R, x, y, out = { x: 0, y: 0 }) {
 // The ground a summit's rings may cover, by bearing from the summit's centre: no hachure is laid inside it.
 const zoneR = (z, t) => { let u = (t / TAU) * BEARINGS; u -= Math.floor(u / BEARINGS) * BEARINGS; const i = Math.floor(u), f = u - i; return z.R[i % BEARINGS] * (1 - f) + z.R[(i + 1) % BEARINGS] * f; };
 export const inZone = (R, x, y, g = 0) => R.zones.some((z) => Math.hypot(x - z.x, y - z.y) < zoneR(z, Math.atan2(y - z.y, x - z.x)) + g);
+// The plateau a summit's footprint covers, as the zone without the apron: the relief is drawn up to it.
+export const inCore = (R, x, y, g = 0) => R.cores.some((z) => Math.hypot(x - z.x, y - z.y) < zoneR(z, Math.atan2(y - z.y, x - z.x)) + g);
 const near = (list, x, y, f, g) => list.some((k) => Math.hypot(x - k.x, y - k.y) < k.r * f + g);
 const TOP = 110; // the header band: nothing laid above it but hachures
 
 function layRelief(w) {
   const p = w.params, W = w.w, H = w.h, r = rng((w.seed ^ 0x6d6f756e) >>> 0);
-  const R = { peaks: [], dips: [], ridge: null, waves: [], zones: [], crags: [], tarns: [], stream: null, trees: [], scree: [], strata: [], ledges: [], shelves: [], gref: 0.0025, q: [0, 0, 0, 0, 0] };
-  const reach = (p.rings + 1) * p.interval;
+  const R = {
+    peaks: [], spurs: [], ridges: [], valleys: [], dips: [], ridge: null, waves: [], zones: [], cores: [], crags: [], tarns: [], stream: null,
+    ledges: [], shelves: [], gref: 0.0025, snow: 1, q: [0, 0, 0, 0, 0],
+  };
   for (const o of w.summits) {
-    // the zone: the edge's widest reach over a broad window of bearings, the rings beyond it and a margin
-    const Z = new Float32Array(BEARINGS), win = BEARINGS >> 4;
-    let mean = 0;
-    for (let j = 0; j < BEARINGS; j++) { let m = 0; for (let d = -win; d <= win; d++) m = Math.max(m, o.C[(j + d + BEARINGS) % BEARINGS]); Z[j] = m + reach + 0.1 * o.mean; mean += Z[j]; }
-    mean /= BEARINGS;
+    // the core: the edge's widest reach over a broad window of bearings and a margin; the zone, the apron beyond it
+    const Z = new Float32Array(BEARINGS), K = new Float32Array(BEARINGS), win = BEARINGS >> 4;
+    let mean = 0, km = 0;
+    for (let j = 0; j < BEARINGS; j++) { let m = 0; for (let d = -win; d <= win; d++) m = Math.max(m, o.C[(j + d + BEARINGS) % BEARINGS]); K[j] = m + 4; Z[j] = m + p.apron + 0.1 * o.mean; mean += Z[j]; km += K[j]; }
+    mean /= BEARINGS; km /= BEARINGS;
     R.zones.push({ x: o.x, y: o.y, R: Z, mean });
+    R.cores.push({ x: o.x, y: o.y, R: K, mean: km });
     R.peaks.push({ x: o.x, y: o.y, r: mean * 1.3, h: 1 });
   }
   if (R.zones.length >= 2) { const [a, b] = R.zones; R.ridge = { ax: a.x, ay: a.y, bx: b.x, by: b.y, r: 0.4 * Math.min(a.mean, b.mean), h: 0.45 }; }
@@ -419,6 +428,7 @@ function layRelief(w) {
     const c = { x, y, r: cr, h: 0.4 + 0.3 * r(), ph: [r() * TAU, r() * TAU, r() * TAU], perched: 0, ledges: [] };
     R.crags.push(c); R.peaks.push({ x, y, r: cr, h: c.h });
   }
+  laySpurs(R, rng((w.seed ^ 0x73707572) >>> 0));
   // the spread of heights, for the treeline, the meadows and the high ground the wind streaks over; and of slopes, so
   // the steepest open ground (the 85th percentile) is the hachures' full length and the rest is read against it
   const hs = [], gs = [], sg = { x: 0, y: 0 };
@@ -427,6 +437,9 @@ function layRelief(w) {
   const q = (A, f) => (A.length ? A[Math.min(A.length - 1, Math.floor(f * A.length))] : 0);
   R.q = [q(hs, 0.1), q(hs, 0.3), q(hs, 0.5), q(hs, 0.7), q(hs, 0.9)];
   R.gref = Math.max(1e-5, q(gs, 0.85));
+  // the snowline: read over all the ground off the plateaus, the aprons with their high shoulders included
+  const hz = []; for (let i = 0; i < 900; i++) { const x = r() * W, y = TOP + r() * (H - TOP); if (!inCore(R, x, y)) hz.push(height(R, x, y)); }
+  hz.sort((a, b) => a - b); R.snow = q(hz, p.snow);
   // tarns in the lowest hollows, apart from each other
   const cand = [];
   for (let y = TOP + 40; y < H - 50; y += 32) for (let x = 60; x < W - 60; x += 32) {
@@ -461,6 +474,46 @@ function layRelief(w) {
     R.shelves.push({ x, y, r: 0 });
   }
   w.relief = R;
+}
+// Spurs: ridges running out from each summit and crag, as capsules of height falling away along them, so the ground
+// between them is valleys and the massif has a skeleton to read. Up to SPURS from each summit, none toward the other summit
+// (the main ridge runs there), three from each crag. Their axes past the plateau are the drawn ridgelines, with the
+// main ridge between the two plateaus; a valley line starts between each two neighbouring spurs.
+const SPURS = 8;
+function laySpurs(R, r) {
+  const add = (x, y, a, from, len, w, h0, list, start) => {
+    const bx = x + Math.cos(a) * len, by = y + Math.sin(a) * len;
+    R.spurs.push({ ax: x, ay: y, bx, by, l2: len * len, r: w, h0, h1: 0.03 });
+    list.push(a);
+    R.ridges.push({ ax: x + Math.cos(a) * from, ay: y + Math.sin(a) * from, bx: x + Math.cos(a) * len * start, by: y + Math.sin(a) * len * start });
+  };
+  const valleys = (x, y, as, from, skip) => {
+    as.sort((a, b) => a - b);
+    for (let i = 0; i < as.length; i++) {
+      const a0 = as[i], a1 = i + 1 < as.length ? as[i + 1] : as[0] + TAU, m = (a0 + a1) / 2;
+      if (skip != null && Math.abs(wrapAngle(skip - m)) < (a1 - a0) / 2) continue;
+      const rr = from(m); R.valleys.push([x + Math.cos(m) * rr, y + Math.sin(m) * rr]);
+    }
+  };
+  R.cores.forEach((o, i) => {
+    const other = R.cores[1 - i], toward = other ? Math.atan2(other.y - o.y, other.x - o.x) : null, base = r() * TAU, as = [];
+    for (let k = 0; k < SPURS; k++) {
+      const a = base + (k * TAU) / SPURS + (r() - 0.5) * 0.4;
+      if (toward != null && Math.abs(wrapAngle(a - toward)) < 0.5) continue;
+      const from = zoneR(o, a) + 3, len = from + o.mean * (0.6 + 0.6 * r());
+      add(o.x, o.y, a, from, len, 0.15 * o.mean, 0.8, as, 0.82);
+    }
+    valleys(o.x, o.y, as, (a) => zoneR(o, a) + 6, toward);
+  });
+  if (R.cores.length >= 2) {
+    const [a, b] = R.cores, t = Math.atan2(b.y - a.y, b.x - a.x), ra = zoneR(a, t) + 3, rb = zoneR(b, t + Math.PI) + 3;
+    R.ridges.push({ ax: a.x + Math.cos(t) * ra, ay: a.y + Math.sin(t) * ra, bx: b.x - Math.cos(t) * rb, by: b.y - Math.sin(t) * rb });
+  }
+  for (const c of R.crags) {
+    const base = r() * TAU, as = [];
+    for (let k = 0; k < 3; k++) add(c.x, c.y, base + (k * TAU) / 3 + (r() - 0.5) * 0.7, c.r * 0.1, c.r * (1.2 + 0.6 * r()), 0.32 * c.r, 0.55 * c.h, as, 0.75);
+    valleys(c.x, c.y, as, () => c.r * 0.35, null);
+  }
 }
 // The stream: from the highest crag's flank (or a summit's zone), down the slope toward a tarn, meandering; it ends on
 // the tarn's shore.
@@ -497,37 +550,243 @@ function layStream(w, R, r) {
 export const tarnR = (t, a) => t.r * (1 + 0.12 * Math.sin(2 * a + t.ph[0]) + 0.07 * Math.sin(3 * a + t.ph[1]) + 0.04 * Math.sin(5 * a + t.ph[2]));
 
 // ----- the static layer -----
+// The relief is drawn three ways, switched by `relief`, each laid and painted once into the static layer:
+//   0 hachures, the cartographer's way: strokes falling downslope, close and long on the slopes turned away from the
+//     light (the upper left) and sparse on the lit ones, so the massif is modelled in light and shade; a firm line down
+//     each ridge with the hachures fanning off both sides; a mark on each crag's top; snow left paper above a ragged
+//     snowline; a dense treeline of conifers on the low slopes.
+//   1 hill signs, the old mapmakers' way: over the plan ground each massif and crag is drawn in profile, seen from the
+//     south, its peaks rising up the page from a base line, the flank away from the light hatched and the lit one left
+//     open, snow on the tops, pines at the foot. The two summits are the plateaus of the two great massifs: the crest
+//     runs along each one's upper edge and the flanks hang below and beside it.
+//   2 woodcut: every slope facing away from the light one flat ink tint, the lit ones paper, traced from the height
+//     field on a grid as a few merged outlines; firm ridgelines and valley lines, snow paper above the snowline, and
+//     hachures only in the shade.
+const reliefMode = (p) => clamp(Math.round(p.relief) | 0, 0, 2);
+const LIGHT_X = -Math.SQRT1_2, LIGHT_Y = -Math.SQRT1_2; // toward the light: the upper left
+// how far ground of slope (sx, sy), g its steepness, faces the light: 1 straight toward it, -1 straight away
+const facing = (sx, sy, g) => (-sx * LIGHT_X - sy * LIGHT_Y) / g;
+// distance from (x, y) to the nearest drawn ridgeline's axis
+function ridgeDist(R, x, y) {
+  let best = Infinity;
+  for (const s of R.ridges) {
+    const ex = s.bx - s.ax, ey = s.by - s.ay, u = clamp(((x - s.ax) * ex + (y - s.ay) * ey) / (ex * ex + ey * ey || 1), 0, 1);
+    best = Math.min(best, Math.hypot(x - s.ax - ex * u, y - s.ay - ey * u));
+  }
+  return best;
+}
+
 // Hachures: the kit's lattice of level dashes, each turned to run downslope from the height field's gradient at its
-// anchor, longer where the ground is steeper; on flat ground only a sparse share is kept. A mark's pts run from its
-// upper end to its lower. None is laid in a summit's zone (the rings are drawn there), on a crag's top or in a tarn.
+// anchor, longer where the ground is steeper. How many are kept, and where, is the relief's: in 0 by steepness and by
+// how far the ground is turned from the light, in 1 a sparse scatter on the plan ground between the hill signs, in 2
+// only in the shade. A mark's pts run from its upper end to its lower; dark marks are drawn stronger. None is laid on a
+// summit's plateau, a crag's top or in a tarn, and none crosses a ridgeline.
 export const HACHURE = { pitch: 11, period: 26, dash: 8, reach: 20 };
+const DENSITY = [2.3, 0.45, 0.9];
 export function hachures(w, W, H, p) {
   const R = w.relief, out = []; if (!R) return out;
-  const marks = latticeMarks((w.seed ^ 0x68616368) >>> 0, W, H, HACHURE, p.density, p.jitter), sl = { x: 0, y: 0 };
+  const mode = reliefMode(p), dens = p.density * DENSITY[mode], sl = { x: 0, y: 0 };
+  const marks = latticeMarks((w.seed ^ 0x68616368) >>> 0, W, H, HACHURE, dens, p.jitter);
+  const norm = Math.min(HACHURE.dash, (0.7 * HACHURE.period) / Math.sqrt(dens));
   for (const m of marks) {
     const cx = (m.pts[0] + m.pts[2]) / 2, cy = m.pts[1];
-    if (inZone(R, cx, cy) || near(R.crags, cx, cy, 0.62, 0) || near(R.tarns, cx, cy, 1, 5)) continue;
+    if (inCore(R, cx, cy, 2) || near(R.crags, cx, cy, mode === 1 ? 0.7 : 0.1, 0) || near(R.tarns, cx, cy, 1, 5)) continue;
     slope(R, cx, cy, sl);
-    const g = Math.hypot(sl.x, sl.y), steep = clamp(g / R.gref, 0, 1);
-    if (g < 1e-9) continue;
-    if (steep < p.flat && pointRand(hashPoint(Math.round(m.x), Math.round(m.y), 0x5a7))() > p.sparse) continue;
+    const g = Math.hypot(sl.x, sl.y); if (g < 1e-9) continue;
+    const steep = clamp(g / R.gref, 0, 1), c = facing(sl.x, sl.y, g), shade = (1 - c) / 2;
+    const rnd = pointRand(hashPoint(Math.round(m.x), Math.round(m.y), 0x5a7))();
     // the lattice's own jitter of a dash's length carries over to the hachure's
-    const L = (p.short + (p.long - p.short) * steep) * ((m.pts[2] - m.pts[0]) / Math.min(HACHURE.dash, 0.7 * HACHURE.period / Math.sqrt(p.density))), ux = -sl.x / g, uy = -sl.y / g;
-    out.push({ x: m.x, y: m.y, pts: [cx - (ux * L) / 2, cy - (uy * L) / 2, cx + (ux * L) / 2, cy + (uy * L) / 2] });
+    let L = (p.short + (p.long - p.short) * steep) * ((m.pts[2] - m.pts[0]) / norm), keep = 0, dark = false;
+    if (mode === 0) {
+      if (c > -0.3 && height(R, cx, cy) > R.snow) continue; // lit snow stays paper
+      keep = clamp(0.1 + 1.25 * steep * (0.25 + 0.75 * shade), 0, 1) * (steep < p.flat ? p.sparse : 1);
+      L *= 0.7 + 0.6 * shade; dark = c < -0.2;
+    } else if (mode === 1) keep = steep < p.flat ? 0.5 * p.sparse : 0.6;
+    else { if (c > -0.25 || steep < p.flat) continue; keep = 0.85; dark = true; }
+    if (rnd > keep) continue;
+    if (mode !== 1) { const d = ridgeDist(R, cx, cy); if (d < L / 2 + 1.5) { L = 2 * (d - 1.5); if (L < 2.5) continue; } }
+    const ux = -sl.x / g, uy = -sl.y / g;
+    out.push({ x: m.x, y: m.y, dark, pts: [cx - (ux * L) / 2, cy - (uy * L) / 2, cx + (ux * L) / 2, cy + (uy * L) / 2] });
   }
   return out;
 }
-// Everything else the static layer draws, as polylines grouped by how they are drawn.
-function floorLines(w) {
-  const R = w.relief, rings = [], strata = [], scree = [], trees = [], tarns = []; if (!R) return { rings, strata, scree, trees, tarns, stream: null };
+
+// The outlines of where F (nx by ny nodes, cell px apart) reaches lev, by marching squares, as closed runs of x, y;
+// the grid's border counts as below, so every outline closes. Filled even-odd, they are the region itself.
+function isoLoops(F, nx, ny, cell, lev) {
+  const v = (i, j) => (i < 0 || j < 0 || i >= nx || j >= ny ? -1e9 : F[j * nx + i] - lev);
+  const W2 = nx + 2, pts = new Map(), adj = new Map();
+  const cross = (i, j, vert) => {
+    const k = 2 * ((j + 1) * W2 + i + 1) + vert;
+    if (!pts.has(k)) { const a = v(i, j), b = vert ? v(i, j + 1) : v(i + 1, j), t = clamp(a / (a - b), 0, 1); pts.set(k, vert ? [i * cell, (j + t) * cell] : [(i + t) * cell, j * cell]); }
+    return k;
+  };
+  const link = (a, b) => { (adj.get(a) || adj.set(a, []).get(a)).push(b); (adj.get(b) || adj.set(b, []).get(b)).push(a); };
+  for (let j = -1; j < ny; j++) for (let i = -1; i < nx; i++) {
+    const a = v(i, j) >= 0, b = v(i + 1, j) >= 0, c = v(i + 1, j + 1) >= 0, d = v(i, j + 1) >= 0;
+    const code = (a ? 8 : 0) | (b ? 4 : 0) | (c ? 2 : 0) | (d ? 1 : 0);
+    if (code === 0 || code === 15) continue;
+    const T = () => cross(i, j, 0), B = () => cross(i, j + 1, 0), L = () => cross(i, j, 1), R = () => cross(i + 1, j, 1);
+    const mid = (v(i, j) + v(i + 1, j) + v(i + 1, j + 1) + v(i, j + 1)) / 4 >= 0;
+    switch (code) {
+      case 1: case 14: link(L(), B()); break;
+      case 2: case 13: link(B(), R()); break;
+      case 3: case 12: link(L(), R()); break;
+      case 4: case 11: link(T(), R()); break;
+      case 6: case 9: link(T(), B()); break;
+      case 7: case 8: link(T(), L()); break;
+      case 5: if (mid) { link(T(), L()); link(B(), R()); } else { link(T(), R()); link(L(), B()); } break;
+      case 10: if (mid) { link(T(), R()); link(L(), B()); } else { link(T(), L()); link(B(), R()); } break;
+    }
+  }
+  const loops = [], seen = new Set();
+  for (const k0 of adj.keys()) {
+    if (seen.has(k0)) continue;
+    const loop = []; let prev = -1, k = k0;
+    while (k !== undefined && !seen.has(k)) {
+      seen.add(k); const q = pts.get(k); loop.push(q[0], q[1]);
+      const n = adj.get(k), next = n[0] !== prev ? n[0] : n[1]; prev = k; k = next;
+    }
+    if (loop.length >= 6) loops.push(loop);
+  }
+  return loops;
+}
+// The height field and how far the ground is turned from the light, sampled on a grid GRID px apart over the page.
+const GRID = 6;
+function reliefGrid(R, W, H) {
+  const nx = Math.ceil(W / GRID) + 1, ny = Math.ceil(H / GRID) + 1, Z = new Float32Array(nx * ny), S = new Float32Array(nx * ny);
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) Z[j * nx + i] = height(R, i * GRID, j * GRID);
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+    const i0 = Math.max(0, i - 1), i1 = Math.min(nx - 1, i + 1), j0 = Math.max(0, j - 1), j1 = Math.min(ny - 1, j + 1);
+    const sx = (Z[j * nx + i1] - Z[j * nx + i0]) / ((i1 - i0) * GRID), sy = (Z[j1 * nx + i] - Z[j0 * nx + i]) / ((j1 - j0) * GRID);
+    S[j * nx + i] = (sx * LIGHT_X + sy * LIGHT_Y) / R.gref; // the shade: steepness turned away from the light
+  }
+  return { nx, ny, Z, S };
+}
+// a loop's points shaken by up to amp px, so a snowline is ragged
+function ragged(loops, seed, amp) {
+  for (const L of loops) for (let i = 0; i < L.length; i += 2) {
+    const d = pointRand(hashPoint(Math.round(L[i]), Math.round(L[i + 1]), seed));
+    L[i] += (d() - 0.5) * 2 * amp; L[i + 1] += (d() - 0.5) * 2 * amp;
+  }
+  return loops;
+}
+// a straight ridge axis as a line that wavers a little, a point every 8 px
+function wavering(s, seed) {
+  const L = Math.hypot(s.bx - s.ax, s.by - s.ay), n = Math.max(2, Math.round(L / 8)), nx = -(s.by - s.ay) / (L || 1), ny = (s.bx - s.ax) / (L || 1), pts = [];
+  const d = pointRand(hashPoint(Math.round(s.ax), Math.round(s.ay), seed));
+  for (let i = 0; i <= n; i++) { const u = i / n, o = i && i < n ? (d() - 0.5) * 2.2 : 0; pts.push(s.ax + (s.bx - s.ax) * u + nx * o, s.ay + (s.by - s.ay) * u + ny * o); }
+  return pts;
+}
+// a valley line: steepest descent from (x, y) in steps of 4 px until the ground flattens, leaves the page or meets a tarn
+function valleyFrom(R, x, y, W, H) {
+  const pts = [x, y], sl = { x: 0, y: 0 };
+  for (let i = 0; i < 90; i++) {
+    slope(R, x, y, sl); const g = Math.hypot(sl.x, sl.y);
+    if (g < 0.12 * R.gref) break;
+    x -= (sl.x / g) * 4; y -= (sl.y / g) * 4;
+    if (x < 0 || y < 0 || x > W || y > H || inCore(R, x, y, 0) || near(R.tarns, x, y, 1, 2)) break;
+    pts.push(x, y);
+  }
+  return pts.length >= 8 ? pts : null;
+}
+
+// ----- hill signs -----
+const lerp = (a, b, t) => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+// One hill sign: crest is its skyline from the left shoulder to the right, peaks marked pk; the flanks fall from the
+// shoulders to the base line at yb between xl and xr. Each peak's snow cap is a ragged line `snow` px under its tip,
+// and its face away from the light, from the cap down to the base, is a hatched region; pines stand along the foot.
+function hillSign(r, R, crest, xl, xr, yb, snow) {
+  const c0 = crest[0], cn = crest[crest.length - 1];
+  const jl = { x: (xl + c0.x) / 2 - 3 - 4 * r(), y: (yb + c0.y) / 2 + (r() - 0.5) * 8 };
+  const jr = { x: (xr + cn.x) / 2 + 3 + 4 * r(), y: (yb + cn.y) / 2 + (r() - 0.5) * 8 };
+  const outline = [{ x: xl, y: yb }, jl, ...crest, jr, { x: xr, y: yb }], faces = [], caps = [], pines = [];
+  const foot = (q, k) => ({ x: q.x + (yb - q.y) * k, y: yb });
+  let top = Infinity;
+  for (let k = 1; k < crest.length - 1; k++) {
+    const P = crest[k]; if (!P.pk) continue;
+    top = Math.min(top, P.y);
+    const A = crest[k - 1], B = crest[k + 1];
+    const left = lerp(P, A, Math.min(0.7, snow / Math.max(1, A.y - P.y))), right = lerp(P, B, Math.min(0.7, snow / Math.max(1, B.y - P.y)));
+    const mid = { x: P.x + (r() - 0.5) * 2, y: P.y + snow * (0.95 + 0.35 * r()) };
+    const j1 = { x: (left.x + mid.x) / 2, y: (left.y + mid.y) / 2 - snow * 0.28 }, j2 = { x: (mid.x + right.x) / 2, y: (mid.y + right.y) / 2 - snow * 0.22 };
+    caps.push([left, j1, mid, j2, right]);
+    // the outermost peak's shade runs down the whole flank; an inner peak's only a little below its crest, as the
+    // mapmakers shaded the near side of each top
+    const last = k + 1 === crest.length - 1, depth = last ? 1 : Math.min(1, (Math.max(B.y, P.y + snow * 4) + snow * 2.5 - P.y) / (yb - P.y));
+    const fp = lerp(mid, foot(P, 0.06), last ? 1 : depth), face = [right, B];
+    if (last) face.push(jr, { x: xr, y: yb }); else face.push(lerp(B, foot(B, 0.14), depth));
+    face.push(fp, mid, j2);
+    const ux = fp.x - mid.x, uy = fp.y - mid.y, ul = Math.hypot(ux, uy) || 1;
+    faces.push({ pts: face, ux: ux / ul, uy: uy / ul });
+  }
+  // pines along the foot, on the lowest part of the flanks and just below the base
+  const band = Math.min(26, (yb - top) * 0.22);
+  for (let x = xl + 8; x < xr - 8; x += 6.5) {
+    if (r() > 0.62) continue;
+    const y = yb - r() * band + (r() < 0.3 ? 6 * r() : 0), s = 0.8 + 0.4 * r(), px = x + (r() - 0.5) * 3;
+    if (inCore(R, px, y - 4, 2)) continue;
+    pines.push([px, y, px, y - 4.5 * s], [px - 2 * s, y - 1.6 * s, px, y - 7 * s, px + 2 * s, y - 1.6 * s]);
+  }
+  return { yb, outline, faces, caps, pines };
+}
+// The hill signs: a great massif under each summit, its crest along the footprint's upper edge rising in three or four
+// peaks, the tallest in the middle, and a smaller sign of two or three peaks on each crag; drawn far to near (by base).
+function hillSigns(w, R) {
+  const r = rng((w.seed ^ 0x68696c6c) >>> 0), signs = [];
+  for (const o of w.summits) {
+    let xl = Infinity, xr = -Infinity, yt = Infinity, yb = -Infinity;
+    for (let j = 0; j < BEARINGS; j++) {
+      const a = (j / BEARINGS) * TAU, e = edge(o, a), x = o.x + Math.cos(a) * e, y = o.y + Math.sin(a) * e;
+      xl = Math.min(xl, x); xr = Math.max(xr, x); yt = Math.min(yt, y); yb = Math.max(yb, y);
+    }
+    const wd = xr - xl, ht = yb - yt;
+    const E = (a, up) => { const e = edge(o, a) + 3, y = o.y + Math.sin(a) * e; return { x: o.x + Math.cos(a) * e, y: y - Math.min(up, y - (TOP - 20)) }; };
+    const k = wd > 380 ? 4 : 3, a0 = Math.PI + 0.12, span = Math.PI - 0.24, crest = [E(a0, 0)];
+    for (let i = 0; i < k; i++) {
+      const u = (i + 0.5) / k, a = a0 + u * span + (r() - 0.5) * 0.12, mid = 1 - Math.abs(u - 0.5) * 1.6;
+      crest.push({ ...E(a, wd * (0.08 + 0.12 * mid + 0.04 * r())), pk: true });
+      if (i < k - 1) crest.push(E(a0 + ((i + 1) / k) * span, 4 + 6 * r()));
+    }
+    crest.push(E(a0 + span, 0));
+    signs.push(hillSign(r, R, crest, xl - wd * 0.2, xr + wd * 0.2, Math.min(w.h - 12, yb + ht * 0.16), 16));
+  }
+  for (const c of R.crags) {
+    const s = c.r, x = c.x, y = c.y, h = s * (1 + 0.3 * r()), crest = [{ x: x - s * 0.62, y: y + s * 0.05 }];
+    if (r() < 0.7) crest.push({ x: x - s * 0.36, y: y - h * (0.45 + 0.15 * r()), pk: true }, { x: x - s * 0.17, y: y - h * 0.2 });
+    crest.push({ x: x + s * 0.02, y: y - h, pk: true });
+    if (r() < 0.7) crest.push({ x: x + s * 0.28, y: y - h * 0.28 }, { x: x + s * 0.46, y: y - h * (0.5 + 0.15 * r()), pk: true });
+    crest.push({ x: x + s * 0.64, y: y + s * 0.05 });
+    signs.push(hillSign(r, R, crest, x - s * 0.95, x + s * 0.95, y + s * 0.5, s * 0.22));
+  }
+  return signs.sort((a, b) => a.yb - b.yb);
+}
+
+// What the relief draws beyond the hachures and the floor, by mode: snowfields, the shade, ridgelines, valley lines,
+// crag tops; or the hill signs.
+function reliefLines(w, p, W, H) {
+  const R = w.relief, mode = reliefMode(p), out = { mode, snow: [], shade: [], ridges: [], valleys: [], tops: [], signs: [] };
+  if (!R) return out;
+  if (mode === 1) { out.signs = hillSigns(w, R); return out; }
+  const G = reliefGrid(R, W, H);
+  out.snow = ragged(isoLoops(G.Z, G.nx, G.ny, GRID, R.snow), (w.seed ^ 0x736e6f77) >>> 0, 1.3);
+  out.ridges = R.ridges.map((s) => wavering(s, (w.seed ^ 0x72696467) >>> 0));
+  if (mode === 0) out.tops = R.crags.map((c) => [c.x, c.y]);
+  else {
+    out.shade = isoLoops(G.S, G.nx, G.ny, GRID, SHADE);
+    for (const [x, y] of R.valleys) { const v = valleyFrom(R, x, y, W, H); if (v) out.valleys.push(v); }
+  }
+  return out;
+}
+const SHADE = 0.4; // the woodcut's shade: ground turned from the light more steeply than this, of the reference slope
+
+// Everything else the static layer draws, as polylines grouped by how they are drawn. Under hill signs the conifers
+// are pines in profile, and the crags' strata and scree are left to the signs.
+function floorLines(w, mode) {
+  const R = w.relief, strata = [], scree = [], trees = [], tarns = []; if (!R) return { strata, scree, trees, tarns, stream: null };
   const r = rng((w.seed ^ 0x666c6f6f) >>> 0);
   for (const c of R.crags) {
-    // a crag's own contours: three wavering rings round its top
-    for (const f of [0.2, 0.38, 0.56]) {
-      const n = 40, pts = [];
-      for (let i = 0; i <= n; i++) { const a = (i / n) * TAU, k = c.r * f * (1 + 0.16 * Math.sin(2 * a + c.ph[0]) + 0.1 * Math.sin(3 * a + c.ph[1] + f * 4) + 0.05 * Math.sin(5 * a + c.ph[2])); pts.push(c.x + Math.cos(a) * k, c.y + Math.sin(a) * k); }
-      rings.push(pts);
-    }
+    if (mode === 1) break;
     // the cliff faces the lowest side: strata along it, scree fanning out below it
     let lo = Infinity, face = 0;
     for (let k = 0; k < 16; k++) { const a = (k / 16) * TAU, z = height(R, c.x + Math.cos(a) * c.r * 0.9, c.y + Math.sin(a) * c.r * 0.9); if (z < lo) { lo = z; face = a; } }
@@ -542,205 +801,77 @@ function floorLines(w) {
       scree.push([x, y, x + Math.cos(a) * 1.2, y + Math.sin(a) * 1.2]);
     }
   }
-  // the treeline: conifers on the low slopes, thinning as the ground rises toward the line
-  const treeTop = R.q[2], base = R.q[0], sl = { x: 0, y: 0 };
-  const S = R.stream;
+  // the treeline: conifers on the low slopes, thinning as the ground rises toward the line; twice as close under the
+  // hachures, where it is the relief's lowest band
+  const treeTop = R.q[2], base = R.q[0], sl = { x: 0, y: 0 }, S = R.stream, close = mode === 0 ? 2 : 1;
   for (let y = TOP; y < w.h - 8; y += 19) for (let x = 8; x < w.w - 8; x += 19) {
-    const d = pointRand(hashPoint(x, y, (w.seed ^ 0x74726565) >>> 0)), tx = x + (d() - 0.5) * 14, ty = y + (d() - 0.5) * 14, z = height(R, tx, ty);
-    if (z > treeTop || inZone(R, tx, ty, 8) || near(R.crags, tx, ty, 0.75, 0) || near(R.tarns, tx, ty, 1, 7)) continue;
-    const keep = 0.42 * w.params.trees * clamp(((treeTop - z) / Math.max(1e-6, treeTop - base)) * 1.6, 0, 1);
-    if (d() > keep) continue;
-    slope(R, tx, ty, sl); if (Math.hypot(sl.x, sl.y) / R.gref < 0.05) continue; // a dead-flat floor is meadow
-    if (S) { let close = false; for (let i = 0; i < S.pts.length && !close; i += 4) close = Math.hypot(S.pts[i] - tx, S.pts[i + 1] - ty) < 7; if (close) continue; }
-    const s = 2.6 + d() * 1.4, a = d() * TAU;
-    for (let k = 0; k < 3; k++) { const b = a + (k * Math.PI) / 3; trees.push([tx - Math.cos(b) * s, ty - Math.sin(b) * s, tx + Math.cos(b) * s, ty + Math.sin(b) * s]); }
+    const d = pointRand(hashPoint(x, y, (w.seed ^ 0x74726565) >>> 0));
+    for (let t = 0; t < close; t++) {
+      const tx = x + (d() - 0.5) * 16, ty = y + (d() - 0.5) * 16, z = height(R, tx, ty);
+      if (z > treeTop || inZone(R, tx, ty, 8) || near(R.crags, tx, ty, 0.75, 0) || near(R.tarns, tx, ty, 1, 7)) continue;
+      const keep = 0.42 * w.params.trees * clamp(((treeTop - z) / Math.max(1e-6, treeTop - base)) * 1.6, 0, 1);
+      if (d() > keep) continue;
+      slope(R, tx, ty, sl); if (Math.hypot(sl.x, sl.y) / R.gref < 0.05) continue; // a dead-flat floor is meadow
+      if (S) { let wet = false; for (let i = 0; i < S.pts.length && !wet; i += 4) wet = Math.hypot(S.pts[i] - tx, S.pts[i + 1] - ty) < 7; if (wet) continue; }
+      const s = 2.6 + d() * 1.4, a = d() * TAU;
+      if (mode === 1) { const k = s / 3.3; trees.push([tx, ty + 3 * k, tx, ty - 1.5 * k], [tx - 2 * k, ty + 1.4 * k, tx, ty - 3.5 * k, tx + 2 * k, ty + 1.4 * k]); }
+      else for (let k = 0; k < 3; k++) { const b = a + (k * Math.PI) / 3; trees.push([tx - Math.cos(b) * s, ty - Math.sin(b) * s, tx + Math.cos(b) * s, ty + Math.sin(b) * s]); }
+    }
   }
   for (const t of R.tarns) {
     const n = 48, shore = [], inner = [];
     for (let i = 0; i <= n; i++) { const a = (i / n) * TAU, k = tarnR(t, a); shore.push(t.x + Math.cos(a) * k, t.y + Math.sin(a) * k); inner.push(t.x + Math.cos(a) * k * 0.55, t.y + Math.sin(a) * k * 0.55); }
     tarns.push({ shore, inner });
   }
-  return { rings, strata, scree, trees, tarns, stream: S ? S.pts : null };
+  return { strata, scree, trees, tarns, stream: S ? S.pts : null };
 }
 const polyline = (ctx, pts) => { ctx.moveTo(pts[0], pts[1]); for (let i = 2; i < pts.length; i += 2) ctx.lineTo(pts[i], pts[i + 1]); };
+const loopPath = (ctx, loops) => { for (const L of loops) { polyline(ctx, L); ctx.closePath(); } };
+const pointsPath = (ctx, P, closed) => { ctx.moveTo(P[0].x, P[0].y); for (let i = 1; i < P.length; i++) ctx.lineTo(P[i].x, P[i].y); if (closed) ctx.closePath(); };
 function smoothLine(ctx, pts) {
   const n = pts.length / 2; ctx.moveTo(pts[0], pts[1]);
   for (let i = 1; i < n - 1; i++) ctx.quadraticCurveTo(pts[2 * i], pts[2 * i + 1], (pts[2 * i] + pts[2 * i + 2]) / 2, (pts[2 * i + 1] + pts[2 * i + 3]) / 2);
   ctx.lineTo(pts[2 * n - 2], pts[2 * n - 1]);
 }
+// a face's hatching: lines along the face's fall line, HATCH px apart, clipped to the face
+const HATCH = 2.6;
+function hatch(ctx, f) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const q of f.pts) { x0 = Math.min(x0, q.x); y0 = Math.min(y0, q.y); x1 = Math.max(x1, q.x); y1 = Math.max(y1, q.y); }
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, half = Math.hypot(x1 - x0, y1 - y0) / 2 + 2, nx = -f.uy, ny = f.ux;
+  ctx.save(); ctx.beginPath(); pointsPath(ctx, f.pts, true); ctx.clip(); ctx.beginPath();
+  for (let s = -half; s <= half; s += HATCH) { const x = cx + nx * s, y = cy + ny * s; ctx.moveTo(x - f.ux * half, y - f.uy * half); ctx.lineTo(x + f.ux * half, y + f.uy * half); }
+  ctx.stroke(); ctx.restore();
+}
+function paintSigns(ctx, signs, p, ink, paper) {
+  for (const s of signs) {
+    ctx.beginPath(); pointsPath(ctx, s.outline, true); ctx.fillStyle = paper; ctx.globalAlpha = 1; ctx.fill();
+    ctx.save(); ctx.clip(); ctx.globalAlpha = p.lineAlpha * 0.75; for (const f of s.faces) hatch(ctx, f); ctx.restore();
+    ctx.globalAlpha = p.lineAlpha; ctx.beginPath(); pointsPath(ctx, s.outline, false); ctx.stroke();
+    ctx.globalAlpha = p.lineAlpha * 0.7; ctx.beginPath(); for (const c of s.caps) pointsPath(ctx, c, false); ctx.stroke();
+    ctx.globalAlpha = Math.min(1, p.floorAlpha * 2); ctx.beginPath(); for (const pts of s.pines) polyline(ctx, pts); ctx.stroke();
+  }
+}
 function paintLayer(ctx, data, p, colours) {
-  const { ink, water } = colours, f = data.floor;
-  drawMarks(ctx, data.marks, ink, p.hachureAlpha);
+  const { ink, paper, water } = colours, f = data.floor, V = data.relief;
   ctx.strokeStyle = ink; ctx.lineWidth = 1; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  ctx.globalAlpha = p.floorAlpha; ctx.beginPath(); for (const pts of f.rings) smoothLine(ctx, pts); ctx.stroke();
+  // snowfields paper, then the woodcut's shade over them as one flat tint
+  if (V.snow.length) { ctx.fillStyle = paper; ctx.globalAlpha = 1; ctx.beginPath(); loopPath(ctx, V.snow); ctx.fill('evenodd'); }
+  if (V.shade.length) { ctx.fillStyle = ink; ctx.globalAlpha = p.shade; ctx.beginPath(); loopPath(ctx, V.shade); ctx.fill('evenodd'); }
+  drawMarks(ctx, data.marks.filter((m) => !m.dark), ink, p.hachureAlpha * (V.mode === 1 ? 0.7 : 0.85));
+  drawMarks(ctx, data.marks.filter((m) => m.dark), ink, Math.min(1, p.hachureAlpha * (V.mode === 0 ? 2.3 : 1.7)));
+  ctx.strokeStyle = ink; ctx.lineWidth = 1; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  if (V.valleys.length) { ctx.globalAlpha = p.lineAlpha * 0.55; ctx.beginPath(); for (const v of V.valleys) smoothLine(ctx, v); ctx.stroke(); }
+  if (V.ridges.length) { ctx.globalAlpha = p.lineAlpha; ctx.beginPath(); for (const v of V.ridges) polyline(ctx, v); ctx.stroke(); }
+  if (V.tops.length) { ctx.fillStyle = ink; ctx.globalAlpha = Math.min(1, p.lineAlpha * 1.3); ctx.beginPath(); for (const [x, y] of V.tops) { ctx.moveTo(x, y - 3.2); ctx.lineTo(x + 2.8, y + 1.8); ctx.lineTo(x - 2.8, y + 1.8); ctx.closePath(); } ctx.fill(); }
   ctx.globalAlpha = p.floorAlpha * 0.8; ctx.beginPath(); for (const pts of f.strata) polyline(ctx, pts); for (const pts of f.trees) polyline(ctx, pts); ctx.stroke();
   ctx.globalAlpha = p.floorAlpha * 1.2; ctx.beginPath(); for (const pts of f.scree) polyline(ctx, pts); ctx.stroke();
   ctx.strokeStyle = water; ctx.fillStyle = water;
   for (const t of f.tarns) { ctx.beginPath(); smoothLine(ctx, t.shore); ctx.globalAlpha = 0.08; ctx.fill(); ctx.globalAlpha = p.waterAlpha; ctx.stroke(); ctx.beginPath(); smoothLine(ctx, t.inner); ctx.globalAlpha = p.waterAlpha * 0.45; ctx.stroke(); }
   if (f.stream) { ctx.globalAlpha = p.waterAlpha * 0.85; ctx.beginPath(); smoothLine(ctx, f.stream); ctx.stroke(); }
+  ctx.strokeStyle = ink;
+  if (V.signs.length) paintSigns(ctx, V.signs, p, ink, paper);
   ctx.globalAlpha = 1;
-}
-
-// ----- the summits' rings -----
-// Each summit's top contour is its footprint's edge, drawn smooth by the kit. Below it the rings are the level sets of
-// one field over a grid anchored to the page: a node's level is its distance out past the nearer summit's edge in
-// intervals, the two summits' levels joined by a soft minimum, so where two summits come close their rings neck and
-// merge across a saddle as a map's do. The field is sampled only near the summits and traced by marching squares, each
-// frame, so the rings follow the outlines as the edge does; the grid never moves, so a ring moves only as its field
-// does and nothing pops. Each crossing lies on one edge of the grid, named by its index, so the cells' segments are
-// chained end to end through the edges they share into whole contours, which are drawn curved through their points'
-// midpoints: a few long paths rather than thousands of loose segments, which cost the GPU process ten times as much.
-let GV = new Float32Array(0);
-let SP = new Float32Array(8192), SE = new Int32Array(4096), SL = new Uint8Array(2048), sn = 0;
-let EA = new Int32Array(0), EB = new Int32Array(0), ES = new Int32Array(0), USED = new Uint8Array(2048), stamp = 0;
-let CH = new Float32Array(4096);
-// the contours of the last ringField: { start, n, closed, level } over CH's x, y pairs
-export const RINGS = { chains: [], pts: CH };
-function seg(x0, y0, e0, x1, y1, e1, lev) {
-  if (sn * 4 + 4 > SP.length) { const a = new Float32Array(SP.length * 2); a.set(SP); SP = a; const b = new Int32Array(SE.length * 2); b.set(SE); SE = b; const c = new Uint8Array(SL.length * 2); c.set(SL); SL = c; }
-  SP[4 * sn] = x0; SP[4 * sn + 1] = y0; SP[4 * sn + 2] = x1; SP[4 * sn + 3] = y1; SE[2 * sn] = e0; SE[2 * sn + 1] = e1; SL[sn] = lev; sn++;
-}
-export function ringField(w) {
-  const p = w.params, S = w.summits, cell = Math.max(3, p.cell), top = Math.max(0, Math.min(250, Math.round(p.rings)));
-  sn = 0; RINGS.chains.length = 0;
-  if (!S.length || !top) return RINGS;
-  const reach = (top + 1.5) * p.interval, boxes = [];
-  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-  for (const o of S) {
-    let m = 0, n = Infinity; for (let j = 0; j < BEARINGS; j++) { m = Math.max(m, o.C[j]); n = Math.min(n, o.C[j]); }
-    const b = [o.x - m - reach, o.y - m - reach, o.x + m + reach, o.y + m + reach, m, n]; boxes.push(b);
-    x0 = Math.min(x0, b[0]); y0 = Math.min(y0, b[1]); x1 = Math.max(x1, b[2]); y1 = Math.max(y1, b[3]);
-  }
-  const gx = Math.floor(x0 / cell), gy = Math.floor(y0 / cell), nx = Math.ceil(x1 / cell) - gx + 1, ny = Math.ceil(y1 / cell) - gy + 1;
-  if (GV.length < nx * ny) GV = new Float32Array(Math.ceil(nx * ny * 1.25));
-  const k = Math.max(1e-3, p.saddle), iv = 1 / p.interval, far = top + 2, BN = BEARINGS / TAU;
-  for (let j = 0; j < ny; j++) {
-    const y = (gy + j) * cell;
-    for (let i = 0; i < nx; i++) {
-      const x = (gx + i) * cell;
-      let a = far, b = far;
-      for (let s = 0; s < S.length; s++) {
-        const B = boxes[s]; if (x < B[0] || x > B[2] || y < B[1] || y > B[3]) continue;
-        const o = S[s], dx = x - o.x, dy = y - o.y, d = Math.sqrt(dx * dx + dy * dy);
-        // bounds first: past the farthest ring, or a node no ring of this summit can lie beyond, needs no bearing
-        const lo = (d - B[4]) * iv; if (lo > far || lo > b + k) continue;
-        if ((d - B[5]) * iv < 0.5) { const l = (d - B[5]) * iv; if (l < a) { b = a; a = l; } else if (l < b) b = l; continue; }
-        // the edge at this bearing, read from the footprint's table between bins
-        let u = fastAtan2(dy, dx) * BN; if (u < 0) u += BEARINGS;
-        const i0 = u | 0, f = u - i0, C = o.C, e0 = C[i0 % BEARINGS], R = e0 + (C[(i0 + 1) % BEARINGS] - e0) * f;
-        const l = (d - R) * iv;
-        if (l < a) { b = a; a = l; } else if (l < b) b = l;
-      }
-      // the polynomial soft minimum: the plain minimum where the two differ by k or more
-      const h = Math.max(0, k - (b - a)) / k;
-      GV[j * nx + i] = a - h * h * k * 0.25;
-    }
-  }
-  const per = 2 * nx * ny;
-  for (let j = 0; j < ny - 1; j++) {
-    for (let i = 0; i < nx - 1; i++) {
-      const v0 = GV[j * nx + i], v1 = GV[j * nx + i + 1], v2 = GV[(j + 1) * nx + i + 1], v3 = GV[(j + 1) * nx + i];
-      const lo = Math.min(v0, v1, v2, v3), hi = Math.max(v0, v1, v2, v3);
-      let m = Math.max(1, Math.ceil(lo)); const mt = Math.min(top, Math.floor(hi));
-      if (m > mt) continue;
-      const X = (gx + i) * cell, Y = (gy + j) * cell;
-      for (; m <= mt; m++) {
-        // the cell's four edges at this level: top, bottom, left, right
-        const base = (m - 1) * per, eT = base + 2 * (j * nx + i), eB = base + 2 * ((j + 1) * nx + i), eL = eT + 1, eR = base + 2 * (j * nx + i + 1) + 1;
-        march(X, Y, cell, v0 - m, v1 - m, v2 - m, v3 - m, eT, eR, eB, eL, m);
-      }
-    }
-  }
-  chain(top * per);
-  return RINGS;
-}
-// The segments chained into contours through the grid edges they share: each edge holds at most two segments, the
-// two cells either side of it. A walk from a segment runs forward through its end edge and back through its start,
-// and a contour that comes round to where it began is closed.
-function chain(edges) {
-  if (ES.length < edges) { ES = new Int32Array(Math.ceil(edges * 1.25)); EA = new Int32Array(ES.length); EB = new Int32Array(ES.length); stamp = 0; }
-  if (USED.length < sn) USED = new Uint8Array(sn * 2);
-  stamp++;
-  const reg = (e, s) => { if (ES[e] !== stamp) { ES[e] = stamp; EA[e] = s; EB[e] = -1; } else EB[e] = s; };
-  for (let s = 0; s < sn; s++) { reg(SE[2 * s], s); reg(SE[2 * s + 1], s); USED[s] = 0; }
-  const other = (e, s) => (EA[e] === s ? EB[e] : EA[e]);
-  let n = 0;
-  const put = (x, y) => { if (2 * n + 2 > CH.length) { const a = new Float32Array(CH.length * 2); a.set(CH); CH = a; RINGS.pts = CH; } CH[2 * n] = x; CH[2 * n + 1] = y; n++; };
-  for (let s0 = 0; s0 < sn; s0++) {
-    if (USED[s0]) continue;
-    USED[s0] = 1;
-    // back from the start edge first, into a run that is then reversed in place, so the contour reads in order
-    const start = n;
-    let cur = s0, e = SE[2 * s0], closed = false;
-    for (;;) {
-      const nx = other(e, cur); if (nx < 0) break; if (USED[nx]) { closed = nx === s0; break; }
-      USED[nx] = 1;
-      if (SE[2 * nx] === e) { put(SP[4 * nx + 2], SP[4 * nx + 3]); e = SE[2 * nx + 1]; } else { put(SP[4 * nx], SP[4 * nx + 1]); e = SE[2 * nx]; }
-      cur = nx;
-    }
-    for (let a = start, b = n - 1; a < b; a++, b--) { const x = CH[2 * a], y = CH[2 * a + 1]; CH[2 * a] = CH[2 * b]; CH[2 * a + 1] = CH[2 * b + 1]; CH[2 * b] = x; CH[2 * b + 1] = y; }
-    put(SP[4 * s0], SP[4 * s0 + 1]); put(SP[4 * s0 + 2], SP[4 * s0 + 3]);
-    cur = s0; e = SE[2 * s0 + 1];
-    for (;;) {
-      const nx = other(e, cur); if (nx < 0) break; if (USED[nx]) { closed = closed || nx === s0; break; }
-      USED[nx] = 1;
-      if (SE[2 * nx] === e) { put(SP[4 * nx + 2], SP[4 * nx + 3]); e = SE[2 * nx + 1]; } else { put(SP[4 * nx], SP[4 * nx + 1]); e = SE[2 * nx]; }
-      cur = nx;
-    }
-    if (closed) n--; // the last point is the first again
-    RINGS.chains.push({ start, n: n - start, closed, level: SL[s0] });
-  }
-}
-// strokes the contours whose level passes keep, each curved through its points' midpoints
-function drawRings(ctx, keep, cell) {
-  const P = RINGS.pts, every = Math.max(1, Math.round(24 / cell));
-  ctx.beginPath();
-  for (const c of RINGS.chains) {
-    if (!keep(c.level) || c.n < 2) continue;
-    // a long contour is curved through crossings about 24 px apart: the curve stays smooth and costs far fewer verbs
-    const k = c.n > 8 * every ? every : 1, X = (i) => P[2 * (c.start + i * k)], Y = (i) => P[2 * (c.start + i * k) + 1], n = Math.floor(c.n / k);
-    if (c.closed) {
-      ctx.moveTo((X(n - 1) + X(0)) / 2, (Y(n - 1) + Y(0)) / 2);
-      for (let i = 0; i < n; i++) { const j = (i + 1) % n; ctx.quadraticCurveTo(X(i), Y(i), (X(i) + X(j)) / 2, (Y(i) + Y(j)) / 2); }
-    } else {
-      ctx.moveTo(X(0), Y(0));
-      for (let i = 1; i < n - 1; i++) ctx.quadraticCurveTo(X(i), Y(i), (X(i) + X(i + 1)) / 2, (Y(i) + Y(i + 1)) / 2);
-      ctx.lineTo(X(n - 1), Y(n - 1));
-    }
-  }
-  ctx.stroke();
-}
-// atan2 within about 0.004 rad, which at the edge's table resolution (one bin is 0.065 rad) moves nothing that shows
-function fastAtan2(y, x) {
-  const ax = Math.abs(x), ay = Math.abs(y), mx = Math.max(ax, ay);
-  if (mx === 0) return 0;
-  const t = Math.min(ax, ay) / mx, s = t * t;
-  let r = ((-0.0464964749 * s + 0.15931422) * s - 0.327622764) * s * t + t;
-  if (ay > ax) r = 1.57079637 - r;
-  if (x < 0) r = 3.14159274 - r;
-  return y < 0 ? -r : r;
-}
-// one cell of marching squares at a level: corners 0 (x, y), 1 (x + c, y), 2 (x + c, y + c), 3 (x, y + c), values
-// already less the level; eT, eR, eB, eL name the cell's top, right, bottom and left edges at this level
-function march(x, y, c, a, b, d, e, eT, eR, eB, eL, lev) {
-  const code = (a > 0 ? 1 : 0) | (b > 0 ? 2 : 0) | (d > 0 ? 4 : 0) | (e > 0 ? 8 : 0);
-  if (code === 0 || code === 15) return;
-  // where the level crosses each side: top (0-1), right (1-2), bottom (3-2), left (0-3)
-  const tx = a !== b ? x + (c * a) / (a - b) : x, ry = b !== d ? y + (c * b) / (b - d) : y;
-  const bx = e !== d ? x + (c * e) / (e - d) : x, ly = a !== e ? y + (c * a) / (a - e) : y, X = x + c, Y = y + c;
-  switch (code) {
-    case 1: case 14: seg(x, ly, eL, tx, y, eT, lev); break;
-    case 2: case 13: seg(tx, y, eT, X, ry, eR, lev); break;
-    case 3: case 12: seg(x, ly, eL, X, ry, eR, lev); break;
-    case 4: case 11: seg(X, ry, eR, bx, Y, eB, lev); break;
-    case 6: case 9: seg(tx, y, eT, bx, Y, eB, lev); break;
-    case 7: case 8: seg(x, ly, eL, bx, Y, eB, lev); break;
-    default: {
-      // a saddle cell: the centre's value says which pair of corners the level parts
-      const up = ((a + b + d + e) / 4 > 0) === (code === 5);
-      if (up) { seg(x, ly, eL, bx, Y, eB, lev); seg(tx, y, eT, X, ry, eR, lev); } else { seg(x, ly, eL, tx, y, eT, lev); seg(X, ry, eR, bx, Y, eB, lev); }
-    }
-  }
 }
 
 // ----- the world -----
@@ -765,7 +896,7 @@ export function createWorld(params, opts = {}) {
 // Lays the relief anew when the page's size, the objects' places or the counts that stand on it change; the eagles,
 // clouds and goats are topped up or trimmed to their counts.
 function plan(w) {
-  const p = w.params, key = `${Math.round(w.w)} ${Math.round(w.h)} ${w.boxes.map((b) => [b.x, b.y, b.w, b.h].map((v) => Math.round(v / 24)).join(',')).join(';')} ${w.coarse ? p.cragsTouch : p.crags} ${p.tarns} ${p.trees} ${p.rings} ${p.interval} ${w.coarse ? p.flowersTouch : p.flowers}`;
+  const p = w.params, key = `${Math.round(w.w)} ${Math.round(w.h)} ${w.boxes.map((b) => [b.x, b.y, b.w, b.h].map((v) => Math.round(v / 24)).join(',')).join(';')} ${w.coarse ? p.cragsTouch : p.crags} ${p.tarns} ${p.trees} ${p.apron} ${p.snow} ${w.coarse ? p.flowersTouch : p.flowers}`;
   if (key !== w.plan) {
     w.plan = key; layRelief(w);
     layFlowers(w); w.goats.length = 0;
@@ -1193,29 +1324,19 @@ export function step(w, dt) {
 }
 
 // ----- drawing -----
-// a band: the summits lighten toward their tops in a flat band of paper, as a map's layer tints do (one band: each is
-// a large fill a frame)
-const BANDS = [[3, 0.3]];
 export function drawGround(ctx, w, colours, layer = { img: null, w: 0, h: 0, flat: colours.paper }) {
   const p = w.params, still = w.reduced, { ink, paper, water } = colours;
   ctx.globalAlpha = 1;
   if (!layer.img || layer.w < w.w || layer.h < w.h) { ctx.fillStyle = layer.flat; ctx.fillRect(0, 0, w.w, w.h); }
   if (layer.img) { ctx.imageSmoothingEnabled = true; ctx.drawImage(layer.img, 0, 0, layer.w, layer.h); }
+  // each summit's plateau, paper inside its top contour, which follows the object live
   ctx.fillStyle = paper;
-  for (const o of w.summits) {
-    for (const [k, a] of BANDS) { if (k > p.rings) continue; ctx.globalAlpha = p.bands * a; edgePath(ctx, o, k * p.interval); ctx.fill(); }
-    ctx.globalAlpha = 1; edgePath(ctx, o, 0); ctx.fill();
-  }
+  for (const o of w.summits) { edgePath(ctx, o, 0); ctx.fill(); }
   ctx.strokeStyle = ink; ctx.lineWidth = 1; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  // the rings, the index contours half again as strong, and each summit's top contour
-  // (the rings: traced and chained afresh each frame, the fifth an index contour half again as strong)
-  ringField(w);
-  ctx.globalAlpha = p.ringAlpha; drawRings(ctx, (m) => m % 5 !== 0, p.cell);
-  ctx.globalAlpha = Math.min(1, p.ringAlpha * 1.6); drawRings(ctx, (m) => m % 5 === 0, p.cell);
   ctx.globalAlpha = p.topAlpha; for (const o of w.summits) { edgePath(ctx, o, 0); ctx.stroke(); }
   // the ridgeline from top to top, drawn as a map draws a crest: no line, only short hachures falling away from it on
-  // both sides, staggered, longest midway where the saddle is steepest across
-  if (w.summits.length >= 2 && p.ridgeAlpha > 0) {
+  // both sides, staggered, longest midway where the saddle is steepest across (under the hachure relief only)
+  if (w.summits.length >= 2 && p.ridgeAlpha > 0 && reliefMode(p) === 0) {
     const [a, b] = w.summits, A = onEdge(a, b.x, b.y, 0, V), ax = A.x, ay = A.y, B = onEdge(b, a.x, a.y, 0, N);
     const dx = B.x - ax, dy = B.y - ay, L = Math.hypot(dx, dy);
     if (L > 20) {
@@ -1312,11 +1433,11 @@ export const scene = {
   strokeStart, strokeTo, strokeEnd, strokeCancel,
   // clear the sky of what the visitor raised: every thermal and ridge goes, and the eagles in it find other lift
   clear(w) { for (const k of w.lifts) if (k.user) k.dead = true; w.ridge = null; },
-  // the relief: made anew for a new plan or hachure setting; repainted for a new candidate or alpha
+  // the relief: made anew for a new plan, relief or hachure setting; repainted for a new candidate or alpha
   layer: {
-    key: (w, p) => `${w.seed} ${w.plan} ${p.density} ${p.jitter} ${p.short} ${p.long} ${p.flat} ${p.sparse}`,
-    make: (w, p, W, H) => ({ marks: hachures(w, W, H, p), floor: floorLines(w) }),
-    look: (p) => `${pickCandidate(p)} ${p.hachureAlpha} ${p.floorAlpha} ${p.waterAlpha}`,
+    key: (w, p) => `${w.seed} ${w.plan} ${reliefMode(p)} ${p.density} ${p.jitter} ${p.short} ${p.long} ${p.flat} ${p.sparse}`,
+    make: (w, p, W, H) => ({ marks: hachures(w, W, H, p), floor: floorLines(w, reliefMode(p)), relief: reliefLines(w, p, W, H) }),
+    look: (p) => `${pickCandidate(p)} ${p.hachureAlpha} ${p.floorAlpha} ${p.waterAlpha} ${p.shade} ${p.lineAlpha}`,
     paint: paintLayer,
   },
   drawGround, drawLive,

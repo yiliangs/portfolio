@@ -86,7 +86,6 @@ const SECTION_TABLES = {
       anchors: [
         ['layer', (l) => l.startsWith('if (!layer.img')],
         ['summits', (l) => l === 'ctx.fillStyle = paper;'],
-        ['rings', (l) => l.startsWith('// (the rings: traced')],
         ['ridge', (l) => l.startsWith('// the ridgeline from top to top')],
         ['stream', (l) => l.startsWith('// the stream\'s marks shimmer')],
         ['flowers', (l) => l === '// edelweiss'],
