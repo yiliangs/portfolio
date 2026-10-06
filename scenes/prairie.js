@@ -47,7 +47,7 @@ export const PARAMS = {
     trot: [2.2, 0.5, 6, 0.05, 'trotting speed, body lengths per s'],
     gallop: [5.5, 1, 12, 0.1, 'galloping speed, body lengths per s'],
     turn: [2.2, 0.2, 8, 0.1, 'turn rate at a walk, rad/s'],
-    figure: [0, 0, 2, 1, 'figure: 0 silhouette, 1 parts, 2 gesture'],
+    horns: [0, 'toggle', 'horns: the longhorn\'s short pair beside the ears; off, polled'],
     alpha: [0.55, 0.05, 1, 0.01, 'ink opacity'],
     width: [1, 0.3, 3, 0.05, 'line width, px'],
   },
@@ -141,38 +141,36 @@ export const PALETTE = {
 };
 const pickPalette = (p) => { PALETTE.pick = Math.max(0, Math.min(CANDIDATES.length - 1, Math.round(p.palette) || 0)); };
 
-// ----- the horse, seen from straight above -----
-// A horse is posed on its own frame: x forward along the spine (the nose at +), y to its right, one unit the barrel's
-// length from rump to chest. Its spine bends with the turn: the barrel by `bend` radians per unit, the neck by half again
-// that, so a turning horse leads with its head. A point (u, v) of the frame is put on the page by walking u along the
-// bent spine from the barrel's middle and v along the normal there.
+// ----- the cow, seen from straight above -----
+// A cow is posed on its own frame: x forward along the spine (the nose at +), y to its right, one unit the body's
+// length from the pin bones to the point of the shoulder. Its spine bends with the turn: the body by `bend` radians per
+// unit, the neck by half again that, so a turning cow leads with its head. A point (u, v) of the frame is put on the
+// page by walking u along the bent spine from the body's middle and v along the normal there.
 //
 // The gait sets the legs. Each leg has a phase in its stride: in stance the hoof is on the ground and travels back
 // under the body from +reach to -reach; in swing it lifts, folds in toward its root and swings forward again. From
-// above most of a leg is hidden under the body: what reads is a fore hoof reaching past the chest beside the neck and
-// a hind hoof trailing past the rump, and how often and how far they do. GAITS lists, for graze, walk, trot and
-// gallop: the phase offset of each leg (left hind, left fore, right hind, right fore), the share of the cycle a hoof
-// stands, the reach, the body lengths covered per stride, how far the neck carries the head, how long the head reads
-// from above (a head held high or down is foreshortened), the spine's flex, the head's nod, the tail's length and the
-// mane's stream. A gait between two of them is the blend of both.
+// above a cow's legs are hidden under its wide body: what reads is a fore hoof reaching past the shoulder beside the
+// neck and a hind hoof trailing past the rump, each in its turn. GAITS lists, for graze, walk, trot and gallop: the
+// phase offset of each leg (left hind, left fore, right hind, right fore), the share of the cycle a hoof stands, the
+// reach, the body lengths covered per stride, how far the neck carries the head, how long the head reads from above,
+// the spine's flex, the head's nod, the tail's length and its swing. A gait between two of them is the blend of both.
 export const GAITS = [
-  // graze: a slow lateral step now and then; the neck stretched forward and down to the grass, so from above the head
-  // lies far out from the body; the tail swishing
-  { name: 'graze', off: [0, 0.25, 0.5, 0.75], duty: 0.75, reach: 0.16, stride: 0.5, neck: 0.54, head: 0.25, flex: 0, nod: 0, tail: 0.26, mane: 0 },
-  // walk: four beats, lateral sequence; the head carried high, so from above the neck reads short; it nods with each fore step
-  { name: 'walk', off: [0, 0.25, 0.5, 0.75], duty: 0.62, reach: 0.25, stride: 0.75, neck: 0.29, head: 0.3, flex: 0, nod: 0.03, tail: 0.26, mane: 0.1 },
+  // graze: a slow step now and then; the head dropped to the grass and stretched forward past a long neck, its face
+  // foreshortened as it points down; the tail swishing at flies
+  { name: 'graze', off: [0, 0.25, 0.5, 0.75], duty: 0.75, reach: 0.14, stride: 0.45, neck: 0.18, head: 0.22, flex: 0, nod: 0, tail: 0.3, swing: 0 },
+  // walk: four beats, lateral sequence; the head tucked back against the shoulders, nodding with each fore step
+  { name: 'walk', off: [0, 0.25, 0.5, 0.75], duty: 0.62, reach: 0.25, stride: 0.7, neck: 0.04, head: 0.27, flex: 0, nod: 0.02, tail: 0.3, swing: 0.1 },
   // trot: two beats, diagonal pairs, the head steady
-  { name: 'trot', off: [0, 0.5, 0.5, 1], duty: 0.45, reach: 0.31, stride: 1.05, neck: 0.33, head: 0.31, flex: 0.012, nod: 0.01, tail: 0.34, mane: 0.45 },
-  // gallop: transverse, the hinds then the fores, a moment in the air; the neck pumps and the spine flexes
-  { name: 'gallop', off: [0, 0.62, 0.12, 0.5], duty: 0.3, reach: 0.42, stride: 1.7, neck: 0.44, head: 0.34, flex: 0.05, nod: 0.05, tail: 0.52, mane: 1 },
+  { name: 'trot', off: [0, 0.5, 0.5, 1], duty: 0.45, reach: 0.3, stride: 0.95, neck: 0.06, head: 0.27, flex: 0.01, nod: 0.01, tail: 0.34, swing: 0.45 },
+  // gallop: heavy and transverse, the hinds then the fores; the head thrust out, the spine flexing, the tail up
+  { name: 'gallop', off: [0, 0.62, 0.12, 0.5], duty: 0.32, reach: 0.37, stride: 1.4, neck: 0.1, head: 0.28, flex: 0.04, nod: 0.04, tail: 0.42, swing: 1 },
 ];
-const GAIT_KEYS = ['duty', 'reach', 'stride', 'neck', 'head', 'flex', 'nod', 'tail', 'mane'];
+const GAIT_KEYS = ['duty', 'reach', 'stride', 'neck', 'head', 'flex', 'nod', 'tail', 'swing'];
 // the neck leaves the shoulders at NB along the spine; past it the spine bends half again as hard
-const NB = 0.4;
-// [along the spine, side] of each leg's root: left hind, left fore, right hind, right fore. A fore stands at the chest
-// and a hind at the buttock, so in every moving gait a fore hoof shows beside the chest and a hind hoof behind the rump
-// on each stride, as they do from above; set further in they showed only at a gallop's full reach.
-const LEGS = [[-0.5, -1], [0.4, -1], [-0.5, 1], [0.4, 1]];
+const NB = 0.5;
+// [along the spine, side] of each leg's root: left hind, left fore, right hind, right fore, under the shoulder and the
+// hip, so a fore hoof shows past the shoulder and a hind hoof past the rump on each stride
+const LEGS = [[-0.4, -1], [0.36, -1], [-0.4, 1], [0.36, 1]];
 const lerp = (a, b, t) => a + (b - a) * t;
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const smooth = (t) => t * t * (3 - 2 * t);
@@ -184,12 +182,12 @@ export function gaitAt(g, out = {}) {
   for (let j = 0; j < 4; j++) out.off[j] = lerp(A.off[j], B.off[j], t);
   return out;
 }
-// The frame of one draw, filled by poseHorse and read by the figures.
-const P = { G: {}, hx: 0, hy: 0, ca: 1, sa: 0, s: 1, bend: 0, neck: 0, head: 0, flex: 1, rx: 0, ry: 0, rt: 0, rc: 1, rs: 0, hoof: new Float32Array(8), lift: new Float32Array(4) };
+// The frame of one draw, filled by poseCow and read by the figure.
+const P = { G: {}, hx: 0, hy: 0, ca: 1, sa: 0, s: 1, bend: 0, neck: 0, head: 0, flex: 1, rx: 0, ry: 0, rt: 0, rc: 1, rs: 0, hoof: new Float32Array(8) };
 const PT = { x: 0, y: 0 };
 // a circular arc of curvature k, d along: [x, y, heading] from its start
 const ARC = [0, 0, 0];
-// (for the small bends a horse carries, k d under 0.6, a series to the fourth order stands in for the trig: the herd's
+// (for the small bends a cow carries, k d under 0.6, a series to the fourth order stands in for the trig: the herd's
 // drawing calls this some thousands of times a frame)
 function arc(k, d) {
   const t = k * d;
@@ -203,7 +201,7 @@ function at(u, v) {
   let px, py, th;
   if (u <= w) { arc(k, u); px = ARC[0]; py = ARC[1]; th = ARC[2]; }
   else {
-    // the neck's root (the barrel's end) is the same for every point of one pose: poseHorse sets it
+    // the neck's root (the shoulders' point) is the same for every point of one pose: poseCow sets it
     arc(1.5 * k, u - w);
     const c = P.rc, s = P.rs; px = P.rx + c * ARC[0] - s * ARC[1]; py = P.ry + s * ARC[0] + c * ARC[1]; th = P.rt + ARC[2];
   }
@@ -211,9 +209,9 @@ function at(u, v) {
   const lx = (px - sn * v) * P.s, ly = (py + cs * v) * P.s;
   PT.x = P.hx + P.ca * lx - P.sa * ly; PT.y = P.hy + P.sa * lx + P.ca * ly; return PT;
 }
-// A horse's draw state: { x, y, a (heading), bend (rad per unit), g (gait 0..3), ph (stride phase 0..1), t (its own
-// clock, s), side (+-1, the side its mane falls), seed, pinto (0 or a patch seed), size (px per unit) }.
-export function poseHorse(h) {
+// A cow's draw state: { x, y, a (heading), bend (rad per unit), g (gait 0..3), ph (stride phase 0..1), t (its own
+// clock, s), side (+-1, the side its calf keeps to), seed, patches (null or its coat's patches), size (px per unit) }.
+export function poseCow(h) {
   const G = gaitAt(h.g, P.G);
   P.hx = h.x; P.hy = h.y; P.ca = Math.cos(h.a); P.sa = Math.sin(h.a); P.s = h.size; P.bend = h.bend;
   arc(h.bend, NB); P.rx = ARC[0]; P.ry = ARC[1]; P.rt = ARC[2]; P.rc = Math.cos(P.rt); P.rs = Math.sin(P.rt);
@@ -227,26 +225,24 @@ export function poseHorse(h) {
     else { const q = (u - G.duty) / (1 - G.duty); d = G.reach * (-1 + 2 * smooth(q)); lift = Math.sin(Math.PI * q); }
     const [ru, side] = LEGS[j];
     // a lifted leg folds: the hoof draws in toward its root, a fore more than a hind (the knee folds back)
-    const fold = 1 - lift * (ru > 0 ? 0.55 : 0.35);
+    const fold = 1 - lift * (ru > 0 ? 0.5 : 0.3);
     P.hoof[2 * j] = ru * P.flex + d * fold;
-    P.hoof[2 * j + 1] = side * (ru > 0 ? 0.155 : 0.14) + side * 0.025 * lift;
-    P.lift[j] = lift;
+    P.hoof[2 * j + 1] = side * (0.13 + 0.02 * lift);
   }
   return P;
 }
-// The nose's distance ahead of the barrel's middle, in body units, for a gait: what a horse must keep clear ahead.
+// The nose's distance ahead of the body's middle, in body units, for a gait: what a cow must keep clear ahead.
 export const noseReach = (g) => { const G = gaitAt(g, NR); return NB + G.neck + G.head; };
 const NR = {};
 
-// The silhouette's half width along the frame, as [u, half width] stations: the rump rounding off at the tail's root,
-// the hips, the barrel, the shoulders narrowing into the chest; then the neck (stretched over P.neck) and the head
-// (over P.head), its cheeks wider than its muzzle. The barrel's stations stretch with the gallop's flex.
-// The rump starts in the notch where the tail leaves it and swells back and out into the two round lobes of the
-// hindquarters, so the rear reads blunt (a fish's tapers to a point). The neck leaves the chest as a narrow column, and
-// the head is set off from it by the throat, wider at the jowls than the neck and rounding off at the muzzle.
-const BODY = [[-0.52, 0.03], [-0.56, 0.1], [-0.55, 0.165], [-0.5, 0.205], [-0.42, 0.218], [-0.3, 0.208], [-0.18, 0.2], [-0.04, 0.22], [0.1, 0.218], [0.22, 0.186], [0.32, 0.15], [0.4, 0.108]];
-const NECK = [[0.15, 0.072], [0.6, 0.06], [0.97, 0.05]];
-const HEAD = [[0.08, 0.09], [0.32, 0.092], [0.62, 0.07], [0.86, 0.062], [0.97, 0.05], [1, 0.03]];
+// The outline's half width along the frame, as [u, half width] stations. The body is a broad slab, its width near half
+// its length: the rump square across the pin bones, the hips swelling into one lobe, a slight waist, the shoulders
+// into the other, then narrowing hard into a short neck (stretched over P.neck). The head (over P.head) is a block set
+// off from the neck by the throat, widest at the poll where the ears leave it, blunt at the muzzle. The body's
+// stations stretch with the gallop's flex.
+const BODY = [[-0.565, 0], [-0.555, 0.11], [-0.515, 0.19], [-0.44, 0.24], [-0.34, 0.252], [-0.24, 0.245], [-0.13, 0.224], [-0.02, 0.22], [0.1, 0.234], [0.22, 0.248], [0.33, 0.244], [0.41, 0.22], [0.465, 0.17], [0.5, 0.11]];
+const NECK = [[0.3, 0.08], [0.8, 0.075]];
+const HEAD = [[0, 0.078], [0.15, 0.105], [0.4, 0.1], [0.7, 0.085], [0.9, 0.072], [1, 0.05], [1.03, 0]];
 const ST = new Float32Array(64), SX = new Float32Array(64), SY = new Float32Array(64);
 function stations() {
   let n = 0;
@@ -257,12 +253,17 @@ function stations() {
   for (const [f, w] of HEAD) { ST[n++] = h0 + f * P.head; ST[n++] = w; }
   return n >> 1;
 }
+// the body's half width at u (unflexed), between its stations
+function girthAt(u) {
+  for (let i = 1; i < BODY.length; i++) if (u <= BODY[i][0]) { const [u0, w0] = BODY[i - 1], [u1, w1] = BODY[i]; return lerp(w0, w1, (u - u0) / (u1 - u0)); }
+  return BODY[BODY.length - 1][1];
+}
 function closedCurve(ctx, X, Y, n) {
   ctx.moveTo((X[n - 1] + X[0]) / 2, (Y[n - 1] + Y[0]) / 2);
   for (let i = 0; i < n; i++) { const j = (i + 1) % n; ctx.quadraticCurveTo(X[i], Y[i], (X[i] + X[j]) / 2, (Y[i] + Y[j]) / 2); }
   ctx.closePath();
 }
-// a closed smooth path round the silhouette: down the right side from rump to nose and back up the left
+// a closed smooth path round body, neck and head: down the right side from rump to muzzle and back up the left
 function silhouette(ctx) {
   const m = stations(); let k = 0;
   for (let i = 0; i < m; i++) { at(ST[2 * i], ST[2 * i + 1]); BX[k] = PT.x; BY[k] = PT.y; k++; }
@@ -274,128 +275,83 @@ const BX = new Float32Array(64), BY = new Float32Array(64);
 let BN = 0;
 const outline = (ctx) => closedCurve(ctx, BX, BY, BN);
 const seg = (ctx, u0, v0, u1, v1) => { at(u0, v0); ctx.moveTo(PT.x, PT.y); at(u1, v1); ctx.lineTo(PT.x, PT.y); };
-// the legs, root to hoof; out roots them at the body's edge (the gesture has no body to hide the roots)
-function legs(ctx, out) {
-  for (let j = 0; j < 4; j++) { const [ru, side] = LEGS[j]; seg(ctx, ru * P.flex, side * (out ? 0.16 : 0.08), P.hoof[2 * j], P.hoof[2 * j + 1]); }
+// the legs, root to hoof, drawn under the body: only the reach past the shoulder or the rump shows
+function legs(ctx) {
+  for (let j = 0; j < 4; j++) { const [ru, side] = LEGS[j]; seg(ctx, ru * P.flex, side * 0.08, P.hoof[2 * j], P.hoof[2 * j + 1]); }
 }
-// the hooves: a dot at each leg's end, never under 1.1 px, so a hoof still reads at the herd's size
-function hooves(ctx) {
-  const r = Math.max(0.028 * P.s, 1.1);
-  for (let j = 0; j < 4; j++) { at(P.hoof[2 * j], P.hoof[2 * j + 1]); ctx.moveTo(PT.x + r, PT.y); ctx.arc(PT.x, PT.y, r, 0, TAU); }
-}
-// The mane: the crest, a line from the withers to the poll a little to the side the mane falls, and at speed a few
-// strands lifting off it and streaming back.
-function mane(ctx, side, t) {
-  const m = P.G.mane, n0 = 0.3 * P.flex, n1 = NB * P.flex + P.neck - 0.01, off = side * 0.022;
-  at(n0, off * 0.5); ctx.moveTo(PT.x, PT.y);
-  for (let i = 1; i <= 6; i++) { const u = lerp(n0, n1, i / 6); at(u, off + Math.sin(t * 9 + i) * 0.006 * m); ctx.lineTo(PT.x, PT.y); }
-  if (m > 0.2) for (let i = 0; i < 4; i++) {
-    const u = lerp(n0 + 0.1, n1, i / 3), w = Math.sin(t * 15 + i * 1.7) * 0.02;
-    seg(ctx, u, off, u - 0.07 * m, off + side * 0.035 * m + w);
-  }
-}
-// the ears: two ticks at the poll, pricked forward and out past the head's outline, never shorter than 2.6 px so
-// they survive at the herd's size
+// The ears: one leaf off each side of the poll, standing straight out, the strongest cue a cow from above gives; never
+// shorter than 3 px so they survive at the herd's size.
 function ears(ctx) {
-  const u = NB * P.flex + P.neck + 0.02;
+  const u = NB * P.flex + P.neck + 0.15 * P.head;
   for (const sg of [-1, 1]) {
-    at(u, sg * 0.06); const x0 = PT.x, y0 = PT.y; at(u + 0.06, sg * 0.12);
-    const dx = PT.x - x0, dy = PT.y - y0, L = Math.hypot(dx, dy) || 1, k = Math.max(L, 2.6) / L;
-    ctx.moveTo(x0, y0); ctx.lineTo(x0 + dx * k, y0 + dy * k);
+    // a leaf: from the front root out along its leading edge, round the tip and back in along its trailing edge
+    at(u + 0.03, sg * 0.098); const ax = PT.x, ay = PT.y;
+    at(u - 0.035, sg * 0.094); const bx = PT.x, by = PT.y, mx = (ax + bx) / 2, my = (ay + by) / 2;
+    at(u + 0.008, sg * 0.245);
+    const dx = PT.x - mx, dy = PT.y - my, L = Math.hypot(dx, dy) || 1, k = Math.max(L, 3) / L, tx = mx + dx * k, ty = my + dy * k;
+    ctx.moveTo(ax, ay); ctx.quadraticCurveTo(ax + dx * 0.55, ay + dy * 0.55, tx, ty); ctx.quadraticCurveTo(bx + dx * 0.6, by + dy * 0.6, bx, by);
   }
 }
-// The back: the spine from the withers to the croup and the groove parting the hindquarters at the tail, the two lines
-// that tell a horse's back from any other long body seen from above.
-function back(ctx) {
-  at(0.28 * P.flex, 0); ctx.moveTo(PT.x, PT.y);
-  for (let i = 1; i <= 5; i++) { at(lerp(0.28, -0.36, i / 5) * P.flex, 0); ctx.lineTo(PT.x, PT.y); }
-  seg(ctx, -0.55 * P.flex, 0, -0.43 * P.flex, 0);
+// The longhorn's horns: a short pair off the poll just ahead of the ears, curving out and forward.
+function horns(ctx) {
+  const u = NB * P.flex + P.neck + 0.3 * P.head;
+  for (const sg of [-1, 1]) { at(u, sg * 0.098); ctx.moveTo(PT.x, PT.y); at(u + 0.005, sg * 0.19); const cx = PT.x, cy = PT.y; at(u + 0.09, sg * 0.23); ctx.quadraticCurveTo(cx, cy, PT.x, PT.y); }
 }
-// The tail: a tuft, drawn as an outline round a curve off the rump: hanging at a walk it reads short from above,
-// lifted at a gallop it streams long and waves, grazing it swishes at flies. Never narrower than 1.4 px across, so it
-// stays a tuft and not a hairline at the herd's size. Drawn large (the pose study), two strands inside give it hair.
-const TUFT = [0.03, 0.055, 0.07, 0.068, 0.055, 0.032, 0];
-const TU = new Float32Array(TUFT.length), TV = new Float32Array(TUFT.length), TN = new Float32Array(2 * TUFT.length);
-function tail(ctx, h, strands) {
-  const G = P.G, L = G.tail, u0 = -0.525 * P.flex, m = TUFT.length;
+// The tail: a line off the rump ending in a tuft. It hangs at a walk and swishes at flies grazing; at a gallop it lifts
+// and streams. The tuft is a small closed drop round the line's end, never under 1.8 px across.
+function tail(ctx, h) {
+  const G = P.G, L = G.tail, u0 = -0.55 * P.flex;
   const sw = (1 - Math.min(1, h.g)) * 0.55 * Math.sin(h.t * 1.9 + h.seed) + 0.2 * Math.sin(h.t * 0.7 + h.seed * 2) - 0.5 * h.bend * L;
-  const wave = Math.sin(h.t * (4 + 7 * G.mane)) * 0.05 * (0.3 + G.mane);
-  // a quadratic from the root through a waving middle to the tip, in the frame
+  const wave = Math.sin(h.t * (4 + 7 * G.swing)) * 0.05 * (0.3 + G.swing);
+  // a quadratic from the root through a waving middle to the end, in the frame
   const mu = u0 - L * 0.5, mv = sw * L * 0.4 + wave, eu = u0 - L, ev = sw * L - wave;
-  for (let i = 0; i < m; i++) {
-    const t = i / (m - 1), a = (1 - t) * (1 - t), b = 2 * t * (1 - t), c = t * t;
-    TU[i] = a * u0 + b * mu + c * eu; TV[i] = b * mv + c * ev;
-    const du = 2 * (1 - t) * (mu - u0) + 2 * t * (eu - mu), dv = 2 * (1 - t) * mv + 2 * t * (ev - mv), n = Math.hypot(du, dv) || 1;
-    TN[2 * i] = -dv / n; TN[2 * i + 1] = du / n;
-  }
-  const floor = 0.7 / P.s;
-  if (strands) {
-    for (const f of [-0.35, 0.35]) { at(TU[0] + TN[0] * TUFT[0] * f, TV[0] + TN[1] * TUFT[0] * f); ctx.moveTo(PT.x, PT.y); for (let i = 1; i < m - 1; i++) { const wd = Math.max(TUFT[i], floor) * f; at(TU[i] + TN[2 * i] * wd, TV[i] + TN[2 * i + 1] * wd); ctx.lineTo(PT.x, PT.y); } }
-    return;
-  }
-  let k = 0;
-  for (let i = 0; i < m; i++) { const wd = Math.max(TUFT[i] * (0.85 + 0.3 * G.mane), i < m - 1 ? floor : 0); at(TU[i] + TN[2 * i] * wd, TV[i] + TN[2 * i + 1] * wd); SX[k] = PT.x; SY[k] = PT.y; k++; }
-  for (let i = m - 2; i >= 0; i--) { const wd = Math.max(TUFT[i] * (0.85 + 0.3 * G.mane), floor); at(TU[i] - TN[2 * i] * wd, TV[i] - TN[2 * i + 1] * wd); SX[k] = PT.x; SY[k] = PT.y; k++; }
-  closedCurve(ctx, SX, SY, k);
+  at(u0, 0); ctx.moveTo(PT.x, PT.y);
+  for (let i = 1; i <= 4; i++) { const t = i / 4, b = 2 * t * (1 - t), c = t * t; at((1 - t) * (1 - t) * u0 + b * mu + c * eu, b * mv + c * ev); ctx.lineTo(PT.x, PT.y); }
+  const du = eu - mu, dv = ev - mv, n = Math.hypot(du, dv) || 1, tu = du / n, tv = dv / n;
+  const len = Math.max(0.1, 2.6 / P.s), wd = Math.max(0.028, 0.9 / P.s);
+  at(eu + tu * len * 0.35, ev + tv * len * 0.35); SX[0] = PT.x; SY[0] = PT.y;
+  at(eu - tu * len * 0.25 - tv * wd, ev - tv * len * 0.25 + tu * wd); SX[1] = PT.x; SY[1] = PT.y;
+  at(eu - tu * len * 0.65, ev - tv * len * 0.65); SX[2] = PT.x; SY[2] = PT.y;
+  at(eu - tu * len * 0.25 + tv * wd, ev - tv * len * 0.25 - tu * wd); SX[3] = PT.x; SY[3] = PT.y;
+  closedCurve(ctx, SX, SY, 4);
 }
-// The pinto's patches: two or three soft blobs on the barrel and quarters from its patch seed alone, filled in the
-// accent and placed so a patch never reaches past the outline (no clip: a clip a horse cost the GPU more than the herd).
+// The coat's patches: two or three large flat shapes over the hindquarters, the shoulders and the middle, from the
+// patch seed alone: an irregular blob wide enough that it often runs out to the body's edge, where it is cut along the
+// outline (no clip: a clip a cow cost the GPU more than the herd; the blob's points are held inside the half width).
 export function pintoPatches(seed) {
-  const r = pointRand(seed), n = 2 + (r() < 0.5 ? 1 : 0), out = [];
-  for (let k = 0; k < n; k++) { const pts = []; const cu = -0.38 + r() * 0.68, rad = 0.06 + r() * 0.06, cv = (r() - 0.5) * 2 * Math.max(0, 0.15 - rad); for (let i = 0; i < 9; i++) pts.push(rad * (0.75 + 0.5 * r())); out.push({ cu, cv, pts }); }
+  const r = pointRand(seed), n = 2 + (r() < 0.5 ? 1 : 0), out = [], spots = [-0.32, 0.25, -0.04], m = 9;
+  for (let k = 0; k < n; k++) {
+    const cu = spots[k] + (r() - 0.5) * 0.12, cv = (r() < 0.5 ? -1 : 1) * (0.05 + r() * 0.15), ru = 0.13 + r() * 0.08, rv = 0.2 + r() * 0.12, U = [], V = [];
+    for (let i = 0; i < m; i++) {
+      const a = (i / m) * TAU, q = 0.55 + 0.7 * r(), u = clamp(cu + Math.cos(a) * ru * q, -0.5, 0.42), lim = 0.88 * girthAt(u);
+      U.push(u); V.push(clamp(cv + Math.sin(a) * rv * q, -lim, lim));
+    }
+    out.push({ U, V });
+  }
   return out;
 }
 function patches(ctx, h, colour) {
   ctx.fillStyle = colour; ctx.beginPath();
-  for (const { cu, cv, pts } of h.patches) {
-    const m = pts.length;
-    for (let i = 0; i < m; i++) { const a = (i / m) * TAU; at(cu + Math.cos(a) * pts[i], cv + Math.sin(a) * pts[i] * 0.8); SX[i] = PT.x; SY[i] = PT.y; }
+  for (const { U, V } of h.patches) {
+    const m = U.length;
+    for (let i = 0; i < m; i++) { at(U[i] * P.flex, V[i]); SX[i] = PT.x; SY[i] = PT.y; }
     closedCurve(ctx, SX, SY, m);
   }
   ctx.fill();
 }
 const ell = (ctx, x, y, a, rx, ry) => { ctx.moveTo(x + Math.cos(a) * rx, y + Math.sin(a) * rx); ctx.ellipse(x, y, rx, ry, a, 0, TAU); };
-// the spine's heading at u, from two points along it
-function headingAt(u) { at(u - 0.01, 0); const x = PT.x, y = PT.y; at(u + 0.01, 0); return Math.atan2(PT.y - y, PT.x - x); }
 
-// The three figures, each one posed horse in ink over a paper fill; alpha is the ink's. 0, silhouette: one closed
-// outline round barrel, neck and head, so the legs under it show only where a hoof reaches past the chest or the rump.
-// 1, parts: the barrel and the neck-and-head as two ellipses, the second laid over the first and bent with the turn.
-// 2, gesture: no outline, a spine line with a shoulder bar and a hip bar and the legs off their ends.
-export const FIGURES = ['silhouette', 'parts', 'gesture'];
-export function drawHorse(ctx, h, figure, ink, paper, accent, alpha) {
-  poseHorse(h);
-  ctx.strokeStyle = ink;
-  ctx.beginPath(); tail(ctx, h, false);
-  if (P.s > 40) tail(ctx, h, true);
-  legs(ctx, figure === 2); ctx.globalAlpha = alpha; ctx.stroke();
-  ctx.fillStyle = ink; ctx.beginPath(); hooves(ctx); ctx.fill();
-  if (figure === 0) {
-    ctx.globalAlpha = 0.94; ctx.fillStyle = paper; ctx.beginPath(); silhouette(ctx); ctx.fill();
-    if (h.patches && accent) { ctx.globalAlpha = 0.85; patches(ctx, h, accent); ctx.beginPath(); outline(ctx); }
-    ears(ctx); mane(ctx, h.side, h.t); back(ctx); ctx.globalAlpha = alpha; ctx.stroke();
-  } else if (figure === 1) {
-    const b = NB * P.flex, n = P.neck + P.head, s = P.s;
-    at(0, 0); const bx = PT.x, by = PT.y, ba = headingAt(0);
-    const mid = b + n / 2; at(mid, 0); const nx = PT.x, ny = PT.y, na = headingAt(mid);
-    const body = () => ell(ctx, bx, by, ba, 0.52 * P.flex * s, 0.19 * s), neck = () => ell(ctx, nx, ny, na, (n / 2 + 0.05) * s, 0.07 * s);
-    ctx.globalAlpha = 0.94; ctx.fillStyle = paper; ctx.beginPath(); body(); ctx.fill();
-    if (h.patches && accent) { ctx.globalAlpha = 0.85; patches(ctx, h, accent); }
-    ctx.globalAlpha = alpha; ctx.beginPath(); body(); ctx.stroke();
-    ctx.globalAlpha = 0.94; ctx.fillStyle = paper; ctx.beginPath(); neck(); ctx.fill();
-    ctx.globalAlpha = alpha; ctx.beginPath(); neck(); ears(ctx); mane(ctx, h.side, h.t); back(ctx); ctx.stroke();
-  } else {
-    ctx.beginPath();
-    const m = stations(); at(-0.5 * P.flex, 0); ctx.moveTo(PT.x, PT.y);
-    for (let i = 3; i < m - 2; i++) { at(ST[2 * i], 0); ctx.lineTo(PT.x, PT.y); }
-    const sh = 0.3 * P.flex, hp = -0.36 * P.flex;
-    seg(ctx, sh, -0.16, sh, 0.16); seg(ctx, hp, -0.16, hp, 0.16);
-    // the head: an open wedge from the cheeks to the muzzle
-    const h0 = NB * P.flex + P.neck;
-    at(h0, 0.065); ctx.moveTo(PT.x, PT.y); at(h0 + P.head, 0); ctx.lineTo(PT.x, PT.y); at(h0, -0.065); ctx.lineTo(PT.x, PT.y);
-    ears(ctx); mane(ctx, h.side, h.t); ctx.stroke();
-    if (h.patches && accent) { ctx.strokeStyle = accent; ctx.beginPath(); for (const q of h.patches) seg(ctx, q.cu - 0.1, q.cv - 0.06, q.cu + 0.1, q.cv + 0.06); ctx.stroke(); ctx.strokeStyle = ink; }
-  }
+// One cow in ink over a paper fill; alpha is the ink's. The tail and the legs go down first, under the body, so a leg
+// shows only where its hoof reaches past the shoulder or the rump; then the outline round body, neck and head over its
+// paper, the coat's patches flat in the accent, and the ears (and a longhorn's horns) off the poll.
+export function drawCow(ctx, h, horned, ink, paper, accent, alpha) {
+  poseCow(h);
+  ctx.strokeStyle = ink; ctx.globalAlpha = alpha;
+  ctx.beginPath(); tail(ctx, h); legs(ctx); ctx.stroke();
+  ctx.globalAlpha = 0.94; ctx.fillStyle = paper; ctx.beginPath(); silhouette(ctx); ctx.fill();
+  if (h.patches && accent) { ctx.globalAlpha = 0.85; patches(ctx, h, accent); ctx.beginPath(); outline(ctx); }
+  ears(ctx); if (horned) horns(ctx);
+  ctx.globalAlpha = alpha; ctx.stroke();
   ctx.globalAlpha = 1;
 }
 
@@ -1402,7 +1358,7 @@ function drawCanopy(ctx, t, ox, oy) {
   ctx.closePath();
 }
 export function drawLive(ctx, w, colours) {
-  const p = w.params, { ink, paper, ochre, chestnut } = colours, fig = clamp(Math.round(p.figure), 0, 2);
+  const p = w.params, { ink, paper, ochre, chestnut } = colours, horned = !!p.horns;
   ctx.lineWidth = p.width; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   // the apples: paper under a chestnut ring, shrinking as they are eaten and fading at the end
   if (w.feed.length) {
@@ -1416,7 +1372,7 @@ export function drawLive(ctx, w, colours) {
   ctx.fillStyle = paper; ctx.strokeStyle = ink;
   for (const q of w.hares) if (q.state !== 'down') drawHare(ctx, q);
   // the herd: foals and all, a paper fill under each so crossing horses read one over the other
-  for (const h of w.horses) drawHorse(ctx, h, fig, ink, paper, chestnut, p.alpha);
+  for (const h of w.horses) drawCow(ctx, h, horned, ink, paper, chestnut, p.alpha);
   // dust behind a gallop, chaff where an apple is eaten
   if (w.puffs.length) {
     ctx.lineWidth = 1;
@@ -1461,22 +1417,22 @@ export function drawLive(ctx, w, colours) {
 // The pose study: one horse at studyScale times the herd's size in the middle of the page, or the sheet of every gait at
 // eight phases, over a paper panel, posed from the study's sliders.
 function drawStudy(ctx, w, colours) {
-  const p = w.params, { ink, paper, chestnut } = colours, fig = clamp(Math.round(p.figure), 0, 2);
+  const p = w.params, { ink, paper, chestnut } = colours, horned = !!p.horns;
   const patches = p.studyPinto ? pintoPatches(0x5eed1) : null, mk = (x, y, size, g, ph) => ({ x, y, a: 0, bend: p.studyTurn, g, ph, t: w.study.t, side: 1, seed: 1, size, patches });
   ctx.globalAlpha = 0.95; ctx.fillStyle = paper; ctx.fillRect(0, 0, w.w, w.h);
   ctx.fillStyle = ink; ctx.font = '11px ui-monospace, Menlo, monospace'; ctx.textBaseline = 'top';
-  ctx.globalAlpha = 0.7; ctx.fillText(`pose study: ${FIGURES[fig]}; a still shows the pose, not the motion`, 24, 92);
+  ctx.globalAlpha = 0.7; ctx.fillText(`pose study: ${horned ? 'longhorn' : 'polled'}; a still shows the pose, not the motion`, 24, 92);
   ctx.lineWidth = p.width;
   if (p.sheet) {
     const cols = 8, cw = (w.w - 140) / cols, rh = (w.h - 140) / 4, size = Math.min(cw / 2.3, rh / 1.1);
     for (let g = 0; g < 4; g++) {
       const y = 130 + rh * (g + 0.5);
       ctx.globalAlpha = 0.7; ctx.fillStyle = ink; ctx.fillText(GAITS[g].name, 24, y - 6);
-      for (let k = 0; k < cols; k++) drawHorse(ctx, mk(110 + cw * (k + 0.5), y, size, g, k / cols), fig, ink, paper, chestnut, p.alpha);
+      for (let k = 0; k < cols; k++) drawCow(ctx, mk(110 + cw * (k + 0.5), y, size, g, k / cols), horned, ink, paper, chestnut, p.alpha);
     }
   } else {
     const ph = p.studyRun ? w.study.ph : p.studyPhase, size = p.size * p.studyScale;
-    drawHorse(ctx, mk(w.w / 2 - size * 0.2, w.h / 2 + 30, size, p.studyGait, ph), fig, ink, paper, chestnut, p.alpha);
+    drawCow(ctx, mk(w.w / 2 - size * 0.2, w.h / 2 + 30, size, p.studyGait, ph), horned, ink, paper, chestnut, p.alpha);
     ctx.globalAlpha = 0.7; ctx.fillStyle = ink; ctx.fillText(`gait ${p.studyGait.toFixed(2)}  phase ${ph.toFixed(2)}  turn ${p.studyTurn}`, 24, 110);
   }
   ctx.globalAlpha = 1;
