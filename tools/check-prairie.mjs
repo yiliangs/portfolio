@@ -1,5 +1,6 @@
 // Checks scenes/prairie.js's simulation headless: the herd and its bands, the land a horse walks round, the apples,
-// the startle, reduced motion, the hares, the grass, the trails, and the scene's place in the home registry.
+// the startle, reduced motion, the hares, the grass, the trails, the scene's place in the home registry, and the horses'
+// bodies kept apart and the canopies' caps.
 //
 // The prairie's step() is a function of the world, dt and the world's own seeded random sources, so every run below is
 // the same run every time. None of these properties shows in a still frame: a horse whose nose dips into a boulder for
@@ -61,16 +62,22 @@ function openNear(w, x, y, dist) {
 lap('a');
 // (a) the herd: over 12 seeds the horses keep near their band's mare, every parting ends with the bands rejoining, and
 // partings happen at all. The first parting comes 27.5 s or more into a run, so a band that never comes back can stay
-// under A_APART in a short run; the share of partings that end (A_REJOIN) catches it.
+// under A_APART in a short run; the share of comebacks that end (A_REJOIN) catches it. A comeback is a parted band whose
+// time apart has run out, so it is making for the main band; only those begun A_BACK s or more before a run's end are
+// counted, since a band that parts late in a run cannot have come back by its end however well it behaves.
 const A_SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], A_SECONDS = 120, A_DT = 1 / 30;
-const A_NEAR = 300, A_SHARE = 0.6, A_SAMPLES = 0.98, A_APART = 100, A_REJOIN = 0.5;
+const A_NEAR = 300, A_SHARE = 0.6, A_SAMPLES = 0.98, A_APART = 100, A_REJOIN = 0.8, A_BACK = 30;
 {
-  let splits = 0, rejoins = 0, worstSamples = 1, worstShare = 1, longest = 0;
+  let splits = 0, rejoins = 0, comebacks = 0, cameBack = 0, worstSamples = 1, worstShare = 1, longest = 0;
   for (const seed of A_SEEDS) {
     const w = world(seed);
     let samples = 0, good = 0, minShare = 1, apartAt = null, apartMax = 0, s0 = w.splits;
+    // a band can turn back and join in the same step, so one seen apart and then gone is a comeback that ended
+    const back = new Map(), seen = new Set();
     run(w, A_SECONDS, A_DT, (w, s) => {
       const t = (s + 1) * A_DT;
+      for (const b of w.bands) { seen.add(b.id); if (b.away <= 0 && !back.has(b.id)) back.set(b.id, { t, ended: false }); }
+      for (const id of seen) if (!w.bands.some((b) => b.id === id)) { const c = back.get(id); if (c) c.ended = true; else back.set(id, { t, ended: true }); seen.delete(id); }
       if (w.bands.length > 1) { if (apartAt == null) apartAt = t; apartMax = Math.max(apartMax, t - apartAt); } else if (apartAt != null) { apartAt = null; rejoins++; }
       if ((s + 1) % 30) return;
       const lead = new Map(w.bands.map((b) => [b.id, w.horses[b.leader]]));
@@ -80,14 +87,16 @@ const A_NEAR = 300, A_SHARE = 0.6, A_SAMPLES = 0.98, A_APART = 100, A_REJOIN = 0
       samples++; if (share >= A_SHARE) good++; minShare = Math.min(minShare, share);
     });
     const frac = good / samples;
+    for (const c of back.values()) if (c.t <= A_SECONDS - A_BACK) { comebacks++; if (c.ended) cameBack++; }
     splits += w.splits - s0; worstSamples = Math.min(worstSamples, frac); worstShare = Math.min(worstShare, minShare); longest = Math.max(longest, apartMax);
     metric(`seed ${seed} (a) herd: ${w.horses.length} horses, ${(frac * 100).toFixed(1)} percent of samples with ${A_SHARE * 100} percent within ${A_NEAR} px of their mare, lowest share ${minShare.toFixed(2)}, ${w.splits - s0} splits, ${w.merges} merges, longest apart ${apartMax.toFixed(1)} s`);
     if (frac < A_SAMPLES) fail(`seed ${seed}: (a) the herd should hold together: ${A_SHARE * 100} percent of horses within ${A_NEAR} px of their band's mare in ${A_SAMPLES * 100} percent of samples, got ${(frac * 100).toFixed(1)} percent`);
     if (apartMax > A_APART) fail(`seed ${seed}: (a) parted bands should rejoin within ${A_APART} s, one parting lasted ${apartMax.toFixed(1)} s`);
   }
-  metric(`(a) herd overall: worst sample share ${(worstSamples * 100).toFixed(1)} percent, lowest share ${worstShare.toFixed(2)}, longest apart ${longest.toFixed(1)} s, ${splits} splits, ${rejoins} rejoined (${(rejoins / Math.max(1, splits)).toFixed(2)})`);
+  metric(`(a) herd overall: worst sample share ${(worstSamples * 100).toFixed(1)} percent, lowest share ${worstShare.toFixed(2)}, longest apart ${longest.toFixed(1)} s, ${splits} splits, ${rejoins} rejoined (${(rejoins / Math.max(1, splits)).toFixed(2)}), ${cameBack} of ${comebacks} comebacks begun ${A_BACK} s before the end ended`);
   if (!(splits >= 1)) fail(`(a) the herd should part at least once over ${A_SEEDS.length} seeds of ${A_SECONDS} s, it never did`);
-  if (rejoins < A_REJOIN * splits) fail(`(a) parted bands should come back: at least ${A_REJOIN * 100} percent of ${splits} partings should end within the runs, ${rejoins} did`);
+  if (!(comebacks >= 1)) fail(`(a) some parted band should start back for the main band ${A_BACK} s or more before a run ends, none did`);
+  if (cameBack < A_REJOIN * comebacks) fail(`(a) parted bands should come back: at least ${A_REJOIN * 100} percent of ${comebacks} comebacks begun ${A_BACK} s before a run's end should end within it, ${cameBack} did`);
 }
 
 lap('b');
@@ -269,6 +278,84 @@ lap('i');
   }
 }
 
+// A horse's body as a capsule: a segment along its heading from the rump to the nose, each end pulled in by the radius,
+// with half the body's width as the radius. cx, cy and R bound it in a circle, so most pairs are rejected cheaply.
+function capsule(h, p) {
+  const S = h.size, r = (p.girth ?? 0.21) * S, ux = Math.cos(h.a), uy = Math.sin(h.a);
+  const back = (p.rump ?? 0.5) * S - r, front = noseReach(h.g) * S - r;
+  const ax = h.x - ux * back, ay = h.y - uy * back, bx = h.x + ux * front, by = h.y + uy * front;
+  return { ax, ay, bx, by, r, cx: (ax + bx) / 2, cy: (ay + by) / 2, R: Math.hypot(bx - ax, by - ay) / 2 + r };
+}
+// the least distance between segments P0P1 and Q0Q1, by the closest points on the two lines clamped to the segments
+function segDist(px, py, qx, qy, rx, ry, sx, sy) {
+  const d1x = qx - px, d1y = qy - py, d2x = sx - rx, d2y = sy - ry, ex = px - rx, ey = py - ry;
+  const a = d1x * d1x + d1y * d1y, e = d2x * d2x + d2y * d2y, f = d2x * ex + d2y * ey;
+  let s, t;
+  if (a < 1e-12 && e < 1e-12) return Math.hypot(ex, ey);
+  if (a < 1e-12) { s = 0; t = Math.min(1, Math.max(0, f / e)); }
+  else {
+    const c = d1x * ex + d1y * ey;
+    if (e < 1e-12) { t = 0; s = Math.min(1, Math.max(0, -c / a)); }
+    else {
+      const b = d1x * d2x + d1y * d2y, den = a * e - b * b;
+      s = den > 1e-12 ? Math.min(1, Math.max(0, (b * f - c * e) / den)) : 0;
+      t = (b * s + f) / e;
+      if (t < 0) { t = 0; s = Math.min(1, Math.max(0, -c / a)); } else if (t > 1) { t = 1; s = Math.min(1, Math.max(0, (b - c) / a)); }
+    }
+  }
+  return Math.hypot(px + d1x * s - (rx + d2x * t), py + d1y * s - (ry + d2y * t));
+}
+// the least capsule gap over every pair of horses, and the pair; pairs whose bounding circles are apart are skipped, so
+// a herd with no pair close reports Infinity
+function leastGap(w) {
+  const p = w.params, C = w.horses.map((h) => capsule(h, p));
+  let least = Infinity;
+  for (let i = 0; i < C.length; i++) {
+    const A = C[i];
+    for (let j = i + 1; j < C.length; j++) {
+      const B = C[j];
+      if (Math.hypot(A.cx - B.cx, A.cy - B.cy) - A.R - B.R >= least) continue;
+      least = Math.min(least, segDist(A.ax, A.ay, A.bx, A.by, B.ax, B.ay, B.bx, B.by) - A.r - B.r);
+    }
+  }
+  return least;
+}
+// how many horses a grove's canopy may hold
+const canopyCap = (w, g) => {
+  const p = w.params;
+  return M.canopyCap ? M.canopyCap(w, g) : Math.max(1, Math.floor((g.r * g.r) / (p.size * p.size * (p.crowd ?? 1.6))));
+};
+
+lap('j');
+// (j) hard separation and the canopy queue: over 12 seeds of 120 s with a startle toward cover at 30 s, no two horses'
+// bodies overlap by more than J_OVERLAP px at any step after the first 2 s, and no grove's canopy ever holds more horses
+// than its cap. Every step is measured.
+const J_SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], J_SECONDS = 120, J_STARTLE = 30, J_SETTLE = 2, J_OVERLAP = 0.5;
+{
+  const t0 = performance.now();
+  for (const seed of J_SEEDS) {
+    const w = world(seed);
+    let t = 0, worst = Infinity, worstAt = 0, overAt = null, canopy = 0, canopyCapAt = 1, ratio = -1;
+    const look = (w) => {
+      t += DT;
+      if (t < J_SETTLE) return;
+      const g = leastGap(w);
+      if (g < worst) { worst = g; worstAt = t; }
+      for (const G of (w.land ? w.land.groves : [])) {
+        let n = 0; for (const h of w.horses) if (Math.hypot(h.x - G.x, h.y - G.y) < G.r) n++;
+        const cap = canopyCap(w, G);
+        if (n / cap > ratio) { ratio = n / cap; canopy = n; canopyCapAt = cap; }
+        if (n > cap && !overAt) overAt = { t, n, cap };
+      }
+    };
+    run(w, J_STARTLE, DT, look); sweep(w, look); run(w, J_SECONDS - J_STARTLE - 51 * DT, DT, look);
+    metric(`seed ${seed} (j) separation: worst capsule gap ${worst.toFixed(2)} px at t ${worstAt.toFixed(2)} s, fullest canopy ${canopy}/${canopyCapAt}`);
+    if (worst < -J_OVERLAP) fail(`seed ${seed}: (j) no two horses should overlap by more than ${J_OVERLAP} px, worst gap ${worst.toFixed(2)} px at t ${worstAt.toFixed(2)} s`);
+    if (overAt) fail(`seed ${seed}: (j) no canopy should hold more horses than its cap, ${overAt.n} under a canopy of cap ${overAt.cap} at t ${overAt.t.toFixed(2)} s`);
+  }
+  metric(`(j) separation ran ${((performance.now() - t0) / 1000).toFixed(1)} s, measuring every step`);
+}
+
 lap(null);
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }
-console.log('check-prairie: the herd holds and rejoins, no horse enters a knoll or a block, apples are eaten, a startle passes, reduced motion stills, hares bolt and settle, the grass, the trails and the registry hold');
+console.log('check-prairie: the herd holds and rejoins, no horse enters a knoll or a block, apples are eaten, a startle passes, reduced motion stills, hares bolt and settle, the grass, the trails and the registry hold, and bodies stay apart under capped canopies');

@@ -32,6 +32,10 @@ export const PARAMS = {
     split: [55, 10, 300, 5, 'mean time between one band parting in two, s'],
     rejoin: [28, 5, 120, 1, 'mean time a band that parted stays apart, s'],
     trail: [0.8, 0, 3, 0.05, 'pull of a worn trail on a walking horse'],
+    girth: [0.21, 0.05, 0.6, 0.01, 'half the body\'s width, body lengths: the capsule no other horse may enter'],
+    rump: [0.5, 0.1, 1, 0.01, 'the rump\'s distance behind the body\'s middle, body lengths'],
+    room: [0.5, 0, 2, 0.05, 'least room a grazing horse leaves to its neighbours, body lengths'],
+    crowd: [1.6, 0.5, 6, 0.1, 'room under a canopy per sheltering horse, square body lengths'],
   },
   gait: {
     size: [20, 8, 40, 1, 'body length, rump to chest, px'],
@@ -472,7 +476,7 @@ function layLand(w) {
     }
     const ns = 2 + Math.floor(r() * 3);
     for (let s = 0; s < ns; s++) {
-      const a = r() * TAU, d = G.r + 10 + r() * 22, x = G.x + Math.cos(a) * d, y = G.y + Math.sin(a) * d, R = 6 + r() * 5;
+      const a = r() * TAU, R = 6 + r() * 5, d = G.r + R + 22 + r() * 22, x = G.x + Math.cos(a) * d, y = G.y + Math.sin(a) * d;
       if (!inside(x, y, R) || knollGap(w, x, y) < R + 30 || blockGap(x, y) < R + 14) continue;
       L.blocks.push({ x, y, r: R, kind: 'shrub', loops: wobble(4, 0.5, 1), ph: r() * TAU });
     }
@@ -486,7 +490,7 @@ function layLand(w) {
     for (let k = 0; k < 40 && !at; k++) {
       const x = near ? L.water.x + Math.cos(r() * TAU) * (L.water.r + R + 8 + r() * 50) : MARGIN + r() * (W - 2 * MARGIN);
       const y = near ? L.water.y + Math.sin(r() * TAU) * (L.water.r + R + 8 + r() * 50) : TOP + r() * (H - TOP - MARGIN);
-      if (inside(x, y, R) && knollGap(w, x, y) > R + 50 && blockGap(x, y) > R + 16 && L.trees.every((t) => Math.hypot(t.x - x, t.y - y) > t.r + R + 6)) at = { x, y };
+      if (inside(x, y, R) && knollGap(w, x, y) > R + 50 && blockGap(x, y) > R + 16 && L.groves.every((g) => Math.hypot(g.x - x, g.y - y) > g.r + R + 24)) at = { x, y };
     }
     if (!at) continue;
     const q = { x: at.x, y: at.y, r: R, kind: 'rock', rim: wobble(7, 0.74, 1), ph: r() * TAU, crack: r() };
@@ -577,8 +581,9 @@ function stepLand(w) { if (landKey(w) !== w.landKey) layLand(w); }
 
 // ----- the herd -----
 // A horse: { x, y, a, v (px/s), g (gait 0..3), want (the gait it is making for), ph, t, bend, om, seed, side, size,
-// foal, mare (its mother's index, foals only), band, alarm (0..1), shelter ({ x, y } under a canopy, or null), food
-// (the apple it is making for), stepT, stepping, stepA, dustT, chaffT, pinto, patches }.
+// foal, mare (its mother's index, foals only), band, alarm (0..1), shelter ({ x, y, grove, ring, t } under or round a
+// canopy, or null), food (the apple it is making for), stepT, stepping, stepA, dustT, chaffT, pinto, patches, and from
+// separate(): crowd (the gap to its tightest neighbour, px), cx, cy (the way away from it), moved }.
 // A band: { id, leader (index), gx, gy (where the leader is making for), keep (time left grazing there), away (time
 // left apart, a band that parted; Infinity for the main band) }.
 const SPEED = (p) => [0, p.walk, p.trot, p.gallop];
@@ -619,7 +624,7 @@ function populate(w) {
       if (freeFor(w, x, y, S * 0.6) && H.every((o) => Math.hypot(o.x - x, o.y - y) > S * (foal ? 0.7 : 1.1))) break;
     }
     const size = S * (foal ? 0.62 : 0.92 + 0.16 * r());
-    H.push({ i, x, y, a: r() * TAU, v: 0, g: 0, want: 0, ph: r(), t: r() * 100, bend: 0, om: 0, seed: r() * TAU, side: r() < 0.5 ? -1 : 1, size, foal, mare, band: 0, alarm: 0, shelter: null, food: null, stepT: 1 + r() * 8, stepping: 0, stepA: 0, dustT: 0, chaffT: 0, pinto: 0, patches: null });
+    H.push({ i, x, y, a: r() * TAU, v: 0, g: 0, want: 0, ph: r(), t: r() * 100, bend: 0, om: 0, seed: r() * TAU, side: r() < 0.5 ? -1 : 1, size, foal, mare, band: 0, alarm: 0, shelter: null, food: null, stepT: 1 + r() * 8, stepping: 0, stepA: 0, dustT: 0, chaffT: 0, pinto: 0, patches: null, crowd: Infinity, cx: 0, cy: 0, moved: false });
   }
   w.horses = H; w.foalN = nf;
   markPintos(w);
@@ -655,7 +660,9 @@ function stepBands(w, dt) {
         const Lm = H[main.leader]; main.gx = Lm.x; main.gy = Lm.y; main.keep = Math.max(main.keep, 3);
         centroid(w, main.id, C0); centroid(w, b.id, C1);
         b.gx = C0.x; b.gy = C0.y;
-        if (Math.hypot(C0.x - C1.x, C0.y - C1.y) < 110 + 2 * p.size * Math.sqrt(C1.n)) { for (const h of H) if (h.band === b.id) h.band = main.id; b.dead = true; w.merges++; }
+        // joined once the two stand together: their middles as near as both bands' spreads allow (bodies never overlap,
+        // so a band that has come back stands beside the main one rather than in it)
+        if (Math.hypot(C0.x - C1.x, C0.y - C1.y) < 110 + 1.2 * p.size * (Math.sqrt(C0.n) + Math.sqrt(C1.n))) { for (const h of H) if (h.band === b.id) h.band = main.id; b.dead = true; w.merges++; }
         continue;
       }
     }
@@ -695,13 +702,33 @@ function stepBands(w, dt) {
 }
 // The canopy a spooked horse makes for: the nearest stand of trees that does not lie back toward the scare, a spot
 // under it of its own; or, with no such stand, open ground straight away from the scare.
+// A canopy holds only so many (canopyCap): when the stand it would make for is full, a horse makes for the next stand
+// with room if one is near enough, and otherwise stands spaced out round the full one's edge, facing in.
 function shelterFor(w, h, ux, uy, grove) {
-  const G = w.land ? w.land.groves : [], r = w.rand;
-  let best = grove, bd = Infinity;
-  if (best == null) for (let i = 0; i < G.length; i++) { const g = G[i], dx = g.x - h.x, dy = g.y - h.y, d = Math.hypot(dx, dy); if (d > 1e-6 && (dx * ux + dy * uy) / d < -0.25) continue; if (d < bd) { bd = d; best = i; } }
-  if (best == null || !G[best]) { const m = w.params.edge; return { x: clamp(h.x + ux * 260, m, w.w - m), y: clamp(h.y + uy * 260, Math.max(m, TOP), w.h - m), grove: null }; }
-  const g = G[best], a = r() * TAU, d = g.r * 0.65 * Math.sqrt(r());
-  return { x: g.x + Math.cos(a) * d, y: g.y + Math.sin(a) * d, grove: best };
+  const G = w.land ? w.land.groves : [], r = w.rand, S = h.size;
+  const ok = [];
+  for (let i = 0; i < G.length; i++) { const g = G[i], dx = g.x - h.x, dy = g.y - h.y, d = Math.hypot(dx, dy); if (i !== grove && d > 1e-6 && (dx * ux + dy * uy) / d < -0.25) continue; ok.push([i === grove ? -1 : d, i]); }
+  if (!ok.length) { const m = w.params.edge; return { x: clamp(h.x + ux * 260, m, w.w - m), y: clamp(h.y + uy * 260, Math.max(m, TOP), w.h - m), grove: null }; }
+  ok.sort((a, b) => a[0] - b[0]);
+  const under = (i) => { let k = 0; for (const o of w.horses) if (o !== h && o.shelter && o.shelter.grove === i && !o.shelter.ring) k++; return k; };
+  for (const [d, i] of ok) {
+    if (d > 400 && i !== ok[0][1]) break;
+    const g = G[i];
+    if (under(i) >= canopyCap(w, g)) continue;
+    const a = r() * TAU, q = g.r * 0.65 * Math.sqrt(r());
+    return { x: g.x + Math.cos(a) * q, y: g.y + Math.sin(a) * q, grove: i, ring: false };
+  }
+  // round the nearest full stand: the free place on a ring outside its edge nearest the way the horse comes from
+  const gi = ok[0][1], g = G[gi], R = g.r + S * 1.1, step = (S * (2 * w.params.girth + w.params.room + 0.2)) / R, t0 = Math.atan2(h.y - g.y, h.x - g.x);
+  const taken = []; for (const o of w.horses) if (o !== h && o.shelter && o.shelter.grove === gi && o.shelter.ring) taken.push(o.shelter.t);
+  for (let k = 0; k < Math.PI / step; k++) {
+    for (const sg of k ? [1, -1] : [1]) {
+      const t = t0 + sg * k * step;
+      if (taken.some((u) => Math.abs(wrapAngle(u - t)) < step * 0.95)) continue;
+      return { x: g.x + Math.cos(t) * R, y: g.y + Math.sin(t) * R, grove: gi, ring: true, t };
+    }
+  }
+  return { x: g.x + Math.cos(t0) * (R + S * 1.5), y: g.y + Math.sin(t0) * (R + S * 1.5), grove: gi, ring: true, t: t0 };
 }
 function spook(w, h, level, ux, uy, grove) {
   if (h.alarm >= level) return;
@@ -748,11 +775,11 @@ function stepHerd(w, dt, startle) {
     h.alarm = Math.max(0, h.alarm - dt / p.calm);
     if (rm) h.alarm = 0;
     if (h.alarm <= 0) h.shelter = null;
-    let tx = h.x, ty = h.y, want = 0, eating = false, stand = false;
+    let tx = h.x, ty = h.y, want = 0, eating = false, stand = false, fx = 0, fy = 0;
     if (h.alarm > 0.02 && h.shelter) {
-      tx = h.shelter.x; ty = h.shelter.y;
+      const s = h.shelter; tx = s.x; ty = s.y;
       const d = Math.hypot(tx - h.x, ty - h.y);
-      if (d < 10) stand = true;
+      if (d < 10) { stand = true; if (s.ring) { const g = w.land.groves[s.grove]; fx = g.x - h.x; fy = g.y - h.y; } }
       else want = h.alarm > 0.5 ? 3 : h.alarm > 0.22 ? 2 : 1;
     } else if (h.food) {
       tx = h.food.x; ty = h.food.y;
@@ -772,7 +799,7 @@ function stepHerd(w, dt, startle) {
       tx = L.x; ty = L.y;
       const d = Math.hypot(tx - h.x, ty - h.y), nb = Math.max(1, centroid(w, band.id, C1).n);
       const R = S * (2 + p.spacing * Math.sqrt(nb) * 0.55);
-      want = d > 2.6 * R ? 2 : d > R ? 1 : 0;
+      want = d > 2 * R ? 2 : d > R ? 1 : 0;
       if (band.away <= 0 && d > R) want = Math.max(want, 1);
     }
     if (rm) want = Math.min(want, 1);
@@ -780,6 +807,8 @@ function stepHerd(w, dt, startle) {
     // a grazing horse takes a step or two now and then: on toward the band when it has drifted out, else anywhere
     if (want === 0 && !eating && !stand) {
       if (h.stepping > 0) h.stepping -= dt;
+      // crowded: a step away from the nearest body, along its own heading where that serves
+      else if (h.crowd < p.room * S) { h.stepping = 0.5 + r() * 0.5; const away = Math.atan2(h.cy, h.cx), da = wrapAngle(away - h.a); h.stepA = Math.abs(da) < 1.2 ? h.a + da * 0.5 : away; }
       else if ((h.stepT -= dt) <= 0) { h.stepT = 3 + r() * 7; h.stepping = 0.8 + r() * 1.4; h.stepA = h.a + (r() - 0.5) * 1.8; }
     } else h.stepping = 0;
     // the direction it would go: its target, kept apart from the others, round the knolls and the blocks, off the
@@ -788,6 +817,7 @@ function stepHerd(w, dt, startle) {
     if (want > 0) { const d = Math.hypot(tx - h.x, ty - h.y) || 1; dx = (tx - h.x) / d; dy = (ty - h.y) / d; }
     else if (h.stepping > 0) { dx = Math.cos(h.stepA); dy = Math.sin(h.stepA); }
     else if (eating) { dx = tx - h.x; dy = ty - h.y; }
+    else if (stand) { dx = fx; dy = fy; }
     const moving = want > 0 || h.stepping > 0;
     if (moving) {
       const sep = S * (h.alarm > 0.3 || h.food ? 1.1 : p.spacing);
@@ -828,12 +858,100 @@ function stepHerd(w, dt, startle) {
     h.x += Math.cos(h.a) * h.v * dt; h.y += Math.sin(h.a) * h.v * dt;
     if (h.g > 2.4 && !rm) { h.dustT -= dt; if (h.dustT <= 0) { h.dustT = 0.09 + 0.06 * r(); puff(w, h.x - Math.cos(h.a) * S * 0.6, h.y - Math.sin(h.a) * S * 0.6, 3 + 2 * r(), 1.1, 0); } }
   }
-  // no two bodies on one spot, then nothing inside a knoll, a boulder, a shrub or the water
-  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
-    const A = H[i], B = H[j], ex = B.x - A.x, ey = B.y - A.y, d = Math.hypot(ex, ey), m = 0.36 * (A.size + B.size);
-    if (d < m && d > 1e-6) { const k = (m - d) / (2 * d); A.x -= ex * k; A.y -= ey * k; B.x += ex * k; B.y += ey * k; }
-  }
   for (const h of H) keepOut(w, h);
+  separate(w, dt);
+}
+
+// ----- the bodies -----
+// A horse's body, for keeping the herd apart, is a capsule along its heading: a segment from its rump to its nose (as
+// far as the gait carries the head) swept by its girth. The numbers are the herd's, not the figure's, so another
+// animal's figure can be laid over the same bodies.
+const CAPS = [];
+function capsule(h, p, c) {
+  const S = h.size, r = p.girth * S, u = Math.cos(h.a), v = Math.sin(h.a), back = Math.max(0, p.rump * S - r), front = Math.max(0, noseReach(h.g) * S - r);
+  c.ax = h.x - u * back; c.ay = h.y - v * back; c.bx = h.x + u * front; c.by = h.y + v * front; c.r = r; c.reach = Math.max(back, front) + r;
+  return c;
+}
+const shift = (c, dx, dy) => { c.ax += dx; c.ay += dy; c.bx += dx; c.by += dy; };
+// The closest points of segments ab and cd: their distance, the point on ab at (SS.px, SS.py) and on cd at (qx, qy).
+const SS = { px: 0, py: 0, qx: 0, qy: 0 };
+function segSeg(ax, ay, bx, by, cx, cy, dx, dy) {
+  const ux = bx - ax, uy = by - ay, vx = dx - cx, vy = dy - cy, wx = ax - cx, wy = ay - cy;
+  const a = ux * ux + uy * uy, e = vx * vx + vy * vy, f = vx * wx + vy * wy;
+  let s, t;
+  if (a < 1e-9 && e < 1e-9) { s = 0; t = 0; }
+  else if (a < 1e-9) { s = 0; t = clamp(f / e, 0, 1); }
+  else {
+    const c = ux * wx + uy * wy;
+    if (e < 1e-9) { t = 0; s = clamp(-c / a, 0, 1); }
+    else {
+      const b = ux * vx + uy * vy, den = a * e - b * b;
+      s = den > 1e-9 ? clamp((b * f - c * e) / den, 0, 1) : 0;
+      t = (b * s + f) / e;
+      if (t < 0) { t = 0; s = clamp(-c / a, 0, 1); } else if (t > 1) { t = 1; s = clamp((b - c) / a, 0, 1); }
+    }
+  }
+  SS.px = ax + ux * s; SS.py = ay + uy * s; SS.qx = cx + vx * t; SS.qy = cy + vy * t;
+  return Math.hypot(SS.px - SS.qx, SS.py - SS.qy);
+}
+// How many horses one canopy shelters: its area over the room each takes.
+export const canopyCap = (w, g) => Math.max(1, Math.floor((g.r * g.r) / (w.params.size * w.params.size * w.params.crowd)));
+// No two bodies overlap, ever: each pair that does is pushed apart along the line between their nearest points, half
+// each, with its motion into the other damped away rather than bounced,
+// and a few rounds of that, so a crowd settles in place. A canopy holding its cap lets no more in. Each horse also
+// learns its tightest neighbour (crowd, and the way away from it, cx, cy), which a grazing horse steps away from.
+function separate(w, dt) {
+  const p = w.params, H = w.horses, n = H.length, SLOP = 0.3;
+  while (CAPS.length < n) CAPS.push({});
+  for (let i = 0; i < n; i++) { capsule(H[i], p, CAPS[i]); H[i].crowd = Infinity; H[i].cx = 0; H[i].cy = 0; H[i].moved = false; H[i].pinned = false; }
+  for (let it = 0; it < 16; it++) {
+    let worst = 0;
+    for (let i = 0; i < n; i++) {
+      const A = H[i], CA = CAPS[i];
+      for (let j = i + 1; j < n; j++) {
+        const B = H[j], CB = CAPS[j], room = it === 0 ? p.room * Math.max(A.size, B.size) : 0;
+        if (Math.abs(B.x - A.x) > CA.reach + CB.reach + room || Math.abs(B.y - A.y) > CA.reach + CB.reach + room) continue;
+        const d = segSeg(CA.ax, CA.ay, CA.bx, CA.by, CB.ax, CB.ay, CB.bx, CB.by), gap = d - CA.r - CB.r;
+        let nx, ny;
+        if (d > 1e-6) { nx = (SS.px - SS.qx) / d; ny = (SS.py - SS.qy) / d; }
+        else { const ex = A.x - B.x, ey = A.y - B.y, m = Math.hypot(ex, ey); if (m > 1e-6) { nx = ex / m; ny = ey / m; } else { nx = -Math.sin(A.a); ny = Math.cos(A.a); } }
+        if (it === 0) {
+          if (gap < A.crowd) { A.crowd = gap; A.cx = nx; A.cy = ny; }
+          if (gap < B.crowd) { B.crowd = gap; B.cx = -nx; B.cy = -ny; }
+        }
+        if (gap >= SLOP) continue;
+        const give = (h) => (h.pinned ? 0.15 : 1), wa = give(A), wb = give(B), pen = SLOP - gap, s = pen / (wa + wb);
+        A.x += nx * s * wa; A.y += ny * s * wa; shift(CA, nx * s * wa, ny * s * wa); A.moved = true;
+        B.x -= nx * s * wb; B.y -= ny * s * wb; shift(CB, -nx * s * wb, -ny * s * wb); B.moved = true;
+        // the push is damped: whatever of its speed carried a horse into the other is let go over a few frames
+        const k = Math.min(1, dt * 8), ia = -(Math.cos(A.a) * nx + Math.sin(A.a) * ny), ib = Math.cos(B.a) * nx + Math.sin(B.a) * ny;
+        if (ia > 0) A.v -= A.v * ia * k; if (ib > 0) B.v -= B.v * ib * k;
+        worst = Math.max(worst, pen);
+      }
+    }
+    worst = Math.max(worst, canopyWalls(w));
+    for (let i = 0; i < n; i++) if (H[i].moved) { const h = H[i], x = h.x, y = h.y; keepOut(w, h); const m = Math.hypot(h.x - x, h.y - y); if (m > 0.01) h.pinned = true; worst = Math.max(worst, m); capsule(h, p, CAPS[i]); h.moved = false; }
+    if (worst < 0.02) break;
+  }
+}
+// A canopy at its cap: the horses under it beyond the cap (those not holding a place under it, the farthest first)
+// are put back out at its edge. Returns the farthest any was moved.
+const UNDER = [];
+function canopyWalls(w) {
+  const G = w.land ? w.land.groves : [], H = w.horses; let worst = 0;
+  for (let gi = 0; gi < G.length; gi++) {
+    const g = G[gi], cap = canopyCap(w, g);
+    UNDER.length = 0;
+    for (const h of H) { const d = Math.hypot(h.x - g.x, h.y - g.y); if (d < g.r + 0.5) UNDER.push(h); }
+    if (UNDER.length <= cap) continue;
+    const held = (h) => (h.shelter && h.shelter.grove === gi && !h.shelter.ring ? 0 : 1);
+    UNDER.sort((a, b) => held(a) - held(b) || Math.hypot(a.x - g.x, a.y - g.y) - Math.hypot(b.x - g.x, b.y - g.y));
+    for (let k = cap; k < UNDER.length; k++) {
+      const h = UNDER[k], ex = h.x - g.x, ey = h.y - g.y, d = Math.hypot(ex, ey), ux = d > 1e-6 ? ex / d : 1, uy = d > 1e-6 ? ey / d : 0, m = g.r + 1;
+      worst = Math.max(worst, m - d); h.x = g.x + ux * m; h.y = g.y + uy * m; h.moved = true; h.pinned = true; shed(h, ux, uy);
+    }
+  }
+  return worst;
 }
 const GA = {};
 // Pushes a horse clear: its middle, its nose and its rump each kept off every knoll (by shore), every block and the
