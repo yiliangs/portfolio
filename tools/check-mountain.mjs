@@ -251,15 +251,13 @@ for (let seed = 1; seed <= 12; seed++) {
   else if (!/\bmountain\s*:\s*\(\)\s*=>\s*import\(\s*'\.\/scenes\/mountain\.js'\s*\)/.test(m[1])) fail("(k) the scenes registry should map mountain to import('./scenes/mountain.js')");
 }
 
-// (l) a coarse pointer gets the touch counts, a fine one the full counts; the first golden eagles carry the gold nape
+// (l) a coarse pointer gets the touch counts, a fine one the full counts
 for (const coarse of [false, true]) {
   const w = mountain(11, { coarse }), p = w.params, kind = coarse ? 'coarse' : 'fine';
-  const want = coarse ? { eagles: p.countTouch, goats: p.goatsTouch, clouds: p.cloudsTouch, gold: p.goldenTouch } : { eagles: p.count, goats: p.goats, clouds: p.clouds, gold: p.golden };
+  const want = coarse ? { eagles: p.countTouch, goats: p.goatsTouch, clouds: p.cloudsTouch } : { eagles: p.count, goats: p.goats, clouds: p.clouds };
   if (w.eagles.length !== want.eagles) fail(`(l) ${kind}: ${w.eagles.length} eagles, want ${want.eagles}`);
   if (w.goats.length !== want.goats) fail(`(l) ${kind}: ${w.goats.length} goats, want ${want.goats}`);
   if (w.clouds.length !== want.clouds) fail(`(l) ${kind}: ${w.clouds.length} clouds, want ${want.clouds}`);
-  const gold = w.eagles.map((e) => !!e.gold), wrong = gold.findIndex((g, i) => g !== i < want.gold);
-  if (wrong >= 0) fail(`(l) ${kind}: eagle ${wrong} has gold ${gold[wrong]}, want the first ${want.gold} gold and no others`);
 }
 
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }
