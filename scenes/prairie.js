@@ -1,20 +1,21 @@
-// Home prairie: the page seen from above as open grassland, with the two home objects standing on bare knolls. A herd
+// Home prairie: the page seen from above as open grassland, with the two home objects standing in ponds. A herd
 // of horses grazes between them in bands that part and come back together behind a lead mare, a few of them pintos
 // with chestnut patches and a few foals keeping to their mothers; they walk from one grazing spot to the next along
-// worn trails, trot to catch up, and gallop for the trees when a fast cursor spooks them, then settle under the
-// canopies and drift back out to graze. Wind runs over the grass in gusts that lay the blades over as they pass,
+// worn trails, trot to catch up, walk down to the ponds now and then to drink, and gallop for the trees when a fast
+// cursor spooks them, as many under each canopy as it shelters and the rest round it, then drift back out to graze.
+// No two horses ever overlap: each is a body on one ground plane. Wind runs over the grass in gusts that lay the blades over as they pass,
 // tumbleweeds roll before it, wildflowers open through the visit, hares sit by their burrows and bolt from the cursor,
 // and a press or a drag scatters apples the horses near it turn and trot to eat. The layer sits behind reading text, so the resting
 // picture is calm: most of the herd has its head down most of the time.
 //
 // The simulation is kept apart from the drawing. createWorld() builds a state and step() advances it by dt with the
 // world's own seeded random source, touching nothing else, so a seed fixes a run and tools/check-prairie.mjs drives it
-// headless. The knolls are the kit's footprints (scenes/kit.js); `scene` at the foot of the file is the descriptor the
+// headless. The ponds are the kit's footprints (scenes/kit.js; named knolls in the code, which they were first); `scene` at the foot of the file is the descriptor the
 // kit's shell mounts, and the contract it fills is the head of scenes/kit.js.
 import {
   FOOTPRINT, GROUND, rng, TAU, wrapAngle, pointRand, placeFootprints, updateFootprint,
   edge, edgeR, edgeGap, onEdge, edgeNormal, footprintAt, edgePath, pointer, pointTo, pointerSpeed, strokeOpen, strokeAlong, strokeClose,
-  latticeMarks, curveThrough,
+  latticeMarks, curveThrough, tint,
 } from './kit.js';
 
 // Parameters by section: [default, min, max, step, label] or [value, 'toggle', label].
@@ -36,6 +37,9 @@ export const PARAMS = {
     rump: [0.5, 0.1, 1, 0.01, 'the rump\'s distance behind the body\'s middle, body lengths'],
     room: [0.5, 0, 2, 0.05, 'least room a grazing horse leaves to its neighbours, body lengths'],
     crowd: [1.6, 0.5, 6, 0.1, 'room under a canopy per sheltering horse, square body lengths'],
+    drink: [300, 10, 900, 5, 'mean time between one horse\'s walks to the water, s'],
+    drinkers: [3, 0, 12, 1, 'horses at the water at once, at most'],
+    sip: [4, 1, 20, 0.5, 'time a horse stands drinking, s'],
   },
   gait: {
     size: [20, 8, 40, 1, 'body length, rump to chest, px'],
@@ -57,14 +61,17 @@ export const PARAMS = {
     studyScale: [8, 2, 12, 0.5, 'scale of the study over the herd\'s'],
     studyPinto: [0, 'toggle', 'study a pinto'],
   },
-  knolls: {
+  ponds: {
     ...FOOTPRINT,
-    shore: [10, 0, 60, 1, 'gap a horse keeps from a knoll, px'],
+    shore: [10, 0, 60, 1, 'gap a horse keeps from a pond, px'],
     look: [60, 0, 300, 5, 'distance at which a horse starts to steer round, px'],
     edge: [50, 0, 300, 5, 'screen margin where horses turn back, px'],
-    thin: [40, 0, 120, 1, 'width of the bands where the grass thins toward a knoll, px'],
-    worn: [0.22, 0, 1, 0.01, 'opacity of the trampled ring round a knoll'],
-    edgeAlpha: [0.2, 0, 1, 0.01, 'opacity of a knoll\'s edge'],
+    water: [0.12, 0, 0.6, 0.005, 'how far the water is taken from the page toward its blue-green'],
+    markDensity: [1, 0, 3, 0.05, 'how close the hatch on the water is laid, dashes per area x this'],
+    markJitter: [0.35, 0, 1, 0.05, 'how loosely the hatch\'s dashes are laid, 0 a strict lattice'],
+    markAlpha: [0.1, 0, 1, 0.01, 'opacity of the hatch on the water'],
+    edgeAlpha: [0.3, 0, 1, 0.01, 'opacity of a pond\'s shore line'],
+    reeds: [0.28, 0, 1, 0.01, 'opacity of the reeds at the shore'],
     palette: [0, 0, 2, 1, 'ground tint: 0 straw, 1 wheat, 2 ochre'],
     straw: [0.07, 0, 0.4, 0.005, 'how far the grass is taken from the page toward its tint'],
     ...GROUND,
@@ -99,9 +106,8 @@ export const PARAMS = {
     grovesTouch: [2, 0, 6, 1, 'stands of trees on a coarse pointer'],
     boulders: [6, 0, 16, 1, 'boulders on a fine pointer'],
     bouldersTouch: [3, 0, 16, 1, 'boulders on a coarse pointer'],
-    waterhole: [1, 'toggle', 'a waterhole'],
     creek: [1, 'toggle', 'a dry creek bed'],
-    landAlpha: [0.24, 0, 1, 0.01, 'opacity of trails, the creek and the waterhole\'s rings'],
+    landAlpha: [0.24, 0, 1, 0.01, 'opacity of the trails and the creek'],
     canopy: [0.4, 0, 1, 0.01, 'opacity of a canopy\'s outline'],
     shade: [0.86, 0, 1, 0.01, 'how fully a canopy hides what is under it'],
   },
@@ -404,7 +410,7 @@ export function createWorld(params, opts = {}) {
     params, w: opts.w || 1, h: opts.h || 1, t: 0, seed, rand: rng(seed), coarse: !!opts.coarse, reduced: !!opts.reduced,
     knolls: [], outlines: [], ptr: pointer(), stroke: null,
     horses: [], bands: [], nextBand: 1, splitT: 0, splits: 0, merges: 0,
-    feed: [], puffs: [], eaten: 0, drops: 0,
+    feed: [], puffs: [], eaten: 0, drops: 0, drinks: 0,
     // the wind blows toward angle a, roughly from the west, all visit long; gusts run along it
     wind: { a: (wr() - 0.5) * 0.9, phase: 0, gusts: [], next: 2 + wr() * 3, rand: wr },
     land: null, landKey: '', hares: [], hrand: rng((seed ^ 0x4a5e) >>> 0), weeds: [],
@@ -419,7 +425,7 @@ export function setSources(w, boxes) { placeFootprints(w.knolls, w.outlines, box
 export function setOutlines(w, fns) { w.outlines = fns || []; }
 export function setPointer(w, x, y, on) { pointTo(w.ptr, x, y, on); }
 export function knollAt(w, x, y) { return footprintAt(w.knolls, x, y); }
-// An apple dropped on open ground; one dropped on a boulder or the waterhole rolls off it.
+// An apple dropped on open ground; one dropped on a boulder or a shrub rolls off it.
 export function dropFeed(w, x, y) {
   if (footprintAt(w.knolls, x, y) >= 0) return;
   for (const b of blocksOf(w)) { const d = Math.hypot(x - b.x, y - b.y); if (d < b.r + 4) { const k = (b.r + 4) / Math.max(1e-6, d); x = b.x + (x - b.x) * k; y = b.y + (y - b.y) * k; } }
@@ -437,16 +443,16 @@ export function strokeCancel(w) { w.stroke = null; }
 function puff(w, x, y, size, life, kind = 0) { if (w.puffs.length < 160) w.puffs.push({ x, y, size, life, age: 0, kind, spin: w.rand() * TAU }); }
 
 // ----- the land -----
-// Everything that stands still: the waterhole, the stands of trees (canopies over a few shrubs), the boulders, the
-// hares' burrows, the drifts of wildflowers, the dry creek and the trails worn between the knolls, the waterhole and
+// Everything that stands still: the stands of trees (canopies over a few shrubs), the boulders, the hares' burrows,
+// the drifts of wildflowers, the dry creek and the trails worn between the ponds (the two footprints) and
 // the trees. It is laid from the world's seed, the page size and where the knolls stand (to 60 px), so it is laid
 // anew only when one of those changes, and the same inputs lay the same land. Its own random stream keeps the world's
-// untouched. The blocks are what a horse walks round: the waterhole, the boulders and the shrubs.
+// untouched. The blocks are what a horse walks round: the boulders and the shrubs.
 const TOP = 80, MARGIN = 30;
 export const blocksOf = (w) => (w.land ? w.land.blocks : []);
 function landKey(w) {
   const p = w.params, k = w.knolls.map((o) => `${Math.round(o.bx / 60)},${Math.round(o.by / 60)}`).join(';');
-  return `${Math.round(w.w / 40)} ${Math.round(w.h / 40)} ${k} ${pick2(w, 'groves')} ${pick2(w, 'boulders')} ${pick2(w, 'hares')} ${pick2(w, 'drifts')} ${p.waterhole} ${p.creek}`;
+  return `${Math.round(w.w / 40)} ${Math.round(w.h / 40)} ${k} ${pick2(w, 'groves')} ${pick2(w, 'boulders')} ${pick2(w, 'hares')} ${pick2(w, 'drifts')} ${p.creek}`;
 }
 const knollGap = (w, x, y) => { let g = Infinity; for (const o of w.knolls) g = Math.min(g, edgeGap(o, x, y, 0)); return g; };
 function layLand(w) {
@@ -460,13 +466,7 @@ function layLand(w) {
     return bs > -Infinity ? { x: bx, y: by } : null;
   };
   const wobble = (n, lo, hi) => Array.from({ length: n }, () => lo + r() * (hi - lo));
-  // the waterhole: well away from the knolls, a wobbled ring
-  if (p.waterhole) {
-    const rad = clamp(Math.min(W, H) * 0.04, 22, 42);
-    const at = best(60, rad, (x, y) => knollGap(w, x, y) > rad + 70, (x, y) => Math.min(knollGap(w, x, y), 320) - 0.2 * Math.abs(x - W / 2));
-    if (at) { L.water = { x: at.x, y: at.y, r: rad, rim: wobble(11, 0.86, 1.08) }; L.blocks.push({ x: at.x, y: at.y, r: rad + 3, kind: 'water' }); }
-  }
-  // the stands of trees: apart from the knolls, the water and one another
+  // the stands of trees: apart from the ponds and one another
   const nG = pick2(w, 'groves');
   for (let g = 0; g < nG; g++) {
     const at = best(60, 50, (x, y) => knollGap(w, x, y) > 90 && blockGap(x, y) > 70 && L.groves.every((q) => Math.hypot(q.x - x, q.y - y) > 260),
@@ -486,14 +486,13 @@ function layLand(w) {
     }
     L.groves.push(G);
   }
-  // the boulders: some by the water, the rest out on the grass
+  // the boulders: out on the grass
   const nR = pick2(w, 'boulders');
   for (let i = 0; i < nR; i++) {
-    const R = 5 + r() * 10, near = L.water && i < nR / 2;
+    const R = 5 + r() * 10;
     let at = null;
     for (let k = 0; k < 40 && !at; k++) {
-      const x = near ? L.water.x + Math.cos(r() * TAU) * (L.water.r + R + 8 + r() * 50) : MARGIN + r() * (W - 2 * MARGIN);
-      const y = near ? L.water.y + Math.sin(r() * TAU) * (L.water.r + R + 8 + r() * 50) : TOP + r() * (H - TOP - MARGIN);
+      const x = MARGIN + r() * (W - 2 * MARGIN), y = TOP + r() * (H - TOP - MARGIN);
       if (inside(x, y, R) && knollGap(w, x, y) > R + 50 && blockGap(x, y) > R + 16 && L.groves.every((g) => Math.hypot(g.x - x, g.y - y) > g.r + R + 24)) at = { x, y };
     }
     if (!at) continue;
@@ -518,7 +517,7 @@ function layLand(w) {
     const n = 9 + Math.floor(r() * 8);
     for (let i = 0; i < n; i++) {
       const a = r() * TAU, rr = 30 * Math.sqrt(-2 * Math.log(1 - r() * 0.95)) * 0.6, x = at.x + Math.cos(a) * rr, y = at.y + Math.sin(a) * rr;
-      if (!inside(x, y, 3) || knollGap(w, x, y) < p.thin + 6 || blockGap(x, y) < 5) continue;
+      if (!inside(x, y, 3) || knollGap(w, x, y) < 46 || blockGap(x, y) < 5) continue;
       const o1 = 3 + r() * 0.5 * p.bloom;
       L.flowers.push({ x, y, o1, o2: o1 + 4 + r() * 0.5 * p.bloom, rot: r() * TAU, s: 0.8 + r() * 0.5, drift: d });
     }
@@ -534,26 +533,24 @@ function layLand(w) {
       turn = clamp(turn + (r() - 0.5) * 0.25, -0.12, 0.12); a += turn; a = a0 + clamp(wrapAngle(a - a0), -0.9, 0.9);
       x += Math.cos(a) * 14; y += Math.sin(a) * 14;
       for (const o of w.knolls) { const g = edgeGap(o, x, y, 70); if (g < 0) { onEdge(o, x, y, 70, OUTP); x = OUTP.x; y = OUTP.y; } }
-      if (L.water) { const d = Math.hypot(x - L.water.x, y - L.water.y), m = L.water.r + 40; if (d < m) { x = L.water.x + ((x - L.water.x) / d) * m; y = L.water.y + ((y - L.water.y) / d) * m; } }
     }
     L.creek = { xs, ys, wide: wobble(xs.length, 4, 8), pebbles: Array.from({ length: Math.floor(xs.length * 0.6) }, () => ({ i: Math.floor(r() * xs.length), o: (r() - 0.5) * 6, s: 0.6 + r() * 0.8 })) };
   }
-  // the trails: from each knoll to the waterhole, and from each stand of trees to its nearest knoll, water or stand
+  // the trails: from one pond to the other, and from each stand of trees to its nearest pond or stand
   const nodes = [];
   w.knolls.forEach((o) => nodes.push({ x: o.x, y: o.y, knoll: o, name: `knoll${o.i}` }));
-  if (L.water) nodes.push({ x: L.water.x, y: L.water.y, r: L.water.r + 4, name: 'water' });
   L.groves.forEach((g, i) => nodes.push({ x: g.x, y: g.y, r: 0, name: `grove${i}` }));
   const pairs = [];
-  const nk = w.knolls.length, wi = L.water ? nk : -1;
-  for (let i = 0; i < nk; i++) { if (wi >= 0) pairs.push([i, wi]); else if (i + 1 < nk) pairs.push([i, i + 1]); }
-  for (let g = (L.water ? nk + 1 : nk); g < nodes.length; g++) {
+  const nk = w.knolls.length;
+  for (let i = 0; i + 1 < nk; i++) pairs.push([i, i + 1]);
+  for (let g = nk; g < nodes.length; g++) {
     let bj = -1, bd = Infinity;
     for (let j = 0; j < nodes.length; j++) { if (j === g || (nodes[j].name.startsWith('grove') && j > g)) continue; const d = Math.hypot(nodes[j].x - nodes[g].x, nodes[j].y - nodes[g].y); if (d < bd) { bd = d; bj = j; } }
     if (bj >= 0) pairs.push([bj, g]);
   }
   for (const [i, j] of pairs) {
     const A = nodes[i], B = nodes[j], end = (N, toward) => {
-      if (N.knoll) { onEdge(N.knoll, toward.x, toward.y, 0.5 * p.thin, OUTP); return { x: OUTP.x, y: OUTP.y }; }
+      if (N.knoll) { onEdge(N.knoll, toward.x, toward.y, 20, OUTP); return { x: OUTP.x, y: OUTP.y }; }
       const d = Math.hypot(toward.x - N.x, toward.y - N.y) || 1; return { x: N.x + ((toward.x - N.x) / d) * N.r, y: N.y + ((toward.y - N.y) / d) * N.r };
     };
     const a = end(A, B), b = end(B, A), L0 = Math.hypot(b.x - a.x, b.y - a.y);
@@ -563,7 +560,7 @@ function layLand(w) {
     for (let k = 0; k <= n; k++) {
       const s = k / n, off = amp * Math.sin(Math.PI * waves * s) + 3 * Math.sin(s * 23 + i);
       let x = lerp(a.x, b.x, s) + nx * off, y = lerp(a.y, b.y, s) + ny * off;
-      for (const q of L.blocks) { if (q.kind === 'water' && (k === 0 || k === n)) continue; const d = Math.hypot(x - q.x, y - q.y), m = q.r + 6; if (d < m && d > 1e-6) { x = q.x + ((x - q.x) / d) * m; y = q.y + ((y - q.y) / d) * m; } }
+      for (const q of L.blocks) { const d = Math.hypot(x - q.x, y - q.y), m = q.r + 6; if (d < m && d > 1e-6) { x = q.x + ((x - q.x) / d) * m; y = q.y + ((y - q.y) / d) * m; } }
       pts[2 * k] = x; pts[2 * k + 1] = y;
     }
     L.trails.push({ from: A.name, to: B.name, pts: resample(pts, 10) });
@@ -586,8 +583,9 @@ function stepLand(w) { if (landKey(w) !== w.landKey) layLand(w); }
 // ----- the herd -----
 // A horse: { x, y, a, v (px/s), g (gait 0..3), want (the gait it is making for), ph, t, bend, om, seed, side, size,
 // foal, mare (its mother's index, foals only), band, alarm (0..1), shelter ({ x, y, grove, ring, t } under or round a
-// canopy, or null), food (the apple it is making for), stepT, stepping, stepA, dustT, chaffT, pinto, patches, and from
-// separate(): crowd (the gap to its tightest neighbour, px), cx, cy (the way away from it), moved }.
+// canopy, or null), food (the apple it is making for), drink ({ k (pond), t, off, x, y, left, at, walk } on its way to
+// or at the water, or null), drinkT, stepT, stepping, stepA, dustT, chaffT, pinto, patches, and from separate():
+// crowd (the gap to its tightest neighbour, px), cx, cy (the way away from it), moved }.
 // A band: { id, leader (index), gx, gy (where the leader is making for), keep (time left grazing there), away (time
 // left apart, a band that parted; Infinity for the main band) }.
 const SPEED = (p) => [0, p.walk, p.trot, p.gallop];
@@ -628,7 +626,7 @@ function populate(w) {
       if (freeFor(w, x, y, S * 0.6) && H.every((o) => Math.hypot(o.x - x, o.y - y) > S * (foal ? 0.7 : 1.1))) break;
     }
     const size = S * (foal ? 0.62 : 0.92 + 0.16 * r());
-    H.push({ i, x, y, a: r() * TAU, v: 0, g: 0, want: 0, ph: r(), t: r() * 100, bend: 0, om: 0, seed: r() * TAU, side: r() < 0.5 ? -1 : 1, size, foal, mare, band: 0, alarm: 0, shelter: null, food: null, stepT: 1 + r() * 8, stepping: 0, stepA: 0, dustT: 0, chaffT: 0, pinto: 0, patches: null, crowd: Infinity, cx: 0, cy: 0, moved: false });
+    H.push({ i, x, y, a: r() * TAU, v: 0, g: 0, want: 0, ph: r(), t: r() * 100, bend: 0, om: 0, seed: r() * TAU, side: r() < 0.5 ? -1 : 1, size, foal, mare, band: 0, alarm: 0, shelter: null, food: null, stepT: 1 + r() * 8, stepping: 0, stepA: 0, dustT: 0, chaffT: 0, pinto: 0, patches: null, drink: null, drinkT: p.drink * (0.1 + r()), crowd: Infinity, cx: 0, cy: 0, moved: false });
   }
   w.horses = H; w.foalN = nf;
   markPintos(w);
@@ -736,9 +734,29 @@ function shelterFor(w, h, ux, uy, grove) {
 }
 function spook(w, h, level, ux, uy, grove) {
   if (h.alarm >= level) return;
-  h.alarm = level; h.food = null; h.stepping = 0;
+  h.alarm = level; h.food = null; h.drink = null; h.stepping = 0;
   h.shelter = shelterFor(w, h, ux, uy, grove);
 }
+// The water: a drinking horse stands at a place on a pond's shore (an angle round the pond, so the place follows the
+// pond as its object moves), its nose just short of the water; no two drinkers closer along the shore than a body's
+// width and some room. shoreFor picks the place, nearest the horse; shoreSpot puts it on the page.
+function shoreFor(w, h) {
+  const p = w.params, S = h.size; let best = -1, bg = 360;
+  w.knolls.forEach((o, i) => { const g = edgeGap(o, h.x, h.y, 0); if (g < bg) { bg = g; best = i; } });
+  if (best < 0) return null;
+  const o = w.knolls[best], off = noseReach(0) * S + 3, t0 = Math.atan2(h.y - o.y, h.x - o.x), R = o.mean + off, step = (S * (2 * p.girth + p.room + 0.4)) / Math.max(1, R);
+  const taken = []; for (const q of w.horses) if (q !== h && q.drink && q.drink.k === best) taken.push(q.drink.t);
+  for (let k = 0; k < 12; k++) for (const sg of k ? [1, -1] : [1]) {
+    const t = t0 + sg * k * step;
+    if (taken.some((u) => Math.abs(wrapAngle(u - t)) < step * 0.95)) continue;
+    const d = { k: best, t, off, x: 0, y: 0, left: p.sip * (0.75 + 0.5 * w.rand()), at: false, walk: 0 };
+    shoreSpot(w, h, d);
+    if (d.x < MARGIN || d.x > w.w - MARGIN || d.y < TOP || d.y > w.h - MARGIN || blocksOf(w).some((b) => Math.hypot(d.x - b.x, d.y - b.y) < b.r + S)) continue;
+    return d;
+  }
+  return null;
+}
+function shoreSpot(w, h, d) { const o = w.knolls[d.k], R = edge(o, d.t) + d.off; d.x = o.x + Math.cos(d.t) * R; d.y = o.y + Math.sin(d.t) * R; }
 // the nearest trail point ahead within reach of (x, y), as a direction to blend in: along the trail the way the horse
 // is heading, and in toward it when off it. Writes to out and returns its weight, 0 when there is no trail near.
 function trailPull(w, h, tx, ty, out) {
@@ -772,7 +790,7 @@ function stepHerd(w, dt, startle) {
       if (h.alarm > p.lure) { h.food = null; continue; }
       let bf = null, bd = p.sense;
       for (const f of w.feed) { const d = Math.hypot(f.x - h.x, f.y - h.y) + (f.eater && f.eater !== h ? 2.5 * h.size : 0); if (d < bd) { bd = d; bf = f; } }
-      if (bf) { h.food = bf; h.alarm = 0; h.shelter = null; }
+      if (bf) { h.food = bf; h.alarm = 0; h.shelter = null; h.drink = null; }
     }
   } else for (const h of H) h.food = null;
   for (const h of H) {
@@ -781,6 +799,13 @@ function stepHerd(w, dt, startle) {
     h.alarm = Math.max(0, h.alarm - dt / p.calm);
     if (rm) h.alarm = 0;
     if (h.alarm <= 0) h.shelter = null;
+    // now and then a calm grazing mare (never a lead mare, never a foal) walks to the water
+    if (!h.foal && h !== L && !h.food && !h.drink && h.alarm <= 0 && !rm && p.drinkers > 0 && (h.drinkT -= dt) <= 0) {
+      h.drinkT = p.drink * (0.5 + r());
+      let busy = 0; for (const o of H) if (o.drink) busy++;
+      if (busy < p.drinkers) h.drink = shoreFor(w, h);
+      if (!h.drink) h.drinkT = 8 + 12 * r();
+    }
     let tx = h.x, ty = h.y, want = 0, eating = false, stand = false, fx = 0, fy = 0;
     if (h.food) {
       const f = h.food; tx = f.x; ty = f.y;
@@ -794,6 +819,18 @@ function stepHerd(w, dt, startle) {
       const d = Math.hypot(tx - h.x, ty - h.y);
       if (d < 10) { stand = true; if (s.ring) { const g = w.land.groves[s.grove]; fx = g.x - h.x; fy = g.y - h.y; } }
       else want = h.alarm > 0.5 ? 3 : h.alarm > 0.22 ? 2 : 1;
+    } else if (h.drink) {
+      const k = h.drink, o = w.knolls[k.k];
+      if (!o) h.drink = null;
+      else {
+        shoreSpot(w, h, k); tx = k.x; ty = k.y;
+        const d = Math.hypot(tx - h.x, ty - h.y);
+        if (k.at || d < 6) {
+          // at the water: head to it, still, until it has drunk; then back to the band
+          k.at = true; stand = true; fx = o.x - h.x; fy = o.y - h.y; k.left -= dt;
+          if (k.left <= 0) { h.drink = null; w.drinks++; }
+        } else { want = d > 220 ? 2 : 1; if ((k.walk += dt) > 30) h.drink = null; }
+      }
     } else if (h.foal) {
       const m = H[h.mare], ox = Math.cos(m.a), oy = Math.sin(m.a);
       tx = m.x - ox * S * 0.3 - oy * S * 0.9 * m.side; ty = m.y - oy * S * 0.3 + ox * S * 0.9 * m.side;
@@ -836,7 +873,9 @@ function stepHerd(w, dt, startle) {
         const kk = clamp(1 - gap / Math.max(1, look), 0, 1), toward = -(hx * gx + hy * gy);
         if (toward > -0.2) { const side = hx * -gy + hy * gx >= 0 ? 1 : -1; dx += (-gy * side * 3 + gx * 2 * kk) * kk; dy += (gx * side * 3 + gy * 2 * kk) * kk; }
       };
-      for (const o of w.knolls) { const gap = edgeGap(o, h.x, h.y, p.shore); if (gap < look) { edgeNormal(o, h.x, h.y, NRM); avoid(gap, NRM.x, NRM.y); } }
+      // a pond is steered round unless what the horse makes for lies by its shore (the water, an apple there): then it
+      // walks straight in, and keepOut holds it at the edge
+      for (const o of w.knolls) { const gap = edgeGap(o, h.x, h.y, p.shore); if (gap < look && edgeGap(o, tx, ty, p.shore) > look * 0.5) { edgeNormal(o, h.x, h.y, NRM); avoid(gap, NRM.x, NRM.y); } }
       for (const b of blocksOf(w)) { const ex = h.x - b.x, ey = h.y - b.y, d = Math.hypot(ex, ey) || 1, gap = d - b.r - S * 0.5; if (gap < look * 0.6) avoid(gap / 0.6, ex / d, ey / d); }
       const m = p.edge;
       if (h.x < m) dx += 2 * (1 - h.x / m); if (h.x > w.w - m) dx -= 2 * (1 - (w.w - h.x) / m);
@@ -855,7 +894,7 @@ function stepHerd(w, dt, startle) {
     const a0 = h.a;
     if (dx * dx + dy * dy > 1e-6) {
       // close to an apple or its shelter a horse turns on the spot rather than circling it
-      const near = (h.food || h.shelter) && Math.hypot(tx - h.x, ty - h.y) < 3 * S ? 2.5 : 1;
+      const near = (h.food || h.shelter || h.drink) && Math.hypot(tx - h.x, ty - h.y) < 3 * S ? 2.5 : 1;
       const aim = wrapAngle(Math.atan2(dy, dx) - h.a), rate = near * p.turn * (h.g < 1 ? 0.7 : 1 + 0.35 * (h.g - 1)) * dt;
       h.a = wrapAngle(h.a + clamp(aim, -rate, rate));
     }
@@ -905,7 +944,7 @@ function segSeg(ax, ay, bx, by, cx, cy, dx, dy) {
 // How many horses one canopy shelters: its area over the room each takes.
 export const canopyCap = (w, g) => Math.max(1, Math.floor((g.r * g.r) / (w.params.size * w.params.size * w.params.crowd)));
 // No two bodies overlap, ever: each pair that does is pushed apart along the line between their nearest points, half
-// each (a horse eating gives way less), with its motion into the other damped away rather than bounced,
+// each (a horse eating or drinking gives way less), with its motion into the other damped away rather than bounced,
 // and a few rounds of that, so a crowd settles in place. A canopy holding its cap lets no more in. Each horse also
 // learns its tightest neighbour (crowd, and the way away from it, cx, cy), which a grazing horse steps away from.
 function separate(w, dt) {
@@ -928,7 +967,7 @@ function separate(w, dt) {
           if (gap < B.crowd) { B.crowd = gap; B.cx = -nx; B.cy = -ny; }
         }
         if (gap >= SLOP) continue;
-        const give = (h) => (h.pinned ? 0.15 : h.food && h.food.eater === h ? 0.3 : 1), wa = give(A), wb = give(B), pen = SLOP - gap, s = pen / (wa + wb);
+        const give = (h) => (h.pinned ? 0.15 : h.drink?.at || (h.food && h.food.eater === h) ? 0.3 : 1), wa = give(A), wb = give(B), pen = SLOP - gap, s = pen / (wa + wb);
         A.x += nx * s * wa; A.y += ny * s * wa; shift(CA, nx * s * wa, ny * s * wa); A.moved = true;
         B.x -= nx * s * wb; B.y -= ny * s * wb; shift(CB, -nx * s * wb, -ny * s * wb); B.moved = true;
         // the push is damped: whatever of its speed carried a horse into the other is let go over a few frames
@@ -1136,7 +1175,7 @@ function paintGrass(ctx, G, wa, blade, lean) {
   }
   ctx.stroke();
 }
-// Everything on the static layer at one lean: the grass, then the creek, the trails, the waterhole, the boulders, the
+// Everything on the static layer at one lean: the grass, then the creek, the trails, the boulders, the
 // shrubs and the burrows, in ink at their own opacities.
 function paintLand(ctx, d, p, colours, lean) {
   const { ink, paper } = colours, L = d.land, la = p.landAlpha;
@@ -1170,16 +1209,8 @@ function paintLand(ctx, d, p, colours, lean) {
     ctx.stroke();
   }
   ctx.setLineDash([]);
-  // the waterhole: its rim, a faint flat of water, and two rings in toward the middle
-  if (L.water) {
-    const q = L.water, path = (k) => { const m = q.rim.length; for (let i = 0; i < m; i++) { const a = (i / m) * TAU; SX[i] = q.x + Math.cos(a) * q.r * k * q.rim[i]; SY[i] = q.y + Math.sin(a) * q.r * k * q.rim[i]; } closedCurve(ctx, SX, SY, m); };
-    ctx.fillStyle = ink; ctx.globalAlpha = 0.045; ctx.beginPath(); path(1); ctx.fill();
-    ctx.globalAlpha = Math.min(1, la * 1.6); ctx.beginPath(); path(1); ctx.stroke();
-    ctx.globalAlpha = la * 0.6; ctx.beginPath(); path(0.72); ctx.stroke(); ctx.beginPath(); path(0.45); ctx.stroke();
-  }
   // the boulders and the shrubs: paper under an outline, a crack across a boulder, a few loops in a shrub
   for (const b of L.blocks) {
-    if (b.kind === 'water') continue;
     ctx.beginPath();
     if (b.kind === 'rock') { const m = b.rim.length; for (let i = 0; i < m; i++) { const a = (i / m) * TAU + b.ph; SX[i] = b.x + Math.cos(a) * b.r * b.rim[i]; SY[i] = b.y + Math.sin(a) * b.r * b.rim[i]; } closedCurve(ctx, SX, SY, m); }
     else for (let i = 0; i < b.loops.length; i++) { const a = b.ph + (i / b.loops.length) * TAU, x = b.x + Math.cos(a) * b.r * 0.4, y = b.y + Math.sin(a) * b.r * 0.4, R = b.r * (0.4 + 0.3 * b.loops[i]); ctx.moveTo(x + R, y); ctx.arc(x, y, R, 0, TAU); }
@@ -1241,34 +1272,90 @@ function drawGusts(ctx, w, layer) {
     }
   }
 }
-// The trampled ring: short ticks along the knoll's edge grown by off, one every gap px, each len px along the edge.
-// Ticks laid by hand cost the GPU a small part of what a dashed stroke of the same ring did.
-function hoofRing(ctx, o, off, gap, len) {
-  const n = Math.max(12, Math.round((TAU * (o.mean + o.calm + off)) / gap));
-  for (let i = 0; i < n; i++) {
-    const t = (i / n) * TAU, R = edge(o, t) + off, c = Math.cos(t), s = Math.sin(t), x = o.x + c * R, y = o.y + s * R, hl = len / 2;
-    ctx.moveTo(x + s * hl, y - c * hl); ctx.lineTo(x - s * hl, y + c * hl);
+// The ponds: the two footprints hold water. The water is the page taken toward the pond scene's blue-green (by
+// `water`), hatched with the kit's lattice of level dashes as the pond's water is (the prairie's own seed and density),
+// the dashes cut to the live outline a few px in from the shore; a shore line and a fainter lip just inside it; and a
+// few clumps of reeds where the water meets the grass.
+export const WATER = { light: [44, 74, 85], dark: [4, 10, 13] };
+export const HATCH = { pitch: 14, period: 44, dash: 22, reach: 30 };
+const LIP = 4;
+// the lattice over the whole page, laid once per page size, density and jitter
+function waterLattice(w) {
+  const p = w.params, key = `${Math.ceil(w.w / 64)} ${Math.ceil(w.h / 64)} ${p.markDensity} ${p.markJitter}`;
+  if (w.lattice && w.lattice.key === key) return w.lattice;
+  const marks = latticeMarks((w.seed ^ 0x706f6e64) >>> 0, Math.ceil(w.w / 64) * 64, Math.ceil(w.h / 64) * 64, HATCH, p.markDensity, p.markJitter);
+  const xy = new Float32Array(marks.length * 4);
+  marks.forEach((m, k) => { xy.set(m.pts, k * 4); });
+  return (w.lattice = { key, xy, n: marks.length });
+}
+// The dashes on pond i as the pond stands now: x0, y0, x1, y1 per dash, cut where they cross the line LIP px inside
+// the shore. Kept until the pond or the lattice moves.
+function waterDashes(w, i) {
+  const o = w.knolls[i], L = waterLattice(w);
+  w.dashes = w.dashes || [];
+  let c = w.dashes[i];
+  let Rmax = 0, sum = 0; for (let k = 0; k < o.C.length; k++) { Rmax = Math.max(Rmax, o.C[k]); sum += o.C[k] * (k + 1); }
+  const key = `${o.x} ${o.y} ${sum} ${L.key}`;
+  if (c && c.key === key) return c;
+  const out = c && c.xy.length >= L.n * 4 ? c.xy : new Float32Array(Math.max(64, L.n * 4));
+  let n = 0;
+  const inside = (x, y) => edgeR(o, x, y, -LIP) < 1;
+  const cut = (xi, xo, y) => { for (let k = 0; k < 7; k++) { const m = (xi + xo) / 2; if (inside(m, y)) xi = m; else xo = m; } return xi; };
+  for (let k = 0; k < L.n; k++) {
+    const x0 = L.xy[4 * k], y = L.xy[4 * k + 1], x1 = L.xy[4 * k + 2];
+    if (Math.abs(y - o.y) > Rmax || x1 < o.x - Rmax || x0 > o.x + Rmax) continue;
+    const a = inside(x0, y), b = inside(x1, y);
+    if (!a && !b) continue;
+    let u0 = x0, u1 = x1;
+    if (!a) u0 = cut(x1, x0, y); else if (!b) u1 = cut(x0, x1, y);
+    if (u1 - u0 < 2) continue;
+    out[n++] = u0; out[n++] = y; out[n++] = u1; out[n++] = y;
+  }
+  return (w.dashes[i] = { key, xy: out, n: n >> 2 });
+}
+// The water marks drawn on pond i in the world's present state, as marks { pts: [x0, y0, x1, y1] } (for the checks).
+export function pondMarks(w, i) {
+  if (!w.knolls[i]) return [];
+  const d = waterDashes(w, i), out = [];
+  for (let k = 0; k < d.n; k++) out.push({ pts: Array.from(d.xy.subarray(4 * k, 4 * k + 4)) });
+  return out;
+}
+// The reeds: a few clumps round each pond, each a fan of short ticks leaning out over the grass from the shore, at
+// angles from the world's seed and the pond's index alone.
+function reedPath(ctx, w, o) {
+  const d = pointRand((w.seed ^ Math.imul(o.i + 1, 0x9e3779b1)) >>> 0), m = 4 + Math.floor(d() * 3), t0 = d() * TAU;
+  for (let c = 0; c < m; c++) {
+    const t = t0 + (c / m) * TAU + (d() - 0.5) * 0.7, k = 3 + Math.floor(d() * 3), R = edge(o, t);
+    for (let j = 0; j < k; j++) {
+      const tt = t + (j - (k - 1) / 2) * (5 / Math.max(20, R)), lean = (j - (k - 1) / 2) * 0.25 + (d() - 0.5) * 0.2, L = 4 + d() * 4;
+      const ca = Math.cos(tt), sa = Math.sin(tt), x = o.x + ca * (R + 1), y = o.y + sa * (R + 1), a = tt + lean;
+      ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * L, y + Math.sin(a) * L);
+    }
   }
 }
-// The knolls: a band of paper laid over the grass so it thins toward the knoll (a wide stroke along the ring, so it
-// covers the ring alone rather than the whole knoll under it), the bare ground inside its edge, a
-// trampled ring of hoofprints round it, and its edge.
 export function drawGround(ctx, w, colours, layer = { img: null, w: 0, h: 0, flat: colours.paper }) {
   const p = w.params, { ink, paper, ochre } = colours;
   ctx.globalAlpha = 1;
   if (!layer.img || layer.w < w.w || layer.h < w.h) { ctx.fillStyle = layer.flat; ctx.fillRect(0, 0, w.w, w.h); }
   if (layer.img) ctx.drawImage(layer.img, 0, 0, layer.w, layer.h);
   if (!w.reduced && w.wind.gusts.length && layer.img && w.layerData && w.layerData.colours) drawGusts(ctx, w, layer);
-  ctx.fillStyle = paper;
-  for (const o of w.knolls) {
-    if (p.thin > 0) { ctx.globalAlpha = 0.45; ctx.strokeStyle = paper; ctx.lineWidth = p.thin; edgePath(ctx, o, p.thin / 2); ctx.stroke(); }
-    ctx.globalAlpha = 1; edgePath(ctx, o, 0); ctx.fill();
-  }
-  ctx.strokeStyle = ink; ctx.lineWidth = 1; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  for (const o of w.knolls) {
-    ctx.globalAlpha = p.worn; ctx.beginPath(); hoofRing(ctx, o, 7, 6, 1.6); ctx.stroke();
-    ctx.globalAlpha = p.worn * 0.6; ctx.beginPath(); hoofRing(ctx, o, 15, 9, 1.1); ctx.stroke();
-    ctx.globalAlpha = p.edgeAlpha; edgePath(ctx, o, 0); ctx.stroke();
+  // the ponds: the water, its hatch, the shore and its lip, the reeds
+  if (w.knolls.length) {
+    const tk = `${paper} ${p.water}`;
+    if (w.waterTone !== tk) { w.waterTone = tk; w.waterFill = tint(paper, p.water, WATER.light, WATER.dark); }
+    ctx.globalAlpha = 1; ctx.fillStyle = w.waterFill;
+    for (const o of w.knolls) { edgePath(ctx, o, 0); ctx.fill(); }
+    ctx.strokeStyle = ink; ctx.lineWidth = 1; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    if (p.markAlpha > 0) {
+      ctx.globalAlpha = p.markAlpha; ctx.beginPath();
+      for (let i = 0; i < w.knolls.length; i++) { const d = waterDashes(w, i), xy = d.xy; for (let k = 0; k < d.n; k++) { ctx.moveTo(xy[4 * k], xy[4 * k + 1]); ctx.lineTo(xy[4 * k + 2], xy[4 * k + 3]); } }
+      ctx.stroke();
+    }
+    for (const o of w.knolls) {
+      ctx.globalAlpha = p.edgeAlpha; edgePath(ctx, o, 0); ctx.stroke();
+      ctx.globalAlpha = p.edgeAlpha * 0.45; edgePath(ctx, o, -LIP); ctx.stroke();
+    }
+    if (p.reeds > 0) { ctx.globalAlpha = p.reeds; ctx.beginPath(); for (const o of w.knolls) reedPath(ctx, w, o); ctx.stroke(); }
   }
   // the wildflowers: a bud, then three petals half open, then five open round the eye, swaying with a passing gust
   const F = w.land ? w.land.flowers : [];

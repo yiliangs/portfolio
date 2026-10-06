@@ -1,6 +1,6 @@
 // Checks scenes/prairie.js's simulation headless: the herd and its bands, the land a horse walks round, the apples,
 // the startle, reduced motion, the hares, the grass, the trails, the scene's place in the home registry, the horses'
-// bodies kept apart and the canopies' caps, and the apples drawing the herd.
+// bodies kept apart and the canopies' caps, the apples drawing the herd, and the ponds and drinking at them.
 //
 // The prairie's step() is a function of the world, dt and the world's own seeded random sources, so every run below is
 // the same run every time. None of these properties shows in a still frame: a horse whose nose dips into a boulder for
@@ -237,21 +237,22 @@ const G_LO = 4500, G_HI = 4950;
 }
 
 lap('h');
-// (h) the trails: one from each knoll to the waterhole, its points close together and its ends on the two features. A
-// trail starts half a trail width (0.5 x thin, 20 px at the defaults) off a knoll's edge, so an end counts as on its
-// feature within H_END.
-const H_STEP = 20, H_END = 30;
+// (h) the trails: there are trails, each pond footprint is an end of at least one (a trail end within H_POND px of its
+// edge), every trail's points are close together and both its ends lie on the features it names. A trail starts 20 px off a
+// pond's shore, so an end counts as on a named feature within H_END; a grove's end counts
+// anywhere within its canopy and H_END past it.
+const H_STEP = 20, H_END = 30, H_POND = 30;
 {
   for (const seed of [1, 7, 42]) {
     const w = world(seed), L = w.land;
-    if (!L || !L.water) { fail(`seed ${seed}: (h) the land should hold a waterhole`); continue; }
+    if (!L || !L.trails || !L.trails.length) { fail(`seed ${seed}: (h) the land should hold trails`); continue; }
     const near = (name, x, y) => {
-      if (name === 'water') return Math.abs(Math.hypot(x - L.water.x, y - L.water.y) - L.water.r);
-      const o = w.knolls[+name.slice(5)]; return o ? Math.abs(edgeGap(o, x, y, 0)) : Infinity;
+      if (name === 'water') return L.water ? Math.abs(Math.hypot(x - L.water.x, y - L.water.y) - L.water.r) : Infinity;
+      if (name.startsWith('grove')) { const g = L.groves[+name.slice(5)]; return g ? Math.max(0, Math.hypot(x - g.x, y - g.y) - g.r) : Infinity; }
+      if (name.startsWith('knoll')) { const o = w.knolls[+name.slice(5)]; return o ? Math.abs(edgeGap(o, x, y, 0)) : Infinity; }
+      return Infinity;
     };
-    for (let i = 0; i < w.knolls.length; i++) {
-      const k = 'knoll' + i, t = L.trails.find((t) => (t.from === k && t.to === 'water') || (t.from === 'water' && t.to === k));
-      if (!t) { fail(`seed ${seed}: (h) there should be a trail from ${k} to the waterhole`); continue; }
+    for (const t of L.trails) {
       const P = t.pts, n = P.length / 2; let gap = 0;
       for (let j = 1; j < n; j++) gap = Math.max(gap, Math.hypot(P[2 * j] - P[2 * j - 2], P[2 * j + 1] - P[2 * j - 1]));
       const e0 = near(t.from, P[0], P[1]), e1 = near(t.to, P[2 * n - 2], P[2 * n - 1]);
@@ -259,6 +260,12 @@ const H_STEP = 20, H_END = 30;
       if (gap > H_STEP) fail(`seed ${seed}: (h) trail ${t.from}-${t.to} should step at most ${H_STEP} px, widest ${gap.toFixed(1)} px`);
       if (e0 > H_END || e1 > H_END) fail(`seed ${seed}: (h) trail ${t.from}-${t.to} should end on its features, ends ${e0.toFixed(1)} and ${e1.toFixed(1)} px off`);
     }
+    w.knolls.forEach((o, i) => {
+      let best = Infinity;
+      for (const t of L.trails) { const P = t.pts, n = P.length / 2; best = Math.min(best, Math.abs(edgeGap(o, P[0], P[1], 0)), Math.abs(edgeGap(o, P[2 * n - 2], P[2 * n - 1], 0))); }
+      metric(`seed ${seed} (h) pond ${i}: nearest trail end ${best.toFixed(1)} px off its edge`);
+      if (!(best <= H_POND)) fail(`seed ${seed}: (h) pond ${i} should be the end of a trail (an end within ${H_POND} px of its edge), the nearest end is ${best.toFixed(1)} px off`);
+    });
   }
 }
 
@@ -423,6 +430,65 @@ const K_WATCH = 4, K_EAT = 12, K_HORSES = 3, K_AIM = (30 * Math.PI) / 180, K_RUS
   }
 }
 
+lap('l');
+// (l) the ponds: the water is drawn on the two footprints, each pond's marks inside its own footprint and clear of the
+// other; there is no separate waterhole. Over 12 seeds of 120 s with a startle at 40 s no horse's middle, nose or rump
+// enters a pond, horses come to the shore to drink and leave, and no more than the drinkers allowed drink at once.
+const L_SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], L_SECONDS = 120, L_STARTLE = 40;
+{
+  if (typeof M.pondMarks !== 'function') fail('(l) the scene should export pondMarks(w, i), the water marks drawn on footprint i');
+  for (const seed of [1, 7, 42]) {
+    const w = world(seed); run(w, 5);
+    if (w.land && w.land.water != null) fail(`seed ${seed}: (l) the land should hold no separate waterhole, land.water is set`);
+    if (blocksOf(w).some((b) => b.kind === 'water')) fail(`seed ${seed}: (l) no block should be of kind 'water'`);
+    if (typeof M.pondMarks !== 'function') continue;
+    w.knolls.forEach((o, i) => {
+      let marks = null; try { marks = M.pondMarks(w, i); } catch (e) { fail(`seed ${seed}: (l) pondMarks(w, ${i}) threw: ${e.message}`); return; }
+      if (!marks || !marks.length) { fail(`seed ${seed}: (l) pond ${i} should draw water marks, got none`); return; }
+      let out = 0, cross = 0, pts = 0, worst = 0;
+      for (const m of marks) {
+        const P = m.pts || [];
+        for (let j = 0; j + 1 < P.length; j += 2) {
+          pts++; const r = edgeR(o, P[j], P[j + 1], 0.5); worst = Math.max(worst, r);
+          if (r >= 1) out++;
+          if (w.knolls.some((q, k) => k !== i && edgeR(q, P[j], P[j + 1], 0) < 1)) cross++;
+        }
+      }
+      metric(`seed ${seed} (l) pond ${i}: ${marks.length} marks, ${pts} points, greatest edgeR ${worst.toFixed(3)}`);
+      if (!pts) fail(`seed ${seed}: (l) pond ${i}'s marks hold no points`);
+      if (out) fail(`seed ${seed}: (l) pond ${i}'s marks should lie inside its footprint, ${out} of ${pts} points outside (greatest edgeR ${worst.toFixed(3)})`);
+      if (cross) fail(`seed ${seed}: (l) pond ${i}'s marks should stay out of the other footprint, ${cross} points inside it`);
+    });
+  }
+  const t0 = performance.now();
+  for (const seed of L_SEEDS) {
+    const w = world(seed), p = w.params, most = p.drinkers ?? 4;
+    let t = 0, kMin = Infinity, hits = 0, first = '', crowd = 0, crowdAt = 0, firstDrink = -1;
+    const shore = new Set();
+    const look = (w) => {
+      t += DT;
+      let n = 0;
+      for (const h of w.horses) {
+        const ca = Math.cos(h.a), sa = Math.sin(h.a);
+        for (const [part, off] of [['middle', 0], ['nose', noseReach(h.g) * h.size], ['rump', -0.6 * h.size]]) {
+          const x = h.x + ca * off, y = h.y + sa * off;
+          for (const o of w.knolls) { const r = edgeR(o, x, y, 0); kMin = Math.min(kMin, r); if (r < 1) { hits++; if (!first) first = `${part} of horse ${h.i} in a pond at t ${t.toFixed(2)} s`; } }
+        }
+        if (h.drink) { n++; if (h.drink.at) shore.add(h); }
+        else if (shore.has(h)) { shore.delete(h); if (firstDrink < 0) firstDrink = t; }
+      }
+      if (n > crowd) { crowd = n; crowdAt = t; }
+    };
+    run(w, L_STARTLE, DT, look); sweep(w, look); run(w, L_SECONDS - L_STARTLE - 51 * DT, DT, look);
+    const drinks = w.drinks ?? 0;
+    metric(`seed ${seed} (l) ponds: least edgeR ${kMin.toFixed(3)}, ${hits} intrusions, first drink finished ${firstDrink < 0 ? 'never' : `at ${firstDrink.toFixed(2)} s`}, ${drinks} drinks, most drinking at once ${crowd}`);
+    if (hits) fail(`seed ${seed}: (l) no horse should enter a pond; ${hits} intrusions, the first ${first}`);
+    if (firstDrink < 0 || !(drinks > 0)) fail(`seed ${seed}: (l) a horse should reach a shore, drink and leave within ${L_SECONDS} s; ${firstDrink < 0 ? 'none did' : 'one did'}, w.drinks ${w.drinks}`);
+    if (crowd > most) fail(`seed ${seed}: (l) at most ${most} horses should drink at once, ${crowd} at t ${crowdAt.toFixed(2)} s`);
+  }
+  metric(`(l) ponds ran ${((performance.now() - t0) / 1000).toFixed(1)} s`);
+}
+
 lap(null);
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }
-console.log('check-prairie: the herd holds and rejoins, no horse enters a knoll or a block, apples are eaten, a startle passes, reduced motion stills, hares bolt and settle, the grass, the trails and the registry hold, bodies stay apart under capped canopies, and apples draw the herd');
+console.log('check-prairie: the herd holds and rejoins, no horse enters a knoll or a block, apples are eaten, a startle passes, reduced motion stills, hares bolt and settle, the grass, the trails and the registry hold, bodies stay apart under capped canopies, apples draw the herd, and the ponds hold water and drinkers');
