@@ -60,8 +60,7 @@ export const PARAMS = {
     countTouch: [16, 1, 120, 1, 'eagles on a coarse pointer'],
     golden: [4, 0, 24, 1, 'eagles with a gold nape, on a fine pointer'],
     goldenTouch: [2, 0, 24, 1, 'gold-naped eagles on a coarse pointer'],
-    length: [17, 8, 50, 1, 'body length at mid height, px; the span is 2.3 lengths'],
-    variant: [0, 0, 2, 1,'figure: 0 parted outline, 1 a stroke per wing, 2 one silhouette'],
+    length: [17, 8, 50, 1, 'eagle length at mid height, px; the span is 2.3 of it, beak to tail 0.8'],
     glide: [70, 10, 200, 1, 'gliding speed, px/s'],
     circle: [48, 10, 200, 1, 'circling speed in lift, px/s'],
     orbit: [58, 20, 200, 1, 'mean radius an eagle circles in lift at, px'],
@@ -136,10 +135,9 @@ export const PALETTE = {
 };
 
 // ----- the eagle -----
-// An eagle seen from straight above, built in its own frame and projected. Units are the body's length (beak to tail
-// tip = 1); x runs forward, y to the eagle's right, z up toward the viewer. The planform is a golden eagle's: a long
-// broad arm, a hand ending in five splayed primaries, a short rounded tail, and a head that juts well ahead of the
-// wings; the span is about 2.3 lengths. A pose is { bank, flap, beat, fan }:
+// An eagle seen from straight above, built in its own frame and projected. Units are the eagle's length L (beak to
+// tail tip about 0.8 of it, the span 2.3); x runs forward, y to the eagle's right, z up toward the viewer. A pose is
+// { bank, flap, beat, fan }:
 //   bank  roll in radians, positive with the right wing down (a turn to the right). The roll carries the wings round the
 //         body's axis: the low wing shortens and shrinks, the high wing, swung toward the viewer, shortens and grows
 //         under a weak perspective; the tail twists against the turn and the head looks into it.
@@ -147,27 +145,31 @@ export const PALETTE = {
 //         their dihedral and foreshorten; on the upstroke the hand folds back at the wrist and draws in.
 //   fan   how far the tail is spread, 0..1 (an eagle circling slow in lift spreads it).
 // Points are given for the right side; the left is the mirror.
-// The proportions are a golden eagle's, 0.85 m long and 2 m across: the arm's chord about half the length, the head
-// and neck a quarter of it ahead of the wing, the tail three tenths behind, six fingered primaries at the tip.
-const HEAD = [0.5, 0, 0.47, 0.03, 0.42, 0.055, 0.34, 0.065, 0.27, 0.09];
-// The wing is a plank: its edges run nearly parallel out to a broad hand, which ends square in six splayed fingers
-// with slots between them.
-const LEAD = [0.2, 0.1, 0.24, 0.3, 0.23, 0.55, 0.18, 0.82];
-const FINGERS = [ // tip x, tip y, then the slot before the next tip
-  0.13, 1.03, 0.041, 0.959,
-  0.07, 1.12, 0.007, 1.013,
-  0, 1.16, -0.037, 1.03,
-  -0.07, 1.16, -0.081, 1.012,
-  -0.14, 1.12, -0.119, 1.003,
-  -0.21, 1.04,
+// The figure is a bald eagle's, drawn as an engraving would: flat in front, feathered behind. Each wing is broad and
+// swept a little forward, so its tip stands ahead of the shoulder; its leading edge is one smooth arc, and its whole
+// trailing edge, from the body out to the tip, is a fringe of rounded feather ends, the secondaries' short near the
+// body and the primaries' longer round the tip. Between the wings the body is a narrow spindle; the white head sits
+// ahead of them on a short neck, with a tick for the beak, and the tail is a short fan behind. Head and tail are paper
+// like the rest; the collar line across the neck marks where the white head starts.
+// The leading edge, shoulder to just short of the wingtip.
+const LEAD = [0.1, 0.08, 0.17, 0.4, 0.24, 0.75, 0.29, 1.02];
+// The line of the feather ends, wingtip to root; laid out by spline() and EDGE below.
+const TRAIL = [0.27, 1.16, 0.12, 1.15, -0.06, 1.05, -0.21, 0.85, -0.31, 0.6, -0.34, 0.34, -0.28, 0.08];
+// The body round from the beak's root, as x, y, sharp: head, neck, spindle, the tail's root, its fan; then the tail's
+// tip on the axis. The head's line, the collar, and the beak's tick are runs of their own in the same path.
+const BODY = [0.29, 0, 0, 0.275, 0.05, 0, 0.2, 0.072, 0, 0.13, 0.058, 0, -0.04, 0.1, 0, -0.28, 0.048, 0];
+const TAIL = [-0.48, 0.15, 1];
+const TAIL_TIP = -0.5;
+const COLLAR = [0.145, 0.06, 0, 0.115, 0, 0, 0.145, -0.06, 0], BEAK = [0.29, 0, 1, 0.35, 0, 1];
+const NAPE = [0.2, 0.042, 0, 0.165, 0.066, 0, 0.14, 0.058, 0];
+// Perched, the wings folded along the back and seen from above: head and collar as in flight, the folded wings' smooth
+// fronts, the primaries' ends fringed down the back to the crossed wingtips, the tail's tip just showing past them.
+const PERCHED = [
+  0.29, 0, 0, 0.275, 0.05, 0, 0.2, 0.072, 0, 0.13, 0.075, 0, 0.02, 0.16, 0, -0.14, 0.18, 0,
+  -0.28, 0.165, 0, -0.26, 0.115, 1, -0.4, 0.125, 0, -0.38, 0.075, 1, -0.52, 0.075, 0, -0.56, 0.04, 0,
 ];
-const TRAIL = [-0.25, 0.9, -0.28, 0.62, -0.3, 0.36, -0.26, 0.12];
-const BODY = [0.5, 0, 0.47, 0.03, 0.42, 0.055, 0.34, 0.065, 0.24, 0.1, 0.08, 0.12, -0.08, 0.11, -0.2, 0.09, -0.27, 0.075];
-const TAIL = [-0.24, 0.08, -0.33, 0.09, -0.45, 0.12, -0.53, 0.14, -0.565, 0.075];
-const TAIL_TIP = -0.575;
-const NAPE = [0.4, 0.035, 0.34, 0.055, 0.28, 0.07];
-const PERCHED = [0.42, 0, 0.39, 0.04, 0.32, 0.065, 0.22, 0.13, 0.02, 0.16, -0.22, 0.12, -0.4, 0.06, -0.52, 0.05, -0.56, 0];
-const WRIST = [0.23, 0.55], SHOULDER_Y = 0.1, HEAD_PIVOT = 0.3, TAIL_PIVOT = -0.25;
+const PERCHED_TIP = -0.59;
+const WRIST = [0.2, 0.5], SHOULDER_Y = 0.08, HEAD_PIVOT = 0.13, TAIL_PIVOT = -0.28;
 // The perspective is weaker at flight size than in the study: a stronger one was tried to make a bank read at 40 px
 // across, and in flight it made a banked eagle a lopsided cross, the far wing all but gone.
 const DIHEDRAL = 0.1, FLAP_AMP = 0.62, FOLD = 0.7, PERSP = 0.38, FLIGHT_PERSP = 0.3;
@@ -187,15 +189,16 @@ function poseEagle(x, y, heading, L, pose, persp = PERSP) {
   const hd = 0.5 * pose.bank, tl = -0.4 * pose.bank;
   P.hc = Math.cos(hd); P.hs = Math.sin(hd); P.tc = Math.cos(tl); P.ts = Math.sin(tl); P.fan = pose.fan;
 }
-// Q holds projected points as x, y pairs; SH flags the sharp ones (a primary's tip or notch), which a path meets with
-// a straight line rather than curving past.
+// Q holds projected points as x, y pairs; SH marks how a path meets each: 0 smooth, curved past through the midpoints;
+// 1 sharp, a notch between feather ends, met with a straight line; 2 a feather end's control point, a single curve
+// from the notch before it to the notch after it, so a feather end costs one verb.
 const Q = new Float32Array(512), SH = new Uint8Array(256);
 let qn = 0;
 // roll about the body's axis, the weak perspective, the heading, the page
 function put(x, y, z, sharp) {
   const yr = y * P.cb + z * P.sb, zr = -y * P.sb + z * P.cb, f = P.L / (1 - P.k * zr);
   const lx = x * f, ly = yr * f;
-  Q[2 * qn] = P.x + lx * P.c - ly * P.s; Q[2 * qn + 1] = P.y + lx * P.s + ly * P.c; SH[qn] = sharp ? 1 : 0; qn++;
+  Q[2 * qn] = P.x + lx * P.c - ly * P.s; Q[2 * qn + 1] = P.y + lx * P.s + ly * P.c; SH[qn] = sharp === 2 ? 2 : sharp ? 1 : 0; qn++;
 }
 // a wing point: folded about the wrist on the upstroke, flapped and lifted about the shoulder, then put
 function wingPt(side, x, y, sharp) {
@@ -216,30 +219,64 @@ function tailPt(x, y, sharp) {
   y *= 1 + 0.9 * P.fan; const dx = x - TAIL_PIVOT;
   put(TAIL_PIVOT + dx * P.tc - y * P.ts, dx * P.ts + y * P.tc, 0, sharp);
 }
-// the wing from shoulder to trailing root, primaries as a tip-and-notch zigzag; reversed for the far run of a closed
-// silhouette drawn round from one side to the other
-function wingRun(side, reverse) {
-  const pts = [];
-  for (let i = 0; i < LEAD.length; i += 2) pts.push(LEAD[i], LEAD[i + 1], 0);
-  for (let i = 0; i < FINGERS.length; i += 2) pts.push(FINGERS[i], FINGERS[i + 1], 1);
-  for (let i = 0; i < TRAIL.length; i += 2) pts.push(TRAIL[i], TRAIL[i + 1], 0);
-  const n = pts.length / 3;
-  for (let j = 0; j < n; j++) { const i = reverse ? n - 1 - j : j; wingPt(side, pts[3 * i], pts[3 * i + 1], pts[3 * i + 2]); }
+// The trailing edge laid out once: a Catmull-Rom spline through TRAIL, resampled at EM + 1 even steps of its length,
+// each as x, y and the unit normal pointing into the wing. EDGE_LEN is its length in body lengths.
+const EM = 96, EDGE = new Float32Array(4 * (EM + 1));
+let EDGE_LEN = 0;
+{
+  const n = TRAIL.length / 2, X = (i) => TRAIL[2 * clamp(i, 0, n - 1)], Y = (i) => TRAIL[2 * clamp(i, 0, n - 1) + 1], s = [];
+  for (let i = 0; i < n - 1; i++) for (let j = 0; j < 12; j++) {
+    const u = j / 12, u2 = u * u, u3 = u2 * u;
+    const b0 = -0.5 * u3 + u2 - 0.5 * u, b1 = 1.5 * u3 - 2.5 * u2 + 1, b2 = -1.5 * u3 + 2 * u2 + 0.5 * u, b3 = 0.5 * u3 - 0.5 * u2;
+    s.push(b0 * X(i - 1) + b1 * X(i) + b2 * X(i + 1) + b3 * X(i + 2), b0 * Y(i - 1) + b1 * Y(i) + b2 * Y(i + 1) + b3 * Y(i + 2));
+  }
+  s.push(X(n - 1), Y(n - 1));
+  const m = s.length / 2, cum = [0];
+  for (let i = 1; i < m; i++) cum.push(cum[i - 1] + Math.hypot(s[2 * i] - s[2 * i - 2], s[2 * i + 1] - s[2 * i - 1]));
+  EDGE_LEN = cum[m - 1];
+  for (let k = 0, j = 1; k <= EM; k++) {
+    const d = (EDGE_LEN * k) / EM;
+    while (j < m - 1 && cum[j] < d) j++;
+    const tx = s[2 * j] - s[2 * j - 2], ty = s[2 * j + 1] - s[2 * j - 1], tl = Math.hypot(tx, ty), f = (d - cum[j - 1]) / Math.max(1e-9, cum[j] - cum[j - 1]);
+    EDGE[4 * k] = s[2 * j - 2] + tx * f; EDGE[4 * k + 1] = s[2 * j - 1] + ty * f; EDGE[4 * k + 2] = -ty / tl; EDGE[4 * k + 3] = tx / tl;
+  }
 }
-// a run of Q from a to b, open or closed: curved through the midpoints of smooth points, straight to sharp ones
+// The fringe: a feather end every FEATHER px of the drawn edge (2 to 3 px is the least the eye parts at flight size),
+// 4 to 16 of them a wing; between each and the next a notch, cut in by arch(t) of a feather's width at t along the
+// edge (0 the wingtip, 1 the root): shallow arches along the secondaries, longer and more parted ones among the
+// primaries, so the trailing edge bows out toward the tip; never less than LEAST_CUT px. The wingtip is the
+// outermost end; each end after it is one curve between its two notches, through the point on the edge.
+const FEATHER = 2.8, LEAST_CUT = 1.1, arch = (t) => 0.26 + 0.64 * Math.max(0, 1 - t / 0.5) ** 1.5;
+// one wing round from the shoulder: the leading edge's smooth arc out to the tip, then the fringe back to the root
+function wingRun(side) {
+  const n = clamp(Math.round((EDGE_LEN * P.L) / FEATHER), 4, 16), wide = EDGE_LEN / n, least = LEAST_CUT / P.L;
+  for (let i = 0; i < LEAD.length; i += 2) wingPt(side, LEAD[i], LEAD[i + 1], false);
+  wingPt(side, EDGE[0], EDGE[1], false);
+  let px = 0, py = 0;
+  for (let k = 0; k < n; k++) {
+    const t = (k + 0.55) / n, d = Math.max(wide * arch(t), least), e = 4 * Math.round(t * EM);
+    const nx = EDGE[e] + EDGE[e + 2] * d, ny = EDGE[e + 1] + EDGE[e + 3] * d;
+    // the control that carries the curve from notch to notch through the edge at k / n
+    if (k) { const f = 4 * Math.round((k / n) * EM); wingPt(side, 2 * EDGE[f] - (px + nx) / 2, 2 * EDGE[f + 1] - (py + ny) / 2, 2); }
+    wingPt(side, nx, ny, 1); px = nx; py = ny;
+  }
+  wingPt(side, EDGE[4 * EM], EDGE[4 * EM + 1], false);
+}
+// a run of Q from a to b, open or closed: curved through the midpoints of smooth points, straight to sharp ones, and
+// from a control point on to the point after it in one curve
 function trace(ctx, a, b, closed) {
   const n = b - a, X = (i) => Q[2 * (a + ((i % n) + n) % n)], Y = (i) => Q[2 * (a + ((i % n) + n) % n) + 1], S = (i) => SH[a + ((i % n) + n) % n];
   if (closed) ctx.moveTo((X(-1) + X(0)) / 2, (Y(-1) + Y(0)) / 2); else ctx.moveTo(X(0), Y(0));
   const last = closed ? n : n - 1;
   for (let i = closed ? 0 : 1; i < last; i++) {
-    if (S(i)) ctx.lineTo(X(i), Y(i)); else ctx.quadraticCurveTo(X(i), Y(i), (X(i) + X(i + 1)) / 2, (Y(i) + Y(i + 1)) / 2);
+    if (S(i) === 2) { ctx.quadraticCurveTo(X(i), Y(i), X(i + 1), Y(i + 1)); i++; } else if (S(i)) ctx.lineTo(X(i), Y(i)); else ctx.quadraticCurveTo(X(i), Y(i), (X(i) + X(i + 1)) / 2, (Y(i) + Y(i + 1)) / 2);
   }
   if (closed) ctx.closePath(); else ctx.lineTo(X(n - 1), Y(n - 1));
 }
 // The run of Q from a to qn thinned: a smooth point that lies within THIN px of the line from the last point kept to
 // the next is dropped, and qn moves back by the points dropped. The curve through such a point moves by less than that
 // distance, well inside the one-px line, so a small eagle is drawn through fewer points than a large one and looks the
-// same. The sharp points, the fingers' tips and slots, are always kept, and so are the run's ends. A path's points are
+// same. The sharp points, the fringe's notches, are always kept, and so are the run's ends. A path's points are
 // what its stroke costs the GPU process, and the eagles' strokes are most of the scene's.
 const THIN = 0.2;
 function thin(a) {
@@ -254,62 +291,40 @@ function thin(a) {
   }
   Q[2 * k] = Q[2 * qn - 2]; Q[2 * k + 1] = Q[2 * qn - 1]; SH[k] = SH[qn - 1]; qn = k + 1;
 }
-const pairs = (A, f, rev, side) => { const n = A.length / 2; for (let j = 0; j < n; j++) { const i = rev ? n - 1 - j : j; f(A[2 * i], side * A[2 * i + 1], false); } };
+// the triples [x, y, sharp] of A from triple i0 on, through f on side (1 the right, -1 the mirror), forward or reversed
+const run = (A, f, side, rev, i0 = 0) => { const n = A.length / 3; for (let j = i0; j < n; j++) { const i = rev ? n - 1 - (j - i0) : j; f(A[3 * i], side * A[3 * i + 1], A[3 * i + 2] === 1); } };
+// the collar and the beak's tick as open runs of the path begun, and the gold nape as a fill of its own
+function headMarks(ctx) {
+  let a = qn; run(COLLAR, bodyPt, 1, false); trace(ctx, a, qn, false);
+  a = qn; run(BEAK, bodyPt, 1, false); trace(ctx, a, qn, false);
+}
+function fillNape(ctx, nape) {
+  qn = 0; run(NAPE, bodyPt, 1, false); run(NAPE, bodyPt, -1, true);
+  const f = ctx.fillStyle; ctx.fillStyle = nape; ctx.globalAlpha = 0.85; ctx.beginPath(); trace(ctx, 0, qn, true); ctx.fill(); ctx.fillStyle = f;
+}
+function fillStroke(ctx, alpha) { ctx.globalAlpha = 0.92; ctx.fill(); ctx.globalAlpha = alpha; ctx.stroke(); }
 
-// One eagle in flight at (x, y), heading in radians, L px long, in pose, in figure variant 0, 1 or 2; nape is a colour
-// for the gold nape or null; persp the perspective factor (FLIGHT_PERSP in the scene). The caller sets strokeStyle,
-// fillStyle (the paper) and lineWidth.
-export function drawEagle(ctx, x, y, heading, L, pose, variant, alpha, nape, persp = PERSP) {
+// One eagle in flight at (x, y), heading in radians, L px long, in pose; nape is a colour for the gold nape or null;
+// persp the perspective factor (FLIGHT_PERSP in the scene). The caller sets strokeStyle, fillStyle (the paper) and
+// lineWidth. Two paths, each a paper fill under its outline: both wings (they never overlap, and one fill and one
+// stroke cost half of two), then the body over their roots, so the body's line crosses them as an engraving's would.
+export function drawEagle(ctx, x, y, heading, L, pose, alpha, nape, persp = PERSP) {
   poseEagle(x, y, heading, L, pose, persp);
-  if (variant === 1) {
-    // a stroke per wing, shoulder through wrist to the leading primary and back to the last; the body a dash; the tail
-    // a shallow fan
-    ctx.globalAlpha = alpha; ctx.beginPath();
-    for (const side of [1, -1]) {
-      qn = 0;
-      for (let i = 0; i < LEAD.length; i += 2) wingPt(side, LEAD[i], LEAD[i + 1], false);
-      wingPt(side, FINGERS[4], FINGERS[5], true);
-      trace(ctx, 0, qn, false);
-    }
-    qn = 0; bodyPt(0.5, 0, true); bodyPt(-0.24, 0, true); trace(ctx, 0, 2, false);
-    qn = 0; tailPt(-0.26, 0.05, true); tailPt(-0.52, 0.13, true); tailPt(TAIL_TIP, 0, false); tailPt(-0.52, -0.13, true); tailPt(-0.26, -0.05, true); trace(ctx, 0, 5, false);
-    ctx.stroke();
-    if (nape) { const s = ctx.strokeStyle; ctx.strokeStyle = nape; qn = 0; bodyPt(0.4, 0, true); bodyPt(0.28, 0, true); ctx.beginPath(); trace(ctx, 0, 2, false); ctx.stroke(); ctx.strokeStyle = s; }
-    ctx.globalAlpha = 1; return;
-  }
-  if (variant === 0) {
-    // parted: the tail, each wing and the body as outlines of their own, each over a paper fill, so the body's line
-    // crosses the wing roots and the parts read like an engraving's
-    // both wings in one path: they never overlap, and one fill and one stroke cost half of two
-    qn = 0; wingRun(1, false); thin(0); const half = qn; wingRun(-1, false); thin(half);
-    ctx.beginPath(); trace(ctx, 0, half, true); trace(ctx, half, qn, true); ctx.globalAlpha = 0.92; ctx.fill(); ctx.globalAlpha = alpha; ctx.stroke();
-    // the body and the tail in one path over the wings, the tail's root showing as a short line across the body
-    qn = 0; pairs(BODY, bodyPt, false, 1); pairs(BODY.slice(2), bodyPt, true, -1); thin(0); const body = qn;
-    tailPt(TAIL[0], TAIL[1], false); pairs(TAIL.slice(2), tailPt, false, 1); tailPt(TAIL_TIP, 0, false); pairs(TAIL.slice(2), tailPt, true, -1); tailPt(TAIL[0], -TAIL[1], false); thin(body);
-    ctx.beginPath(); trace(ctx, 0, body, true); trace(ctx, body, qn, true); ctx.globalAlpha = 0.92; ctx.fill(); ctx.globalAlpha = alpha; ctx.stroke();
-  } else {
-    // one silhouette: beak, the right side round wing and tail, the left side back
-    qn = 0;
-    pairs(HEAD, bodyPt, false, 1); wingRun(1, false); pairs(TAIL, tailPt, false, 1); tailPt(TAIL_TIP, 0, false);
-    pairs(TAIL, tailPt, true, -1); wingRun(-1, true); pairs(HEAD.slice(2), bodyPt, true, -1);
-    fillStroke(ctx, 0, qn, alpha);
-  }
-  if (nape) {
-    qn = 0; pairs(NAPE, bodyPt, false, 1); pairs(NAPE, bodyPt, true, -1);
-    const f = ctx.fillStyle; ctx.fillStyle = nape; ctx.globalAlpha = 0.85; ctx.beginPath(); trace(ctx, 0, qn, true); ctx.fill(); ctx.fillStyle = f;
-  }
+  qn = 0; wingRun(1); thin(0); const half = qn; wingRun(-1); thin(half);
+  ctx.beginPath(); trace(ctx, 0, half, true); trace(ctx, half, qn, true); fillStroke(ctx, alpha);
+  qn = 0; run(BODY, bodyPt, 1, false); run(TAIL, tailPt, 1, false); tailPt(TAIL_TIP, 0, false); run(TAIL, tailPt, -1, true); run(BODY, bodyPt, -1, true, 1); thin(0);
+  ctx.beginPath(); trace(ctx, 0, qn, true); headMarks(ctx); fillStroke(ctx, alpha);
+  if (nape) fillNape(ctx, nape);
   ctx.globalAlpha = 1;
 }
-function fillStroke(ctx, a, b, alpha) { ctx.beginPath(); trace(ctx, a, b, true); ctx.globalAlpha = 0.92; ctx.fill(); ctx.globalAlpha = alpha; ctx.stroke(); }
-// An eagle perched on a crag: wings folded along the back, seen from above as a narrow outline with the line where
-// the wings meet down its middle.
+// An eagle perched on a crag, its wings folded along the back, with the line where they meet down its middle.
 const FLAT = { bank: 0, flap: 0, beat: 0, fan: 0 };
 export function drawPerched(ctx, x, y, heading, L, alpha, nape) {
   poseEagle(x, y, heading, L, FLAT);
-  qn = 0; pairs(PERCHED, bodyPt, false, 1); pairs(PERCHED.slice(2, -2), bodyPt, true, -1);
-  fillStroke(ctx, 0, qn, alpha);
-  qn = 0; bodyPt(0.14, 0, true); bodyPt(-0.4, 0, true); ctx.beginPath(); trace(ctx, 0, 2, false); ctx.globalAlpha = alpha * 0.7; ctx.stroke();
-  if (nape) { qn = 0; pairs(NAPE, bodyPt, false, 1); pairs(NAPE, bodyPt, true, -1); const f = ctx.fillStyle; ctx.fillStyle = nape; ctx.globalAlpha = 0.85; ctx.beginPath(); trace(ctx, 0, qn, true); ctx.fill(); ctx.fillStyle = f; }
+  qn = 0; run(PERCHED, bodyPt, 1, false); bodyPt(PERCHED_TIP, 0, false); run(PERCHED, bodyPt, -1, true, 1);
+  ctx.beginPath(); trace(ctx, 0, qn, true); headMarks(ctx); fillStroke(ctx, alpha);
+  qn = 0; bodyPt(0.02, 0, true); bodyPt(-0.46, 0, true); ctx.beginPath(); trace(ctx, 0, 2, false); ctx.globalAlpha = alpha * 0.7; ctx.stroke();
+  if (nape) fillNape(ctx, nape);
   ctx.globalAlpha = 1;
 }
 
@@ -1224,12 +1239,12 @@ export function drawLive(ctx, w, colours) {
   for (const g of w.goats) drawGoat(ctx, g);
   if (p.study) { drawStudy(ctx, w, colours); return; }
   // perched eagles, then the flying ones from the lowest to the highest, then the clouds over them
-  const v = Math.round(p.variant), O = w.order; O.length = 0;
+  const O = w.order; O.length = 0;
   for (const e of w.eagles) if (e.mode === 'perch') drawPerched(ctx, e.x, e.y, e.h, p.length * 0.72, p.alpha, e.gold ? gold : null); else O.push(e);
   O.sort((a, b) => a.alt - b.alt);
   // one at a time, lowest first, so the higher reads over the lower. (Every uncrossed eagle in one shared fill and
   // stroke was tried: one large self-overlapping path cost the GPU process half again what 36 small ones do.)
-  for (const e of O) drawEagle(ctx, e.x, e.y, e.h, p.length * sizeAt(e.alt), e, v, p.alpha, e.gold ? gold : null, FLIGHT_PERSP);
+  for (const e of O) drawEagle(ctx, e.x, e.y, e.h, p.length * sizeAt(e.alt), e, p.alpha, e.gold ? gold : null, FLIGHT_PERSP);
   // the clouds, over everything that flies under them
   for (const c of w.clouds) {
     cloudPath(ctx, c, w.cloudT); ctx.globalAlpha = 0.95; ctx.fill(); ctx.globalAlpha = p.cloudAlpha; ctx.stroke();
@@ -1244,7 +1259,7 @@ export function drawLive(ctx, w, colours) {
 function drawStudy(ctx, w, colours) {
   const p = w.params, L = p.length * 8 * sizeAt(p.rise);
   ctx.lineWidth = p.width;
-  drawEagle(ctx, w.w / 2, w.h / 2, p.heading * DEG, L, { bank: p.bank * DEG, flap: p.flap, beat: p.beat, fan: p.fan }, Math.round(p.variant), Math.max(p.alpha, 0.7), colours.gold);
+  drawEagle(ctx, w.w / 2, w.h / 2, p.heading * DEG, L, { bank: p.bank * DEG, flap: p.flap, beat: p.beat, fan: p.fan }, Math.max(p.alpha, 0.7), colours.gold);
 }
 
 export const scene = {
