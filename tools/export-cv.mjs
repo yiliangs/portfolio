@@ -73,12 +73,19 @@ function pick(obj, keys) {
   return out;
 }
 
-const listOf = (v) => (Array.isArray(v) ? v.filter(isPublic) : []);
+// lib/style.typ: in-resume. Public, and on the core tier, where an absent tier means core. resume.typ
+// gates block entries, projects and talks on it; every other list carries no tier, so gating every
+// list here gives the rule one home without changing what those lists export.
+const isCore = (x) => !(x && typeof x === 'object' && x.tier !== undefined && x.tier !== 'core');
+const inResume = (x) => isPublic(x) && isCore(x);
+
+const listOf = (v) => (Array.isArray(v) ? v.filter(inResume) : []);
 const mapPick = (v, keys) => listOf(v).map((x) => pick(x, keys));
 
 // ---------------------------------------------------------------- the schema
 
-const WORK_KEYS = ['org', 'org_units', 'location', 'start', 'end', 'role', 'employment', 'funding'];
+const WORK_KEYS = ['org', 'org_units', 'location', 'start', 'end', 'role', 'employment', 'funding',
+  'progression_summary'];
 const TITLE_KEYS = ['title', 'start', 'end'];
 const BLOCK_KEYS = ['heading', 'role', 'period', 'intro'];
 const ENTRY_KEYS = ['name', 'desc'];
@@ -99,11 +106,13 @@ function job(j) {
   const out = pick(j, WORK_KEYS);
   const titles = mapPick(j.title_progression, TITLE_KEYS);
   const highlights = Array.isArray(j.highlights) ? j.highlights.filter((h) => !isEmpty(h)) : [];
-  const blocks = listOf(j.blocks).map((b) => {
+  // resume.typ skips a block left with no core entry and no intro; one with an intro keeps its head.
+  const blocks = listOf(j.blocks).flatMap((b) => {
     const blk = pick(b, BLOCK_KEYS);
     const entries = mapPick(b.entries, ENTRY_KEYS);
     if (entries.length) blk.entries = entries;
-    return blk;
+    else if (isEmpty(blk.intro)) return [];
+    return [blk];
   });
   if (titles.length) out.title_progression = titles;
   if (highlights.length) out.highlights = highlights;
@@ -143,12 +152,7 @@ export function publicCv(doc, meta = {}) {
   out.projects = listOf(src.projects)
     .filter((p) => PROJECT_CATEGORIES.includes(p.category) && !isEmpty(p.resume_desc))
     .map((p) => pick(p, PROJECT_KEYS));
-  out.patents = listOf(src.patents).map((p) => {
-    const pat = pick(p, PATENT_KEYS);
-    const total = p.claims && p.claims.total;
-    if (!isEmpty(total)) pat.claims = { total };
-    return pat;
-  });
+  out.patents = mapPick(src.patents, PATENT_KEYS);
   out.publications = publications(src.publications);
   out.awards = listOf(src.awards)
     .filter((a) => !isEmpty(a.resume_line))
