@@ -25,7 +25,7 @@ const DENIED = [
   'notes', 'note', 'media', 'exhibitions', 'exhibitions_extra', 'skills', 'teaching', 'public',
   'evidence', 'press', 'framing', 'team', 'role_note', 'aka', 'membership', 'scope', 'funded',
   'years', 'event', 'compensation', 'co_panelists', 'format', 'outlet', 'about', 'urls', 'url',
-  'c3_strength', 'website', 'orcid', 'scholar', 'research_initiatives',
+  'c3_strength', 'website', 'orcid', 'scholar', 'research_initiatives', 'claims', 'tier',
 ];
 
 // The allowlist, position by position. __keys is the complete set a node at that position may
@@ -36,7 +36,7 @@ const SHAPE = {
   basics: { __keys: ['name', 'email', 'links'], links: { __keys: ['github'] } },
   work: {
     __keys: ['org', 'org_units', 'location', 'start', 'end', 'role', 'employment', 'funding',
-      'title_progression', 'highlights', 'blocks'],
+      'progression_summary', 'title_progression', 'highlights', 'blocks'],
     title_progression: { __keys: ['title', 'start', 'end'] },
     blocks: {
       __keys: ['heading', 'role', 'period', 'intro', 'entries'],
@@ -44,10 +44,7 @@ const SHAPE = {
     },
   },
   projects: { __keys: ['name', 'category', 'resume_desc'] },
-  patents: {
-    __keys: ['title', 'role', 'application_no', 'claims', 'status', 'filed'],
-    claims: { __keys: ['total'] },
-  },
+  patents: { __keys: ['title', 'role', 'application_no', 'status', 'filed'] },
   publications: {
     __keys: ['title', 'position', 'venue', 'venue_short', 'volume', 'year', 'status', 'type'],
   },
@@ -82,7 +79,7 @@ function assertNoDeniedKeys(doc, label) {
 }
 
 // A phone number in any of the shapes a person writes one in. Runs on the exported document, whose
-// only digits are dates, claim counts and metrics, so a hit is a leak rather than a coincidence.
+// only digits are dates, application numbers and metrics, so a hit is a leak rather than a coincidence.
 const PHONE_SHAPED = /\+?\d?[\s.\-]?\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4}/;
 
 const FIXTURE = {
@@ -122,6 +119,7 @@ const FIXTURE = {
       funding: 'Funded in part by a grant.',
       tech: ['C#', 'React'],
       highlights: ['A highlight that ships.'],
+      progression_summary: 'A track, joined as Something',
       title_progression: [
         { title: 'Senior Something', start: '2025-10', end: 'present' },
         { title: 'Something', start: '2022-02', end: '2025-09' },
@@ -135,7 +133,17 @@ const FIXTURE = {
           entries: [
             { name: 'Shipped entry', desc: 'Moved 2.13M things in one year.' },
             { name: 'Hidden entry', desc: 'Must not ship.', public: false },
+            { name: 'Archived entry', desc: 'Must not ship.', tier: 'archive' },
+            { name: 'Explicitly core entry', desc: 'Ships.', tier: 'core' },
           ],
+        },
+        {
+          heading: 'An Archived Block', period: '2023',
+          entries: [{ name: 'Archived A', desc: 'Must not ship.', tier: 'archive' }],
+        },
+        {
+          heading: 'An Intro Block', role: 'Lead', period: '2026', intro: 'An intro with no core entries.',
+          entries: [{ name: 'Archived B', desc: 'Must not ship.', tier: 'archive' }],
         },
         { heading: 'A Hidden Block', period: '2024', public: false, entries: [{ name: 'x', desc: 'y' }] },
       ],
@@ -210,6 +218,8 @@ const FIXTURE = {
     { name: 'A Public Plugin', category: 'Personal', resume_desc: 'Ships too.', links: ['https://example.org'] },
     { name: 'A Bare Personal Project', category: 'Personal', resume_desc: '', years: '2018' },
     { name: 'A Withheld Lab Project', category: 'UPenn / PSL', resume_desc: 'Must not ship.', public: false },
+    { name: 'An Archived Lab Project', category: 'UPenn / PSL', resume_desc: 'Must not ship.', tier: 'archive' },
+    { name: 'An Archived Plugin', category: 'Personal', resume_desc: 'Must not ship.', tier: 'archive' },
   ],
   awards: [
     { title: 'Selected', org: 'A Cohort', year: '2026', scope: 'regional', resume_line: 'Selected, A Cohort.' },
@@ -218,6 +228,7 @@ const FIXTURE = {
   talks: [
     { title: 'A Talk', event: 'Somewhere', role: 'Presenter', date: '2026-05-13', resume_line: 'Featured presenter, A Talk.', evidence: 'strong' },
     { title: 'An Unlisted Talk', event: 'Elsewhere', date: '2026-07-15', evidence: 'strong' },
+    { title: 'An Archived Talk', date: '2025-03-01', resume_line: 'Guest, Must not ship.', tier: 'archive' },
   ],
   media: [{ outlet: 'A Magazine', about: 'The work', url: 'https://example.org' }],
   exhibitions: [{ title: 'A Show', venue: 'A Museum' }],
@@ -257,13 +268,34 @@ test('publicCv drops every entry marked public: false, at every depth', () => {
   const json = JSON.stringify(out);
   assert.ok(!json.includes('Must not ship'), 'a withheld entry survived the export');
   assert.equal(out.work.length, 1, 'the withheld employer survived');
-  assert.equal(out.work[0].blocks.length, 1, 'the withheld block survived');
+  assert.ok(!out.work[0].blocks.some((b) => b.heading === 'A Hidden Block'), 'the withheld block survived');
+  assert.deepEqual(out.work[0].blocks.map((b) => b.heading), ['A Platform', 'An Intro Block']);
   assert.deepEqual(out.work[0].blocks[0].entries, [
     { name: 'Shipped entry', desc: 'Moved 2.13M things in one year.' },
+    { name: 'Explicitly core entry', desc: 'Ships.' },
   ]);
   assert.deepEqual(out.publications.map((p) => p.title), [
     'A Newer Paper Under Review', 'An Older Published Paper',
   ], 'publications are not year-descending, or a withheld paper survived');
+});
+
+// lib/style.typ: in-resume(x) = is-public(x) and tier-of(x) == "core", tier absent meaning core.
+// resume.typ applies it to block entries, projects and talks; an archived item travels no further
+// than the source.
+test('publicCv drops every item whose tier is not core, wherever resume.typ gates on it', () => {
+  const out = publicCv(FIXTURE, META);
+  const json = JSON.stringify(out);
+  for (const name of ['Archived entry', 'Archived A', 'Archived B', 'An Archived Lab Project',
+    'An Archived Plugin', 'Guest, Must not ship.']) {
+    assert.ok(!json.includes(name), 'an archived item survived the export: ' + name);
+  }
+  const blocks = out.work[0].blocks;
+  assert.ok(!blocks.some((b) => b.heading === 'An Archived Block'),
+    'a block with no core entries and no intro should be dropped whole');
+  assert.deepEqual(blocks.find((b) => b.heading === 'An Intro Block'),
+    { heading: 'An Intro Block', role: 'Lead', period: '2026', intro: 'An intro with no core entries.' },
+    'a block with an intro keeps its head and intro when no entry survives');
+  assert.deepEqual(out.talks.map((t) => t.resume_line), ['Featured presenter, A Talk.']);
 });
 
 test('publicCv filters projects to the two public categories carrying a description', () => {
@@ -287,13 +319,14 @@ test('publicCv keeps only the lines the resume renders, verbatim', () => {
   }]);
   assert.deepEqual(out.patents, [{
     title: 'A Patent', role: 'First-named inventor', application_no: 'US 19/305,030',
-    claims: { total: 22 }, status: 'pending', filed: '2025-08-20',
+    status: 'pending', filed: '2025-08-20',
   }]);
   const job = out.work[0];
   assert.equal(job.org, 'A Firm');
   assert.deepEqual(job.org_units, ['A Firm,', 'Chicago Studio']);
   assert.deepEqual(job.highlights, ['A highlight that ships.']);
   assert.equal(job.funding, 'Funded in part by a grant.');
+  assert.equal(job.progression_summary, 'A track, joined as Something');
   assert.deepEqual(job.title_progression[0], { title: 'Senior Something', start: '2025-10', end: 'present' });
   assert.equal(out.source_commit, 'abc1234');
   assert.equal(out.source_date, '2026-07-07');

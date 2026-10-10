@@ -152,8 +152,8 @@ test('the mono document is the same model punctuated differently', () => {
   const patent = doc.research[0];
   assert.match(patent.rightMono, /^filed \d{4}-\d{2}$/, 'the mono patent rail is not a raw year-month');
 
-  // the mono register is typed: ASCII arrows, year first
-  assert.match(doc.jobs[0].priorMono, /^2022 Junior Designer -> .* -> 2024 Designer$/);
+  // a job with a progression summary says it the same way in both registers
+  assert.equal(doc.jobs[0].priorMono, doc.jobs[0].prior);
   assert.match(doc.bylineMono, /^>_ cv · rev \d{4}-\d{2} · issued from cv\.json$/);
   assert.match(doc.footerMono, /^yiliang shao · \d{4}-\d{2}-\d{2} · cv\.json @ [0-9a-f]+$/);
 
@@ -197,15 +197,18 @@ test('cvModel sets the real document the way resume.typ does', () => {
 
   assert.equal(doc.name, cv.basics.name);
   assert.deepEqual(doc.contact.map((x) => x.t), [cv.basics.email, 'github.com/yiliangs']);
-  for (const flag of ['hasProfile', 'hasWork', 'hasResearch', 'hasRecognition', 'hasTalks', 'hasOss', 'hasEducation']) {
+  for (const flag of ['hasProfile', 'hasWork', 'hasResearch', 'hasRecognition', 'hasTalks', 'hasEducation']) {
     assert.equal(doc[flag], true, 'the CV renders no ' + flag.slice(3) + ' section');
   }
+  // every Personal project is archived in the source, so the PDF has no Open Source section either
+  assert.equal(doc.hasOss, false, 'the Open Source section is rendering archived projects');
 
   // the employer heads the entry, the current title sits under it, the prior ones run oldest to newest
   const som = doc.jobs[0];
   assert.equal(som.dates, 'Feb 2022 – present');
   assert.equal(som.titleDates, 'Oct 2025 – present');
-  assert.match(som.prior, /^Junior Designer 2022 → .* → Designer 2024$/);
+  // resume.typ: the progression summary and the span of the prior titles replace the ladder
+  assert.equal(som.prior, 'Designer track, joined as Junior Designer, Feb 2022 – Sep 2025');
   assert.equal(som.projects.length, 0, 'the lab projects are hanging off the wrong job');
 
   // the lab's flagship projects belong to the job whose tenure scoped them, and carry no dates
@@ -217,10 +220,10 @@ test('cvModel sets the real document the way resume.typ does', () => {
   const years = doc.research.map((r) => r.right);
   assert.match(years[0], /^filed /, 'the patent should head the section');
   const pubs = cv.publications;
-  assert.deepEqual(pubs.map((p) => p.year), ['2026', '2026', '2025', '2023']);
+  assert.deepEqual(pubs.map((p) => p.year), ['2026', '2026', '2026', '2025', '2023']);
   for (let i = 0; i < pubs.length; i++) {
     const right = doc.research[i + 1].right;
-    assert.equal(right, pubs[i].status === 'published' ? pubs[i].year : '',
+    assert.equal(right, ['published', 'accepted'].includes(pubs[i].status) ? pubs[i].year : '',
       'a paper with status "' + pubs[i].status + '" is showing ' + JSON.stringify(right));
   }
   const review = doc.research.find((r) => flatten(r.parts).includes('(under review'));
@@ -230,8 +233,50 @@ test('cvModel sets the real document the way resume.typ does', () => {
   const rank = doc.recognition.map((r) => r.right);
   assert.deepEqual(rank, [...rank].sort().reverse(), 'Recognition & Service is not reverse-chronological');
   assert.ok(doc.recognition.some((r) => /Paper reviewer/.test(r.line)), 'review service never reached the section');
+  // a service line without detail closes on a period, as resume.typ sets it
+  for (const org of ['CAADRIA', 'ACADIA']) {
+    assert.ok(doc.recognition.some((r) => r.line === 'Paper reviewer, ' + org + '.'), 'no service line for ' + org);
+  }
+  // resume.typ no longer prints the claim count on the patent line
+  assert.ok(!/claims/.test(flatten(doc.research[0].parts)), 'the patent line still prints a claim count');
 
   assert.equal(doc.footer, cv.basics.name + ' · ' + c.prettyDate(cv.source_date));
+});
+
+// The rules on synthetic input, so a branch the real document does not exercise is still held.
+test('cvModel mirrors the resume.typ branches the real document does not reach', () => {
+  const c = logic();
+  const doc = c.cvModel({
+    basics: { name: 'N' },
+    work: [
+      { org: 'A', start: '2020-01', end: 'present', title_progression: [
+        { title: 'C', start: '2024-01', end: 'present' },
+        { title: 'B', start: '2022-03', end: '2023-12' },
+        { title: 'A0', start: '2020-01', end: '2022-02' }] },
+      { org: 'B', start: '2020-01', end: 'present', progression_summary: 'Track, joined as A0', title_progression: [
+        { title: 'C', start: '2024-01', end: 'present' },
+        { title: 'B', start: '2022-03', end: '2023-12' },
+        { title: 'A0', start: '2020-01', end: '2022-02' }] },
+    ],
+    publications: [
+      { title: 'Acc', position: 'Sole author', venue: 'Proceedings of X', year: '2026', status: 'accepted' },
+      { title: 'Sub', position: 'Sole author', venue: 'Y', venue_short: 'Y', year: '2026', status: 'submitted' },
+    ],
+    service: [{ role: 'Paper reviewer', org: 'X', detail: '(8 papers).', year: '2026' }],
+  });
+  // no summary: the ladder stays, oldest to newest
+  assert.equal(doc.jobs[0].prior, 'A0 2020 → B 2022');
+  assert.equal(doc.jobs[0].priorMono, '2020 A0 -> 2022 B');
+  // a summary: one phrase and the span from the earliest prior start to the latest prior end
+  assert.equal(doc.jobs[1].prior, 'Track, joined as A0, Jan 2020 – Dec 2023');
+  assert.equal(doc.jobs[1].priorMono, doc.jobs[1].prior);
+  // accepted is set exactly like published: venue and year, no qualifier tag
+  assert.equal(flatten(doc.research[0].parts), 'Acc. Sole author. Proceedings of X.');
+  assert.equal(doc.research[0].right, '2026');
+  assert.equal(flatten(doc.research[1].parts), 'Sub. Sole author. (submitted, Y)');
+  assert.equal(doc.research[1].right, '');
+  // detail present: it follows the org after a space and carries its own punctuation
+  assert.equal(doc.recognition[0].line, 'Paper reviewer, X (8 papers).');
 });
 
 test('the Development timeline is the same document, read as an index', () => {
