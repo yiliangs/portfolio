@@ -1,6 +1,6 @@
 {
-  "source_commit": "4a8f781",
-  "source_date": "2026-07-07",
+  "source_commit": "b08c7d0",
+  "source_date": "2026-10-10",
   "basics": {
     "name": "Yiliang Shao",
     "email": "yiliangsh@gmail.com",
@@ -16,6 +16,7 @@
       "start": "2022-02",
       "end": "present",
       "role": "Senior Computational Design Specialist",
+      "progression_summary": "Designer track, joined as Junior Designer",
       "title_progression": [
         {
           "title": "Senior Computational Design Specialist",
@@ -43,11 +44,11 @@
           "heading": "Natalie: Computational Design Platform",
           "role": "Creator & Lead Developer",
           "period": "2023 – present",
-          "intro": "Primary engineer across the stack: React front end, solver and ML core, Rhino and Revit integration, encrypted distribution, telemetry, and release. Funded by SOM IW, a firm subsidiary, after review by a committee of Partners; 25 production releases since 2023 (v0.5.0 to v1.3.2); in routine use on live projects across 8 offices worldwide. Proprietary to SOM; publications extract the generalizable methods.",
+          "intro": "Primary engineer across the stack: React front end, solver and ML core, Rhino and Revit integration, encrypted distribution, telemetry, and release. Funded by SOM IW, a firm subsidiary, after review by a committee of Partners; 25 production releases since 2023; in routine use on live projects across 8 offices worldwide. Proprietary to SOM; publications extract the generalizable methods.",
           "entries": [
             {
               "name": "Facade propagation",
-              "desc": "Siamese heterogeneous graph attention network transferring facade systems from prototype to massing; TorchSharp inference in live Rhino sessions. 2.13M facade modules populated in one year."
+              "desc": "Siamese heterogeneous graph attention network transferring facade systems from prototype to massing, trained with pair-local label supervision so correspondence needs no shared label vocabulary across scales; TorchSharp inference in live Rhino sessions. 2.6M facade modules populated on live projects."
             },
             {
               "name": "Residential planner",
@@ -58,30 +59,12 @@
               "desc": "Exact MILP for unit stacking and mix across residential massings; certifies feasibility or diagnoses why none exists."
             },
             {
+              "name": "Web portal",
+              "desc": "Browser version of the platform on the same solver backend, in use by studio heads and partners on live projects to prototype with clients in the meeting room, no Rhino seat required; residential planner and unit-mix solver rewritten in Rust from the Rhino-command originals and compiled to WebAssembly."
+            },
+            {
               "name": "Rhino–Revit bridge",
               "desc": "Context-based porting into live Revit via Rhino.Inside: blocks arrive as placed families, planar surfaces as levels and floors — semantics survive the port."
-            }
-          ]
-        },
-        {
-          "heading": "Applied Research (methods behind the platform)",
-          "period": "2023 – present",
-          "entries": [
-            {
-              "name": "Graph neural networks for cross-scale building correspondence",
-              "desc": "Pair-local label supervision for node correspondence across graphs of different scale, without a shared label vocabulary (under review at ACADIA 2026; workshop paper in preparation)."
-            },
-            {
-              "name": "Deep metric learning",
-              "desc": "Triplet objectives with semi-hard negative mining for retrieval-based correspondence; family-clean evaluation protocols."
-            },
-            {
-              "name": "Mixed-integer programming for architectural layout",
-              "desc": "Unit demising and stacking formulations balancing yield, code compliance, and design intent."
-            },
-            {
-              "name": "Constraint-based solvers",
-              "desc": "Constraint algebra for room programs: proximity classes, pairing quantifiers, prohibitions; satisfaction by search where checkable, by construction where not."
             }
           ]
         },
@@ -89,21 +72,7 @@
           "heading": "Research Initiatives",
           "role": "Lead Researcher",
           "period": "2026",
-          "intro": "Formal internal SOM research: three-month staffed sprints, presented to Partners and C-suite.",
-          "entries": [
-            {
-              "name": "Massing intelligence",
-              "desc": "Learned models for massing-level design reasoning."
-            },
-            {
-              "name": "Layout representation",
-              "desc": "Toward a pattern algebra for exemplar transfer in residential layout."
-            },
-            {
-              "name": "Agentic modeling",
-              "desc": "LLM-agent-driven parametric modeling workflows."
-            }
-          ]
+          "intro": "Formal internal SOM research: three-month staffed sprints on massing intelligence, layout representation, and agentic modeling, presented to Partners and C-suite."
         }
       ]
     },
@@ -118,7 +87,6 @@
       "end": "2023-09",
       "role": "Research Assistant",
       "employment": "part-time",
-      "funding": "Research funded in part by NSF CAREER award CMMI-1944691.",
       "highlights": [
         "Geometry-based structural form-finding via Polyhedral Graphic Statics."
       ]
@@ -133,17 +101,12 @@
     {
       "name": "Dove Wave",
       "category": "UPenn / PSL",
-      "resume_desc": "Design team; Judges' Choice winner, Eventscape Inventory Constrained Design Competition: algorithmic wood-stacking canopy reusing 1,450 ft of overstock black locust at ~96% material efficiency."
+      "resume_desc": "Design team; Judges' Choice winner, Eventscape Inventory Constrained Design Competition: algorithmic wood-stacking canopy of overstock black locust."
     },
     {
       "name": "Floralis",
       "category": "UPenn / PSL",
       "resume_desc": "Conceptual design team; a National Park Service–funded preservation pavilion at Florissant Fossil Beds National Monument; ETFE-clad multilaminar timber, robotic fabrication."
-    },
-    {
-      "name": "Flywheel",
-      "category": "Personal",
-      "resume_desc": "Grasshopper plugin for one-click massing and building population; on Food4Rhino."
     }
   ],
   "patents": [
@@ -152,20 +115,17 @@
       "role": "First-named inventor",
       "application_no": "US 19/305,030",
       "status": "pending",
-      "filed": "2025-08-20",
-      "claims": {
-        "total": 22
-      }
+      "filed": "2025-08-20"
     }
   ],
   "publications": [
     {
       "title": "From Prototype to Massing: Learning Graph Correspondence for Scalable Facade Modeling",
       "position": "Sole author",
-      "venue": "ACADIA",
+      "venue": "Proceedings of ACADIA",
       "venue_short": "ACADIA 2026",
       "year": "2026",
-      "status": "under review",
+      "status": "accepted",
       "type": "conference"
     },
     {
@@ -175,6 +135,15 @@
       "venue_short": "IJAC",
       "year": "2026",
       "status": "under review",
+      "type": "journal"
+    },
+    {
+      "title": "Where Generated Floor Plans Stop: Encoding Practice Acceptance Rules to Evaluate Machine Learning Floor Plan Generators",
+      "position": "Sole author",
+      "venue": "Advanced Engineering Informatics",
+      "venue_short": "Advanced Engineering Informatics",
+      "year": "2026",
+      "status": "submitted",
       "type": "journal"
     },
     {
@@ -197,50 +166,42 @@
   ],
   "awards": [
     {
-      "resume_line": "Selected, Metropolis Chicago Arch30, a nominated cohort of ~30 future architecture leaders in Greater Chicago.",
+      "resume_line": "Selected, Metropolis Chicago Arch30, nominated cohort of emerging architecture leaders.",
       "year": "2026"
     },
     {
-      "resume_line": "Winner, SOM Computational Design Challenge (firmwide): a graphic-statics rethinking of Lever House.",
+      "resume_line": "Team winner, SOM Computational Design Challenge (firmwide): a graphic-statics rethinking of Lever House.",
       "year": "2025"
     }
   ],
   "service": [
     {
       "role": "Paper reviewer",
+      "org": "CAADRIA",
+      "year": "2027"
+    },
+    {
+      "role": "Paper reviewer",
       "org": "ACADIA",
-      "detail": "(8 papers).",
       "year": "2026"
     }
   ],
   "talks": [
     {
-      "resume_line": "Featured presenter, SOM AI Roundtable “The Bridge from Prompt to Product,” with speakers from Luma AI and Flora AI.",
-      "date": "2026-05-13"
+      "resume_line": "Invited speaker, Rhino User Meeting Chicago, “How many of your steps need you.”",
+      "date": "2026-10-08"
     },
     {
-      "resume_line": "Panelist, course-end session of “AI for Architects” (ELVTR).",
-      "date": "2026-03-19"
+      "resume_line": "Invited speaker, Chicago Innovate Symposium, panel “Innovation in Practice.”",
+      "date": "2026-09-25"
+    },
+    {
+      "resume_line": "Featured presenter, SOM AI Roundtable “The Bridge from Prompt to Product.”",
+      "date": "2026-05-13"
     },
     {
       "resume_line": "Conference presenter, ACADIA 2025 (Notra: A Kerf-Bent Polyhedral Timber Frame).",
       "date": "2025-11-08"
-    },
-    {
-      "resume_line": "Firmwide presenter, SOM Winter Design Forum (selected design leads present to the firm).",
-      "date": "2024 – 2025"
-    },
-    {
-      "resume_line": "Guest critic, design-studio jury, Illinois Institute of Technology.",
-      "date": "2024-10-21"
-    },
-    {
-      "resume_line": "Recurring speaker, SOM Oktoberfest studio technology-sharing sessions.",
-      "date": "ongoing"
-    },
-    {
-      "resume_line": "Internal instructor, recurring SOM sessions on Python for designers, Natalie, and tooling.",
-      "date": "ongoing"
     }
   ],
   "education": [

@@ -4125,11 +4125,17 @@
       const jobs = (cv.work || []).map((j) => {
         const units = j.org_units && j.org_units.length ? j.org_units : [j.org || ''];
         const prog = j.title_progression || [];
-        // prior titles run oldest to newest with their start years: history, at a quarter of the space
-        const prior = prog.slice(1).reverse()
+        const earlier = prog.slice(1);
+        // resume.typ: a progression summary replaces the ladder with one phrase and the span of the
+        // prior titles, from the start of the earliest to the end of the most recent. Both registers
+        // read it the same way, as they read every other date range.
+        const summary = earlier.length && j.progression_summary
+          ? j.progression_summary + ', ' + this.prettyRange(earlier[earlier.length - 1].start, earlier[0].end) : '';
+        // without one, prior titles run oldest to newest with their start years: history, at a quarter of the space
+        const prior = summary || earlier.slice().reverse()
           .map((t) => t.title + ' ' + String(t.start || '').slice(0, 4)).join(' → ');
         // the mono register is typed, not set: the year leads and the arrow is two ASCII characters
-        const priorMono = prog.slice(1).reverse()
+        const priorMono = summary || earlier.slice().reverse()
           .map((t) => String(t.start || '').slice(0, 4) + ' ' + t.title).join(' -> ');
         return {
           units: units.map((u, i) => ({ t: u, loc: i === units.length - 1 && j.location ? ', ' + j.location : '' })),
@@ -4161,7 +4167,6 @@
       for (const p of cv.patents || []) {
         const facts = [];
         if (p.application_no) facts.push('US patent application ' + String(p.application_no).replace('US ', ''));
-        if (p.claims && p.claims.total != null) facts.push(p.claims.total + ' claims');
         const parts = [this.cvRun((p.title || '') + '. ')];
         const partsMono = [this.cvRun(p.title || '', 'title')];
         if (p.role) {
@@ -4183,7 +4188,8 @@
         });
       }
       for (const p of cv.publications || []) {
-        const published = p.status === 'published';
+        // resume.typ sets an accepted paper exactly like a published one
+        const published = p.status === 'published' || p.status === 'accepted';
         const venue = (p.venue || '') + (p.volume ? ', ' + p.volume : '');
         // an unpublished paper carries an honest status tag and no year, so nothing reads as published
         const tag = p.venue_short ? (p.status || '') + ', ' + p.venue_short : (p.type || '') + ', ' + (p.status || '');
@@ -4210,7 +4216,8 @@
       // strict reverse chronology across both lists; within a year, recognition before service
       const merged = (cv.awards || []).map((a) => ({ line: a.resume_line, year: a.year || '', k: 'z' }))
         .concat((cv.service || []).map((s) => ({
-          line: [s.role ? s.role + ',' : '', s.org || '', s.detail || ''].filter(Boolean).join(' '),
+          // resume.typ: "role, org", then " detail" when there is one and "." when there is not
+          line: (s.role ? s.role + ', ' : '') + (s.org || '') + (s.detail ? ' ' + s.detail : '.'),
           year: s.year || '', k: 'a',
         })));
       const recognition = merged.map((it, i) => [it, i])
