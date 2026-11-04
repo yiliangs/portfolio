@@ -47,8 +47,7 @@ if (args.help) {
   --view=1080p1,1440p2    viewports: 1080p1 = 1920x1080 at DPR 1, 1440p2 = 2560x1440 at DPR 2
   --load=idle,busy        idle: fish only; busy: a scripted drag dropping treats across the water
   --mode=off,on           pond-off baseline and pond-on
-  --coast-res=1,2         pond-on runs at each coastRes (coast layer resolution, CSS px scale); default: the page's own
-  --sections              time each section of drawGround() and drawLive(), and the ground's copy (JS time only)
+  --sections              time each section of drawGround() and drawLive() (JS time only)
   --ablate=a,b            extra pond-on runs, each with draw() sections skipped: water,land,islets (the stones),floor,shore,fish,treats,surface (pads, flowers),striders,rings;
                           join with + to skip several in one run (land+shore), or 'all' for an empty draw()
   --cpu-profile           V8 CPU profile during pond-on runs; prints top self-time functions
@@ -65,7 +64,6 @@ for (const v of VIEW_KEYS) if (!VIEWS[v]) throw new Error('unknown --view ' + v)
 const LOADS = list(args.load, 'idle,busy');
 const MODES = list(args.mode, 'off,on');
 const ABLATE = args.ablate ? list(args.ablate) : [];
-const COAST_RES = args['coast-res'] ? list(args['coast-res']).map(Number) : [null];
 const SECTIONS = ['water', 'land', 'islets', 'floor', 'shore', 'fish', 'treats', 'surface', 'striders'];
 const ablation = (item) => (item === 'all' ? [...SECTIONS] : item.split('+'));
 for (const a of ABLATE) for (const p of ablation(a)) if (!SECTIONS.includes(p) && p !== 'rings') throw new Error('unknown --ablate ' + p);
@@ -88,8 +86,8 @@ function instrumentedPond() {
   src = once(src, '\n    paint();\n', '\n    const __t2 = performance.now(); paint(); if (globalThis.__prof) __prof.tick(__t1 - __t0, performance.now() - __t2);\n');
   src = once(src, '\n  return api;\n}', '\n  globalThis.__pondApi = api;\n  return api;\n}');
   if (args.sections || ABLATE.length) {
-    // the ground's sections; then 'copy' runs from the end of the ground to the first live section (the scaled
-    // copy onto the canvas when the coasts are drawn apart, nearly nothing when they are drawn straight on)
+    // the ground's sections; then 'copy' runs from the end of the ground to the first live section (nearly nothing
+    // now that the ground goes straight onto the canvas; a jump there means work landed between the two)
     src = sectionFn(src, 'export function drawGround(ctx, w, ink, paper, water = { img: null, w: 0, h: 0, flat: paper }) {', [
       ['water', (l) => l.startsWith('ctx.globalAlpha = 1; if (!water.img')],
       ['land', (l) => l === 'ctx.fillStyle = paper;'],
@@ -225,7 +223,6 @@ async function runScenario(sc) {
     const n0 = await ev('__prof.n'); await sleep(1000); const n1 = await ev('__prof.n');
     if (n1 - n0 < 10) throw new Error(`frames are not advancing (${n1 - n0} in 1 s); the tab is backgrounded or stalled`);
     if (sc.ablate && ablation(sc.ablate).includes('rings')) await ev('__pondApi.params.rings = 0');
-    if (sc.cr != null) await ev(`__pondApi.params.coastRes = ${sc.cr}`);
     await sleep(2500); // the pond's 900 ms fade-in, and the world settling
     const page = await ev('({ iso: crossOriginIsolated, dpr: devicePixelRatio, w: innerWidth, h: innerHeight, fish: globalThis.__pondWorld ? __pondWorld.fish.length : 0, canvas: (() => { const c = document.querySelector("canvas"); return c ? c.width + "x" + c.height : null; })() })');
 
@@ -315,14 +312,14 @@ function analyseProfile(p, frames) {
 // ---------- the matrix ----------
 const scenarios = [];
 for (const throttle of THROTTLES) for (const view of VIEW_KEYS) for (const load of LOADS) {
-  for (const mode of MODES) for (const cr of mode === 'on' ? COAST_RES : [null]) scenarios.push({ throttle, viewKey: view, view: VIEWS[view], load, mode, cr });
-  for (const cr of COAST_RES) for (const ablate of ABLATE) scenarios.push({ throttle, viewKey: view, view: VIEWS[view], load, mode: 'on', ablate, cr });
+  for (const mode of MODES) scenarios.push({ throttle, viewKey: view, view: VIEWS[view], load, mode });
+  for (const ablate of ABLATE) scenarios.push({ throttle, viewKey: view, view: VIEWS[view], load, mode: 'on', ablate });
 }
 console.log(`pond profile: ${scenarios.length} scenarios x ${SECONDS} s; Chrome ${gpu.headless ? 'headless' : 'headed'}; GPU ${gpu.vendor} / ${gpu.device}; 2d_canvas=${gpu.canvas2d} gpu_compositing=${gpu.compositing} rasterization=${gpu.rasterization}; prefers-reduced-motion emulated as ${REDUCED}`);
 
 const results = [];
 for (const sc of scenarios) {
-  const label = `${sc.throttle}x ${sc.viewKey} ${sc.load} ${sc.mode}${sc.cr != null ? ' cr' + sc.cr : ''}${sc.ablate ? ' -' + sc.ablate : ''}`;
+  const label = `${sc.throttle}x ${sc.viewKey} ${sc.load} ${sc.mode}${sc.ablate ? ' -' + sc.ablate : ''}`;
   process.stdout.write(label + ' ... ');
   try { const r = await runScenario(sc); results.push(r); console.log(`ok (${r.dump.frames.length} frames, canvas ${r.page.canvas}, iso=${r.page.iso}, fish ${r.page.fish}, treats ${r.dump.treats.toFixed(1)}${r.dump.hash ? ', hash ' + r.dump.hash : ''})`); }
   catch (e) { console.log('FAILED: ' + e.message); results.push({ ...sc, error: e.message }); }
@@ -345,36 +342,35 @@ const pad = (s, n) => String(s).padEnd(n);
 console.log('\n' + ['scenario'.padEnd(30), 'fps', 'int mean/p95', '>20', '>33', 'step mean/p95/max', 'draw mean/p95/max', 'main%', 'main ms/fr', 'gpu ms/fr', 'viz ms/fr', 'gc ms/fr'].join(' | '));
 for (const x of rows) {
   const r = x.r;
-  console.log([pad(`${r.throttle}x ${r.viewKey} ${r.load} ${r.mode}${r.cr != null ? ' cr' + r.cr : ''}${r.ablate ? ' -' + r.ablate : ''}${x.stalled ? ' STALLED' : ''}`, 30), f(x.fps, 1), `${f(x.I.mean, 1)}/${f(x.I.p95, 1)}`, x.over20, x.over33,
+  console.log([pad(`${r.throttle}x ${r.viewKey} ${r.load} ${r.mode}${r.ablate ? ' -' + r.ablate : ''}${x.stalled ? ' STALLED' : ''}`, 30), f(x.fps, 1), `${f(x.I.mean, 1)}/${f(x.I.p95, 1)}`, x.over20, x.over33,
     r.mode === 'off' ? '-' : `${f(x.S.mean)}/${f(x.S.p95)}/${f(x.S.max)}`, r.mode === 'off' ? '-' : `${f(x.D.mean)}/${f(x.D.p95)}/${f(x.D.max)}`,
     f(100 * x.busyShare, 0), f(x.t.mainMs), f(x.t.gpuMs), f(x.t.vizMs), f(x.t.gcMs, 3)].join(' | '));
 }
 // marginal cost: pond-on minus pond-off, per frame
 console.log('\nmarginal (on - off) per frame: main ms, gpu ms, viz ms, frames >20 ms on/off');
-// base: the cell a pond-off baseline belongs to; key: a pond-on variant of it (its coastRes, when set)
+// the cell a pond-on run and its pond-off baseline share
 const base = (r) => `${r.throttle}x ${r.viewKey} ${r.load}`;
-const key = (r) => base(r) + (r.cr != null ? ` cr${r.cr}` : '');
 const marg = {};
 for (const x of rows) if (x.r.mode === 'on' && !x.r.ablate && !x.stalled) {
   const o = rows.find((y) => y.r.mode === 'off' && !y.stalled && base(y.r) === base(x.r)); if (!o) continue;
   const m = { main: x.t.mainMs - o.t.mainMs, gpu: x.t.gpuMs - o.t.gpuMs, viz: x.t.vizMs - o.t.vizMs, over20: [x.over20, o.over20] };
-  marg[key(x.r)] = m;
-  console.log(`  ${pad(key(x.r), 20)} main ${f(m.main)}  gpu ${f(m.gpu)}  viz ${f(m.viz)}  >20ms ${m.over20[0]}/${m.over20[1]}`);
+  marg[base(x.r)] = m;
+  console.log(`  ${pad(base(x.r), 20)} main ${f(m.main)}  gpu ${f(m.gpu)}  viz ${f(m.viz)}  >20ms ${m.over20[0]}/${m.over20[1]}`);
 }
 if (ABLATE.length) {
   console.log('\nablation (full pond - pond with one section skipped) per frame: draw JS ms, main ms, gpu ms');
   for (const x of rows) if (x.r.ablate) {
-    const full = rows.find((y) => y.r.mode === 'on' && !y.r.ablate && !y.stalled && key(y.r) === key(x.r)); if (!full || x.stalled) continue;
-    console.log(`  ${pad(key(x.r), 20)} ${pad(x.r.ablate, 16)} draw ${f(full.D.mean - x.D.mean)}  main ${f(full.t.mainMs - x.t.mainMs)}  gpu ${f(full.t.gpuMs - x.t.gpuMs)}`);
+    const full = rows.find((y) => y.r.mode === 'on' && !y.r.ablate && !y.stalled && base(y.r) === base(x.r)); if (!full || x.stalled) continue;
+    console.log(`  ${pad(base(x.r), 20)} ${pad(x.r.ablate, 16)} draw ${f(full.D.mean - x.D.mean)}  main ${f(full.t.mainMs - x.t.mainMs)}  gpu ${f(full.t.gpuMs - x.t.gpuMs)}`);
   }
 }
 if (args.sections) {
   console.log('\ndraw() sections, JS ms per frame (mean)');
-  for (const x of rows) if (x.r.mode === 'on' && !x.r.ablate && x.r.dump.secN) console.log(`  ${pad(key(x.r), 20)} ` + [...SECTIONS.slice(0, 4), 'copy', ...SECTIONS.slice(4)].map((k) => `${k} ${f((x.r.dump.secAcc[k] || 0) / x.r.dump.secN, 3)}`).join('  '));
+  for (const x of rows) if (x.r.mode === 'on' && !x.r.ablate && x.r.dump.secN) console.log(`  ${pad(base(x.r), 20)} ` + [...SECTIONS.slice(0, 4), 'copy', ...SECTIONS.slice(4)].map((k) => `${k} ${f((x.r.dump.secAcc[k] || 0) / x.r.dump.secN, 3)}`).join('  '));
 }
 if (args['cpu-profile']) {
   console.log('\nCPU profile, top self time (ms per frame)');
-  for (const x of rows) if (x.r.prof) { console.log('  ' + key(x.r)); for (const [k, ms] of x.r.prof) console.log(`    ${f(ms, 3)}  ${k}`); }
+  for (const x of rows) if (x.r.prof) { console.log('  ' + base(x.r)); for (const [k, ms] of x.r.prof) console.log(`    ${f(ms, 3)}  ${k}`); }
 }
 // the verdict criterion, on 2560x1440 DPR 2 idle
 const v1 = marg['1x 1440p2 idle'], v4 = marg['4x 1440p2 idle'];
