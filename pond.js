@@ -1203,20 +1203,29 @@ function swim(w, f, want, dt) {
   f.fin = (f.fin + TAU * (0.5 + 0.9 * Math.max(0, 1 - f.sp / Math.max(1, p.cruise))) * dt) % TAU;
 }
 
+// The longest stretch of time one pass of the world is trusted with. A longer step is cut into equal passes no longer
+// than this, so a machine that draws few frames shows the same pond in fewer pictures, never a slower one.
+const PASS = 0.05;
+
 // Advances the world by dt seconds. Deterministic: the only randomness is the world's own source.
 export function step(w, dt) {
   if (!(dt > 0)) return;
-  const p = w.params, r = w.rand, F = w.fish, n = F.length;
+  // the cursor's speed over the whole step, so cutting it into passes neither hides it nor inflates it; a still or
+  // slow cursor startles nothing
+  const ptr = w.ptr;
+  if (ptr.on && ptr.seen) { const d = Math.hypot(ptr.x - ptr.px, ptr.y - ptr.py); ptr.speed = d / dt; } else ptr.speed = 0;
+  ptr.px = ptr.x; ptr.py = ptr.y; ptr.seen = ptr.on;
+  const startle = !w.reduced && ptr.speed > w.params.startle;
+  const k = Math.ceil(dt / PASS - 1e-9);
+  for (let i = 0; i < k; i++) pass(w, dt / k, startle);
+}
+function pass(w, dt, startle) {
+  const p = w.params, r = w.rand, F = w.fish, n = F.length, ptr = w.ptr;
   w.t += dt;
   // the coasts follow their objects; the swell runs on the world's clock and holds still under reduced motion
   for (const o of w.islands) updateIsland(o, w.outlines[o.i], dt, p, w.reduced, w.t);
   if (n !== target(w)) populate(w);
   else if (w.koiN !== koiTarget(w) || w.koiOf !== n) markKoi(w);
-  // the cursor's speed over this step; a still or slow cursor startles nothing
-  const ptr = w.ptr;
-  if (ptr.on && ptr.seen) { const d = Math.hypot(ptr.x - ptr.px, ptr.y - ptr.py); ptr.speed = d / dt; } else ptr.speed = 0;
-  ptr.px = ptr.x; ptr.py = ptr.y; ptr.seen = ptr.on;
-  const startle = !w.reduced && ptr.speed > p.startle;
 
   // treats age and sink; ripples spread
   for (let i = w.treats.length - 1; i >= 0; i--) { const t = w.treats[i]; t.age += dt; if (t.age > p.sink) w.treats.splice(i, 1); }
@@ -1744,12 +1753,14 @@ export function mount(container) {
     drawGround(ctx, world, ink, paper, water);
     drawLive(ctx, world, ink, paper, GOLD);
   };
+  // A slow frame is stepped through in full (step cuts it into passes), so the pond keeps the wall clock down to 4 fps;
+  // only a longer stall, a debugger or a frozen page, is let go.
   let alive = true, raf = 0, last = performance.now();
   const tick = (now) => {
     raf = 0;
     if (!alive || document.hidden) return;
     raf = requestAnimationFrame(tick);
-    const dt = Math.min(0.05, Math.max(0, (now - last) / 1000)); last = now;
+    const dt = Math.min(0.25, Math.max(0, (now - last) / 1000)); last = now;
     inkAge += dt; if (inkAge > 1) readInk();
     step(world, dt);
     relayWater(now);

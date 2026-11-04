@@ -14,7 +14,9 @@
 // on the code it was written to replace.
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
-const M = await import(process.env.POND_MODULE ? pathToFileURL(resolve(process.env.POND_MODULE)).href : '../pond.js');
+import { readFileSync } from 'node:fs';
+const POND = process.env.POND_MODULE ? pathToFileURL(resolve(process.env.POND_MODULE)).href : new URL('../pond.js', import.meta.url).href;
+const M = await import(POND);
 const { defaults, createWorld, step, setIslands, setPointer, dropTreat, strokeStart, strokeTo, strokeEnd, strokeCancel, envelope, thrustHz, lateral, shoreR, coast, waterOf } = M;
 
 const failures = [];
@@ -242,8 +244,20 @@ for (const seed of [1, 7, 42]) {
   metric(`islands: swell span ${dist.span.toFixed(3)} of the mean radius, quarter-turn correlation ${dist.sym.toFixed(3)}`);
 }
 
-// (c) a treat dropped within sensing range is eaten within a bounded time, and a reduced-motion school still eats
-function eatTime(reduced, dist, seed) {
+// The browser loop hands step() the time since the last frame, cut off at a ceiling so a stall is let go. That ceiling
+// lives in mount(), which needs a page, so it is read from the source here; frame() below is that loop, headless. The
+// slow-machine check after (c) depends on it: step() alone always kept time, it was the ceiling that once dropped it.
+const CLAMP = (() => {
+  const m = /const dt = Math\.min\(([\d.]+), Math\.max\(0, \(now - last\) \/ 1000\)\)/.exec(readFileSync(new URL(POND), 'utf8'));
+  if (!m) { fail('could not find the frame ceiling in mount(); the slow-machine check needs it'); return Infinity; }
+  return Number(m[1]);
+})();
+const frame = (w, dt) => step(w, Math.min(CLAMP, dt));
+
+// (c) a treat dropped within sensing range is eaten within a bounded time, and a reduced-motion school still eats. The
+// time is wall-clock seconds at frames of dt, which defaults to the 60 fps DT; the school always settles at DT, so
+// every frame rate sees the same drop.
+function eatTime(reduced, dist, seed, dt = DT) {
   const w = pond(seed, reduced);
   for (let s = 0; s < 120; s++) step(w, DT); // let the school settle a moment first
   let cx = 0, cy = 0; for (const f of w.fish) { cx += f.x; cy += f.y; } cx /= w.fish.length; cy /= w.fish.length;
@@ -252,7 +266,8 @@ function eatTime(reduced, dist, seed) {
   const tx = Math.min(1200, Math.max(80, near.x + Math.cos(near.h + Math.PI / 2) * dist)), ty = Math.min(720, Math.max(80, near.y + Math.sin(near.h + Math.PI / 2) * dist));
   dropTreat(w, tx, ty);
   const before = w.eaten;
-  for (let s = 0; s < 60 * 8; s++) { step(w, DT); if (w.eaten > before) return s * DT; }
+  const frames = Math.round(8 / dt);
+  for (let s = 0; s < frames; s++) { frame(w, dt); if (w.eaten > before) return (s + 1) * dt; }
   return Infinity;
 }
 for (const seed of [3, 11]) {
@@ -260,6 +275,21 @@ for (const seed of [3, 11]) {
   if (!(t < 4)) fail(`seed ${seed}: a treat 150 px to the side should be eaten within 4 s, took ${t}`);
   const tr = eatTime(true, 50, seed);
   if (!(tr < 8)) fail(`seed ${seed}: under reduced motion a treat 50 px to the side should be eaten before it sinks, took ${tr}`);
+}
+
+// A slow machine keeps the wall clock: at 10 fps and at 4 fps, two seconds of frames advance the pond two seconds, and
+// at 10 fps a fish reaches a treat about as soon as at 60 fps. The tolerance is a quarter of the 60 fps time or a
+// quarter second, whichever is larger; the measured gap is under a tenth of a second, one 10 fps frame, while a pond
+// that loses time takes about twice as long.
+for (const dt of [0.1, 0.25]) {
+  const w = pond(3, false);
+  for (let s = 0, n = Math.round(2 / dt); s < n; s++) frame(w, dt);
+  if (!(Math.abs(w.t - 2) <= 1e-9)) fail(`at frames of ${dt} s, two seconds of frames should advance the pond 2 s, advanced ${w.t.toFixed(3)} s`);
+}
+for (const seed of [3, 11]) {
+  const fast = eatTime(false, 150, seed), slow = eatTime(false, 150, seed, 0.1);
+  metric(`seed ${seed}: a treat 150 px to the side is eaten in ${fast.toFixed(3)} s at 60 fps, ${slow.toFixed(3)} s at 10 fps`);
+  if (!(Math.abs(slow - fast) <= Math.max(0.25 * fast, 0.25))) fail(`seed ${seed}: at 10 fps a treat should be eaten about as soon as at 60 fps, took ${slow.toFixed(3)} s against ${fast.toFixed(3)} s`);
 }
 
 // (d) under reduced motion nothing bursts: treats and a fast cursor leave every fish below the calm cruise speed
