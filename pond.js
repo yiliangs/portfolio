@@ -79,7 +79,6 @@ export const PARAMS = {
     markAlpha: [0.05, 0, 1, 0.01, 'opacity of the hatch on the water'],
     markJitter: [0.35, 0, 1, 0.05, 'how loosely the hatch\'s dashes are laid, 0 a strict lattice, 1 hand-laid'],
     shallows: [0.6, 0, 1, 0.05, 'how far the shallows lighten back toward the land'],
-    coastRes: [1.5, 1, 2, 0.25, 'resolution of the ground (water, land, floor, shores) on a dense screen: 1 CSS px, 2 the full backing store'],
   },
   treats: {
     sense: [240, 0, 800, 10, 'how far a fish notices a treat, px'],
@@ -1204,20 +1203,29 @@ function swim(w, f, want, dt) {
   f.fin = (f.fin + TAU * (0.5 + 0.9 * Math.max(0, 1 - f.sp / Math.max(1, p.cruise))) * dt) % TAU;
 }
 
+// The longest stretch of time one pass of the world is trusted with. A longer step is cut into equal passes no longer
+// than this, so a machine that draws few frames shows the same pond in fewer pictures, never a slower one.
+const PASS = 0.05;
+
 // Advances the world by dt seconds. Deterministic: the only randomness is the world's own source.
 export function step(w, dt) {
   if (!(dt > 0)) return;
-  const p = w.params, r = w.rand, F = w.fish, n = F.length;
+  // the cursor's speed over the whole step, so cutting it into passes neither hides it nor inflates it; a still or
+  // slow cursor startles nothing
+  const ptr = w.ptr;
+  if (ptr.on && ptr.seen) { const d = Math.hypot(ptr.x - ptr.px, ptr.y - ptr.py); ptr.speed = d / dt; } else ptr.speed = 0;
+  ptr.px = ptr.x; ptr.py = ptr.y; ptr.seen = ptr.on;
+  const startle = !w.reduced && ptr.speed > w.params.startle;
+  const k = Math.ceil(dt / PASS - 1e-9);
+  for (let i = 0; i < k; i++) pass(w, dt / k, startle);
+}
+function pass(w, dt, startle) {
+  const p = w.params, r = w.rand, F = w.fish, n = F.length, ptr = w.ptr;
   w.t += dt;
   // the coasts follow their objects; the swell runs on the world's clock and holds still under reduced motion
   for (const o of w.islands) updateIsland(o, w.outlines[o.i], dt, p, w.reduced, w.t);
   if (n !== target(w)) populate(w);
   else if (w.koiN !== koiTarget(w) || w.koiOf !== n) markKoi(w);
-  // the cursor's speed over this step; a still or slow cursor startles nothing
-  const ptr = w.ptr;
-  if (ptr.on && ptr.seen) { const d = Math.hypot(ptr.x - ptr.px, ptr.y - ptr.py); ptr.speed = d / dt; } else ptr.speed = 0;
-  ptr.px = ptr.x; ptr.py = ptr.y; ptr.seen = ptr.on;
-  const startle = !w.reduced && ptr.speed > p.startle;
 
   // treats age and sink; ripples spread
   for (let i = w.treats.length - 1; i >= 0; i--) { const t = w.treats[i]; t.age += dt; if (t.age > p.sink) w.treats.splice(i, 1); }
@@ -1710,10 +1718,8 @@ export function mount(container) {
   // second, so a change of theme reaches the ink without any hook into how the theme is switched
   let ink = '#201f1d', paper = '#f3f2f2', inkAge = Infinity;
   const readInk = () => { const css = getComputedStyle(container); ink = css.getPropertyValue('--color-text').trim() || ink; paper = css.getPropertyValue('--color-bg').trim() || paper; inkAge = 0; };
-  // backing pixels per CSS px of the ground (see paint)
-  const groundRes = () => Math.min(dpr, Math.max(1, params.coastRes || 1));
   // The water: the hatch is generated once and drawn once, over the flat water colour, into its own canvas at the
-  // ground's resolution, so it is as crisp as the floor's branch; the ground blits it each frame. The marks are kept
+  // canvas's resolution, so it is as crisp as the floor's branch; the ground blits it each frame. The marks are kept
   // apart from their colour, so a theme, depth or alpha change only redraws them, and only a change of size, density or
   // jitter makes new ones. A resize regenerates 200 ms after the last one; until then the old layer is drawn at its
   // own size, never stretched, with the flat water under what it misses.
@@ -1721,7 +1727,7 @@ export function mount(container) {
   const relayWater = (now) => {
     const mk = `${world.seed} ${vw} ${vh} ${params.markDensity} ${params.markJitter}`;
     if (mk !== marksKey && (!marks || now - resizedAt > 200)) { marks = { w: vw, h: vh, list: waterMarks(world.seed, vw, vh, params.markDensity, params.markJitter) }; marksKey = mk; }
-    const res = groundRes(), lk = `${marksKey} ${res} ${paper} ${ink} ${params.water} ${params.markAlpha}`;
+    const res = dpr, lk = `${marksKey} ${paper} ${ink} ${params.water} ${params.markAlpha}`;
     if (lk === layerKey) return;
     layerKey = lk;
     const flat = waterOf(paper, params.water);
@@ -1739,29 +1745,22 @@ export function mount(container) {
     resizeWorld(world, vw, vh);
   };
   const ro = new ResizeObserver(resize); ro.observe(container); resize();
-  // On a dense screen the ground is drawn into a copy at coastRes backing pixels per CSS px (1.5 by default) and scaled
-  // up onto the canvas: their big soft paths cost the GPU by the pixel. At 1 the faint shoreline and waves visibly
-  // soften, so the default keeps some of the resolution back. The live layer is drawn over them at full resolution. At coastRes >= dpr they go straight on.
-  let coastCanvas = null, coastCtx = null;
+  // The ground and the live layer both go straight onto the canvas at its full resolution. The ground is never drawn
+  // small and scaled up: where the canvas is rasterised in software (no GPU, or a blocklisted one) that scaled copy of
+  // a dense screen's whole backing store costs more than the ground itself, enough to hold a 4K screen under 20 fps,
+  // and on a GPU it saves nothing measurable.
   const paint = () => {
-    const res = groundRes();
-    if (res >= dpr) drawGround(ctx, world, ink, paper, water);
-    else {
-      if (!coastCtx) { coastCanvas = document.createElement('canvas'); coastCtx = coastCanvas.getContext('2d', { alpha: false }); }
-      const cw = Math.max(1, Math.round(vw * res)), ch = Math.max(1, Math.round(vh * res));
-      if (coastCanvas.width !== cw || coastCanvas.height !== ch) { coastCanvas.width = cw; coastCanvas.height = ch; }
-      coastCtx.setTransform(res, 0, 0, res, 0, 0);
-      drawGround(coastCtx, world, ink, paper, water);
-      ctx.imageSmoothingEnabled = true; ctx.drawImage(coastCanvas, 0, 0, vw, vh);
-    }
+    drawGround(ctx, world, ink, paper, water);
     drawLive(ctx, world, ink, paper, GOLD);
   };
+  // A slow frame is stepped through in full (step cuts it into passes), so the pond keeps the wall clock down to 4 fps;
+  // only a longer stall, a debugger or a frozen page, is let go.
   let alive = true, raf = 0, last = performance.now();
   const tick = (now) => {
     raf = 0;
     if (!alive || document.hidden) return;
     raf = requestAnimationFrame(tick);
-    const dt = Math.min(0.05, Math.max(0, (now - last) / 1000)); last = now;
+    const dt = Math.min(0.25, Math.max(0, (now - last) / 1000)); last = now;
     inkAge += dt; if (inkAge > 1) readInk();
     step(world, dt);
     relayWater(now);
@@ -1790,7 +1789,7 @@ export function mount(container) {
       alive = false; if (raf) cancelAnimationFrame(raf); ro.disconnect();
       document.removeEventListener('visibilitychange', onVisible); reducedQ?.removeEventListener?.('change', onReduced);
       if (dev) dev.destroy();
-      canvas.width = canvas.height = 0; if (coastCanvas) coastCanvas.width = coastCanvas.height = 0; if (waterCanvas) waterCanvas.width = waterCanvas.height = 0; if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+      canvas.width = canvas.height = 0; if (waterCanvas) waterCanvas.width = waterCanvas.height = 0; if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
     },
   };
   if (new URLSearchParams(location.search).has('dev')) import('./pond-dev.js').then((m) => { if (alive) dev = m.mount(api); }).catch((e) => console.error('pond-dev', e));
