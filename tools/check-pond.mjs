@@ -1,12 +1,11 @@
-// Checks pond.js's simulation headless: the swimming stroke, the islands, the treats, and reduced motion.
+// Checks pond.js's simulation headless: the swimming stroke, the islands, the treats, and the things on the water.
 //
 // The pond's step() is a function of the world, dt and the world's own seeded random source, so every run below is
 // the same run every time. None of these properties shows in a still frame: a fish that clips an island for one frame,
-// a school that circles a treat without ever taking it, or a reduced-motion school that still bursts all look fine in
-// a screenshot and wrong in motion.
+// or a school that circles a treat without ever taking it both look fine in a screenshot and wrong in motion.
 //
-// The checks are lettered in the order they were written. (l), the reeds, and (o), the dragonfly, went with the
-// things they checked; the other letters keep their names, so the gaps are deliberate.
+// The checks are lettered in the order they were written. (l), the reeds, (o), the dragonfly, and the island check
+// (vi) went with the things they checked; the other letters keep their names, so the gaps are deliberate.
 //
 // Run with `npm run check`. Exits non-zero and prints every failure it found.
 
@@ -92,8 +91,8 @@ for (const seed of [2, 19]) {
 
 // a pond with the two islands placed as the home view places them, and a cursor sweeping through
 const ISLANDS = [{ x: 260, y: 220, w: 160, h: 300 }, { x: 820, y: 300, w: 220, h: 220 }];
-function pond(seed, reduced) {
-  const w = createWorld(defaults(), { w: 1280, h: 800, seed, reduced });
+function pond(seed) {
+  const w = createWorld(defaults(), { w: 1280, h: 800, seed });
   setIslands(w, ISLANDS);
   return w;
 }
@@ -101,7 +100,7 @@ function pond(seed, reduced) {
 // (b) no fish ever enters an island, whatever the school is doing: milling, chasing treats dropped behind the
 // islands, or scattering from a fast cursor
 for (const seed of [1, 7, 42]) {
-  const w = pond(seed, false);
+  const w = pond(seed);
   let worst = Infinity, where = '';
   for (let s = 0; s < 60 * 60; s++) {
     if (s % 240 === 0) dropTreat(w, [340, 930, 600, 150][(s / 240) % 4], [380, 410, 90, 700][(s / 240) % 4]);
@@ -120,7 +119,7 @@ for (const seed of [1, 7, 42]) {
 
 // an island follows its object's outline on screen: the object always stands on land, the coast follows a turning
 // object within a few follow times yet changes slowly, the swell distorts it well past the object's own profile, a box
-// stands in when the object shows nothing, and reduced motion freezes the swell but not the following
+// stands in when the object shows nothing
 {
   const has = typeof M.setOutlines === 'function';
   const CX = 400, CY = 400, HALF = 60;
@@ -146,7 +145,7 @@ for (const seed of [1, 7, 42]) {
     return 60;
   };
   const SQ_BOX = { x: CX - HALF, y: CY - HALF, w: 2 * HALF, h: 2 * HALF }, RC_BOX = { x: RX - 150, y: RY - 20, w: 300, h: 40 };
-  const quiet = (reduced) => { const p = defaults(); p.count = 0; p.countTouch = 0; return createWorld(p, { w: 1440, h: 900, seed: 5, reduced }); };
+  const quiet = () => { const p = defaults(); p.count = 0; p.countTouch = 0; return createWorld(p, { w: 1440, h: 900, seed: 5 }); };
   const BUF = new Float32Array(512);
   // least land in px between any outline point and the coast
   const clearance = (o, fn) => {
@@ -169,12 +168,12 @@ for (const seed of [1, 7, 42]) {
   if (!has) {
     const [o] = M.islandsFrom([SQ_BOX]); o.time = 10;
     dist = distortion(o, (k) => M.offsetRay(o.a, o.b, M.MARGIN, (k / 360) * TAU));
-    fail('islands should follow outline functions (setOutlines); (i), (ii), (iii), (v), (vi) cannot run on this model');
+    fail('islands should follow outline functions (setOutlines); (i), (ii), (iii), (v) cannot run on this model');
   } else {
     const P = defaults();
     // (i) on land, under a turning square and a tilting thin rectangle
     {
-      const w = quiet(false);
+      const w = quiet();
       const sq = square(() => 0.25 * w.t), rc = rect(() => 0.5 * Math.sin(0.4 * w.t));
       M.setOutlines(w, [sq, rc]); setIslands(w, [SQ_BOX, RC_BOX]);
       let low = [Infinity, Infinity];
@@ -184,22 +183,22 @@ for (const seed of [1, 7, 42]) {
     }
     // (ii) follows: turn the square 45 degrees; within 3 follow times the profile is within 2 px of its new target
     {
-      const w = quiet(false); let a = 0;
+      const w = quiet(); let a = 0;
       M.setOutlines(w, [square(() => a)]); setIslands(w, [SQ_BOX]);
       for (let s = 0; s < 60 * 3; s++) step(w, DT);
       a = Math.PI / 4;
       for (let s = 0; s < Math.ceil((3 * P.follow) / DT); s++) step(w, DT);
-      const o = w.islands[0], fresh = M.makeIsland(0, SQ_BOX); M.updateIsland(fresh, square(() => a), 0, P, false, w.t);
+      const o = w.islands[0], fresh = M.makeIsland(0, SQ_BOX); M.updateIsland(fresh, square(() => a), 0, P, w.t);
       let off = 0; for (let j = 0; j < M.BEARINGS; j++) off = Math.max(off, Math.abs(o.S[j] - fresh.S[j]));
       if (!(off <= 2)) fail(`(ii) after ${(3 * P.follow).toFixed(2)} s the coast should be within 2 px of the turned square's, is ${off.toFixed(2)} px off`);
       // and it did move: the target for the turned square differs from the upright one
-      const up = M.makeIsland(0, SQ_BOX); M.updateIsland(up, square(() => 0), 0, P, false, w.t);
+      const up = M.makeIsland(0, SQ_BOX); M.updateIsland(up, square(() => 0), 0, P, w.t);
       let moved = 0; for (let j = 0; j < M.BEARINGS; j++) moved = Math.max(moved, Math.abs(up.S[j] - fresh.S[j]));
       metric(`islands: follow residue ${off.toFixed(2)} px of a ${moved.toFixed(2)} px change`);
     }
     // (iii) smooth: under a square turning at the tesseract's rate the coast changes at most 12 px/s at any bearing
     {
-      const w = quiet(false);
+      const w = quiet();
       M.setOutlines(w, [square(() => 0.25 * w.t)]); setIslands(w, [SQ_BOX]);
       for (let s = 0; s < 60 * 3; s++) step(w, DT);
       let prev = ring(w.islands[0]), fast = 0;
@@ -208,7 +207,7 @@ for (const seed of [1, 7, 42]) {
       metric(`islands: fastest coast change ${fast.toFixed(2)} px/s`);
     }
     {
-      const w = quiet(false);
+      const w = quiet();
       M.setOutlines(w, [square(() => 0)]); setIslands(w, [SQ_BOX]);
       for (let s = 0; s < 60 * 10; s++) step(w, DT);
       const o = w.islands[0];
@@ -216,27 +215,12 @@ for (const seed of [1, 7, 42]) {
     }
     // (v) fallback: an object that shows nothing still has its box on land
     {
-      const w = quiet(false), B = { x: 100, y: 100, w: 200, h: 120 };
+      const w = quiet(), B = { x: 100, y: 100, w: 200, h: 120 };
       M.setOutlines(w, [() => 0]); setIslands(w, [B]);
       for (let s = 0; s < 60; s++) step(w, DT);
       const corners = (out) => { const q = [B.x, B.y, B.x + B.w, B.y, B.x + B.w, B.y + B.h, B.x, B.y + B.h]; q.forEach((v, j) => (out[j] = v)); return 4; };
       const low = clearance(w.islands[0], corners);
       if (!(low >= P.floor - 1e-3)) fail(`(v) an island with no outline should keep its box ${P.floor} px inside the coast, came within ${low.toFixed(2)} px`);
-    }
-    // (vi) reduced motion: the swell holds still, yet the coast still follows its object
-    {
-      const w = quiet(true); let a = 0;
-      M.setOutlines(w, [square(() => a)]); setIslands(w, [SQ_BOX]);
-      for (let s = 0; s < 60 * 10; s++) step(w, DT);
-      const c0 = ring(w.islands[0]);
-      for (let s = 0; s < 60 * 5; s++) step(w, DT);
-      const c1 = ring(w.islands[0]); let drift = 0; for (let k = 0; k < 360; k++) drift = Math.max(drift, Math.abs(c1[k] - c0[k]));
-      if (!(drift <= 1e-3)) fail(`(vi) reduced motion: a still object's coast should hold, moved ${drift.toFixed(3)} px in 5 s`);
-      a = Math.PI / 4;
-      for (let s = 0; s < 60 * 8; s++) step(w, DT);
-      const o = w.islands[0], fresh = M.makeIsland(0, SQ_BOX); M.updateIsland(fresh, square(() => a), 0, w.params, true, w.t);
-      let off = 0; for (let j = 0; j < M.BEARINGS; j++) off = Math.max(off, Math.abs(o.S[j] - fresh.S[j]));
-      if (!(off <= 2)) fail(`(vi) reduced motion: the coast should still follow a turned object, ${off.toFixed(2)} px off after 8 s`);
     }
   }
   if (!(dist.span >= 0.15)) fail(`(iv) the swell should span at least 0.15 of the mean radius, spans ${dist.span.toFixed(3)}`);
@@ -254,11 +238,11 @@ const CLAMP = (() => {
 })();
 const frame = (w, dt) => step(w, Math.min(CLAMP, dt));
 
-// (c) a treat dropped within sensing range is eaten within a bounded time, and a reduced-motion school still eats. The
+// (c) a treat dropped within sensing range is eaten within a bounded time. The
 // time is wall-clock seconds at frames of dt, which defaults to the 60 fps DT; the school always settles at DT, so
 // every frame rate sees the same drop.
-function eatTime(reduced, dist, seed, dt = DT) {
-  const w = pond(seed, reduced);
+function eatTime(dist, seed, dt = DT) {
+  const w = pond(seed);
   for (let s = 0; s < 120; s++) step(w, DT); // let the school settle a moment first
   let cx = 0, cy = 0; for (const f of w.fish) { cx += f.x; cy += f.y; } cx /= w.fish.length; cy /= w.fish.length;
   // the fish nearest the school's middle, and a treat off to its side, so only seeking reaches it
@@ -271,10 +255,8 @@ function eatTime(reduced, dist, seed, dt = DT) {
   return Infinity;
 }
 for (const seed of [3, 11]) {
-  const t = eatTime(false, 150, seed);
+  const t = eatTime(150, seed);
   if (!(t < 4)) fail(`seed ${seed}: a treat 150 px to the side should be eaten within 4 s, took ${t}`);
-  const tr = eatTime(true, 50, seed);
-  if (!(tr < 8)) fail(`seed ${seed}: under reduced motion a treat 50 px to the side should be eaten before it sinks, took ${tr}`);
 }
 
 // A slow machine keeps the wall clock: at 10 fps and at 4 fps, two seconds of frames advance the pond two seconds, and
@@ -282,32 +264,19 @@ for (const seed of [3, 11]) {
 // quarter second, whichever is larger; the measured gap is under a tenth of a second, one 10 fps frame, while a pond
 // that loses time takes about twice as long.
 for (const dt of [0.1, 0.25]) {
-  const w = pond(3, false);
+  const w = pond(3);
   for (let s = 0, n = Math.round(2 / dt); s < n; s++) frame(w, dt);
   if (!(Math.abs(w.t - 2) <= 1e-9)) fail(`at frames of ${dt} s, two seconds of frames should advance the pond 2 s, advanced ${w.t.toFixed(3)} s`);
 }
 for (const seed of [3, 11]) {
-  const fast = eatTime(false, 150, seed), slow = eatTime(false, 150, seed, 0.1);
+  const fast = eatTime(150, seed), slow = eatTime(150, seed, 0.1);
   metric(`seed ${seed}: a treat 150 px to the side is eaten in ${fast.toFixed(3)} s at 60 fps, ${slow.toFixed(3)} s at 10 fps`);
   if (!(Math.abs(slow - fast) <= Math.max(0.25 * fast, 0.25))) fail(`seed ${seed}: at 10 fps a treat should be eaten about as soon as at 60 fps, took ${slow.toFixed(3)} s against ${fast.toFixed(3)} s`);
 }
 
-// (d) under reduced motion nothing bursts: treats and a fast cursor leave every fish below the calm cruise speed
+// treats set a school bursting
 {
-  const w = pond(5, true);
-  let top = 0;
-  for (let s = 0; s < 60 * 30; s++) {
-    if (s % 90 === 0) dropTreat(w, 200 + (s * 7) % 900, 100 + (s * 13) % 600);
-    const k = s % 120; setPointer(w, 50 + k * 60, 300 + k, k < 20);
-    step(w, DT);
-    for (const f of w.fish) top = Math.max(top, f.sp);
-  }
-  if (!(top < w.params.cruise)) fail(`reduced motion: top speed ${top.toFixed(1)} px/s should stay below the cruise ${w.params.cruise}`);
-}
-
-// and a full-motion school does burst, or (d) proves nothing
-{
-  const w = pond(5, false);
+  const w = pond(5);
   let top = 0;
   for (let s = 0; s < 60 * 10; s++) { if (s % 90 === 0) dropTreat(w, 200 + (s * 7) % 900, 100 + (s * 13) % 600); step(w, DT); for (const f of w.fish) top = Math.max(top, f.sp); }
   if (!(top > w.params.cruise * 2)) fail(`full motion: a treat should set fish bursting, top speed only ${top.toFixed(1)} px/s`);
@@ -317,20 +286,20 @@ for (const seed of [3, 11]) {
 // of the pointer's steps; a press that never moves drops one; a cancelled stroke drops nothing more; and a long line
 // keeps its newest treats up to the cap.
 {
-  const w = pond(8, false), sp = w.params.spacing;
+  const w = pond(8), sp = w.params.spacing;
   strokeStart(w, 100, 770); for (let x = 107; x <= 320; x += 7) strokeTo(w, x, 770); strokeTo(w, 320, 770); strokeEnd(w); // below both islands, so no treat rolls to a shore
   const want = 1 + Math.floor(220 / sp);
   if (w.treats.length !== want) fail(`a 220 px drag should drop ${want} treats, dropped ${w.treats.length}`);
   const gaps = w.treats.slice(1).map((t, i) => t.x - w.treats[i].x);
   if (gaps.some((g) => Math.abs(g - sp) > 1e-6)) fail(`treats along a drag should sit ${sp} px apart, gaps ${gaps.map((g) => g.toFixed(1)).join(',')}`);
-  const c = pond(8, false); strokeStart(c, 600, 600); strokeTo(c, 603, 601); strokeEnd(c);
+  const c = pond(8); strokeStart(c, 600, 600); strokeTo(c, 603, 601); strokeEnd(c);
   if (c.treats.length !== 1) fail(`a press without a drag should drop one treat, dropped ${c.treats.length}`);
-  const k = pond(8, false); strokeStart(k, 600, 600); strokeTo(k, 610, 600); strokeCancel(k); strokeTo(k, 700, 600); strokeEnd(k);
+  const k = pond(8); strokeStart(k, 600, 600); strokeTo(k, 610, 600); strokeCancel(k); strokeTo(k, 700, 600); strokeEnd(k);
   if (k.treats.length !== 0) fail(`a cancelled stroke should drop nothing, dropped ${k.treats.length}`);
-  const m = pond(8, false); strokeStart(m, 40, 700); strokeTo(m, 1240, 700); strokeEnd(m);
+  const m = pond(8); strokeStart(m, 40, 700); strokeTo(m, 1240, 700); strokeEnd(m);
   if (m.treats.length !== m.params.max || !(m.treats[m.treats.length - 1].x > 1200)) fail(`a long line should keep the newest ${m.params.max} treats, kept ${m.treats.length}`);
   // and a line of treats draws a shoal along it: a line laid ahead of the nearest shoal is mostly eaten
-  const e = pond(4, false);
+  const e = pond(4);
   for (let s = 0; s < 120; s++) step(e, DT);
   const f0 = e.fish[0];
   strokeStart(e, f0.x, f0.y); for (let d = 10; d <= 300; d += 10) strokeTo(e, f0.x + Math.cos(f0.h) * d, f0.y + Math.sin(f0.h) * d); strokeEnd(e);
@@ -469,7 +438,7 @@ for (const m of fission.filter((f) => f.seed === 2 || f.seed === 19)) {
   else {
     const { islandAt } = M;
     const p = defaults(); p.count = 0; p.countTouch = 0;
-    const w = createWorld(p, { w: 1440, h: 900, seed: 7, reduced: true });
+    const w = createWorld(p, { w: 1440, h: 900, seed: 7 });
     const RX = 900, RY = 450, L = 150, T = 20; let ang = 0;
     const bar = (out) => {   // a thin bar, 300 x 40, turned by ang
       const c = Math.cos(ang), s = Math.sin(ang), q = [[-L, -T], [L, -T], [L, T], [-L, T]]; let n = 0;
@@ -654,7 +623,7 @@ for (const seed of [2, 19]) {
 // coarse pointer) through three simulated minutes of cursor passes and treats: every strider stays on open water (off
 // the pads, 20 px off the land, 20 px inside the edges); each dart runs 20 to 60 px at the dart speed and starts exactly
 // one dimple (a ripple of size 8 at the strider); with the cursor away every pause lasts 0.5 to 3 s; the cursor within
-// 60 px sends a pausing strider darting away from it. Under reduced motion no strider moves and no dimple starts.
+// 60 px sends a pausing strider darting away from it.
 for (const seed of [2, 19]) {
   for (const cursor of [true, false]) {
     const p = defaults(); p.count = 12;
@@ -698,11 +667,6 @@ for (const seed of [2, 19]) {
     s.dart = false; s.left = 10;
     setPointer(w, s.x + 30, s.y, true); step(w, DT);
     if (!s.dart || !(Math.cos(s.a) < 0)) fail(`(n) the cursor 30 px from a pausing strider should send it darting away (darting ${s.dart}, heading ${s.a.toFixed(2)})`);
-    const r = createWorld(p, { w: 1440, h: 900, seed: 2, reduced: true }); setIslands(r, ISL2); step(r, DT);
-    const at = r.striders.map((t) => [t.x, t.y]), rip = r.ripples.length;
-    for (let k = 0; k < 60 * 20; k++) { setPointer(r, at[0][0] + 20, at[0][1], k % 60 < 5); step(r, DT); }
-    const moved = Math.max(0, ...r.striders.map((t, i) => Math.hypot(t.x - at[i][0], t.y - at[i][1])));
-    if (moved > 1e-6 || r.ripples.length !== rip) fail(`(n) under reduced motion striders should stay still and start no dimple: moved ${moved.toFixed(2)} px, ${r.ripples.length - rip} ripples`);
   }
 }
 
@@ -973,4 +937,4 @@ for (const [W, H, coarse] of [[1920, 1080, false], [1280, 720, false], [1920, 10
 }
 
 if (failures.length) { for (const f of failures) console.error('FAIL ' + f); process.exit(1); }
-console.log('check-pond: stroke, islands, treats, reduced motion, koi, lily pads, flowers, striders, stones and their layout, the islets, the pond floor, the marks on the water hold');
+console.log('check-pond: stroke, islands, treats, koi, lily pads, flowers, striders, stones and their layout, the islets, the pond floor, the marks on the water hold');
