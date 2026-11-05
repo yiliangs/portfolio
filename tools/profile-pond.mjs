@@ -17,9 +17,6 @@
 // - Each scenario gets a fresh tab: viewport and DPR by Emulation.setDeviceMetricsOverride, CPU throttle by
 //   Emulation.setCPUThrottlingRate, the tab brought to the front with focus emulated, and sampling starts only once
 //   rAF frames are seen to advance (a backgrounded tab reports stalled numbers without erroring).
-// - Every tab emulates prefers-reduced-motion: no-preference (Emulation.setEmulatedMedia), whatever the machine
-//   reports, so the pond always runs in full motion: under reduced motion the fish crawl and the striders hold still, and
-//   the profile would measure a different pond. The summary line says so.
 // - Per scenario it reports: step() and draw() JS time per frame, the rAF frame interval distribution from a probe
 //   loop that runs in both modes, main-thread busy share (Performance.getMetrics TaskDuration), and from a trace the
 //   busy time per frame of the renderer main thread, the GPU process main thread (where 2D canvas commands raster)
@@ -36,7 +33,6 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
-const REDUCED = 'no-preference'; // the prefers-reduced-motion every tab emulates
 
 // ---------- options ----------
 const args = Object.fromEntries(process.argv.slice(2).map((a) => { const m = a.match(/^--([^=]+)(?:=(.*))?$/); return m ? [m[1], m[2] ?? true] : [a, true]; }));
@@ -212,14 +208,12 @@ async function runScenario(sc) {
     await s('Emulation.setFocusEmulationEnabled', { enabled: true });
     await s('Emulation.setDeviceMetricsOverride', { width: sc.view.width, height: sc.view.height, deviceScaleFactor: sc.view.dpr, mobile: false });
     await s('Emulation.setCPUThrottlingRate', { rate: sc.throttle });
-    await s('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: REDUCED }] });
     await s('Page.addScriptToEvaluateOnNewDocument', { source: initScript({ off: sc.mode === 'off', ablate: sc.ablate ? ablation(sc.ablate) : [] }) });
     await s('Page.navigate', { url: BASE + '/' });
     // wait for the pond (or its stub) to mount, then for frames to be seen advancing
     let ready = false;
     for (let i = 0; i < 300 && !ready; i++) { await sleep(100); ready = await ev('!!globalThis.__pondApi').catch(() => false); }
     if (!ready) throw new Error('the pond never mounted');
-    if (await ev('matchMedia("(prefers-reduced-motion: reduce)").matches')) throw new Error('the tab still reports reduced motion');
     const n0 = await ev('__prof.n'); await sleep(1000); const n1 = await ev('__prof.n');
     if (n1 - n0 < 10) throw new Error(`frames are not advancing (${n1 - n0} in 1 s); the tab is backgrounded or stalled`);
     if (sc.ablate && ablation(sc.ablate).includes('rings')) await ev('__pondApi.params.rings = 0');
@@ -315,7 +309,7 @@ for (const throttle of THROTTLES) for (const view of VIEW_KEYS) for (const load 
   for (const mode of MODES) scenarios.push({ throttle, viewKey: view, view: VIEWS[view], load, mode });
   for (const ablate of ABLATE) scenarios.push({ throttle, viewKey: view, view: VIEWS[view], load, mode: 'on', ablate });
 }
-console.log(`pond profile: ${scenarios.length} scenarios x ${SECONDS} s; Chrome ${gpu.headless ? 'headless' : 'headed'}; GPU ${gpu.vendor} / ${gpu.device}; 2d_canvas=${gpu.canvas2d} gpu_compositing=${gpu.compositing} rasterization=${gpu.rasterization}; prefers-reduced-motion emulated as ${REDUCED}`);
+console.log(`pond profile: ${scenarios.length} scenarios x ${SECONDS} s; Chrome ${gpu.headless ? 'headless' : 'headed'}; GPU ${gpu.vendor} / ${gpu.device}; 2d_canvas=${gpu.canvas2d} gpu_compositing=${gpu.compositing} rasterization=${gpu.rasterization}`);
 
 const results = [];
 for (const sc of scenarios) {

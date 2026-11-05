@@ -49,7 +49,6 @@ export const PARAMS = {
     turnBurst: [5, 0, 15, 0.1, 'extra turn rate at full burst, rad/s'],
     calm: [1.1, 0.2, 6, 0.1, 'burst decay, s'],
     whim: [0.05, 0, 0.5, 0.005, 'spontaneous darts per fish per s'],
-    reduced: [0.25, 0.05, 0.95, 0.05, 'speed under reduced motion, of cruise'],
   },
   body: {
     length: [24, 10, 60, 1, 'mean fish length, px'],
@@ -176,7 +175,7 @@ function markKoi(w) {
 // constant follow, so a turning object moves its coast without shimmer. On top of S lies a swell that only ever pushes
 // outward: harmonics 2..9 weighted 1/k, each drifting round the coast at its own slow rate and breathing on its own
 // slower cycle, stretched each frame to span rough times the island's mean radius. Phases and rates come from the island's index, so an
-// island moves the same way across reloads; its clock is the world's, frozen under reduced motion.
+// island moves the same way across reloads; its clock is the world's.
 // The coast is tabulated once a frame at the BEARINGS bearings (C) and read between them. This is the one representation of
 // an island: containment, push-out, steering, treats, the land and the waves all read it.
 export const BEARINGS = 96;
@@ -243,11 +242,11 @@ function hullReach(cx, cy, t, m) {
   return r >= 0 ? r : h;
 }
 // One frame of an island: its outline from fn (or its box), then centre, profile, easing and the tabulated coast.
-export function updateIsland(o, fn, dt, p, reduced, time) {
+export function updateIsland(o, fn, dt, p, time) {
   let n = fn ? fn(OUT) | 0 : 0;
   if (n <= 0) n = boxPoints(o.box, OUT);
   n = Math.min(n, OUT.length >> 1);
-  const tau = reduced ? Math.max(1.5, p.follow) : p.follow, e = o.fresh ? 1 : 1 - Math.exp(-dt / Math.max(1e-3, tau));
+  const e = o.fresh ? 1 : 1 - Math.exp(-dt / Math.max(1e-3, p.follow));
   let sx = 0, sy = 0; for (let j = 0; j < n; j++) { sx += OUT[2 * j]; sy += OUT[2 * j + 1]; }
   o.dx += (sx / n - o.bx - o.dx) * e; o.dy += (sy / n - o.by - o.dy) * e; o.x = o.bx + o.dx; o.y = o.by + o.dy;
   // the convex hull round the centre. Binning the points themselves by bearing notched the profile wherever an inner
@@ -271,7 +270,7 @@ export function updateIsland(o, fn, dt, p, reduced, time) {
     o.S[j] = Math.max(o.S[j] + (T - o.S[j]) * e, lo); mean += o.S[j];
   }
   o.mean = mean / BEARINGS; o.fresh = false;
-  if (!reduced) o.time = time;
+  o.time = time;
   // the swell, stretched round the ring to run from 0 to 1, so rough is the share of the radius it spans
   let lo = Infinity, hi = -Infinity;
   for (let j = 0; j < BEARINGS; j++) { const g = (SW[j] = swell(o, (j / BEARINGS) * TAU)); lo = Math.min(lo, g); hi = Math.max(hi, g); }
@@ -371,7 +370,7 @@ function spawnFish(w, f, x, y) {
   f.x = x + (r() - 0.5) * 70; f.y = y + (r() - 0.5) * 70;
   for (const o of w.islands) if (shoreR(o, f.x, f.y, p.shore) < 1) { onShore(o, f.x, f.y, p.shore, PT); f.x = PT.x; f.y = PT.y; }
   f.h = r() * TAU;
-  f.sp = p.cruise * (w.reduced ? p.reduced : f.pace) * (0.6 + 0.6 * r()); f.en = 0; f.flee = 0; f.fx = 0; f.fy = 0;
+  f.sp = p.cruise * f.pace * (0.6 + 0.6 * r()); f.en = 0; f.flee = 0; f.fx = 0; f.fy = 0;
   f.phase = r() * TAU; f.fin = r() * TAU; f.wa = 0; f.idle = 0; f.cs = -2;
   f.left = 0; f.top = 0; f.hz = 0; f.sweep = 0; f.amp = r() * 0.5; f.low = p.low * (0.85 + 0.3 * r());
   f.goal = null; f.keep = 0; f.will = 1; f.food = false;
@@ -382,11 +381,11 @@ function spawnFish(w, f, x, y) {
   return f;
 }
 
-// A world: the pond's whole state. opts: { w, h, seed, coarse, reduced }.
+// A world: the pond's whole state. opts: { w, h, seed, coarse }.
 export function createWorld(params, opts = {}) {
   const w = {
     params, w: opts.w || 1, h: opts.h || 1, t: 0, rand: rng(opts.seed == null ? 1 : opts.seed),
-    coarse: !!opts.coarse, reduced: !!opts.reduced,
+    coarse: !!opts.coarse,
     fish: [], islands: [], outlines: [], treats: [], ripples: [], stroke: null, fed: [],
     ptr: { x: 0, y: 0, on: false, px: 0, py: 0, seen: false, speed: 0 },
     eaten: 0,
@@ -421,7 +420,7 @@ export function resizeWorld(w, width, height) {
 export function setIslands(w, boxes) {
   const list = boxes || [];
   w.islands.length = Math.min(w.islands.length, list.length);
-  list.forEach((b, i) => { if (w.islands[i]) placeBox(w.islands[i], b); else { const o = makeIsland(i, b); updateIsland(o, w.outlines[i], 0, w.params, w.reduced, w.t); w.islands.push(o); } });
+  list.forEach((b, i) => { if (w.islands[i]) placeBox(w.islands[i], b); else { const o = makeIsland(i, b); updateIsland(o, w.outlines[i], 0, w.params, w.t); w.islands.push(o); } });
   // stones and pads laid out before the page had any islands are laid out again round the first ones, while the pond is new
   if (!w.laidIsl && w.islands.length && w.t < 1) layPond(w);
 }
@@ -1003,48 +1002,46 @@ function flowAt(w, x, y) {
 }
 function stepPads(w, dt) {
   const p = w.params, P = w.pads, r = w.prand;
-  if (!w.reduced) {
-    const drag = Math.exp(-dt / PAD_DRAG);
-    for (const q of P) {
-      // a ripple ring that passed under the pad's centre this step pushes it outward and gives it a turn
-      for (const g of w.ripples) {
-        const dx = q.x - g.x, dy = q.y - g.y, d = Math.hypot(dx, dy);
-        if (d > 1e-6 && d <= rippleR(g, g.age) && (g.age - dt <= 0 || d > rippleR(g, g.age - dt))) {
-          const k = g.k * Math.min(1, g.size / RIPPLE_FULL);
-          q.vx += (dx / d) * p.push * k; q.vy += (dy / d) * p.push * k; q.va += (r() - 0.5) * 0.8 * k; q.since = 0;
-        }
+  const drag = Math.exp(-dt / PAD_DRAG);
+  for (const q of P) {
+    // a ripple ring that passed under the pad's centre this step pushes it outward and gives it a turn
+    for (const g of w.ripples) {
+      const dx = q.x - g.x, dy = q.y - g.y, d = Math.hypot(dx, dy);
+      if (d > 1e-6 && d <= rippleR(g, g.age) && (g.age - dt <= 0 || d > rippleR(g, g.age - dt))) {
+        const k = g.k * Math.min(1, g.size / RIPPLE_FULL);
+        q.vx += (dx / d) * p.push * k; q.vy += (dy / d) * p.push * k; q.va += (r() - 0.5) * 0.8 * k; q.since = 0;
       }
-      // rings that follow close on each other (a treat dropped, then eaten) do not stack past one push
-      const m = Math.hypot(q.vx, q.vy), cap = p.push; if (m > cap) { q.vx *= cap / m; q.vy *= cap / m; }
-      // the drift and the soft pushes, bounded together so a pad never hurries on its own account
-      const h = flowAt(w, q.x, q.y), s = p.drift * (1 + 0.33 * Math.sin(0.13 * w.t + q.ph));
-      // the tether: about 12 px of wander at the mean drift before the spring holds the pad to its spot
-      let ux = Math.cos(h) * s + (q.hx - q.x) * PAD_TETHER, uy = Math.sin(h) * s + (q.hy - q.y) * PAD_TETHER;
-      for (const o of P) {
-        if (o === q) continue;
-        const dx = q.x - o.x, dy = q.y - o.y, d = Math.hypot(dx, dy) || 1e-6, room = d - q.r - o.r, want = PAD_APART * Math.min(q.r, o.r);
-        if (room < want) { const k = Math.min(1.5, (want - room) / want) * 4; ux += (dx / d) * k; uy += (dy / d) * k; }
-      }
-      for (const o of w.islands) {
-        const gap = outerGap(o, q.x, q.y, q.r + CLEAR, w.params);
-        if (gap < 30) { shoreNormal(o, q.x, q.y, NRM); const k = Math.min(1.5, 1 - gap / 30) * 6; ux += NRM.x * k; uy += NRM.y * k; }
-      }
-      for (const o of w.rocks) {
-        const gap = discGap(o, q.x, q.y, q.r, NRM);
-        if (gap < 30) { const k = Math.min(1.5, 1 - gap / 30) * 6; ux += NRM.x * k; uy += NRM.y * k; }
-      }
-      const e = PAD_EDGE + q.r + 30;
-      if (q.x < e) ux += ((e - q.x) / 30) * 3; else if (q.x > w.w - e) ux -= ((q.x - (w.w - e)) / 30) * 3;
-      if (q.y < e) uy += ((e - q.y) / 30) * 3; else if (q.y > w.h - e) uy -= ((q.y - (w.h - e)) / 30) * 3;
-      const um = Math.hypot(ux, uy); if (um > PAD_MAX) { ux *= PAD_MAX / um; uy *= PAD_MAX / um; }
-      q.x += (ux + q.vx) * dt; q.y += (uy + q.vy) * dt;
-      q.a += (0.06 * Math.sin(0.07 * w.t + q.ph) + q.va) * dt;
-      q.vx *= drag; q.vy *= drag; q.va *= drag; q.since += dt;
     }
+    // rings that follow close on each other (a treat dropped, then eaten) do not stack past one push
+    const m = Math.hypot(q.vx, q.vy), cap = p.push; if (m > cap) { q.vx *= cap / m; q.vy *= cap / m; }
+    // the drift and the soft pushes, bounded together so a pad never hurries on its own account
+    const h = flowAt(w, q.x, q.y), s = p.drift * (1 + 0.33 * Math.sin(0.13 * w.t + q.ph));
+    // the tether: about 12 px of wander at the mean drift before the spring holds the pad to its spot
+    let ux = Math.cos(h) * s + (q.hx - q.x) * PAD_TETHER, uy = Math.sin(h) * s + (q.hy - q.y) * PAD_TETHER;
+    for (const o of P) {
+      if (o === q) continue;
+      const dx = q.x - o.x, dy = q.y - o.y, d = Math.hypot(dx, dy) || 1e-6, room = d - q.r - o.r, want = PAD_APART * Math.min(q.r, o.r);
+      if (room < want) { const k = Math.min(1.5, (want - room) / want) * 4; ux += (dx / d) * k; uy += (dy / d) * k; }
+    }
+    for (const o of w.islands) {
+      const gap = outerGap(o, q.x, q.y, q.r + CLEAR, w.params);
+      if (gap < 30) { shoreNormal(o, q.x, q.y, NRM); const k = Math.min(1.5, 1 - gap / 30) * 6; ux += NRM.x * k; uy += NRM.y * k; }
+    }
+    for (const o of w.rocks) {
+      const gap = discGap(o, q.x, q.y, q.r, NRM);
+      if (gap < 30) { const k = Math.min(1.5, 1 - gap / 30) * 6; ux += NRM.x * k; uy += NRM.y * k; }
+    }
+    const e = PAD_EDGE + q.r + 30;
+    if (q.x < e) ux += ((e - q.x) / 30) * 3; else if (q.x > w.w - e) ux -= ((q.x - (w.w - e)) / 30) * 3;
+    if (q.y < e) uy += ((e - q.y) / 30) * 3; else if (q.y > w.h - e) uy -= ((q.y - (w.h - e)) / 30) * 3;
+    const um = Math.hypot(ux, uy); if (um > PAD_MAX) { ux *= PAD_MAX / um; uy *= PAD_MAX / um; }
+    q.x += (ux + q.vx) * dt; q.y += (uy + q.vy) * dt;
+    q.a += (0.06 * Math.sin(0.07 * w.t + q.ph) + q.va) * dt;
+    q.vx *= drag; q.vy *= drag; q.va *= drag; q.since += dt;
   }
   // then hard limits, which the soft pushes above keep from ever acting in calm water: apart, off the land and the
   // stones, on screen.
-  // They also carry the pads through a resize or an island that moves under them, reduced motion or not
+  // They also carry the pads through a resize or an island that moves under them
   for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
     const a = P[i], b = P[j], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy), need = a.r + b.r;
     if (d >= need) continue;
@@ -1114,7 +1111,7 @@ function stepFlowers(w, dt) {
 // 0.5 to 3 s. Each dart starts with a dimple, a small faint ripple that the pads take like any other, scaled down. A
 // strider keeps to open water: a dart ends clear of the pads, 20 px off the land and 20 px inside the screen, and a pad
 // drifting onto it or a coast swelling under it pushes it aside, so it skates round them. The cursor within 60 px
-// sends it darting away. Under reduced motion they stay still. They draw from a seeded source of their own.
+// sends it darting away. They draw from a seeded source of their own.
 // strider: { x, y, a (heading), dart (true while darting), tx, ty (where the dart ends), len, left (s of pause left), darts }
 const striderTarget = (w) => Math.max(0, Math.round(w.coarse ? w.params.stridersTouch : w.params.striders));
 const STR_LAND = 20, STR_EDGE = 20, STR_PAD = 6, STR_HARD = 4, STR_FLEE = 60;
@@ -1149,16 +1146,14 @@ function stepStriders(w, dt) {
   }
   if (S.length > n) S.length = n;
   for (const s of S) {
-    if (!w.reduced) {
-      if (!s.dart && ptr.on && Math.hypot(s.x - ptr.x, s.y - ptr.y) < STR_FLEE) startDart(w, s, Math.atan2(s.y - ptr.y, s.x - ptr.x));
-      if (s.dart) {
-        // a dart whose end a pad has drifted over stops where it is
-        const dx = s.tx - s.x, dy = s.ty - s.y, d = Math.hypot(dx, dy), go = p.dart * dt;
-        if (d <= go || !striderFree(w, s.tx, s.ty)) { if (d <= go) { s.x = s.tx; s.y = s.ty; } s.dart = false; s.left = 0.5 + 2.5 * r(); }
-        else { s.x += (dx / d) * go; s.y += (dy / d) * go; }
-      } else if ((s.left -= dt) <= 0 && !startDart(w, s)) s.left = 0.5 + 2.5 * r();
-    }
-    // hard limits, reduced motion or not: off the pads and the stones, off the land, on screen
+    if (!s.dart && ptr.on && Math.hypot(s.x - ptr.x, s.y - ptr.y) < STR_FLEE) startDart(w, s, Math.atan2(s.y - ptr.y, s.x - ptr.x));
+    if (s.dart) {
+      // a dart whose end a pad has drifted over stops where it is
+      const dx = s.tx - s.x, dy = s.ty - s.y, d = Math.hypot(dx, dy), go = p.dart * dt;
+      if (d <= go || !striderFree(w, s.tx, s.ty)) { if (d <= go) { s.x = s.tx; s.y = s.ty; } s.dart = false; s.left = 0.5 + 2.5 * r(); }
+      else { s.x += (dx / d) * go; s.y += (dy / d) * go; }
+    } else if ((s.left -= dt) <= 0 && !startDart(w, s)) s.left = 0.5 + 2.5 * r();
+    // hard limits: off the pads and the stones, off the land, on screen
     for (const q of w.pads) if (discGap(q, s.x, s.y, STR_HARD, NRM) < 0) { s.x = q.x + NRM.x * (q.r + STR_HARD); s.y = q.y + NRM.y * (q.r + STR_HARD); }
     for (const q of w.rocks) if (discGap(q, s.x, s.y, STR_HARD, NRM) < 0) { s.x = q.x + NRM.x * (q.r + STR_HARD); s.y = q.y + NRM.y * (q.r + STR_HARD); }
     for (const o of w.islands) if (shoreGap(o, s.x, s.y, STR_LAND) < 0) { onShore(o, s.x, s.y, STR_LAND, PT); s.x = PT.x; s.y = PT.y; }
@@ -1181,7 +1176,7 @@ function kick(w, f, top, n, hz, sweep) { f.top = top; f.left = n; f.hz = hz; f.s
 function swim(w, f, want, dt) {
   const p = w.params, r = w.rand;
   // sudden urgency (a treat seen, a fright) does not wait for the thrust under way to finish: it speeds that one up
-  if (f.left > 0 && want * p.over > f.top * 1.3) { f.top = want * p.over; f.hz = w.reduced ? Math.min(1, thrustHz(f.top, f.len, p)) : thrustHz(f.top, f.len, p); f.left = Math.max(f.left, 2); }
+  if (f.left > 0 && want * p.over > f.top * 1.3) { f.top = want * p.over; f.hz = thrustHz(f.top, f.len, p); f.left = Math.max(f.left, 2); }
   if (f.left > 0) {
     f.sp += (f.top - f.sp) * (1 - Math.exp(-dt * p.kick));
     const beats = Math.min(f.left, f.hz * dt);
@@ -1196,7 +1191,7 @@ function swim(w, f, want, dt) {
       const urgent = f.en > 0.3, top = want * p.over;
       let n = urgent ? 2 + Math.floor(r() * 3) : 1 + Math.floor(r() * Math.max(1, Math.round(p.beats)));
       if (f.sp < want * 0.4) n++; // from near stillness it takes an extra beat to get going
-      kick(w, f, top, n, w.reduced ? Math.min(1, thrustHz(top, f.len, p)) : thrustHz(top, f.len, p), 0.8 + 0.4 * Math.min(1, f.en));
+      kick(w, f, top, n, thrustHz(top, f.len, p), 0.8 + 0.4 * Math.min(1, f.en));
     } else if (want <= 1 && r() < p.hover * dt) kick(w, f, Math.min(p.cruise * 0.25, 8), 1, 0.8, 0.5); // a holding beat
   }
   // the pectoral fins scull all the time, harder the slower the fish
@@ -1215,15 +1210,15 @@ export function step(w, dt) {
   const ptr = w.ptr;
   if (ptr.on && ptr.seen) { const d = Math.hypot(ptr.x - ptr.px, ptr.y - ptr.py); ptr.speed = d / dt; } else ptr.speed = 0;
   ptr.px = ptr.x; ptr.py = ptr.y; ptr.seen = ptr.on;
-  const startle = !w.reduced && ptr.speed > w.params.startle;
+  const startle = ptr.speed > w.params.startle;
   const k = Math.ceil(dt / PASS - 1e-9);
   for (let i = 0; i < k; i++) pass(w, dt / k, startle);
 }
 function pass(w, dt, startle) {
   const p = w.params, r = w.rand, F = w.fish, n = F.length, ptr = w.ptr;
   w.t += dt;
-  // the coasts follow their objects; the swell runs on the world's clock and holds still under reduced motion
-  for (const o of w.islands) updateIsland(o, w.outlines[o.i], dt, p, w.reduced, w.t);
+  // the coasts follow their objects; the swell runs on the world's clock
+  for (const o of w.islands) updateIsland(o, w.outlines[o.i], dt, p, w.t);
   if (n !== target(w)) populate(w);
   else if (w.koiN !== koiTarget(w) || w.koiOf !== n) markKoi(w);
 
@@ -1288,7 +1283,7 @@ function pass(w, dt, startle) {
     if (tb >= 0) {
       const t = w.treats[tb], d = tbd || 1;
       sx += ((t.x - f.x) / d) * 4; sy += ((t.y - f.y) / d) * 4;
-      if (!w.reduced) f.en = Math.max(f.en, 1 - 0.5 * (d / Math.max(1, p.sense)));
+      f.en = Math.max(f.en, 1 - 0.5 * (d / Math.max(1, p.sense)));
       if (!f.goal) f.goal = { x: 0, y: 0 };
       f.goal.x = t.x; f.goal.y = t.y; f.keep = 6; f.will = 1; f.food = true; f.idle = 0; f.pad = null;
     }
@@ -1314,8 +1309,7 @@ function pass(w, dt, startle) {
       }
     }
     // now and then a fish darts off on its own
-    if (!w.reduced && !(f.idle > 0) && r() < p.whim * dt) { f.en = Math.max(f.en, 0.3 + 0.3 * r()); f.wa = (r() - 0.5) * 2.4; }
-    if (w.reduced) f.en = 0;
+    if (!(f.idle > 0) && r() < p.whim * dt) { f.en = Math.max(f.en, 0.3 + 0.3 * r()); f.wa = (r() - 0.5) * 2.4; }
     // a calm fish now and then stops to hover a few seconds; anything urgent wakes it
     if (f.idle > 0) { f.idle -= dt; if (f.en > 0.2) f.idle = 0; }
     else if (f.en < 0.05 && !f.goal && !f.pad && r() < p.idle * dt) f.idle = p.idleFor * (0.3 + 0.7 * r());
@@ -1332,13 +1326,13 @@ function pass(w, dt, startle) {
     const aim = wrapAngle(Math.atan2(sy, sx) - f.h);
     // a sharp turn from a glide or a hover is one strong stroke, a C-start: the head whips round and a single beat
     // drives it out of the turn. A slow turn is just a curve, taken whether the tail is beating or not
-    if (!w.reduced && !(f.idle > 0) && Math.abs(aim) > 2 && f.cs <= -2 && f.left <= 0) { f.cs = 0.3; kick(w, f, Math.max(f.sp, p.cruise * f.pace) * p.over, 1, Math.min(p.maxHz, 3), 1.3); }
+    if (!(f.idle > 0) && Math.abs(aim) > 2 && f.cs <= -2 && f.left <= 0) { f.cs = 0.3; kick(w, f, Math.max(f.sp, p.cruise * f.pace) * p.over, 1, Math.min(p.maxHz, 3), 1.3); }
     f.cs -= dt;
-    const turn = (w.reduced ? p.turn * 0.6 : p.turn + p.turnBurst * (f.en + (f.cs > 0 ? 2 : 0))) * dt;
+    const turn = (p.turn + p.turnBurst * (f.en + (f.cs > 0 ? 2 : 0))) * dt;
     const dh = aim > turn ? turn : aim < -turn ? -turn : aim;
     f.h = wrapAngle(f.h + dh);
     // the speed it wants: its own pace, raised by urgency, nothing while it hovers
-    const want = hold >= 0 ? Math.min(hold, p.cruise) : f.idle > 0 ? 0 : w.reduced ? p.cruise * p.reduced : p.cruise * f.pace * (1 + f.en * (p.burst - 1));
+    const want = hold >= 0 ? Math.min(hold, p.cruise) : f.idle > 0 ? 0 : p.cruise * f.pace * (1 + f.en * (p.burst - 1));
     swim(w, f, want, dt);
     f.en *= decay;
   }
@@ -1384,7 +1378,7 @@ function pass(w, dt, startle) {
     const bite = f.len * 0.3 + 4;
     for (let k = 0; k < w.treats.length; k++) {
       const t = w.treats[k];
-      if (Math.hypot(t.x - f.x, t.y - f.y) < bite) { w.treats.splice(k, 1); ripple(w, t.x, t.y, 14, 0.9); w.eaten++; remember(w, t); if (!w.reduced) f.en = Math.max(f.en, 0.5); break; }
+      if (Math.hypot(t.x - f.x, t.y - f.y) < bite) { w.treats.splice(k, 1); ripple(w, t.x, t.y, 14, 0.9); w.eaten++; remember(w, t); f.en = Math.max(f.en, 0.5); break; }
     }
   }
   // the surface, after the fish
@@ -1438,8 +1432,8 @@ function drawPatches(ctx, f, gold) {
   ctx.fillStyle = gold; ctx.globalAlpha = 0.75; ctx.fill();
   ctx.restore();
 }
-function drawFish(ctx, f, p, swim, gold) {
-  const amp = f.len * p.amp * f.amp * swim;
+function drawFish(ctx, f, p, gold) {
+  const amp = f.len * p.amp * f.amp;
   const rope = f.rope;
   for (let i = 0; i < SPINE; i++) {
     const a = Math.max(0, i - 1), b = Math.min(SPINE - 1, i + 1);
@@ -1462,7 +1456,7 @@ function drawFish(ctx, f, p, swim, gold) {
   if (f.koi) { drawPatches(ctx, f, gold); bodyPath(ctx, f.len); }
   ctx.globalAlpha = p.alpha; ctx.stroke();
   // pectoral fins, sculling wider when the fish is slow
-  const flap = (0.2 + 0.25 * Math.max(0, 1 - f.sp / Math.max(1, p.cruise))) * Math.sin(f.fin) * swim, fl = f.len * 0.13, k = 2;
+  const flap = (0.2 + 0.25 * Math.max(0, 1 - f.sp / Math.max(1, p.cruise))) * Math.sin(f.fin), fl = f.len * 0.13, k = 2;
   let bx = PX[k] - PX[k + 1], by = PY[k] - PY[k + 1]; const bm = Math.hypot(bx, by) || 1; bx /= bm; by /= bm;
   ctx.beginPath();
   for (const side of [1, -1]) {
@@ -1560,7 +1554,7 @@ export function draw(ctx, w, ink, paper, gold, water) {
 }
 // The ground: covers the whole canvas, so it needs nothing under it.
 export function drawGround(ctx, w, ink, paper, water = { img: null, w: 0, h: 0, flat: paper }) {
-  const p = w.params, still = w.reduced;
+  const p = w.params;
   // the water (the flat colour only where the layer falls short, as for a moment after a resize), then each island as land with shallows lightening toward its coast
   ctx.globalAlpha = 1; if (!water.img || water.w < w.w || water.h < w.h) { ctx.fillStyle = water.flat; ctx.fillRect(0, 0, w.w, w.h); } if (water.img) { ctx.imageSmoothingEnabled = true; ctx.drawImage(water.img, 0, 0, water.w, water.h); }
   ctx.fillStyle = paper;
@@ -1577,8 +1571,8 @@ export function drawGround(ctx, w, ink, paper, water = { img: null, w: 0, h: 0, 
   ctx.lineWidth = p.width; ctx.lineJoin = 'round'; ctx.strokeStyle = ink;
   for (const s of w.islets) {
     for (let i = 0; i < ISLET_RINGS; i++) {
-      const u = still ? (i + 0.5) / ISLET_RINGS : ((w.t * p.lap + s.ph + i / ISLET_RINGS) % 1); // 0 far out, 1 at the shore
-      const a = still ? 0.6 : Math.min(1, u * 4) * (1 - u);
+      const u = (w.t * p.lap + s.ph + i / ISLET_RINGS) % 1; // 0 far out, 1 at the shore
+      const a = Math.min(1, u * 4) * (1 - u);
       if (a <= 0.001) continue;
       ctx.globalAlpha = p.ringAlpha * a; ctx.lineWidth = p.width; coastPath(ctx, s, 3 + ISLET_REACH * (1 - u)); ctx.stroke();
     }
@@ -1599,8 +1593,8 @@ export function drawGround(ctx, w, ink, paper, water = { img: null, w: 0, h: 0, 
     coastPath(ctx, o, 0); ctx.stroke();
     const m = Math.round(p.rings);
     for (let i = 0; i < m; i++) {
-      const u = still ? (i + 0.5) / m : ((w.t * p.lap + i / m) % 1); // 0 far out, 1 at the shore
-      const a = still ? 0.6 : Math.min(1, u * 4) * (1 - u);
+      const u = (w.t * p.lap + i / m) % 1; // 0 far out, 1 at the shore
+      const a = Math.min(1, u * 4) * (1 - u);
       if (a <= 0.001) continue;
       const g = 3 + p.reach * (1 - u);
       ctx.globalAlpha = p.ringAlpha * a;
@@ -1662,11 +1656,11 @@ function drawFlower(ctx, f, p, gold) {
 }
 // The live layer, over the ground: the fish, the ripples and treats in the water, then the surface over them.
 export function drawLive(ctx, w, ink, paper, gold) {
-  const p = w.params, still = w.reduced;
+  const p = w.params;
   // the school: a paper fill under each outline, so crossing fish read as one over the other
   ctx.strokeStyle = ink; ctx.lineWidth = p.width; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   ctx.fillStyle = paper;
-  for (const f of w.fish) drawFish(ctx, f, p, still ? 0.4 : 1, gold);
+  for (const f of w.fish) drawFish(ctx, f, p, gold);
   // ripples, then the treats, in the water under whatever floats
   for (const q of w.ripples) {
     const k = q.age / q.life;
@@ -1710,10 +1704,8 @@ export function mount(container) {
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   const params = defaults();
   const mq = (q) => (window.matchMedia ? window.matchMedia(q) : null);
-  const coarseQ = mq('(pointer: coarse)'), reducedQ = mq('(prefers-reduced-motion: reduce)');
-  const world = createWorld(params, { w: container.clientWidth || 1, h: container.clientHeight || 1, seed: (Math.random() * 2 ** 32) >>> 0, coarse: !!coarseQ?.matches, reduced: !!reducedQ?.matches });
-  const onReduced = () => { world.reduced = !!reducedQ.matches; };
-  reducedQ?.addEventListener?.('change', onReduced);
+  const coarseQ = mq('(pointer: coarse)');
+  const world = createWorld(params, { w: container.clientWidth || 1, h: container.clientHeight || 1, seed: (Math.random() * 2 ** 32) >>> 0, coarse: !!coarseQ?.matches });
   // the tokens live on the root div, not on <html>, so read them off the layer itself; and read them again every
   // second, so a change of theme reaches the ink without any hook into how the theme is switched
   let ink = '#201f1d', paper = '#f3f2f2', inkAge = Infinity;
@@ -1787,7 +1779,7 @@ export function mount(container) {
     // shrinking the canvas to nothing hands the backing store back now rather than at the next collection
     destroy() {
       alive = false; if (raf) cancelAnimationFrame(raf); ro.disconnect();
-      document.removeEventListener('visibilitychange', onVisible); reducedQ?.removeEventListener?.('change', onReduced);
+      document.removeEventListener('visibilitychange', onVisible);
       if (dev) dev.destroy();
       canvas.width = canvas.height = 0; if (waterCanvas) waterCanvas.width = waterCanvas.height = 0; if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
     },
